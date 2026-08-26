@@ -1,0 +1,13 @@
+.git
+.next
+.sites-runtime
+.wrangler
+dist
+node_modules
+local-data
+coverage
+outputs
+work
+.env*
+*.log
+tsconfig.tsbuildinfo

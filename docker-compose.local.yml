@@ -1,0 +1,12 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.local
+    init: true
+    environment:
+      LOCAL_LAN_TEST: "${LOCAL_LAN_TEST:-0}"
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:5173:5173"
+    volumes:
+      - ./local-data:/app/.wrangler
