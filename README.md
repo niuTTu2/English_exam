@@ -116,6 +116,17 @@ Use build commands for targeted diagnosis after a remote failure, not as part of
 
 The timeout defaults can be overridden for a controlled canary with `SITES_INSTALL_TIMEOUT`, `SITES_INSTALL_KILL_AFTER`, `SITES_BUILD_TIMEOUT`, and `SITES_BUILD_KILL_AFTER`. A timeout fails the command; the helpers never retry an unchanged install or build.
 
+## Cloudflare Workers Builds
+
+Connect the `main` branch to the existing `zhenti-judu` Worker with these settings:
+
+- Root directory: `/`
+- Build command: `npm run build`
+- Deploy command: `npm run deploy:cloudflare`
+- Production branch: `main`
+
+The deploy command uses the Wrangler configuration generated in `dist/server`, including the production D1 binding. Runtime secrets such as `RESEND_API_KEY` stay in Cloudflare Worker Secrets and must not be committed to this repository.
+
 ## Learn More
 
 - [vinext Documentation](https://github.com/cloudflare/vinext)

@@ -4,7 +4,7 @@ import hostingConfig from "./.openai/hosting.json";
 import { sites } from "./build/sites-vite-plugin";
 
 const D1_DATABASE_ID =
-  process.env.D1_DATABASE_ID ?? "00000000-0000-4000-8000-000000000000";
+  process.env.D1_DATABASE_ID ?? "07579767-4ace-4097-a9e8-06814ded6e53";
 
 const { d1, r2 } = hostingConfig;
 

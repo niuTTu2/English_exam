@@ -11,6 +11,7 @@
     "dev:local": "vite --host 127.0.0.1 --port 5173",
     "dev:lan": "vite --host 0.0.0.0 --port 5173",
     "build": "bash scripts/build-verified.sh",
+    "deploy:cloudflare": "wrangler deploy --config dist/server/wrangler.json",
     "start": "WRANGLER_LOG_PATH=.wrangler/wrangler.log vinext start",
     "test": "npm run build && node --test --test-concurrency=1 tests/*.test.mjs",
     "quality:content": "node --test tests/content-quality.test.mjs",

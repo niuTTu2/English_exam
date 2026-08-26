@@ -11,6 +11,13 @@
     "not_found_handling": "none",
     "binding": "ASSETS"
   },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "zhenti-judu-prod",
+      "database_id": "07579767-4ace-4097-a9e8-06814ded6e53"
+    }
+  ],
   "images": {
     "binding": "IMAGES"
   }
