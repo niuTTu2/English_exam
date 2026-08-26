@@ -118,14 +118,14 @@ The timeout defaults can be overridden for a controlled canary with `SITES_INSTA
 
 ## Cloudflare Workers Builds
 
-Connect the `main` branch to the existing `zhenti-judu` Worker with these settings:
+Connect the `main` branch to the existing `english-exam` Worker with these settings:
 
 - Root directory: `/`
 - Build command: `npm run build`
 - Deploy command: `npm run deploy:cloudflare`
 - Production branch: `main`
 
-The deploy command uses the Wrangler configuration generated in `dist/server`, including the production D1 binding. Runtime secrets such as `RESEND_API_KEY` stay in Cloudflare Worker Secrets and must not be committed to this repository.
+The deploy command uses the Wrangler configuration generated in `dist/server`, including the production `zhenti-judu-prod` D1 binding. Runtime secrets such as `RESEND_API_KEY` stay in Cloudflare Worker Secrets and must not be committed to this repository. The production custom domains are `onehjt.dpdns.org` and `english.onehjt.dpdns.org`.
 
 ## Learn More
 
