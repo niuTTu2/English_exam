@@ -13,6 +13,13 @@ import {
   passage2PhraseGuides,
   passage2WordKnowledge,
 } from "./passage-2-knowledge";
+import {
+  passage3CollocationGlosses,
+  passage3FamilyGlosses,
+  passage3PhraseAliases,
+  passage3PhraseGuides,
+  passage3WordKnowledge,
+} from "./passage-3-knowledge";
 
 type Structure = NonNullable<VocabEntry["structures"]>[number];
 type ReferenceDetail = NonNullable<VocabEntry["collocationDetails"]>[number];
@@ -595,6 +602,34 @@ for (const [key, value] of Object.entries(passage2WordKnowledge)) {
   if (!wordKnowledge[key]) wordKnowledge[key] = value;
 }
 
+function mergePhrase(existing: PhraseKnowledge | undefined, incoming: PhraseKnowledge): PhraseKnowledge {
+  if (!existing) return incoming;
+  return {
+    ...existing,
+    ...incoming,
+    structures: Array.from(new Map([...existing.structures, ...incoming.structures].map((item) => [item.pattern, item])).values()),
+    pitfalls: Array.from(new Set([...(existing.pitfalls ?? []), ...(incoming.pitfalls ?? [])])),
+  };
+}
+
+for (const [key, value] of Object.entries(passage3PhraseGuides)) {
+  phraseGuides[key] = mergePhrase(phraseGuides[key], value);
+}
+Object.assign(phraseAliases, passage3PhraseAliases);
+Object.assign(collocationGlosses, passage3CollocationGlosses);
+Object.assign(familyGlosses, passage3FamilyGlosses);
+for (const [key, value] of Object.entries(passage3WordKnowledge)) {
+  const existing = wordKnowledge[key];
+  wordKnowledge[key] = existing
+    ? {
+        ...existing,
+        ...value,
+        structures: Array.from(new Map([...existing.structures, ...value.structures].map((item) => [item.pattern, item])).values()),
+        pitfalls: Array.from(new Set([...(existing.pitfalls ?? []), ...(value.pitfalls ?? [])])),
+      }
+    : value;
+}
+
 function normalized(value: string) {
   return value.trim().toLowerCase().replace(/\s+/g, " ");
 }
@@ -604,10 +639,10 @@ export function getPhraseKnowledge(source: string): PhraseKnowledge | undefined 
   const alias = phraseAliases[clean];
   if (alias) {
     const guide = phraseGuides[alias];
-    if (guide) return { sourceExpression: guide.sourceExpression ?? source.trim(), ...guide };
+    if (guide) return { ...guide, sourceExpression: source.trim() };
   }
   const direct = phraseGuides[clean];
-  if (direct) return { sourceExpression: direct.sourceExpression ?? source.trim(), ...direct };
+  if (direct) return { ...direct, sourceExpression: source.trim() };
   const gloss = collocationGlosses[clean];
   if (!gloss) return undefined;
   return {

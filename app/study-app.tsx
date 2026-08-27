@@ -60,6 +60,7 @@ import {
   sections,
   vocab,
   type SentenceAnalysis,
+  type Question,
   type SyntaxRole,
   type VocabEntry,
 } from "./data";
@@ -1159,6 +1160,9 @@ export default function StudyApp() {
                           ))}
                         </div>
                       )}
+                      {submitted && question.analysis && (
+                        <QuestionAnalysisPanel question={question} onTerm={openTerm} />
+                      )}
                     </article>
                   ))}
                 </div>
@@ -1646,6 +1650,140 @@ function YearVocabularyPanel({
         </div>
       )}
     </section>
+  );
+}
+
+const knownAnalysisPhrases = Array.from(new Set([
+  ...allSentences.flatMap((sentence) => sentence.phrases),
+  ...allQuestions.flatMap((question) => question.options
+    .map((option) => option.text)
+    .filter((text) => text.includes(" ") && Boolean(getPhraseKnowledge(text)))),
+]));
+
+function analysisPhrases(analysis: SentenceAnalysis) {
+  const candidates = [...analysis.phrases, ...knownAnalysisPhrases];
+  const lower = analysis.text.toLowerCase();
+  return Array.from(new Set(candidates.filter((phrase) => lower.includes(phrase.toLowerCase()))));
+}
+
+function QuestionAnalysisPanel({
+  question,
+  onTerm,
+}: {
+  question: Question;
+  onTerm: (label: string, sentenceId: string, isPhrase?: boolean) => void;
+}) {
+  const analysis = question.analysis;
+  if (!analysis) return null;
+
+  const optionAnalyses = question.options
+    .map((option) => ({ option, analysis: analysis.options?.[option.key] }))
+    .filter((item): item is { option: Question["options"][number]; analysis: SentenceAnalysis } => Boolean(item.analysis));
+
+  return (
+    <section className="question-analysis-panel" aria-label={`第 ${question.id} 题提交后句读`}>
+      <div className="question-analysis-heading">
+        <BookOpenCheck />
+        <strong>提交后句读</strong>
+        <span>题干、选项与正确答案的结构对照</span>
+      </div>
+      {analysis.prompt && (
+        <QuestionAnalysisBlock
+          label="题干"
+          analysis={analysis.prompt}
+          sentenceId={question.sentenceId}
+          onTerm={onTerm}
+          defaultOpen
+        />
+      )}
+      {optionAnalyses.map(({ option, analysis: optionAnalysis }) => (
+        <QuestionAnalysisBlock
+          key={`${question.id}-${option.key}`}
+          label={`${option.key} 选项`}
+          analysis={optionAnalysis}
+          sentenceId={question.sentenceId}
+          onTerm={onTerm}
+        />
+      ))}
+      {analysis.answer && (
+        <QuestionAnalysisBlock
+          label={`正确答案：${question.answer}`}
+          analysis={analysis.answer}
+          sentenceId={question.sentenceId}
+          onTerm={onTerm}
+          defaultOpen
+          answer
+        />
+      )}
+    </section>
+  );
+}
+
+function QuestionAnalysisBlock({
+  label,
+  analysis,
+  sentenceId,
+  onTerm,
+  defaultOpen = false,
+  answer = false,
+}: {
+  label: string;
+  analysis: SentenceAnalysis;
+  sentenceId: string;
+  onTerm: (label: string, sentenceId: string, isPhrase?: boolean) => void;
+  defaultOpen?: boolean;
+  answer?: boolean;
+}) {
+  const phrases = analysisPhrases(analysis);
+  return (
+    <details className={`question-analysis-block ${answer ? "is-answer" : ""}`} open={defaultOpen}>
+      <summary>
+        <span>{label}</span>
+        <ChevronDown />
+      </summary>
+      <div className="question-analysis-body">
+        <p className="question-analysis-text">
+          {renderInteractiveText(analysis.text, phrases, sentenceId, onTerm, true)}
+        </p>
+        <div className="question-colored-sentence">
+          {analysis.chunks.map((chunk, index) => (
+            <span key={`${analysis.id}-chunk-${index}`} className={roleClass(chunk.role)}>
+              {renderInteractiveText(chunk.text, phrases, sentenceId, onTerm, true)}
+            </span>
+          ))}
+        </div>
+        <div className="question-trunk-row">
+          <span>主干</span>
+          <strong>{renderWords(analysis.trunk, sentenceId, onTerm, `${analysis.id}-trunk`)}</strong>
+        </div>
+        <div className="question-analysis-columns">
+          <section>
+            <h4><Layers3 />逐层拆解</h4>
+            <ol className="question-layer-list">
+              {analysis.layers.map((layer, index) => (
+                <li key={`${analysis.id}-layer-${index}`}>
+                  <span>{index + 1}</span>
+                  <p><strong>{layer.label}</strong>{renderWords(layer.text, sentenceId, onTerm, `${analysis.id}-layer-${index}`)}</p>
+                </li>
+              ))}
+            </ol>
+          </section>
+          <section>
+            <h4><Sparkles />语法提醒</h4>
+            <ul className="question-grammar-list">
+              {analysis.grammar.map((item, index) => (
+                <li key={`${analysis.id}-grammar-${index}`}>{renderWords(item, sentenceId, onTerm, `${analysis.id}-grammar-${index}`)}</li>
+              ))}
+            </ul>
+          </section>
+        </div>
+        <div className="question-translation-block">
+          <div><span>结构直译</span><p>{analysis.literal}</p></div>
+          <div><span>通顺译文</span><p>{analysis.natural}</p></div>
+        </div>
+        <div className="question-logic-note"><Brain /><p><strong>句间逻辑</strong>{renderWords(analysis.logic, sentenceId, onTerm, `${analysis.id}-logic`)}</p></div>
+      </div>
+    </details>
   );
 }
 

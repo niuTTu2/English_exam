@@ -1,5 +1,6 @@
 import { passage1Questions, passage1Sentences } from "./passage-1-data";
 import { passage2Questions, passage2Sentences } from "./passage-2-data";
+import { passage3Questions, passage3Sentences } from "./passage-3-data";
 
 export type SyntaxRole =
   | "condition"
@@ -72,10 +73,17 @@ export type Question = {
   answer: "A" | "B" | "C" | "D";
   locating: string;
   explanations: Record<"A" | "B" | "C" | "D", string>;
+  analysis?: QuestionAnalysis;
+};
+
+export type QuestionAnalysis = {
+  prompt?: SentenceAnalysis;
+  options?: Partial<Record<"A" | "B" | "C" | "D", SentenceAnalysis>>;
+  answer?: SentenceAnalysis;
 };
 
 export type ArticleContent = {
-  id: "cloze" | "p1" | "p2";
+  id: "cloze" | "p1" | "p2" | "p3";
   label: string;
   badge: string;
   title: string;
@@ -89,7 +97,7 @@ export const sections = [
   { id: "cloze", label: "完形填空", meta: "8句 · 10题", status: "ready" },
   { id: "p1", label: "阅读 Passage 1", meta: "25句 · 4题", status: "ready" },
   { id: "p2", label: "阅读 Passage 2", meta: "27句 · 4题", status: "ready" },
-  { id: "p3", label: "阅读 Passage 3", meta: "4题", status: "pending" },
+  { id: "p3", label: "阅读 Passage 3", meta: "13句 · 4题", status: "ready" },
   { id: "p4", label: "阅读 Passage 4", meta: "4题", status: "pending" },
   { id: "p5", label: "阅读 Passage 5", meta: "4题", status: "pending" },
   { id: "translation", label: "英译汉", meta: "5句", status: "pending" },
@@ -1051,7 +1059,7 @@ export const questions: Question[] = [
   },
 ];
 
-export const articleContents: Record<"cloze" | "p1" | "p2", ArticleContent> = {
+export const articleContents: Record<"cloze" | "p1" | "p2" | "p3", ArticleContent> = {
   cloze: {
     id: "cloze",
     label: "完形填空",
@@ -1082,7 +1090,17 @@ export const articleContents: Record<"cloze" | "p1" | "p2", ArticleContent> = {
     sentences: passage2Sentences,
     questions: passage2Questions,
   },
+  p3: {
+    id: "p3",
+    label: "阅读 Passage 3",
+    badge: "2000 · 阅读 Passage 3",
+    title: "未来主义诗歌与新的表达方式",
+    description: "沿着未来主义者的理论、形式实验及作者的保留评价，逐句理解这篇评论。",
+    kind: "reading",
+    sentences: passage3Sentences,
+    questions: passage3Questions,
+  },
 };
 
-export const allSentences = [...sentences, ...passage1Sentences, ...passage2Sentences];
-export const allQuestions = [...questions, ...passage1Questions, ...passage2Questions];
+export const allSentences = [...sentences, ...passage1Sentences, ...passage2Sentences, ...passage3Sentences];
+export const allQuestions = [...questions, ...passage1Questions, ...passage2Questions, ...passage3Questions];

@@ -41,6 +41,37 @@ function requireStructure(structure, label) {
   }
 }
 
+function requireSentenceAnalysis(analysis, label) {
+  assert.ok(analysis, `${label} 缺少分析对象`);
+  requireText(analysis.text, `${label}.text`);
+  requireText(analysis.trunk, `${label}.trunk`);
+  requireText(analysis.literal, `${label}.literal`);
+  requireText(analysis.natural, `${label}.natural`);
+  requireText(analysis.logic, `${label}.logic`);
+  assert.ok(analysis.chunks.length >= 2, `${label} 缺少彩色结构分块`);
+  assert.equal(
+    normalizeText(analysis.chunks.map((chunk) => chunk.text).join("")),
+    normalizeText(analysis.text),
+    `${label} 的 chunks 不能还原原文`,
+  );
+  for (const [index, chunk] of analysis.chunks.entries()) {
+    requireText(chunk.text, `${label}.chunks[${index}].text`);
+    assert.ok(["condition", "subject", "predicate", "object", "modifier", "connector"].includes(chunk.role), `${label} 存在无效结构角色`);
+  }
+  assert.ok(analysis.layers.length > 0, `${label} 缺少逐层拆解`);
+  analysis.layers.forEach((layer, index) => {
+    requireText(layer.label, `${label}.layers[${index}].label`);
+    requireText(layer.text, `${label}.layers[${index}].text`);
+  });
+  assert.ok(analysis.grammar.length > 0, `${label} 缺少语法说明`);
+  analysis.grammar.forEach((item, index) => requireText(item, `${label}.grammar[${index}]`));
+  for (const [index, phrase] of (analysis.phrases ?? []).entries()) {
+    requireText(phrase, `${label}.phrases[${index}]`);
+    assert.ok(analysis.text.toLowerCase().includes(phrase.toLowerCase()), `${label}.phrases[${index}] 不在分析原文中`);
+    assert.ok(knowledge.getPhraseKnowledge(phrase), `${label}.phrases[${index}] 缺少知识条目`);
+  }
+}
+
 test("句子分析完整并可还原原文", () => {
   const ids = new Set();
   for (const sentence of allSentences) {
@@ -122,11 +153,61 @@ test("所有预标词组都有规范原型、中文义和语法", () => {
       requireText(phrase.grammarRole, `${source}.grammarRole`);
       assert.ok(phrase.structures.length > 0, `${source} 缺少规范结构`);
       phrase.structures.forEach((structure, index) => requireStructure(structure, `${source}.structures[${index}]`));
-      if (sentence.id.startsWith("p2-")) {
+      if (sentence.id.startsWith("p2-") || sentence.id.startsWith("p3-")) {
         assert.ok(phrase.pitfalls?.length > 0, `${source} 缺少易错点`);
       }
       (phrase.pitfalls ?? []).forEach((item, index) => requireText(item, `${source}.pitfalls[${index}]`));
     }
+  }
+});
+
+test("提交答案后的题目分析完整且英文词可追溯", () => {
+  const article = data.articleContents.p3;
+  assert.ok(article, "Passage 3 内容对象不存在");
+  for (const question of article.questions) {
+    const analysis = question.analysis;
+    assert.ok(analysis, `第 ${question.id} 题缺少提交后分析`);
+    requireSentenceAnalysis(analysis.prompt, `question[${question.id}].analysis.prompt`);
+    assert.deepEqual(Object.keys(analysis.options ?? {}).sort(), ["A", "B", "C", "D"], `第 ${question.id} 题四项分析不完整`);
+    for (const key of ["A", "B", "C", "D"]) {
+      requireSentenceAnalysis(analysis.options[key], `question[${question.id}].analysis.options.${key}`);
+    }
+    requireSentenceAnalysis(analysis.answer, `question[${question.id}].analysis.answer`);
+  }
+
+  const analysisText = article.questions.flatMap((question) => {
+    const entries = [question.analysis.prompt, question.analysis.answer, ...Object.values(question.analysis.options ?? {})];
+    return entries.flatMap((item) => [
+      item.text,
+      ...item.chunks.map((chunk) => chunk.text),
+      item.trunk,
+      ...item.layers.flatMap((layer) => [layer.label, layer.text]),
+      ...item.grammar,
+      item.literal,
+      item.natural,
+      item.logic,
+      ...(item.phrases ?? []),
+    ]);
+  }).join(" ");
+  const tokens = [...new Set(analysisText.match(/(?:[A-Za-z]\.){2,}|(?<![0-9])[A-Za-z]+(?:-[A-Za-z]+)?(?:'[A-Za-z]+)?/g) ?? [])];
+  for (const rawToken of tokens) {
+    // A/B and A-D are grammar-pattern variables, not vocabulary items.
+    if (/^[A-D](?:-[A-D])?$/.test(rawToken)) continue;
+    const token = rawToken.toLowerCase();
+    const guide = lexicon.getLexicalGuide(token);
+    const lemma = guide.headword;
+    const key = data.aliasToVocab[token] ?? data.aliasToVocab[lemma] ?? lemma;
+    const core = data.vocab[key];
+    const wordKnowledge = knowledge.getWordKnowledge(lemma);
+    const meaning = data.basicMeanings[token] ?? data.basicMeanings[lemma] ?? core?.contextualMeaning ?? guide.contextualMeaning;
+    const use = guide.use ?? core?.use ?? wordKnowledge?.grammarSummary;
+    requireText(guide.headword, `${token}.headword`);
+    requireText(guide.partOfSpeech, `${token}.partOfSpeech`);
+    assert.ok(!guide.partOfSpeech.startsWith("word（"), `${token} 使用了推测词性`);
+    requireText(meaning, `${token}.contextualMeaning`);
+    requireText(use, `${token}.use`);
+    assert.ok(guide.specialForms.length > 0, `${token} 缺少特殊变形说明`);
+    assert.ok(guide.examSynonyms.length > 0, `${token} 缺少近义词处理说明`);
   }
 });
 
