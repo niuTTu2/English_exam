@@ -1,4 +1,11 @@
 import type { VocabEntry } from "./data";
+import {
+  passage1CollocationGlosses,
+  passage1FamilyGlosses,
+  passage1PhraseAliases,
+  passage1PhraseGuides,
+  passage1WordKnowledge,
+} from "./passage-1-knowledge";
 
 type Structure = NonNullable<VocabEntry["structures"]>[number];
 type ReferenceDetail = NonNullable<VocabEntry["collocationDetails"]>[number];
@@ -556,6 +563,12 @@ const wordKnowledge: Record<string, WordKnowledge> = {
   },
 };
 
+Object.assign(phraseGuides, passage1PhraseGuides);
+Object.assign(phraseAliases, passage1PhraseAliases);
+Object.assign(collocationGlosses, passage1CollocationGlosses);
+Object.assign(familyGlosses, passage1FamilyGlosses);
+Object.assign(wordKnowledge, passage1WordKnowledge);
+
 function normalized(value: string) {
   return value.trim().toLowerCase().replace(/\s+/g, " ");
 }
@@ -623,7 +636,7 @@ export function getFamilyDetails(items: string[]): ReferenceDetail[] {
     const pos = item.match(/\b(n|v|adj|adv)\./)?.[0];
     return {
       label: headword,
-      meaning: familyGlosses[headword] ?? "与当前词同源",
+      meaning: familyGlosses[normalized(headword)] ?? "与当前词同源",
       note: pos ? `同源词；词性 ${pos}` : "同源词",
       target: `word:${headword}`,
     };

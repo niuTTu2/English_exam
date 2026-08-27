@@ -1,3 +1,10 @@
+import {
+  passage1FamilyAliases,
+  passage1FormPartOfSpeech,
+  passage1LemmaAliases,
+  passage1Lexicon,
+} from "./passage-1-lexicon";
+
 export type LexicalGuide = {
   headword: string;
   partOfSpeech: string;
@@ -213,6 +220,10 @@ const formPartOfSpeech: Record<string, string> = {
   ways: "n.（复数）",
   wishes: "v.（第三人称单数）",
 };
+
+Object.assign(lemmaAliases, passage1LemmaAliases);
+Object.assign(familyAliases, passage1FamilyAliases);
+Object.assign(formPartOfSpeech, passage1FormPartOfSpeech);
 
 const specialForms: Record<string, string[]> = {
   bad: ["bad（原级）", "worse（比较级）", "worst（最高级）"],
@@ -500,18 +511,23 @@ export function canonicalLemma(token: string) {
 export function getLexicalGuide(token: string): LexicalGuide {
   const normalized = token.trim().toLowerCase();
   const headword = canonicalLemma(normalized);
-  const pos = formPartOfSpeech[normalized] ?? partOfSpeech[headword] ?? inferPartOfSpeech(headword);
+  const passageEntry = passage1Lexicon[headword];
+  const pos = formPartOfSpeech[normalized] ?? passageEntry?.partOfSpeech ?? partOfSpeech[headword] ?? inferPartOfSpeech(headword);
   const isStructureWord = /art\.|prep\.|conj\.|pron\.|det\.|modal/.test(pos);
+  const mergedCollocations = Array.from(new Set([...(collocations[headword] ?? []), ...(passageEntry?.collocations ?? [])]));
+  const mergedMeanings = Array.from(new Set([...(otherMeanings[headword] ?? []), ...(passageEntry?.otherMeanings ?? [])]));
+  const mergedFamily = Array.from(new Set([...(wordFamily[headword] ?? []), ...(passageEntry?.wordFamily ?? [])]));
+  const mergedConfusions = Array.from(new Set([...(confusions[headword] ?? []), ...(passageEntry?.confusions ?? [])]));
   return {
     headword,
     partOfSpeech: pos,
-    contextualMeaning: contextualMeaning[headword],
-    use: usage[headword],
-    specialForms: specialForms[headword] ?? [isStructureWord ? "结构词：无普通词形变化，重点看句法位置" : "无需要单独记忆的不规则变形"],
-    examSynonyms: examSynonyms[headword] ?? [isStructureWord ? "结构词通常不能脱离句型直接替换" : "本词暂无需要成组强记的考研近义词"],
-    collocations: collocations[headword],
-    otherMeanings: otherMeanings[headword],
-    wordFamily: wordFamily[headword],
-    confusions: confusions[headword],
+    contextualMeaning: passageEntry?.contextualMeaning ?? contextualMeaning[headword],
+    use: passageEntry?.use ?? usage[headword],
+    specialForms: passageEntry?.specialForms ?? specialForms[headword] ?? [isStructureWord ? "结构词：无普通词形变化，重点看句法位置" : "无需要单独记忆的不规则变形"],
+    examSynonyms: passageEntry?.examSynonyms ?? examSynonyms[headword] ?? [isStructureWord ? "结构词通常不能脱离句型直接替换" : "本词暂无需要成组强记的考研近义词"],
+    collocations: mergedCollocations,
+    otherMeanings: mergedMeanings,
+    wordFamily: mergedFamily,
+    confusions: mergedConfusions,
   };
 }

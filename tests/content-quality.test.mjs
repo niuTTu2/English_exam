@@ -18,6 +18,8 @@ after(async () => {
 const data = await vite.ssrLoadModule("/app/data.ts");
 const lexicon = await vite.ssrLoadModule("/app/lexicon.ts");
 const knowledge = await vite.ssrLoadModule("/app/knowledge-base.ts");
+const allSentences = data.allSentences ?? data.sentences;
+const allQuestions = data.allQuestions ?? data.questions;
 
 const forbiddenPlaceholder = /(待精审|后续补充|持续补充|结合本句成分理解|暂无资料|将在所属真题精审|该词未出现在)/;
 const normalizeText = (value) => value.replace(/\s+/g, " ").trim();
@@ -40,7 +42,7 @@ function requireStructure(structure, label) {
 
 test("句子分析完整并可还原原文", () => {
   const ids = new Set();
-  for (const sentence of data.sentences) {
+  for (const sentence of allSentences) {
     assert.ok(!ids.has(sentence.id), `句子 ID 重复：${sentence.id}`);
     ids.add(sentence.id);
     assert.ok(Number.isInteger(sentence.number) && sentence.number > 0, `${sentence.id} 序号无效`);
@@ -70,19 +72,29 @@ test("句子分析完整并可还原原文", () => {
 });
 
 test("自测空格、题号和答案严格对应", () => {
-  const sentenceIds = new Set(data.sentences.map((sentence) => sentence.id));
-  const blankIds = [];
-  for (const sentence of data.sentences) {
-    const matches = [...(sentence.testText ?? "").matchAll(/___\((\d+)\)/g)].map((match) => Number(match[1]));
-    blankIds.push(...matches);
-    assert.equal(sentence.answerWords?.length ?? 0, matches.length, `${sentence.id} 的答案词数量与自测空格不一致`);
+  const sentenceIds = new Set(allSentences.map((sentence) => sentence.id));
+  for (const article of Object.values(data.articleContents)) {
+    const blankIds = [];
+    for (const sentence of article.sentences) {
+      const matches = [...(sentence.testText ?? "").matchAll(/___\((\d+)\)/g)].map((match) => Number(match[1]));
+      blankIds.push(...matches);
+      assert.equal(sentence.answerWords?.length ?? 0, matches.length, `${sentence.id} 的答案词数量与自测空格不一致`);
+    }
+    if (article.kind === "cloze") {
+      assert.deepEqual(
+        [...blankIds].sort((a, b) => a - b),
+        article.questions.map((question) => question.id).sort((a, b) => a - b),
+        `${article.id} 自测空格编号与题号不一致`,
+      );
+    } else {
+      assert.deepEqual(blankIds, [], `${article.id} 阅读正文不应出现完形空格`);
+    }
   }
 
-  const questionIds = data.questions.map((question) => question.id);
+  const questionIds = allQuestions.map((question) => question.id);
   assert.deepEqual([...new Set(questionIds)], questionIds, "题号存在重复");
-  assert.deepEqual([...blankIds].sort((a, b) => a - b), [...questionIds].sort((a, b) => a - b), "自测空格编号与题号不一致");
 
-  for (const question of data.questions) {
+  for (const question of allQuestions) {
     assert.ok(sentenceIds.has(question.sentenceId), `第 ${question.id} 题定位句不存在`);
     requireText(question.prompt, `question[${question.id}].prompt`);
     requireText(question.locating, `question[${question.id}].locating`);
@@ -96,7 +108,7 @@ test("自测空格、题号和答案严格对应", () => {
 });
 
 test("所有预标词组都有规范原型、中文义和语法", () => {
-  for (const sentence of data.sentences) {
+  for (const sentence of allSentences) {
     const lower = sentence.text.toLowerCase();
     for (const source of sentence.phrases) {
       assert.ok(lower.includes(source.toLowerCase()), `${sentence.id} 的词组不在原句中：${source}`);
@@ -116,10 +128,10 @@ test("所有预标词组都有规范原型、中文义和语法", () => {
 
 test("正文、题干选项中的全部词形都有有效知识", () => {
   const corpus = [
-    ...data.sentences.map((sentence) => sentence.text),
-    ...data.questions.flatMap((question) => [question.prompt, ...question.options.map((option) => option.text)]),
+    ...allSentences.map((sentence) => sentence.text),
+    ...allQuestions.flatMap((question) => [question.prompt, ...question.options.map((option) => option.text)]),
   ].join(" ");
-  const tokens = [...new Set(corpus.toLowerCase().match(/[a-z]+(?:-[a-z]+)?(?:'[a-z]+)?/g) ?? [])];
+  const tokens = [...new Set(corpus.toLowerCase().match(/(?:[a-z]\.){2,}|(?<![0-9])[a-z]+(?:-[a-z]+)?(?:'[a-z]+)?/g) ?? [])];
 
   for (const token of tokens) {
     const guide = lexicon.getLexicalGuide(token);
@@ -161,5 +173,16 @@ test("正文、题干选项中的全部词形都有有效知识", () => {
       assert.notEqual(detail.meaning, "与当前词同源", `${token} 的同源词缺少中文义：${detail.label}`);
       assert.ok(detail.target, `${token} 的同源词不可点击：${detail.label}`);
     }
+  }
+});
+
+test("已就绪文章与目录、题号和稳定 ID 一致", () => {
+  const readyIds = data.sections.filter((section) => section.status === "ready").map((section) => section.id);
+  assert.deepEqual(readyIds, Object.keys(data.articleContents), "目录中的已就绪文章必须都有完整内容对象");
+  for (const article of Object.values(data.articleContents)) {
+    assert.ok(article.sentences.length > 0, `${article.id} 缺少正文句子`);
+    assert.ok(article.questions.length > 0, `${article.id} 缺少题目`);
+    article.sentences.forEach((sentence) => assert.ok(sentence.id.startsWith(`${article.id}-`), `${sentence.id} 未使用文章稳定前缀`));
+    article.questions.forEach((question) => assert.ok(article.sentences.some((sentence) => sentence.id === question.sentenceId), `第 ${question.id} 题定位句不属于 ${article.id}`));
   }
 });

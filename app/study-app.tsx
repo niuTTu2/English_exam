@@ -53,10 +53,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import {
   aliasToVocab,
+  allQuestions,
+  allSentences,
+  articleContents,
   basicMeanings,
-  questions,
   sections,
-  sentences,
   vocab,
   type SentenceAnalysis,
   type SyntaxRole,
@@ -72,6 +73,7 @@ import {
 import { canonicalLemma, familyAliases, getLexicalGuide } from "./lexicon";
 
 type AppView = "study" | "test" | "review" | "vocabulary";
+type ArticleId = keyof typeof articleContents;
 type RevealTiming = "instant" | "sentence" | "article";
 type TimerMode = "up" | "down";
 type ReviewFilter = "all" | "word" | "phrase" | "sentence" | "question";
@@ -120,6 +122,8 @@ type PersistedStudyState = {
   sentenceMarks: string[];
   answers: Record<number, string>;
   submitted: boolean;
+  activeSection?: ArticleId;
+  submittedSections?: Record<string, boolean>;
   revealTiming: RevealTiming;
   timerMode: TimerMode;
   lists: string[];
@@ -176,13 +180,17 @@ const phraseGlosses: Record<string, string> = {
 };
 
 const corpusText = [
-  ...sentences.map((sentence) => sentence.text.toLowerCase()),
-  ...questions.flatMap((question) => question.options.map((option) => option.text.toLowerCase())),
+  ...allSentences.map((sentence) => sentence.text.toLowerCase()),
+  ...allQuestions.flatMap((question) => [question.prompt, ...question.options.map((option) => option.text)].map((text) => text.toLowerCase())),
 ].join(" ");
-const corpusTokens = corpusText.match(/[a-z]+(?:-[a-z]+)?(?:'[a-z]+)?/g) ?? [];
+const corpusTokens = tokenizeWords(corpusText);
+
+function tokenizeWords(text: string) {
+  return text.match(/(?:[a-z]\.){2,}|(?<![0-9])[a-z]+(?:-[a-z]+)?(?:'[a-z]+)?/g) ?? [];
+}
 
 const optionLookup = new Map(
-  questions.flatMap((question) => question.options.map((option) => [
+  allQuestions.flatMap((question) => question.options.map((option) => [
     option.text.toLowerCase(),
     {
       explanation: question.explanations[option.key],
@@ -190,6 +198,14 @@ const optionLookup = new Map(
       isCorrect: option.key === question.answer,
     },
   ] as const)),
+);
+
+const sentenceArticle = new Map(
+  Object.values(articleContents).flatMap((article) => article.sentences.map((sentence) => [sentence.id, article] as const)),
+);
+
+const questionArticle = new Map(
+  Object.values(articleContents).flatMap((article) => article.questions.map((question) => [question.id, article] as const)),
 );
 
 function lemmaOf(token: string) {
@@ -212,8 +228,8 @@ function currentCounts(label: string, isPhrase: boolean) {
     const exact = countPhrase(normalized);
     const patternKey = getPhraseKnowledge(normalized)?.key;
     const annotatedPhrases = [
-      ...sentences.flatMap((sentence) => sentence.phrases),
-      ...questions.flatMap((question) => question.options.map((option) => option.text).filter((text) => text.includes(" "))),
+      ...allSentences.flatMap((sentence) => sentence.phrases),
+      ...allQuestions.flatMap((question) => question.options.map((option) => option.text).filter((text) => text.includes(" "))),
     ];
     const pattern = patternKey
       ? annotatedPhrases.filter((phrase) => getPhraseKnowledge(phrase)?.key === patternKey).length
@@ -233,30 +249,38 @@ function currentOccurrences(label: string, isPhrase: boolean) {
   const normalized = label.toLowerCase();
   const lemma = lemmaOf(normalized);
   const phraseKey = isPhrase ? getPhraseKnowledge(normalized)?.key : undefined;
-  const sentenceMatches = sentences.filter((sentence) => {
+  const sentenceMatches = allSentences.filter((sentence) => {
     const lower = sentence.text.toLowerCase();
     if (isPhrase) {
       if (phraseKey) return sentence.phrases.some((phrase) => getPhraseKnowledge(phrase)?.key === phraseKey);
       return lower.includes(normalized);
     }
-    const tokens = lower.match(/[a-z]+(?:-[a-z]+)?(?:'[a-z]+)?/g) ?? [];
+    const tokens = tokenizeWords(lower);
     return tokens.some((token) => lemmaOf(token) === lemma);
   });
-  const optionMatches = questions.flatMap((question) => question.options
+  const optionMatches = allQuestions.flatMap((question) => question.options
     .filter((option) => {
       const lower = option.text.toLowerCase();
       if (isPhrase) {
         if (phraseKey) return getPhraseKnowledge(option.text)?.key === phraseKey;
         return lower === normalized;
       }
-      const tokens = lower.match(/[a-z]+(?:-[a-z]+)?(?:'[a-z]+)?/g) ?? [];
+      const tokens = tokenizeWords(lower);
       return tokens.some((token) => lemmaOf(token) === lemma);
     })
     .map((option) => ({ questionId: question.id, text: option.text })));
 
   return [
-    ...sentenceMatches.map((sentence) => ({ year: 2000, section: "完形正文", excerpt: sentence.text })),
-    ...optionMatches.map((option) => ({ year: 2000, section: `完形第 ${option.questionId} 题选项`, excerpt: option.text })),
+    ...sentenceMatches.map((sentence) => ({
+      year: 2000,
+      section: `${sentenceArticle.get(sentence.id)?.label ?? "真题"}正文`,
+      excerpt: sentence.text,
+    })),
+    ...optionMatches.map((option) => ({
+      year: 2000,
+      section: `${questionArticle.get(option.questionId)?.label ?? "真题"}第 ${option.questionId} 题选项`,
+      excerpt: option.text,
+    })),
   ];
 }
 
@@ -378,13 +402,13 @@ function resolveEntry(label: string, isPhrase = false): VocabEntry {
 }
 
 function sentenceIdForWord(headword: string) {
-  const sentence = sentences.find((item) => {
-    const tokens = item.text.toLowerCase().match(/[a-z]+(?:-[a-z]+)?(?:'[a-z]+)?/g) ?? [];
+  const sentence = allSentences.find((item) => {
+    const tokens = tokenizeWords(item.text.toLowerCase());
     return tokens.some((token) => lemmaOf(token) === headword);
   });
   if (sentence) return sentence.id;
-  return questions.find((question) => question.options.some((option) => {
-    const tokens = option.text.toLowerCase().match(/[a-z]+(?:-[a-z]+)?(?:'[a-z]+)?/g) ?? [];
+  return allQuestions.find((question) => question.options.some((option) => {
+    const tokens = tokenizeWords(option.text.toLowerCase());
     return tokens.some((token) => lemmaOf(token) === headword);
   }))?.sentenceId ?? "year-vocabulary";
 }
@@ -417,10 +441,10 @@ function buildYearWordItems(): YearWordItem[] {
 
 function buildYearPhraseItems(): YearPhraseItem[] {
   const sources = new Map<string, { source: string; sentenceId: string }>();
-  sentences.forEach((sentence) => sentence.phrases.forEach((source) => {
+  allSentences.forEach((sentence) => sentence.phrases.forEach((source) => {
     sources.set(source.toLowerCase(), { source, sentenceId: sentence.id });
   }));
-  questions.forEach((question) => question.options.forEach((option) => {
+  allQuestions.forEach((question) => question.options.forEach((option) => {
     if (option.text.includes(" ") && getPhraseKnowledge(option.text)) {
       sources.set(option.text.toLowerCase(), { source: option.text, sentenceId: question.sentenceId });
     }
@@ -454,6 +478,7 @@ function roleClass(role: SyntaxRole) {
 
 export default function StudyApp() {
   const [view, setView] = useState<AppView>("study");
+  const [activeSection, setActiveSection] = useState<ArticleId>("cloze");
   const [expanded, setExpanded] = useState<Set<string>>(new Set(["cloze-s1"]));
   const [selectedTerm, setSelectedTerm] = useState<SelectedTerm | null>(null);
   const [termHistory, setTermHistory] = useState<SelectedTerm[]>([]);
@@ -464,7 +489,7 @@ export default function StudyApp() {
   const [sentenceNotes, setSentenceNotes] = useState<Record<string, string>>({});
   const [sentenceMarks, setSentenceMarks] = useState<Set<string>>(new Set());
   const [answers, setAnswers] = useState<Record<number, string>>({});
-  const [submitted, setSubmitted] = useState(false);
+  const [submittedSections, setSubmittedSections] = useState<Record<string, boolean>>({});
   const [revealTiming, setRevealTiming] = useState<RevealTiming>("article");
   const [unlockedTerms, setUnlockedTerms] = useState<Set<string>>(new Set());
   const [timerMode, setTimerMode] = useState<TimerMode>("up");
@@ -490,6 +515,13 @@ export default function StudyApp() {
   const [authBusy, setAuthBusy] = useState(false);
   const [authError, setAuthError] = useState("");
   const [remoteReady, setRemoteReady] = useState(false);
+  const activeArticle = articleContents[activeSection];
+  const sentences = activeArticle.sentences;
+  const questions = activeArticle.questions;
+  const submitted = Boolean(submittedSections[activeSection]);
+  const selectedTermArticle = selectedTerm
+    ? sentenceArticle.get(selectedTerm.sentenceId) ?? activeArticle
+    : activeArticle;
   const yearWordItems = useMemo(() => buildYearWordItems(), []);
   const yearPhraseItems = useMemo(() => buildYearPhraseItems(), []);
 
@@ -502,7 +534,9 @@ export default function StudyApp() {
     if (snapshot.sentenceNotes) setSentenceNotes(snapshot.sentenceNotes);
     if (Array.isArray(snapshot.sentenceMarks)) setSentenceMarks(new Set(snapshot.sentenceMarks));
     if (snapshot.answers) setAnswers(snapshot.answers);
-    if (typeof snapshot.submitted === "boolean") setSubmitted(snapshot.submitted);
+    if (snapshot.activeSection && snapshot.activeSection in articleContents) setActiveSection(snapshot.activeSection);
+    if (snapshot.submittedSections) setSubmittedSections(snapshot.submittedSections);
+    else if (snapshot.submitted) setSubmittedSections({ cloze: true });
     if (snapshot.revealTiming) setRevealTiming(snapshot.revealTiming);
     if (snapshot.timerMode) setTimerMode(snapshot.timerMode);
     if (Array.isArray(snapshot.lists)) setLists(snapshot.lists);
@@ -577,13 +611,15 @@ export default function StudyApp() {
     sentenceNotes,
     sentenceMarks: Array.from(sentenceMarks),
     answers,
-    submitted,
+    submitted: Boolean(submittedSections.cloze),
+    activeSection,
+    submittedSections,
     revealTiming,
     timerMode,
     lists,
     listItems,
     reviewFilter,
-  }), [answers, expanded, listItems, lists, marks, revealTiming, reviewFilter, reviewSchedule, sentenceMarks, sentenceNotes, submitted, termNotes, termRatings, timerMode]);
+  }), [activeSection, answers, expanded, listItems, lists, marks, revealTiming, reviewFilter, reviewSchedule, sentenceMarks, sentenceNotes, submittedSections, termNotes, termRatings, timerMode]);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -619,15 +655,17 @@ export default function StudyApp() {
     return () => window.clearInterval(id);
   }, [countdownStart, timerMode, timerRunning]);
 
-  const studiedProgress = Math.round((expanded.size / sentences.length) * 100);
-  const selectedAnswers = Object.keys(answers).length;
+  const studiedCount = sentences.filter((sentence) => expanded.has(sentence.id)).length;
+  const studiedProgress = Math.round((studiedCount / sentences.length) * 100);
+  const selectedAnswers = questions.filter((question) => Boolean(answers[question.id])).length;
   const correctAnswers = submitted
     ? questions.filter((question) => answers[question.id] === question.answer).length
     : 0;
   const markedKeys = Object.keys(marks).filter((key) => marks[key]?.length);
-  const wrongQuestions = submitted
-    ? questions.filter((question) => answers[question.id] !== question.answer)
-    : [];
+  const wrongQuestions = allQuestions.filter((question) => {
+    const article = questionArticle.get(question.id);
+    return Boolean(article && submittedSections[article.id] && answers[question.id] !== question.answer);
+  });
   const reviewCount = markedKeys.length + sentenceMarks.size + wrongQuestions.length;
   const visibleMarkedKeys = markedKeys.filter((key) => {
     if (reviewFilter === "all") return true;
@@ -754,10 +792,24 @@ export default function StudyApp() {
   }
 
   function resetTest() {
-    setAnswers({});
-    setSubmitted(false);
+    setAnswers((current) => {
+      const next = { ...current };
+      questions.forEach((question) => delete next[question.id]);
+      return next;
+    });
+    setSubmittedSections((current) => ({ ...current, [activeSection]: false }));
     setTimerSeconds(0);
     setTimerRunning(false);
+    setUnlockedTerms(new Set());
+  }
+
+  function selectArticle(id: ArticleId) {
+    setActiveSection(id);
+    setView("study");
+    setSelectedTerm(null);
+    setTermHistory([]);
+    setTimerRunning(false);
+    setTimerSeconds(0);
     setUnlockedTerms(new Set());
   }
 
@@ -877,25 +929,29 @@ export default function StudyApp() {
           </div>
 
           <nav className="section-list">
-            {sections.map((section) => (
-              <button
-                key={section.id}
-                type="button"
-                className={`section-row ${section.status === "ready" ? view === "vocabulary" ? "is-ready" : "is-active" : "is-pending"}`}
-                disabled={section.status !== "ready"}
-                onClick={() => section.status === "ready" && setView("study")}
-                aria-current={section.status === "ready" && view !== "vocabulary" ? "page" : undefined}
-              >
-                <span className="section-icon">
-                  {section.status === "ready" ? <FileText /> : <LockKeyhole />}
-                </span>
-                <span className="section-copy">
-                  <strong>{section.label}</strong>
-                  <small>{section.meta}</small>
-                </span>
-                {section.status === "ready" ? <ChevronRight /> : <span className="pending-dot">待精审</span>}
-              </button>
-            ))}
+            {sections.map((section) => {
+              const isReady = section.status === "ready" && section.id in articleContents;
+              const isActive = isReady && section.id === activeSection && view !== "vocabulary";
+              return (
+                <button
+                  key={section.id}
+                  type="button"
+                  className={`section-row ${isReady ? isActive ? "is-active" : "is-ready" : "is-pending"}`}
+                  disabled={!isReady}
+                  onClick={() => isReady && selectArticle(section.id as ArticleId)}
+                  aria-current={isActive ? "page" : undefined}
+                >
+                  <span className="section-icon">
+                    {isReady ? <FileText /> : <LockKeyhole />}
+                  </span>
+                  <span className="section-copy">
+                    <strong>{section.label}</strong>
+                    <small>{section.meta}</small>
+                  </span>
+                  {isReady ? <ChevronRight /> : <span className="pending-dot">待精审</span>}
+                </button>
+              );
+            })}
           </nav>
 
           <div className="review-summary">
@@ -944,14 +1000,14 @@ export default function StudyApp() {
               <>
                 <div>
                   <div className="heading-meta">
-                    <Badge className="paper-badge">2000 · 完形填空</Badge>
-                    <span>精审示范版</span>
+                    <Badge className="paper-badge">{activeArticle.badge}</Badge>
+                    <span>精审完成</span>
                   </div>
-                  <h2>从“生产剩余”读懂一段经济逻辑</h2>
-                  <p>先读原句。展开句子看结构，再点带下划线的单词或词组。</p>
+                  <h2>{activeArticle.title}</h2>
+                  <p>{activeArticle.description}</p>
                 </div>
                 <div className="paper-progress">
-                  <div><span>学习进度</span><strong>{expanded.size}/{sentences.length} 句</strong></div>
+                  <div><span>学习进度</span><strong>{studiedCount}/{sentences.length} 句</strong></div>
                   <Progress value={studiedProgress} />
                 </div>
               </>
@@ -1037,7 +1093,9 @@ export default function StudyApp() {
 
               <div className="test-instruction">
                 <Flag />
-                <p><strong>模拟考场：</strong>正文只保留真正的第 1–10 空，不再显示额外句子序号。在心中独立翻译，点选项字母作答；词汇讲解按你的设置解锁。</p>
+                <p><strong>模拟考场：</strong>{activeArticle.kind === "cloze"
+                  ? "正文只保留真正的第 1–10 空，不再显示额外句子序号。"
+                  : "先限时默读全文，再完成第 11–14 题；不提前显示逐句讲解。"} 点选项字母作答；词汇讲解按你的设置解锁。</p>
               </div>
 
               <div className="test-passage">
@@ -1050,8 +1108,8 @@ export default function StudyApp() {
 
               <section className="question-section">
                 <div className="question-heading">
-                  <div><span>完形选择</span><strong>{selectedAnswers}/10 已作答</strong></div>
-                  {submitted && <Badge className="score-badge">{correctAnswers}/10</Badge>}
+                  <div><span>{activeArticle.kind === "cloze" ? "完形选择" : "阅读选择"}</span><strong>{selectedAnswers}/{questions.length} 已作答</strong></div>
+                  {submitted && <Badge className="score-badge">{correctAnswers}/{questions.length}</Badge>}
                 </div>
                 <div className="question-grid">
                   {questions.map((question) => (
@@ -1108,9 +1166,12 @@ export default function StudyApp() {
                   size="lg"
                   className="submit-test"
                   disabled={selectedAnswers !== questions.length || submitted}
-                  onClick={() => { setSubmitted(true); setTimerRunning(false); }}
+                  onClick={() => {
+                    setSubmittedSections((current) => ({ ...current, [activeSection]: true }));
+                    setTimerRunning(false);
+                  }}
                 >
-                  <CircleCheck />{submitted ? "已提交" : `提交答案（${selectedAnswers}/10）`}
+                  <CircleCheck />{submitted ? "已提交" : `提交答案（${selectedAnswers}/${questions.length}）`}
                 </Button>
               </section>
             </TabsContent>
@@ -1157,21 +1218,27 @@ export default function StudyApp() {
                           );
                         })}
                         {visibleSentenceMarks.map((sentenceId) => {
-                          const sentence = sentences.find((item) => item.id === sentenceId);
+                          const sentence = allSentences.find((item) => item.id === sentenceId);
                           if (!sentence) return null;
+                          const article = sentenceArticle.get(sentenceId);
                           return (
                             <button key={sentenceId} type="button" onClick={() => {
+                              if (article) setActiveSection(article.id);
                               setExpanded((current) => new Set(current).add(sentenceId));
                               setView("study");
                             }}>
-                              <span><strong>第 {sentence.number} 句</strong><small>{sentence.text.slice(0, 62)}…</small></span>
+                              <span><strong>{article?.label ?? "真题"} · 第 {sentence.number} 句</strong><small>{sentence.text.slice(0, 62)}…</small></span>
                               <Badge variant="outline">整句</Badge>
                             </button>
                           );
                         })}
                         {visibleWrongQuestions.map((question) => (
-                          <button key={`wrong-${question.id}`} type="button" onClick={() => setView("test")}>
-                            <span><strong>第 {question.id} 题</strong><small>已自动收录错题与错误选项</small></span>
+                          <button key={`wrong-${question.id}`} type="button" onClick={() => {
+                            const article = questionArticle.get(question.id);
+                            if (article) setActiveSection(article.id);
+                            setView("test");
+                          }}>
+                            <span><strong>第 {question.id} 题</strong><small>{questionArticle.get(question.id)?.label ?? "真题"} · 已自动收录错题与错误选项</small></span>
                             <Badge variant="outline">错题</Badge>
                           </button>
                         ))}
@@ -1238,7 +1305,7 @@ export default function StudyApp() {
                 <div className="term-header-row">
                   <div className="term-kicker">
                     <Badge variant="outline">{termIsLocked ? "自测标记" : selectedTerm.entry.kind === "phrase" ? "语法 / 搭配" : selectedTerm.entry.partOfSpeech}</Badge>
-                    <span>2000 · 完形</span>
+                    <span>{selectedTermArticle.badge}</span>
                   </div>
                   {termHistory.length > 0 && (
                     <button type="button" className="term-back" onClick={goBackTerm}>
@@ -1515,7 +1582,7 @@ function YearVocabularyPanel({
 
       <div className="vocabulary-scope-note">
         <Badge variant="outline">2000 · 已精审内容</Badge>
-        <p>当前覆盖完形正文、题干与选项；其余文章精审导入后会自动加入本表。</p>
+        <p>当前覆盖完形与阅读 Passage 1 的正文、题干和选项；其余文章精审导入后会自动加入本表。</p>
         <strong>{resultCount} 个结果</strong>
       </div>
 
@@ -1787,7 +1854,7 @@ function TermDetails({
       <details>
         <summary>出现次数与年份</summary>
         <div className="detail-body">
-          <p className="count-scope">当前范围：已精审导入的 2000 年完形正文与选项</p>
+          <p className="count-scope">当前范围：已精审导入的 2000 年完形与阅读 Passage 1 正文、题干和选项</p>
           <div className="count-grid">
             {entry.kind === "phrase" ? (
               <>
@@ -1807,7 +1874,7 @@ function TermDetails({
             <p key={`${item.year}-${item.excerpt}`} className="occurrence"><strong>{item.year} · {item.section}</strong>{item.excerpt}</p>
           ))}
           {entry.occurrences.length === 0 && <p className="no-occurrence">当前已精审语料中尚未出现；它来自近义词或同源词关联。</p>}
-          <small>每加入一篇经你确认的真题，词形、原形和词族统计都会随语料更新。</small>
+          <small>每加入一篇通过质量门禁的真题，词形、原形和词族统计都会随语料更新。</small>
         </div>
       </details>
     </div>
@@ -1935,9 +2002,9 @@ function renderWords(
       ];
     }
 
-    const parts = segment.split(/([A-Za-z]+(?:-[A-Za-z]+)?(?:'[A-Za-z]+)?)/g);
+    const parts = segment.split(/((?:[A-Za-z]\.){2,}|(?<![0-9])[A-Za-z]+(?:-[A-Za-z]+)?(?:'[A-Za-z]+)?)/g);
     return parts.map((part, index) => {
-      if (!/^[A-Za-z]+(?:-[A-Za-z]+)?(?:'[A-Za-z]+)?$/.test(part)) return part;
+      if (!/^(?:[A-Za-z]\.){2,}$|^[A-Za-z]+(?:-[A-Za-z]+)?(?:'[A-Za-z]+)?$/.test(part)) return part;
       return (
         <button
           type="button"

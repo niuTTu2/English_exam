@@ -1,3 +1,5 @@
+import { passage1Questions, passage1Sentences } from "./passage-1-data";
+
 export type SyntaxRole =
   | "condition"
   | "subject"
@@ -71,9 +73,20 @@ export type Question = {
   explanations: Record<"A" | "B" | "C" | "D", string>;
 };
 
+export type ArticleContent = {
+  id: "cloze" | "p1";
+  label: string;
+  badge: string;
+  title: string;
+  description: string;
+  kind: "cloze" | "reading";
+  sentences: SentenceAnalysis[];
+  questions: Question[];
+};
+
 export const sections = [
   { id: "cloze", label: "完形填空", meta: "8句 · 10题", status: "ready" },
-  { id: "p1", label: "阅读 Passage 1", meta: "4题", status: "pending" },
+  { id: "p1", label: "阅读 Passage 1", meta: "25句 · 4题", status: "ready" },
   { id: "p2", label: "阅读 Passage 2", meta: "4题", status: "pending" },
   { id: "p3", label: "阅读 Passage 3", meta: "4题", status: "pending" },
   { id: "p4", label: "阅读 Passage 4", meta: "4题", status: "pending" },
@@ -1036,3 +1049,29 @@ export const questions: Question[] = [
     },
   },
 ];
+
+export const articleContents: Record<"cloze" | "p1", ArticleContent> = {
+  cloze: {
+    id: "cloze",
+    label: "完形填空",
+    badge: "2000 · 完形填空",
+    title: "从“生产剩余”读懂一段经济逻辑",
+    description: "先读原句。展开句子看结构，再点带下划线的单词或词组。",
+    kind: "cloze",
+    sentences,
+    questions,
+  },
+  p1: {
+    id: "p1",
+    label: "阅读 Passage 1",
+    badge: "2000 · 阅读 Passage 1",
+    title: "成功、危机与美国工业的重新调整",
+    description: "沿着“战后优势—竞争冲击—信心危机—经济复苏”的主线逐句精读。",
+    kind: "reading",
+    sentences: passage1Sentences,
+    questions: passage1Questions,
+  },
+};
+
+export const allSentences = [...sentences, ...passage1Sentences];
+export const allQuestions = [...questions, ...passage1Questions];
