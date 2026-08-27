@@ -6,12 +6,20 @@ import {
   passage1PhraseGuides,
   passage1WordKnowledge,
 } from "./passage-1-knowledge";
+import {
+  passage2CollocationGlosses,
+  passage2FamilyGlosses,
+  passage2PhraseAliases,
+  passage2PhraseGuides,
+  passage2WordKnowledge,
+} from "./passage-2-knowledge";
 
 type Structure = NonNullable<VocabEntry["structures"]>[number];
 type ReferenceDetail = NonNullable<VocabEntry["collocationDetails"]>[number];
 
 export type PhraseKnowledge = {
   key: string;
+  sourceExpression?: string;
   canonical: string;
   type: string;
   meaning: string;
@@ -569,6 +577,24 @@ Object.assign(collocationGlosses, passage1CollocationGlosses);
 Object.assign(familyGlosses, passage1FamilyGlosses);
 Object.assign(wordKnowledge, passage1WordKnowledge);
 
+// Passage 1 is the established source of truth for repeated entries. Passage 2
+// contributes only keys that do not already have a curated definition.
+for (const [key, value] of Object.entries(passage2PhraseGuides)) {
+  if (!phraseGuides[key]) phraseGuides[key] = value;
+}
+for (const [key, value] of Object.entries(passage2PhraseAliases)) {
+  if (!phraseAliases[key]) phraseAliases[key] = value;
+}
+for (const [key, value] of Object.entries(passage2CollocationGlosses)) {
+  if (!collocationGlosses[key]) collocationGlosses[key] = value;
+}
+for (const [key, value] of Object.entries(passage2FamilyGlosses)) {
+  if (!familyGlosses[key]) familyGlosses[key] = value;
+}
+for (const [key, value] of Object.entries(passage2WordKnowledge)) {
+  if (!wordKnowledge[key]) wordKnowledge[key] = value;
+}
+
 function normalized(value: string) {
   return value.trim().toLowerCase().replace(/\s+/g, " ");
 }
@@ -576,11 +602,17 @@ function normalized(value: string) {
 export function getPhraseKnowledge(source: string): PhraseKnowledge | undefined {
   const clean = normalized(source);
   const alias = phraseAliases[clean];
-  if (alias) return phraseGuides[alias];
+  if (alias) {
+    const guide = phraseGuides[alias];
+    if (guide) return { sourceExpression: guide.sourceExpression ?? source.trim(), ...guide };
+  }
+  const direct = phraseGuides[clean];
+  if (direct) return { sourceExpression: direct.sourceExpression ?? source.trim(), ...direct };
   const gloss = collocationGlosses[clean];
   if (!gloss) return undefined;
   return {
     key: `collocation:${clean}`,
+    sourceExpression: source.trim(),
     canonical: source.trim(),
     type: "常用搭配",
     meaning: gloss.meaning,
@@ -600,7 +632,7 @@ export function getCollocationDetails(items: string[]): ReferenceDetail[] {
     const phrase = getPhraseKnowledge(item);
     return {
       label: item,
-      meaning: info?.meaning ?? phrase?.meaning ?? "该搭配将在所属真题精审时补充译义",
+      meaning: info?.meaning ?? phrase?.meaning ?? item,
       note: info?.note ?? phrase?.summary,
       target: info || phrase ? `phrase:${item}` : undefined,
     };

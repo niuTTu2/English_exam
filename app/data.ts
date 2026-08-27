@@ -1,4 +1,5 @@
 import { passage1Questions, passage1Sentences } from "./passage-1-data";
+import { passage2Questions, passage2Sentences } from "./passage-2-data";
 
 export type SyntaxRole =
   | "condition"
@@ -74,7 +75,7 @@ export type Question = {
 };
 
 export type ArticleContent = {
-  id: "cloze" | "p1";
+  id: "cloze" | "p1" | "p2";
   label: string;
   badge: string;
   title: string;
@@ -87,7 +88,7 @@ export type ArticleContent = {
 export const sections = [
   { id: "cloze", label: "完形填空", meta: "8句 · 10题", status: "ready" },
   { id: "p1", label: "阅读 Passage 1", meta: "25句 · 4题", status: "ready" },
-  { id: "p2", label: "阅读 Passage 2", meta: "4题", status: "pending" },
+  { id: "p2", label: "阅读 Passage 2", meta: "27句 · 4题", status: "ready" },
   { id: "p3", label: "阅读 Passage 3", meta: "4题", status: "pending" },
   { id: "p4", label: "阅读 Passage 4", meta: "4题", status: "pending" },
   { id: "p5", label: "阅读 Passage 5", meta: "4题", status: "pending" },
@@ -1050,7 +1051,7 @@ export const questions: Question[] = [
   },
 ];
 
-export const articleContents: Record<"cloze" | "p1", ArticleContent> = {
+export const articleContents: Record<"cloze" | "p1" | "p2", ArticleContent> = {
   cloze: {
     id: "cloze",
     label: "完形填空",
@@ -1071,7 +1072,17 @@ export const articleContents: Record<"cloze" | "p1", ArticleContent> = {
     sentences: passage1Sentences,
     questions: passage1Questions,
   },
+  p2: {
+    id: "p2",
+    label: "阅读 Passage 2",
+    badge: "2000 · 阅读 Passage 2",
+    title: "人类进化为何走向停滞",
+    description: "沿着生存率、生育差异和技术替代自然选择的线索，逐句理解人类身体为何几乎没有改变。",
+    kind: "reading",
+    sentences: passage2Sentences,
+    questions: passage2Questions,
+  },
 };
 
-export const allSentences = [...sentences, ...passage1Sentences];
-export const allQuestions = [...questions, ...passage1Questions];
+export const allSentences = [...sentences, ...passage1Sentences, ...passage2Sentences];
+export const allQuestions = [...questions, ...passage1Questions, ...passage2Questions];

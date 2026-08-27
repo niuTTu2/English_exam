@@ -1,8 +1,9 @@
 import assert from "node:assert/strict";
 import test, { after } from "node:test";
+import { fileURLToPath } from "node:url";
 import { createServer } from "vite";
 
-const root = new URL("..", import.meta.url).pathname;
+const root = fileURLToPath(new URL("..", import.meta.url));
 const vite = await createServer({
   appType: "custom",
   configFile: false,
@@ -121,6 +122,9 @@ test("所有预标词组都有规范原型、中文义和语法", () => {
       requireText(phrase.grammarRole, `${source}.grammarRole`);
       assert.ok(phrase.structures.length > 0, `${source} 缺少规范结构`);
       phrase.structures.forEach((structure, index) => requireStructure(structure, `${source}.structures[${index}]`));
+      if (sentence.id.startsWith("p2-")) {
+        assert.ok(phrase.pitfalls?.length > 0, `${source} 缺少易错点`);
+      }
       (phrase.pitfalls ?? []).forEach((item, index) => requireText(item, `${source}.pitfalls[${index}]`));
     }
   }

@@ -16,7 +16,7 @@
 |---|---|---|---|
 | 1 | 完形填空 | 已完成（既有金标准） | 既有内容 |
 | 2 | 阅读 Passage 1 | 已完成 | `docs/change-reports/2000-passage-1.md` |
-| 3 | 阅读 Passage 2 | 待精审 | — |
+| 3 | 阅读 Passage 2 | 已完成 | `docs/change-reports/2000-passage-2.md` |
 | 4 | 阅读 Passage 3 | 待精审 | — |
 | 5 | 阅读 Passage 4 | 待精审 | — |
 | 6 | 阅读 Passage 5 | 待精审 | — |

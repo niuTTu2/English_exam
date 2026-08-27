@@ -4,6 +4,12 @@ import {
   passage1LemmaAliases,
   passage1Lexicon,
 } from "./passage-1-lexicon";
+import {
+  passage2FamilyAliases,
+  passage2FormPartOfSpeech,
+  passage2LemmaAliases,
+  passage2Lexicon,
+} from "./passage-2-lexicon";
 
 export type LexicalGuide = {
   headword: string;
@@ -224,6 +230,15 @@ const formPartOfSpeech: Record<string, string> = {
 Object.assign(lemmaAliases, passage1LemmaAliases);
 Object.assign(familyAliases, passage1FamilyAliases);
 Object.assign(formPartOfSpeech, passage1FormPartOfSpeech);
+for (const [key, value] of Object.entries(passage2LemmaAliases)) {
+  if (!lemmaAliases[key]) lemmaAliases[key] = value;
+}
+for (const [key, value] of Object.entries(passage2FamilyAliases)) {
+  if (!familyAliases[key]) familyAliases[key] = value;
+}
+for (const [key, value] of Object.entries(passage2FormPartOfSpeech)) {
+  if (!formPartOfSpeech[key]) formPartOfSpeech[key] = value;
+}
 
 const specialForms: Record<string, string[]> = {
   bad: ["bad（原级）", "worse（比较级）", "worst（最高级）"],
@@ -511,20 +526,24 @@ export function canonicalLemma(token: string) {
 export function getLexicalGuide(token: string): LexicalGuide {
   const normalized = token.trim().toLowerCase();
   const headword = canonicalLemma(normalized);
-  const passageEntry = passage1Lexicon[headword];
+  const passage1Entry = passage1Lexicon[headword];
+  const passage2Entry = passage2Lexicon[headword];
+  const passageEntry = passage1Entry ?? passage2Entry;
   const pos = formPartOfSpeech[normalized] ?? passageEntry?.partOfSpeech ?? partOfSpeech[headword] ?? inferPartOfSpeech(headword);
   const isStructureWord = /art\.|prep\.|conj\.|pron\.|det\.|modal/.test(pos);
-  const mergedCollocations = Array.from(new Set([...(collocations[headword] ?? []), ...(passageEntry?.collocations ?? [])]));
-  const mergedMeanings = Array.from(new Set([...(otherMeanings[headword] ?? []), ...(passageEntry?.otherMeanings ?? [])]));
-  const mergedFamily = Array.from(new Set([...(wordFamily[headword] ?? []), ...(passageEntry?.wordFamily ?? [])]));
-  const mergedConfusions = Array.from(new Set([...(confusions[headword] ?? []), ...(passageEntry?.confusions ?? [])]));
+  const mergedCollocations = Array.from(new Set([...(collocations[headword] ?? []), ...(passage1Entry?.collocations ?? []), ...(passage2Entry?.collocations ?? [])]));
+  const mergedMeanings = Array.from(new Set([...(otherMeanings[headword] ?? []), ...(passage1Entry?.otherMeanings ?? []), ...(passage2Entry?.otherMeanings ?? [])]));
+  const mergedFamily = Array.from(new Set([...(wordFamily[headword] ?? []), ...(passage1Entry?.wordFamily ?? []), ...(passage2Entry?.wordFamily ?? [])]));
+  const mergedConfusions = Array.from(new Set([...(confusions[headword] ?? []), ...(passage1Entry?.confusions ?? []), ...(passage2Entry?.confusions ?? [])]));
+  const mergedSpecialForms = Array.from(new Set([...(specialForms[headword] ?? []), ...(passage1Entry?.specialForms ?? []), ...(passage2Entry?.specialForms ?? [])]));
+  const mergedExamSynonyms = Array.from(new Set([...(examSynonyms[headword] ?? []), ...(passage1Entry?.examSynonyms ?? []), ...(passage2Entry?.examSynonyms ?? [])]));
   return {
     headword,
     partOfSpeech: pos,
     contextualMeaning: passageEntry?.contextualMeaning ?? contextualMeaning[headword],
     use: passageEntry?.use ?? usage[headword],
-    specialForms: passageEntry?.specialForms ?? specialForms[headword] ?? [isStructureWord ? "结构词：无普通词形变化，重点看句法位置" : "无需要单独记忆的不规则变形"],
-    examSynonyms: passageEntry?.examSynonyms ?? examSynonyms[headword] ?? [isStructureWord ? "结构词通常不能脱离句型直接替换" : "本词暂无需要成组强记的考研近义词"],
+    specialForms: mergedSpecialForms.length > 0 ? mergedSpecialForms : [isStructureWord ? "结构词：无普通词形变化，重点看句法位置" : "无需要单独记忆的不规则变形"],
+    examSynonyms: mergedExamSynonyms.length > 0 ? mergedExamSynonyms : [isStructureWord ? "结构词通常不能脱离句型直接替换" : "本词暂无需要成组强记的考研近义词"],
     collocations: mergedCollocations,
     otherMeanings: mergedMeanings,
     wordFamily: mergedFamily,
