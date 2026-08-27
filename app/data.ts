@@ -1,6 +1,7 @@
 import { passage1Questions, passage1Sentences } from "./passage-1-data";
 import { passage2Questions, passage2Sentences } from "./passage-2-data";
 import { passage3Questions, passage3Sentences } from "./passage-3-data";
+import { passage4Questions, passage4Sentences } from "./passage-4-data";
 
 export type SyntaxRole =
   | "condition"
@@ -83,7 +84,7 @@ export type QuestionAnalysis = {
 };
 
 export type ArticleContent = {
-  id: "cloze" | "p1" | "p2" | "p3";
+  id: "cloze" | "p1" | "p2" | "p3" | "p4";
   label: string;
   badge: string;
   title: string;
@@ -98,7 +99,7 @@ export const sections = [
   { id: "p1", label: "阅读 Passage 1", meta: "25句 · 4题", status: "ready" },
   { id: "p2", label: "阅读 Passage 2", meta: "27句 · 4题", status: "ready" },
   { id: "p3", label: "阅读 Passage 3", meta: "13句 · 4题", status: "ready" },
-  { id: "p4", label: "阅读 Passage 4", meta: "4题", status: "pending" },
+  { id: "p4", label: "阅读 Passage 4", meta: "17句 · 4题", status: "ready" },
   { id: "p5", label: "阅读 Passage 5", meta: "4题", status: "pending" },
   { id: "translation", label: "英译汉", meta: "5句", status: "pending" },
 ] as const;
@@ -1059,7 +1060,7 @@ export const questions: Question[] = [
   },
 ];
 
-export const articleContents: Record<"cloze" | "p1" | "p2" | "p3", ArticleContent> = {
+export const articleContents: Record<"cloze" | "p1" | "p2" | "p3" | "p4", ArticleContent> = {
   cloze: {
     id: "cloze",
     label: "完形填空",
@@ -1100,7 +1101,17 @@ export const articleContents: Record<"cloze" | "p1" | "p2" | "p3", ArticleConten
     sentences: passage3Sentences,
     questions: passage3Questions,
   },
+  p4: {
+    id: "p4",
+    label: "阅读 Passage 4",
+    badge: "2000 · 阅读 Passage 4",
+    title: "日本社会工作伦理的变化与生活压力",
+    description: "沿着工作价值、教育方式和城市生活压力的线索，逐句理解日本社会观念的转变。",
+    kind: "reading",
+    sentences: passage4Sentences,
+    questions: passage4Questions,
+  },
 };
 
-export const allSentences = [...sentences, ...passage1Sentences, ...passage2Sentences, ...passage3Sentences];
-export const allQuestions = [...questions, ...passage1Questions, ...passage2Questions, ...passage3Questions];
+export const allSentences = [...sentences, ...passage1Sentences, ...passage2Sentences, ...passage3Sentences, ...passage4Sentences];
+export const allQuestions = [...questions, ...passage1Questions, ...passage2Questions, ...passage3Questions, ...passage4Questions];

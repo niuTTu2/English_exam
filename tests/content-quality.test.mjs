@@ -162,33 +162,36 @@ test("所有预标词组都有规范原型、中文义和语法", () => {
 });
 
 test("提交答案后的题目分析完整且英文词可追溯", () => {
-  const article = data.articleContents.p3;
-  assert.ok(article, "Passage 3 内容对象不存在");
-  for (const question of article.questions) {
-    const analysis = question.analysis;
-    assert.ok(analysis, `第 ${question.id} 题缺少提交后分析`);
-    requireSentenceAnalysis(analysis.prompt, `question[${question.id}].analysis.prompt`);
-    assert.deepEqual(Object.keys(analysis.options ?? {}).sort(), ["A", "B", "C", "D"], `第 ${question.id} 题四项分析不完整`);
-    for (const key of ["A", "B", "C", "D"]) {
-      requireSentenceAnalysis(analysis.options[key], `question[${question.id}].analysis.options.${key}`);
+  const analysisTextParts = [];
+  for (const articleId of ["p3", "p4"]) {
+    const article = data.articleContents[articleId];
+    assert.ok(article, `${articleId} 内容对象不存在`);
+    for (const question of article.questions) {
+      const analysis = question.analysis;
+      assert.ok(analysis, `第 ${question.id} 题缺少提交后分析`);
+      requireSentenceAnalysis(analysis.prompt, `question[${question.id}].analysis.prompt`);
+      assert.deepEqual(Object.keys(analysis.options ?? {}).sort(), ["A", "B", "C", "D"], `第 ${question.id} 题四项分析不完整`);
+      for (const key of ["A", "B", "C", "D"]) {
+        requireSentenceAnalysis(analysis.options[key], `question[${question.id}].analysis.options.${key}`);
+      }
+      requireSentenceAnalysis(analysis.answer, `question[${question.id}].analysis.answer`);
+
+      const entries = [analysis.prompt, analysis.answer, ...Object.values(analysis.options ?? {})];
+      analysisTextParts.push(...entries.flatMap((item) => [
+        item.text,
+        ...item.chunks.map((chunk) => chunk.text),
+        item.trunk,
+        ...item.layers.flatMap((layer) => [layer.label, layer.text]),
+        ...item.grammar,
+        item.literal,
+        item.natural,
+        item.logic,
+        ...(item.phrases ?? []),
+      ]));
     }
-    requireSentenceAnalysis(analysis.answer, `question[${question.id}].analysis.answer`);
   }
 
-  const analysisText = article.questions.flatMap((question) => {
-    const entries = [question.analysis.prompt, question.analysis.answer, ...Object.values(question.analysis.options ?? {})];
-    return entries.flatMap((item) => [
-      item.text,
-      ...item.chunks.map((chunk) => chunk.text),
-      item.trunk,
-      ...item.layers.flatMap((layer) => [layer.label, layer.text]),
-      ...item.grammar,
-      item.literal,
-      item.natural,
-      item.logic,
-      ...(item.phrases ?? []),
-    ]);
-  }).join(" ");
+  const analysisText = analysisTextParts.join(" ");
   const tokens = [...new Set(analysisText.match(/(?:[A-Za-z]\.){2,}|(?<![0-9])[A-Za-z]+(?:-[A-Za-z]+)?(?:'[A-Za-z]+)?/g) ?? [])];
   for (const rawToken of tokens) {
     // A/B and A-D are grammar-pattern variables, not vocabulary items.
