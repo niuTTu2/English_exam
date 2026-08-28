@@ -1,3 +1,5 @@
+import type { ContextualSubstitution } from "./contextual-vocabulary";
+
 export type PassageLexiconEntry = {
   partOfSpeech: string;
   contextualMeaning: string;
@@ -8,6 +10,7 @@ export type PassageLexiconEntry = {
   otherMeanings?: string[];
   wordFamily?: string[];
   confusions?: string[];
+  contextualSubstitutions?: ContextualSubstitution[];
 };
 
 export const passage1LemmaAliases: Record<string, string> = {

@@ -2213,6 +2213,99 @@ button {
   line-height: 1.65;
 }
 
+.contextual-substitutions {
+  display: grid;
+  gap: 10px;
+  margin-top: 10px;
+  padding: 13px 14px;
+  border: 1px solid #d6dfd7;
+  border-radius: 11px;
+  background: #f8faf6;
+}
+
+.contextual-substitutions > header,
+.substitution-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.contextual-substitutions > header > div {
+  display: grid;
+  gap: 2px;
+}
+
+.contextual-substitutions > header span {
+  color: #245b58;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.contextual-substitutions > header strong {
+  color: #788481;
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.substitution-list {
+  display: grid;
+  gap: 8px;
+}
+
+.substitution-card {
+  padding: 11px 12px;
+  border: 1px solid #e1e5dc;
+  border-radius: 9px;
+  background: #fff;
+}
+
+.substitution-heading button {
+  height: auto;
+  padding: 0;
+  color: #245b58;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 16px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.substitution-heading button svg {
+  width: 14px;
+  height: 14px;
+}
+
+.substitution-chinese,
+.substitution-card > p,
+.substitution-card small {
+  margin: 5px 0 0;
+  color: #5f6d69;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.substitution-card .substitution-chinese {
+  color: #334b49;
+  font-weight: 700;
+}
+
+.substitution-card blockquote {
+  margin: 8px 0 0;
+  padding: 8px 10px;
+  border-left: 3px solid #d0a94e;
+  border-radius: 5px;
+  background: #fff6d9;
+  color: #3d4e4d;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.substitution-card small {
+  display: block;
+  color: #8a643c;
+}
+
 .mark-section,
 .list-membership,
 .rating-section,

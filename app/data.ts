@@ -4,6 +4,7 @@ import { passage3Questions, passage3Sentences } from "./passage-3-data";
 import { passage4Questions, passage4Sentences } from "./passage-4-data";
 import { passage5Questions, passage5Sentences } from "./passage-5-data";
 import { translationSentences, translationTasks } from "./translation-data";
+import type { ContextualSubstitution } from "./contextual-vocabulary";
 
 export type SyntaxRole =
   | "condition"
@@ -54,6 +55,7 @@ export type VocabEntry = {
   }>;
   pitfalls?: string[];
   relation?: { kind: string; source: string; note: string };
+  contextualSubstitutions?: ContextualSubstitution[];
   collocationDetails?: Array<{ label: string; meaning: string; note?: string; target?: string }>;
   synonymDetails?: Array<{ label: string; meaning: string; note?: string; target?: string }>;
   familyDetails?: Array<{ label: string; meaning: string; note?: string; target?: string }>;

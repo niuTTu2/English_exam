@@ -19,6 +19,8 @@ after(async () => {
 const data = await vite.ssrLoadModule("/app/data.ts");
 const lexicon = await vite.ssrLoadModule("/app/lexicon.ts");
 const knowledge = await vite.ssrLoadModule("/app/knowledge-base.ts");
+const contextualVocabulary = await vite.ssrLoadModule("/app/contextual-vocabulary.ts");
+const answerKeys = await vite.ssrLoadModule("/app/verified-answer-keys.ts");
 const allSentences = data.allSentences ?? data.sentences;
 const allQuestions = data.allQuestions ?? data.questions;
 
@@ -137,6 +139,64 @@ test("自测空格、题号和答案严格对应", () => {
       requireText(question.explanations[option.key], `question[${question.id}].explanations[${option.key}]`);
     }
   }
+});
+
+test("2000 年答案与独立核验清单一致", () => {
+  assert.equal(Object.keys(answerKeys.verifiedAnswerKey2000).length, 30, "2000 年答案清单必须覆盖第 1—30 题");
+  for (const question of allQuestions) {
+    assert.equal(
+      question.answer,
+      answerKeys.verifiedAnswerKey2000[question.id],
+      `第 ${question.id} 题答案偏离独立核验清单`,
+    );
+  }
+  assert.ok(answerKeys.verifiedAnswerSources2000.length >= 2, "答案修订必须保留可追溯来源");
+  for (const source of answerKeys.verifiedAnswerSources2000) {
+    requireText(source.range, "answerSource.range");
+    requireText(source.label, "answerSource.label");
+    assert.match(source.url, /^https:\/\//, "答案来源必须使用可访问链接");
+  }
+});
+
+test("同一词条按文章和句子语境显示本句义与可替换表达", () => {
+  const sentenceById = new Map(allSentences.map((sentence) => [sentence.id, sentence]));
+
+  for (const [sentenceId, wordContexts] of Object.entries(contextualVocabulary.sentenceWordContexts)) {
+    const sentence = sentenceById.get(sentenceId);
+    assert.ok(sentence, `语境词条指向不存在的句子：${sentenceId}`);
+    const sourceTokens = sentence.text.toLowerCase().match(/(?:[a-z]\.){2,}|(?<![0-9])[a-z]+(?:-[a-z]+)?(?:['’][a-z]+)?/g) ?? [];
+
+    for (const [headword, context] of Object.entries(wordContexts)) {
+      assert.ok(
+        sourceTokens.some((token) => lexicon.canonicalLemma(token) === headword),
+        `${sentenceId} 中不存在语境词 ${headword}`,
+      );
+      if (context.contextualMeaning) requireText(context.contextualMeaning, `${sentenceId}.${headword}.contextualMeaning`);
+      if (context.use) requireText(context.use, `${sentenceId}.${headword}.use`);
+
+      const substitutions = context.contextualSubstitutions ?? [];
+      assert.ok(substitutions.length >= 1 && substitutions.length <= 3, `${sentenceId}.${headword} 的本句替换应为 1—3 项`);
+      for (const [index, item] of substitutions.entries()) {
+        const label = `${sentenceId}.${headword}.contextualSubstitutions[${index}]`;
+        requireText(item.label, `${label}.label`);
+        requireText(item.chinese, `${label}.chinese`);
+        requireText(item.rewrittenSentence, `${label}.rewrittenSentence`);
+        requireText(item.nuance, `${label}.nuance`);
+        assert.ok(["direct", "with-adjustment"].includes(item.fit), `${label}.fit 无效`);
+        assert.match(item.target, /^(word|phrase):[^:]+$/, `${label}.target 必须是可点击知识链接`);
+        assert.notEqual(normalizeText(item.rewrittenSentence), normalizeText(sentence.text), `${label} 没有完成实际改写`);
+        if (item.fit === "with-adjustment") requireText(item.adjustment, `${label}.adjustment`);
+      }
+    }
+  }
+
+  const passageRequire = lexicon.getLexicalGuide("requires", { articleId: "p3", sentenceId: "p3-s5" });
+  const translationRequire = lexicon.getLexicalGuide("requires", { articleId: "translation", sentenceId: "translation-s31" });
+  assert.notEqual(passageRequire.use, translationRequire.use, "同一 require 在阅读与翻译语境中不应共用本句说明");
+
+  const firstRegard = lexicon.getLexicalGuide("regarded", { articleId: "p5", sentenceId: "p5-s1" });
+  const secondRegard = lexicon.getLexicalGuide("regarded", { articleId: "p5", sentenceId: "p5-s2" });
+  assert.notEqual(firstRegard.contextualMeaning, secondRegard.contextualMeaning, "同篇不同句的 regard 词义必须能独立覆盖");
 });
 
 test("所有预标词组都有规范原型、中文义和语法", () => {

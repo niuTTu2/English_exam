@@ -34,6 +34,11 @@ import {
   translationLemmaAliases,
   translationLexicon,
 } from "./translation-lexicon";
+import {
+  getSentenceWordContext,
+  type ArticleLexiconId,
+  type ContextualSubstitution,
+} from "./contextual-vocabulary";
 
 export type LexicalGuide = {
   headword: string;
@@ -46,6 +51,12 @@ export type LexicalGuide = {
   otherMeanings?: string[];
   wordFamily?: string[];
   confusions?: string[];
+  contextualSubstitutions: ContextualSubstitution[];
+};
+
+export type LexicalContext = {
+  articleId?: ArticleLexiconId;
+  sentenceId?: string;
 };
 
 export const lemmaAliases: Record<string, string> = {
@@ -107,12 +118,16 @@ const partOfSpeech: Record<string, string> = {
   but: "conj./prep./adv.",
   can: "modal v.",
   channel: "n./v.",
+  characteristic: "adj./n.",
   chemical: "adj./n.",
   commodity: "n.",
+  consider: "v.",
   construct: "v./n.",
   consume: "v.",
   consumption: "n.",
   continue: "v.",
+  decrease: "v./n.",
+  disadvantage: "n.",
   desire: "v./n.",
   difference: "n.",
   disparity: "n.",
@@ -181,6 +196,7 @@ const partOfSpeech: Record<string, string> = {
   presumably: "adv.",
   produce: "v./n.",
   production: "n.",
+  prosper: "v.",
   property: "n.",
   proportion: "n.",
   purchase: "v./n.",
@@ -199,6 +215,7 @@ const partOfSpeech: Record<string, string> = {
   "self-satisfied": "adj.",
   "self-sufficient": "adj.",
   sell: "v./n.",
+  serious: "adj.",
   since: "prep./conj./adv.",
   soil: "n./v.",
   some: "det./pron./adv.",
@@ -228,6 +245,7 @@ const partOfSpeech: Record<string, string> = {
   which: "pron./det.",
   wide: "adj./adv.",
   will: "modal v./n./v.",
+  wise: "adj.",
   wish: "v./n.",
 };
 
@@ -293,8 +311,12 @@ const specialForms: Record<string, string[]> = {
   be: ["am / is / are（现在时）", "was / were（过去时）", "been（过去分词）", "being（-ing）"],
   can: ["can（现在式）", "could（过去式/较委婉形式）", "cannot / can't（否定）"],
   channel: ["channel（单数/原形）", "channels（复数/第三人称单数）", "channelled / channeled（过去式）"],
+  characteristic: ["characteristic（单数/原级）", "characteristics（复数）", "characteristically（副词）"],
+  consider: ["consider（原形）", "considers（第三人称单数）", "considered（过去式/过去分词）", "considering（-ing）"],
   consume: ["consume（原形）", "consumes（第三人称单数）", "consumed（过去式/过去分词）", "consuming（-ing，去 e）"],
   continue: ["continue（原形）", "continues（第三人称单数）", "continued（过去式/过去分词）", "continuing（-ing，去 e）"],
+  decrease: ["decrease（原形/单数）", "decreases（第三人称单数/复数）", "decreased（过去式/过去分词）", "decreasing（-ing）"],
+  disadvantage: ["disadvantage（单数）", "disadvantages（复数）", "disadvantaged（形容词）"],
   do: ["do（原形）", "does（第三人称单数）", "did（过去式）", "done（过去分词）", "doing（-ing）"],
   effect: ["effect（单数/原形）", "effects（复数/第三人称单数）", "effected（动词过去式）"],
   family: ["family（单数）", "families（复数，y → ies）"],
@@ -312,16 +334,19 @@ const specialForms: Record<string, string[]> = {
   obtain: ["obtain（原形）", "obtains（第三人称单数）", "obtained（过去式/过去分词）", "obtaining（-ing）"],
   old: ["old（原级）", "older / elder（比较级）", "oldest / eldest（最高级）"],
   produce: ["produce（原形）", "produces（第三人称单数）", "produced（过去式/过去分词）", "producing（-ing，去 e）"],
+  prosper: ["prosper（原形）", "prospers（第三人称单数）", "prospered（过去式/过去分词）", "prospering（-ing）"],
   property: ["property（单数/不可数“财产”）", "properties（多处房产/多种性质）"],
   quantity: ["quantity（单数）", "quantities（复数，y → ies）"],
   seek: ["seek（原形）", "seeks（第三人称单数）", "sought（过去式/过去分词）", "seeking（-ing）"],
   sell: ["sell（原形）", "sells（第三人称单数）", "sold（过去式/过去分词）", "selling（-ing）"],
+  serious: ["serious（原级）", "more serious（比较级）", "most serious（最高级）", "seriously（副词）"],
   sow: ["sow（原形）", "sows（第三人称单数）", "sowed（过去式）", "sown / sowed（过去分词）", "sowing（-ing）"],
   succeed: ["succeed（原形）", "succeeds（第三人称单数）", "succeeded（过去式/过去分词）", "succeeding（-ing）"],
   success: ["success（通常不可数：成功）", "successes（可数：成功的人或事）"],
   try: ["try（原形）", "tries（第三人称单数，y → ies）", "tried（过去式/过去分词）", "trying（-ing）"],
   use: ["use（原形/名词）", "uses（第三人称单数/复数）", "used（过去式/过去分词）", "using（-ing，去 e）"],
   wide: ["wide（原级）", "wider（比较级）", "widest（最高级）"],
+  wise: ["wise（原级）", "wiser（比较级）", "wisest（最高级）", "wisely（副词）"],
   will: ["will（现在式）", "would（过去式/假设或委婉形式）"],
   wish: ["wish（原形）", "wishes（第三人称单数，-sh + es）", "wished（过去式/过去分词）", "wishing（-ing）"],
 };
@@ -329,8 +354,12 @@ const specialForms: Record<string, string[]> = {
 const contextualMeaning: Record<string, string> = {
   between: "在……之间；原句构成 between his consumption and his production",
   before: "在……之前；原选项 long before 表“早在……之前”",
+  characteristic: "典型的；具有某种特征的",
+  consider: "认为；考虑；把……看作",
+  decrease: "减少；降低；下降",
   desire: "渴望；愿望（语气通常比 hope / wish 更强、更正式）",
   difference: "差别；差异",
+  disadvantage: "不利条件；劣势",
   disparity: "明显差距；不平等",
   ever: "曾经；在任何时候；原选项 ever since 表“自从……以来”",
   excess: "过量；过剩；超出所需的部分",
@@ -339,6 +368,8 @@ const contextualMeaning: Record<string, string> = {
   long: "很久；长的；原选项 long before 中作副词",
   more: "更多；原选项 more than 表“超过；不仅仅”",
   much: "很多；原选项 much as 表“尽管”",
+  prosper: "兴旺；繁荣；成功发展",
+  serious: "严重的；认真的",
   since: "自从；因为；从……以后",
   success: "成功；成功的结果或事物",
   successful: "成功的；达到预期结果的",
@@ -346,12 +377,17 @@ const contextualMeaning: Record<string, string> = {
   than: "比；用于比较结构",
   want: "想要；需要（最普通、直接）",
   well: "好地；原选项 as well as 表“也；以及”",
+  wise: "明智的；有判断力的",
   wish: "希望；原句 wishes to succeed 表较正式地“想要成功”",
 };
 
 const usage: Record<string, string> = {
   against: "against + 风险/损失可表示“防范、抵御”；insurance against sth 是固定搭配。",
   agricultural: "只作定语较常见：agricultural production / implements；不要与 agriculture n. 混用。",
+  characteristic: "be characteristic of 表示“是……的特征”；作名词时指特征、特点。",
+  consider: "consider A + 名词/形容词表示“认为 A 是……”，通常不用 as；consider doing 表示考虑做某事。",
+  decrease: "可作不及物动词表示自行减少，也可作及物动词表示使某物减少；a decrease in + 名词表示某方面的下降。",
+  disadvantage: "at a disadvantage 表处于不利地位；the disadvantage of + 名词说明某事的缺点。",
   available: "be available to sb / for sth；既可指物“可获得”，也可指人“有空”。",
   before: "before + 名词/时间点，或 before + 从句；long before 强调“早在……之前”。",
   between: "核心结构是 between A and B，A、B 应保持语法平行；也可接复数名词，表示若干彼此区分的对象之间。",
@@ -396,6 +432,7 @@ const usage: Record<string, string> = {
   percentage: "percentage of + 整体；具体百分数可用 a high percentage，但 interest rate 不能换成 percentage of interest。",
   presumably: "句子副词，表示根据已知情况推测“大概”；不表示频率。",
   produce: "produce a surplus / result；作名词时重音变化，表示农产品。",
+  prosper: "用于国家、企业或个人事业兴旺发展；不及物，通常不直接接“成功完成”的具体宾语。",
   proportion: "the proportion of A to B 或 a proportion of the whole；强调部分占整体的份额。",
   purchase: "purchase sth 比 buy 正式；purchase old implements 会变成“购买旧农具”，不合本题逻辑。",
   raise: "raise + 宾语：提高、筹集、养育；是不及物 rise 的对应及物动词。",
@@ -406,6 +443,7 @@ const usage: Record<string, string> = {
   search: "search a place/person 或 search for sth；不能直接说 search funds 表“寻求资金”。",
   seed: "seed for sowing；作动词可表示播种或为比赛设种子选手。",
   sell: "sell sth to sb / sell sth for a price；sell well 是“畅销”，主动形式表被动意义。",
+  serious: "serious problem/consequence 表问题或后果严重；be serious about 表认真对待。",
   since: "ever since + 时间起点，常与完成时连用；since 也可引导原因从句。",
   sow: "sow seed / sow a field with seed；过去分词常用 sown。",
   supplement: "supplement A with B 表用 B 补充 A；不能直接表达把旧农具换掉。",
@@ -460,6 +498,7 @@ const usage: Record<string, string> = {
   try: "try to do 表示努力、设法做；try doing 表示试着用某种办法，两者含义不同。",
   unpredictable: "由 un- + predict + -able 构成，表示“无法预料的”；常修饰 effects、weather、outcome 等。",
   wide: "可表示物理宽度或抽象差距大；a wide gap 是“很大的差距”，不要机械译成“宽的缝隙”。",
+  wise: "it is wise to do 表示做某事是明智的；be wise about/to sth 表示对某事判断审慎。",
   which: "关系代词 which 指物，在定语从句中可作主语或宾语；原句指代 commodity。",
   will: "此处表示将来或自然倾向；will 也可表示意愿，would 可用于过去将来/假设/委婉。",
   wish: "原句是 wish to do sth（较正式地“想要做某事”）。wish + that 从句常表示与事实相反或难实现的愿望；还可用 wish sb sth。",
@@ -467,15 +506,22 @@ const usage: Record<string, string> = {
 
 const collocations: Record<string, string[]> = {
   between: ["between A and B", "the difference between A and B", "choose between A and B", "between the ages of A and B"],
+  characteristic: ["be characteristic of", "a defining characteristic"],
+  consider: ["consider A (to be) B", "consider doing sth", "be considered normal"],
+  decrease: ["decrease by", "decrease to", "a decrease in"],
+  disadvantage: ["at a disadvantage", "the disadvantage of", "a serious disadvantage"],
   excess: ["an excess of", "in excess of", "excess demand", "excess baggage"],
   wish: ["wish to do sth", "wish sb to do sth", "wish + that 从句", "wish sb sth"],
   hope: ["hope to do sth", "hope that...", "hope for sth", "in the hope of doing"],
+  prosper: ["businesses prosper", "prosper under stable conditions"],
+  serious: ["a serious problem", "serious consequences", "be serious about"],
   want: ["want to do sth", "want sb to do sth", "want sth done"],
   desire: ["desire to do sth", "a desire for sth"],
   expect: ["expect to do sth", "expect sb to do sth", "be expected to do"],
   success: ["achieve success", "a great success", "success in doing"],
   successful: ["be successful in doing", "a successful attempt", "highly successful"],
   successfully: ["successfully complete", "successfully apply"],
+  wise: ["it is wise to do", "a wise decision", "be wise to sth"],
 };
 
 const examSynonyms: Record<string, string[]> = {
@@ -483,11 +529,15 @@ const examSynonyms: Record<string, string[]> = {
   bad: ["poor（质量差）", "adverse（不利的）", "harmful（有害的）"],
   borrow: ["obtain on loan（借入）"],
   channel: ["canal（水渠）", "passage（通道）"],
+  characteristic: ["typical（典型的）", "representative（有代表性的）"],
   commodity: ["goods（货物）", "merchandise（商品）", "product（产品）"],
+  consider: ["regard（把……视为；常接 as）", "view（看待）"],
   construct: ["build（建造）", "establish（建立）", "form（构建）"],
   consume: ["use up（耗尽）", "expend（消耗）"],
   consumption: ["use（使用/消耗）", "expenditure（支出/消耗量）", "intake（摄入量）"],
   continue: ["persist（坚持继续）", "proceed（继续进行）", "remain（仍然）"],
+  decrease: ["diminish（逐渐减弱）", "decline（下降；衰退）", "reduce（使减少；及物）"],
+  disadvantage: ["handicap（妨碍进展的障碍）", "drawback（缺点）"],
   effect: ["impact（影响）", "result（结果）", "consequence（后果）"],
   excess: ["surplus（超过需要的剩余）", "overabundance（过多）", "overflow（溢出量）"],
   enhance: ["improve（改善）", "strengthen（加强）", "boost（提升）"],
@@ -513,6 +563,7 @@ const examSynonyms: Record<string, string[]> = {
   produce: ["generate（产生）", "create（创造）", "manufacture（制造）"],
   production: ["output（产出）", "manufacture（制造）"],
   property: ["possession（所有物）", "asset（资产）", "real estate（房地产）"],
+  prosper: ["succeed（成功）", "thrive（蓬勃发展）"],
   purchase: ["buy（购买）", "acquire（购得）"],
   quantity: ["amount（不可数事物的量）", "number（可数事物的数量）", "volume（总量）"],
   rate: ["pace（速度）", "level（比率水平）", "charge（费率）"],
@@ -520,6 +571,7 @@ const examSynonyms: Record<string, string[]> = {
   search: ["look for（寻找）", "seek（寻求）"],
   seek: ["look for（寻找）", "pursue（追求）", "request（寻求/请求）"],
   sell: ["trade（交易）", "market（推销）"],
+  serious: ["severe（严重的）", "grave（严峻的）"],
   store: ["save（储存）", "preserve（保存）", "stockpile（大量储备）"],
   succeed: ["prosper（兴旺）", "achieve（达到目标，及物）", "accomplish（完成，及物）"],
   success: ["achievement（成就）", "accomplishment（完成的成果）"],
@@ -531,6 +583,7 @@ const examSynonyms: Record<string, string[]> = {
   want: ["wish（希望）", "desire（渴望）", "need（需要；部分语境）"],
   weather: ["climate（气候；不是同义词，时间尺度不同）"],
   wide: ["broad（宽广的）", "extensive（广泛的）"],
+  wise: ["advisable（可取的）", "sensible（明智合理的）"],
   wish: ["hope（希望可能实现的事）", "want（普通直接地想要）", "desire（较强烈、正式地渴望）"],
 };
 
@@ -571,7 +624,7 @@ export function canonicalLemma(token: string) {
   return lemmaAliases[normalized] ?? normalized;
 }
 
-export function getLexicalGuide(token: string): LexicalGuide {
+export function getLexicalGuide(token: string, context?: LexicalContext): LexicalGuide {
   const normalized = token.trim().toLowerCase().replace(/[’‘]/g, "'");
   const headword = canonicalLemma(normalized);
   const passage3Entry = passage3Lexicon[headword];
@@ -580,7 +633,20 @@ export function getLexicalGuide(token: string): LexicalGuide {
   const passage4Entry = passage4Lexicon[headword];
   const passage5Entry = passage5Lexicon[headword];
   const translationEntry = translationLexicon[headword];
-  const passageEntry = passage3Entry ?? passage1Entry ?? passage2Entry ?? passage4Entry ?? passage5Entry ?? translationEntry;
+  const articleEntries = {
+    cloze: undefined,
+    p1: passage1Entry,
+    p2: passage2Entry,
+    p3: passage3Entry,
+    p4: passage4Entry,
+    p5: passage5Entry,
+    translation: translationEntry,
+  } satisfies Record<ArticleLexiconId, typeof passage1Entry | undefined>;
+  const articleEntry = context?.articleId ? articleEntries[context.articleId] : undefined;
+  const passageEntry = context?.articleId
+    ? articleEntry
+    : passage3Entry ?? passage1Entry ?? passage2Entry ?? passage4Entry ?? passage5Entry ?? translationEntry;
+  const sentenceContext = getSentenceWordContext(context?.sentenceId, headword);
   const pos = formPartOfSpeech[normalized] ?? passageEntry?.partOfSpeech ?? partOfSpeech[headword] ?? inferPartOfSpeech(headword);
   const isStructureWord = /art\.|prep\.|conj\.|pron\.|det\.|modal/.test(pos);
   const mergedCollocations = Array.from(new Set([...(collocations[headword] ?? []), ...(passage2Entry?.collocations ?? []), ...(passage1Entry?.collocations ?? []), ...(passage3Entry?.collocations ?? []), ...(passage4Entry?.collocations ?? []), ...(passage5Entry?.collocations ?? []), ...(translationEntry?.collocations ?? [])]));
@@ -592,13 +658,14 @@ export function getLexicalGuide(token: string): LexicalGuide {
   return {
     headword,
     partOfSpeech: pos,
-    contextualMeaning: passageEntry?.contextualMeaning ?? contextualMeaning[headword],
-    use: passageEntry?.use ?? usage[headword],
+    contextualMeaning: sentenceContext?.contextualMeaning ?? passageEntry?.contextualMeaning ?? contextualMeaning[headword],
+    use: sentenceContext?.use ?? passageEntry?.use ?? usage[headword],
     specialForms: mergedSpecialForms.length > 0 ? mergedSpecialForms : [isStructureWord ? "结构词：无普通词形变化，重点看句法位置" : "无需要单独记忆的不规则变形"],
     examSynonyms: mergedExamSynonyms.length > 0 ? mergedExamSynonyms : [isStructureWord ? "结构词通常不能脱离句型直接替换" : "本词暂无需要成组强记的考研近义词"],
     collocations: mergedCollocations,
     otherMeanings: mergedMeanings,
     wordFamily: mergedFamily,
     confusions: mergedConfusions,
+    contextualSubstitutions: sentenceContext?.contextualSubstitutions ?? passageEntry?.contextualSubstitutions ?? [],
   };
 }

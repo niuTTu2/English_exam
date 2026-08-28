@@ -212,6 +212,13 @@ const questionArticle = new Map(
   Object.values(articleContents).flatMap((article) => article.questions.map((question) => [question.id, article] as const)),
 );
 
+function lexicalContextFor(sentenceId?: string) {
+  return {
+    sentenceId,
+    articleId: sentenceId ? sentenceArticle.get(sentenceId)?.id : undefined,
+  };
+}
+
 function lemmaOf(token: string) {
   return canonicalLemma(token);
 }
@@ -288,11 +295,11 @@ function currentOccurrences(label: string, isPhrase: boolean) {
   ];
 }
 
-function makeFallbackEntry(label: string, isPhrase = false): VocabEntry {
+function makeFallbackEntry(label: string, isPhrase = false, sentenceId?: string): VocabEntry {
   const normalized = label.toLowerCase();
   const option = optionLookup.get(normalized);
   const phraseKnowledge = isPhrase ? getPhraseKnowledge(normalized) : undefined;
-  const guide = isPhrase ? null : getLexicalGuide(normalized);
+  const guide = isPhrase ? null : getLexicalGuide(normalized, lexicalContextFor(sentenceId));
   const wordKnowledge = guide ? getWordKnowledge(guide.headword) : undefined;
   const counts = currentCounts(label, isPhrase);
   if (phraseKnowledge) {
@@ -358,23 +365,24 @@ function makeFallbackEntry(label: string, isPhrase = false): VocabEntry {
         ? [option.isCorrect ? "它是本题正确项，需结合定位句记忆。" : `本题正确项是 ${option.correct}，注意两者的语义和搭配差别。`]
         : []),
     ],
+    contextualSubstitutions: guide?.contextualSubstitutions ?? [],
     counts,
     knowledgeLevel: guide?.use || wordKnowledge ? "curated" : "related",
     occurrences: currentOccurrences(label, isPhrase),
   };
 }
 
-function resolveEntry(label: string, isPhrase = false): VocabEntry {
+function resolveEntry(label: string, isPhrase = false, sentenceId?: string): VocabEntry {
   const normalized = label.toLowerCase();
   const phraseKnowledge = isPhrase ? getPhraseKnowledge(normalized) : undefined;
-  const guide = isPhrase ? null : getLexicalGuide(normalized);
+  const guide = isPhrase ? null : getLexicalGuide(normalized, lexicalContextFor(sentenceId));
   const wordKnowledge = guide ? getWordKnowledge(guide.headword) : undefined;
   const key = phraseKnowledge
     ? `pattern:${phraseKnowledge.key}`
     : isPhrase
       ? normalized
       : aliasToVocab[normalized] ?? guide?.headword ?? normalized;
-  const entry = vocab[key] ?? makeFallbackEntry(label, isPhrase);
+  const entry = vocab[key] ?? makeFallbackEntry(label, isPhrase, sentenceId);
   if (phraseKnowledge) return entry;
   const mergedCollocations = Array.from(new Set([...(entry.collocations ?? []), ...(guide?.collocations ?? [])]));
   const mergedSynonyms = guide?.examSynonyms ?? entry.examSynonyms ?? [];
@@ -385,7 +393,9 @@ function resolveEntry(label: string, isPhrase = false): VocabEntry {
     display: label,
     headword: guide?.headword ?? entry.headword,
     partOfSpeech: guide?.partOfSpeech ?? entry.partOfSpeech,
+    contextualMeaning: guide?.contextualMeaning ?? entry.contextualMeaning,
     use: guide?.use ?? entry.use,
+    contextualSubstitutions: guide?.contextualSubstitutions ?? entry.contextualSubstitutions ?? [],
     specialForms: guide?.specialForms ?? entry.specialForms ?? [],
     examSynonyms: guide?.examSynonyms ?? entry.examSynonyms ?? [],
     grammarRole: wordKnowledge?.grammarRole ?? entry.grammarRole,
@@ -428,7 +438,8 @@ function buildYearWordItems(): YearWordItem[] {
 
   return Array.from(grouped.entries())
     .map(([headword, formCounts]) => {
-      const entry = resolveEntry(headword, false);
+      const sentenceId = sentenceIdForWord(headword);
+      const entry = resolveEntry(headword, false, sentenceId);
       const rankedForms = Array.from(formCounts.entries()).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "en"));
       return {
         headword,
@@ -437,7 +448,7 @@ function buildYearWordItems(): YearWordItem[] {
         count: Array.from(formCounts.values()).reduce((sum, value) => sum + value, 0),
         meaning: entry.contextualMeaning,
         partOfSpeech: entry.partOfSpeech,
-        sentenceId: sentenceIdForWord(headword),
+        sentenceId,
       };
     })
     .sort((a, b) => a.headword.localeCompare(b.headword, "en"));
@@ -456,7 +467,7 @@ function buildYearPhraseItems(): YearPhraseItem[] {
 
   return Array.from(sources.values())
     .map(({ source, sentenceId }) => {
-      const entry = resolveEntry(source, true);
+      const entry = resolveEntry(source, true, sentenceId);
       return {
         source,
         canonical: entry.canonicalForm ?? entry.headword,
@@ -734,7 +745,7 @@ export default function StudyApp() {
   }
 
   function openTerm(label: string, sentenceId: string, isPhrase = false) {
-    const entry = resolveEntry(label, isPhrase);
+    const entry = resolveEntry(label, isPhrase, sentenceId);
     if (selectedTerm) setTermHistory((current) => [...current, selectedTerm].slice(-8));
     setSelectedTerm({ key: entry.key, label, entry, sentenceId });
   }
@@ -748,7 +759,7 @@ export default function StudyApp() {
     const label = detail.target.startsWith("word:")
       ? detail.target.slice("word:".length)
       : detail.label;
-    const base = resolveEntry(label, false);
+    const base = resolveEntry(label, false, sentenceId);
     const isFamilyLink = source.familyDetails?.some(
       (item) => item.label === detail.label && item.target === detail.target,
     );
@@ -1440,6 +1451,14 @@ export default function StudyApp() {
                       <p>{selectedTerm.entry.use}</p>
                     </section>
 
+                    {(selectedTerm.entry.contextualSubstitutions?.length ?? 0) > 0 && (
+                      <ContextualSubstitutions
+                        entry={selectedTerm.entry}
+                        sentenceId={selectedTerm.sentenceId}
+                        onReference={openReference}
+                      />
+                    )}
+
                     {(selectedTerm.entry.grammarSummary || selectedTerm.entry.grammarRole) && (
                       <section className="knowledge-overview">
                         <div>
@@ -2062,6 +2081,58 @@ function StudySentence({
   );
 }
 
+function ContextualSubstitutions({
+  entry,
+  sentenceId,
+  onReference,
+}: {
+  entry: VocabEntry;
+  sentenceId: string;
+  onReference: (detail: ReferenceDetail, source: VocabEntry, sentenceId: string) => void;
+}) {
+  const substitutions = entry.contextualSubstitutions ?? [];
+
+  return (
+    <section className="contextual-substitutions" aria-label="本句可替换表达">
+      <header>
+        <div>
+          <span>本句可替换</span>
+          <strong>只列在当前原句中成立的同义改写</strong>
+        </div>
+        <Badge variant="outline">{substitutions.length} 项</Badge>
+      </header>
+      <div className="substitution-list">
+        {substitutions.map((item) => (
+          <article key={`${item.label}-${item.rewrittenSentence}`} className="substitution-card">
+            <div className="substitution-heading">
+              <Button
+                type="button"
+                variant="link"
+                onClick={() => onReference({
+                  label: item.label,
+                  meaning: item.chinese,
+                  note: item.nuance,
+                  target: item.target,
+                }, entry, sentenceId)}
+              >
+                {item.label}
+                <ChevronRight />
+              </Button>
+              <Badge variant={item.fit === "direct" ? "secondary" : "outline"}>
+                {item.fit === "direct" ? "可直接替换" : "需调整结构"}
+              </Badge>
+            </div>
+            <p className="substitution-chinese">{item.chinese}</p>
+            <blockquote>{item.rewrittenSentence}</blockquote>
+            <p>{item.nuance}</p>
+            {item.adjustment && <small>改写提醒：{item.adjustment}</small>}
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function TermDetails({
   entry,
   sentenceId,
@@ -2170,7 +2241,7 @@ function TermDetails({
       <details>
         <summary>出现次数与年份</summary>
         <div className="detail-body">
-          <p className="count-scope">当前范围：已精审导入的 2000 年完形与阅读 Passage 1 正文、题干和选项</p>
+          <p className="count-scope">当前范围：已精审导入的 2000 年完形、五篇阅读与英译汉正文、题干和选项</p>
           <div className="count-grid">
             {entry.kind === "phrase" ? (
               <>

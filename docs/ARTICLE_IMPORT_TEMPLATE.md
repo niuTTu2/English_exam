@@ -63,6 +63,36 @@
 
 次数与出处由语料统计生成，不要手工编造固定数字。
 
+## 句子语境与本句可替换
+
+重复词仍复用稳定 `headword`。只有当前文章/句子的词义、用法或可替换项放进
+`app/contextual-vocabulary.ts`，不要复制整份词条：
+
+```ts
+"year-section-sentence-number": {
+  headword: {
+    contextualMeaning: "当前句中的准确词义（与通用词义不同时填写）",
+    use: "当前句中的句法、搭配和语义作用（需要覆盖时填写）",
+    contextualSubstitutions: [
+      {
+        label: "替换词或表达",
+        chinese: "该替换项在本句中的中文义",
+        fit: "direct", // 或 with-adjustment
+        rewrittenSentence: "完成替换后的整句，不能只列单词",
+        nuance: "替换项与原词在语气、范围或搭配上的区别",
+        adjustment: "fit 为 with-adjustment 时必填，说明改了什么结构",
+        target: "word:稳定原形", // 或 phrase:规范表达
+      },
+    ],
+  },
+}
+```
+
+- 每个词最多列 1—3 个当前句真正成立的替换项；没有可靠替换时不强行填写。
+- `examSynonyms` 是一般近义词辨析，不代表能直接放回原句。
+- 替换后的完整句必须保持原命题信息；改变语气时要明确写进 `nuance`。
+- `target` 指向的单词或词组必须能打开有词性、中文义和用法的有效知识页。
+
 ## 词组知识
 
 ```ts
@@ -101,6 +131,7 @@
     { key: "D", text: "选项" },
   ],
   answer: "A",
+  // 答案同时写入该年份的 verified-answer-keys 清单，防止后续误改。
   locating: "答案如何由定位句、搭配或逻辑确定",
   explanations: {
     A: "逐项原因",
