@@ -21,6 +21,7 @@ const lexicon = await vite.ssrLoadModule("/app/lexicon.ts");
 const knowledge = await vite.ssrLoadModule("/app/knowledge-base.ts");
 const contextualVocabulary = await vite.ssrLoadModule("/app/contextual-vocabulary.ts");
 const answerKeys = await vite.ssrLoadModule("/app/verified-answer-keys.ts");
+const syntaxGuide = await vite.ssrLoadModule("/app/syntax-guide.ts");
 const allSentences = data.allSentences ?? data.sentences;
 const allQuestions = data.allQuestions ?? data.questions;
 
@@ -72,6 +73,42 @@ function requireSentenceAnalysis(analysis, label) {
     assert.ok(analysis.text.toLowerCase().includes(phrase.toLowerCase()), `${label}.phrases[${index}] 不在分析原文中`);
     assert.ok(knowledge.getPhraseKnowledge(phrase), `${label}.phrases[${index}] 缺少知识条目`);
   }
+  requireBeginnerSyntax(analysis, label);
+}
+
+function requireBeginnerSyntax(analysis, label) {
+  const guide = syntaxGuide.buildBeginnerSyntaxGuide(analysis);
+  assert.equal(guide.components.length, analysis.beginnerSyntax?.components?.length ?? analysis.chunks.length, `${label} 的零基础成分数量错误`);
+  assert.equal(guide.layers.length, analysis.layers.length, `${label} 的细分层级数量错误`);
+
+  for (const [index, component] of guide.components.entries()) {
+    requireText(component.text, `${label}.beginner.components[${index}].text`);
+    requireText(component.form, `${label}.beginner.components[${index}].form`);
+    requireText(component.function, `${label}.beginner.components[${index}].function`);
+    requireText(component.modifies, `${label}.beginner.components[${index}].modifies`);
+    requireText(component.explanation, `${label}.beginner.components[${index}].explanation`);
+  }
+  for (const [index, layer] of guide.layers.entries()) {
+    requireText(layer.label, `${label}.beginner.layers[${index}].label`);
+    requireText(layer.english, `${label}.beginner.layers[${index}].english`);
+    requireText(layer.explanation, `${label}.beginner.layers[${index}].explanation`);
+    requireText(layer.function, `${label}.beginner.layers[${index}].function`);
+    requireText(layer.form, `${label}.beginner.layers[${index}].form`);
+    requireText(layer.question, `${label}.beginner.layers[${index}].question`);
+    requireText(layer.modifies, `${label}.beginner.layers[${index}].modifies`);
+  }
+  for (const [index, clause] of guide.clauses.entries()) {
+    requireText(clause.text, `${label}.beginner.clauses[${index}].text`);
+    requireText(clause.type, `${label}.beginner.clauses[${index}].type`);
+    requireText(clause.marker, `${label}.beginner.clauses[${index}].marker`);
+    requireText(clause.role, `${label}.beginner.clauses[${index}].role`);
+    requireText(clause.subject, `${label}.beginner.clauses[${index}].subject`);
+    requireText(clause.predicate, `${label}.beginner.clauses[${index}].predicate`);
+    requireText(clause.translationOrder, `${label}.beginner.clauses[${index}].translationOrder`);
+  }
+  if (!syntaxGuide.isLegacySyntaxSentence(analysis.id)) {
+    assert.ok(analysis.beginnerSyntax, `${label} 是新增句子，必须人工填写 beginnerSyntax，不能只依赖旧数据推导`);
+  }
 }
 
 test("句子分析完整并可还原原文", () => {
@@ -102,7 +139,22 @@ test("句子分析完整并可还原原文", () => {
     });
     assert.ok(sentence.grammar.length > 0, `${sentence.id} 缺少语法说明`);
     sentence.grammar.forEach((item, index) => requireText(item, `${sentence.id}.grammar[${index}]`));
+    requireBeginnerSyntax(sentence, sentence.id);
   }
+});
+
+test("零基础句法能识别词组作用、时间地点状语和从句内部结构", () => {
+  const gold = syntaxGuide.buildBeginnerSyntaxGuide(allSentences.find((sentence) => sentence.id === "cloze-s1"));
+  assert.equal(gold.clauses[0].type, "条件状语从句");
+  assert.equal(gold.clauses[0].subject, "a farmer");
+  assert.equal(gold.clauses[0].predicate, "wishes");
+  assert.ok(gold.components.some((item) => item.text === "between his consumption and his production" && item.function.includes("定语")), "金标准句缺少 between 介词短语的修饰说明");
+
+  const timeGuide = syntaxGuide.buildBeginnerSyntaxGuide(allSentences.find((sentence) => sentence.id === "p4-s10"));
+  assert.ok(timeGuide.components.some((item) => item.text === "Last year" && item.function === "时间状语"), "Last year 应识别为时间状语");
+
+  const placeGuide = syntaxGuide.buildBeginnerSyntaxGuide(allSentences.find((sentence) => sentence.id === "p4-s14"));
+  assert.ok(placeGuide.components.some((item) => item.text.includes("In Japan") && item.function.includes("地点")), "In Japan 应识别为地点状语");
 });
 
 test("自测空格、题号和答案严格对应", () => {

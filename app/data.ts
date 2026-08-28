@@ -19,6 +19,30 @@ export type SentenceChunk = {
   role: SyntaxRole;
 };
 
+export type BeginnerSyntaxComponent = {
+  text: string;
+  form: string;
+  function: string;
+  modifies: string;
+  explanation: string;
+};
+
+export type BeginnerClauseDetail = {
+  text: string;
+  type: string;
+  marker: string;
+  role: string;
+  subject: string;
+  predicate: string;
+  objectOrComplement?: string;
+  translationOrder: string;
+};
+
+export type BeginnerSyntax = {
+  components: BeginnerSyntaxComponent[];
+  clauses: BeginnerClauseDetail[];
+};
+
 export type SentenceAnalysis = {
   id: string;
   number: number;
@@ -28,6 +52,7 @@ export type SentenceAnalysis = {
   trunk: string;
   layers: Array<{ label: string; text: string }>;
   grammar: string[];
+  beginnerSyntax?: BeginnerSyntax;
   literal: string;
   natural: string;
   logic: string;
@@ -143,6 +168,57 @@ export const sentences: SentenceAnalysis[] = [
       "keep + 宾语表示“维持某种状态”，不是“保管”。",
       "consumption 与 production 是动词名词化，阅读中常形成抽象概念对比。",
     ],
+    beginnerSyntax: {
+      components: [
+        {
+          text: "If a farmer wishes to succeed",
+          form: "If 引导的完整从句",
+          function: "条件状语从句",
+          modifies: "整体修饰主句 he must try to keep...，说明在什么条件下必须这样做",
+          explanation: "这一整组词先看成“如果农民想成功”，不能把 If、farmer、wishes 分开逐词翻译。",
+        },
+        {
+          text: "he",
+          form: "人称代词",
+          function: "主句主语",
+          modifies: "与 must try 构成主句主干",
+          explanation: "回答“谁必须设法这样做”：he 回指前面的 a farmer。",
+        },
+        {
+          text: "must try to keep",
+          form: "情态动词 + 动词原形 + to do 不定式",
+          function: "主句谓语",
+          modifies: "说明主语 he 必须做什么",
+          explanation: "must 后用 try 原形；try 后接 to keep，合起来是“必须设法维持”。",
+        },
+        {
+          text: "a wide gap",
+          form: "冠词 + 形容词 + 名词",
+          function: "宾语",
+          modifies: "承接 keep，说明要维持什么",
+          explanation: "中心词是 gap；a 和 wide 一起限定 gap，不能只把 wide 当成孤立的“宽”。",
+        },
+        {
+          text: "between his consumption and his production",
+          form: "between A and B 介词短语",
+          function: "后置定语 / 范围说明",
+          modifies: "修饰 gap，说明这个差额存在于哪两项之间",
+          explanation: "his consumption 与 his production 是平行的两个名词短语，共同组成 between A and B。",
+        },
+      ],
+      clauses: [
+        {
+          text: "If a farmer wishes to succeed",
+          type: "条件状语从句",
+          marker: "If",
+          role: "给主句 he must try to keep... 设置条件",
+          subject: "a farmer",
+          predicate: "wishes",
+          objectOrComplement: "to succeed（不定式作 wishes 的补足内容）",
+          translationOrder: "先译条件“如果一个农民想成功”，再译主句“他必须……”。",
+        },
+      ],
+    },
     literal: "如果一个农民希望成功，他必须努力在他的消费与生产之间保持一个很大的差额。",
     natural: "农民要想成功，就必须尽量让产出远高于消耗。",
     logic: "全文总论点：农业经营要先形成剩余，后文依次解释剩余的用途和没有剩余的后果。",
