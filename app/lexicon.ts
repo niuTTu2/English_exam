@@ -28,6 +28,12 @@ import {
   passage5LemmaAliases,
   passage5Lexicon,
 } from "./passage-5-lexicon";
+import {
+  translationFamilyAliases,
+  translationFormPartOfSpeech,
+  translationLemmaAliases,
+  translationLexicon,
+} from "./translation-lexicon";
 
 export type LexicalGuide = {
   headword: string;
@@ -278,6 +284,9 @@ for (const [key, value] of Object.entries(passage5FamilyAliases)) {
 for (const [key, value] of Object.entries(passage5FormPartOfSpeech)) {
   if (!formPartOfSpeech[key]) formPartOfSpeech[key] = value;
 }
+Object.assign(lemmaAliases, translationLemmaAliases);
+Object.assign(familyAliases, translationFamilyAliases);
+Object.assign(formPartOfSpeech, translationFormPartOfSpeech);
 
 const specialForms: Record<string, string[]> = {
   bad: ["bad（原级）", "worse（比较级）", "worst（最高级）"],
@@ -558,27 +567,28 @@ function inferPartOfSpeech(headword: string) {
 }
 
 export function canonicalLemma(token: string) {
-  const normalized = token.trim().toLowerCase();
+  const normalized = token.trim().toLowerCase().replace(/[’‘]/g, "'");
   return lemmaAliases[normalized] ?? normalized;
 }
 
 export function getLexicalGuide(token: string): LexicalGuide {
-  const normalized = token.trim().toLowerCase();
+  const normalized = token.trim().toLowerCase().replace(/[’‘]/g, "'");
   const headword = canonicalLemma(normalized);
   const passage3Entry = passage3Lexicon[headword];
   const passage1Entry = passage1Lexicon[headword];
   const passage2Entry = passage2Lexicon[headword];
   const passage4Entry = passage4Lexicon[headword];
   const passage5Entry = passage5Lexicon[headword];
-  const passageEntry = passage3Entry ?? passage1Entry ?? passage2Entry ?? passage4Entry ?? passage5Entry;
+  const translationEntry = translationLexicon[headword];
+  const passageEntry = passage3Entry ?? passage1Entry ?? passage2Entry ?? passage4Entry ?? passage5Entry ?? translationEntry;
   const pos = formPartOfSpeech[normalized] ?? passageEntry?.partOfSpeech ?? partOfSpeech[headword] ?? inferPartOfSpeech(headword);
   const isStructureWord = /art\.|prep\.|conj\.|pron\.|det\.|modal/.test(pos);
-  const mergedCollocations = Array.from(new Set([...(collocations[headword] ?? []), ...(passage2Entry?.collocations ?? []), ...(passage1Entry?.collocations ?? []), ...(passage3Entry?.collocations ?? []), ...(passage4Entry?.collocations ?? []), ...(passage5Entry?.collocations ?? [])]));
-  const mergedMeanings = Array.from(new Set([...(otherMeanings[headword] ?? []), ...(passage2Entry?.otherMeanings ?? []), ...(passage1Entry?.otherMeanings ?? []), ...(passage3Entry?.otherMeanings ?? []), ...(passage4Entry?.otherMeanings ?? []), ...(passage5Entry?.otherMeanings ?? [])]));
-  const mergedFamily = Array.from(new Set([...(wordFamily[headword] ?? []), ...(passage2Entry?.wordFamily ?? []), ...(passage1Entry?.wordFamily ?? []), ...(passage3Entry?.wordFamily ?? []), ...(passage4Entry?.wordFamily ?? []), ...(passage5Entry?.wordFamily ?? [])]));
-  const mergedConfusions = Array.from(new Set([...(confusions[headword] ?? []), ...(passage2Entry?.confusions ?? []), ...(passage1Entry?.confusions ?? []), ...(passage3Entry?.confusions ?? []), ...(passage4Entry?.confusions ?? []), ...(passage5Entry?.confusions ?? [])]));
-  const mergedSpecialForms = Array.from(new Set([...(specialForms[headword] ?? []), ...(passage2Entry?.specialForms ?? []), ...(passage1Entry?.specialForms ?? []), ...(passage3Entry?.specialForms ?? []), ...(passage4Entry?.specialForms ?? []), ...(passage5Entry?.specialForms ?? [])]));
-  const mergedExamSynonyms = Array.from(new Set([...(examSynonyms[headword] ?? []), ...(passage2Entry?.examSynonyms ?? []), ...(passage1Entry?.examSynonyms ?? []), ...(passage3Entry?.examSynonyms ?? []), ...(passage4Entry?.examSynonyms ?? []), ...(passage5Entry?.examSynonyms ?? [])]));
+  const mergedCollocations = Array.from(new Set([...(collocations[headword] ?? []), ...(passage2Entry?.collocations ?? []), ...(passage1Entry?.collocations ?? []), ...(passage3Entry?.collocations ?? []), ...(passage4Entry?.collocations ?? []), ...(passage5Entry?.collocations ?? []), ...(translationEntry?.collocations ?? [])]));
+  const mergedMeanings = Array.from(new Set([...(otherMeanings[headword] ?? []), ...(passage2Entry?.otherMeanings ?? []), ...(passage1Entry?.otherMeanings ?? []), ...(passage3Entry?.otherMeanings ?? []), ...(passage4Entry?.otherMeanings ?? []), ...(passage5Entry?.otherMeanings ?? []), ...(translationEntry?.otherMeanings ?? [])]));
+  const mergedFamily = Array.from(new Set([...(wordFamily[headword] ?? []), ...(passage2Entry?.wordFamily ?? []), ...(passage1Entry?.wordFamily ?? []), ...(passage3Entry?.wordFamily ?? []), ...(passage4Entry?.wordFamily ?? []), ...(passage5Entry?.wordFamily ?? []), ...(translationEntry?.wordFamily ?? [])]));
+  const mergedConfusions = Array.from(new Set([...(confusions[headword] ?? []), ...(passage2Entry?.confusions ?? []), ...(passage1Entry?.confusions ?? []), ...(passage3Entry?.confusions ?? []), ...(passage4Entry?.confusions ?? []), ...(passage5Entry?.confusions ?? []), ...(translationEntry?.confusions ?? [])]));
+  const mergedSpecialForms = Array.from(new Set([...(specialForms[headword] ?? []), ...(passage2Entry?.specialForms ?? []), ...(passage1Entry?.specialForms ?? []), ...(passage3Entry?.specialForms ?? []), ...(passage4Entry?.specialForms ?? []), ...(passage5Entry?.specialForms ?? []), ...(translationEntry?.specialForms ?? [])]));
+  const mergedExamSynonyms = Array.from(new Set([...(examSynonyms[headword] ?? []), ...(passage2Entry?.examSynonyms ?? []), ...(passage1Entry?.examSynonyms ?? []), ...(passage3Entry?.examSynonyms ?? []), ...(passage4Entry?.examSynonyms ?? []), ...(passage5Entry?.examSynonyms ?? []), ...(translationEntry?.examSynonyms ?? [])]));
   return {
     headword,
     partOfSpeech: pos,

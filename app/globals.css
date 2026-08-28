@@ -1205,6 +1205,195 @@ button {
   flex: 0 0 auto;
 }
 
+.translation-test-section {
+  margin-top: 20px;
+}
+
+.translation-test-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.translation-test-heading > div {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.translation-test-heading span {
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.translation-test-heading strong {
+  color: #778180;
+  font-size: 12px;
+}
+
+.translation-task-list {
+  display: grid;
+  gap: 14px;
+}
+
+.translation-task {
+  padding: clamp(16px, 2.5vw, 22px);
+  border: 1px solid #daddd5;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.64);
+}
+
+.translation-task.is-submitted {
+  border-color: #9cc9b2;
+}
+
+.translation-task-source {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr);
+  gap: 11px;
+  align-items: flex-start;
+}
+
+.translation-task-number {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border-radius: 7px;
+  background: #24484a;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.translation-task-source p {
+  margin: 1px 0 0;
+  color: #354a4b;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 16px;
+  line-height: 1.72;
+}
+
+.translation-answer-label {
+  display: grid;
+  gap: 7px;
+  margin-top: 15px;
+}
+
+.translation-answer-label > span,
+.translation-answer-comparison > span {
+  color: #687777;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.translation-answer-label textarea {
+  min-height: 96px;
+  resize: vertical;
+  background: #fffefb;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.translation-task-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+
+.translation-result {
+  display: grid;
+  gap: 10px;
+  margin-top: 16px;
+  padding-top: 15px;
+  border-top: 1px dashed #cdd3cc;
+}
+
+.translation-answer-comparison {
+  padding: 11px 12px;
+  border-left: 3px solid #6d9690;
+  background: #f0f5f2;
+}
+
+.translation-answer-comparison.is-reference {
+  border-left-color: #c49b43;
+  background: #fff6df;
+}
+
+.translation-answer-comparison p {
+  margin: 5px 0 0;
+  color: #405150;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.translation-locating {
+  display: flex;
+  gap: 7px;
+  padding: 9px 10px;
+  border-radius: 7px;
+  background: #edf2ec;
+  color: #385b58;
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.translation-locating svg {
+  width: 14px;
+  flex: 0 0 auto;
+}
+
+.translation-locating p {
+  margin: 0;
+}
+
+.translation-analysis {
+  overflow: hidden;
+  border: 1px solid #dce1da;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.58);
+}
+
+.translation-analysis > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 38px;
+  padding: 8px 10px;
+  color: #3e5b5a;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  list-style: none;
+}
+
+.translation-analysis > summary::-webkit-details-marker {
+  display: none;
+}
+
+.translation-analysis > summary svg {
+  width: 14px;
+  color: #71908a;
+  transition: transform 160ms ease;
+}
+
+.translation-analysis[open] > summary {
+  border-bottom: 1px solid #e2e6e0;
+}
+
+.translation-analysis[open] > summary svg {
+  transform: rotate(180deg);
+}
+
+.translation-analysis-body {
+  display: grid;
+  gap: 9px;
+  padding: 10px;
+}
+
 .question-analysis-panel {
   display: grid;
   gap: 8px;
@@ -2731,6 +2920,9 @@ button.reference-row.is-linked:focus-visible {
 
   .analysis-grid,
   .translation-block,
+  .translation-test-heading,
+  .translation-test-heading > div,
+  .translation-task-source,
   .test-toolbar,
   .question-grid,
   .question-analysis-columns,
@@ -2742,6 +2934,24 @@ button.reference-row.is-linked:focus-visible {
   .translation-block > div + div {
     border-top: 1px solid #dfddd3;
     border-left: 0;
+  }
+
+  .translation-test-heading {
+    align-items: flex-start;
+  }
+
+  .translation-test-heading > div {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .translation-task-actions {
+    justify-content: stretch;
+  }
+
+  .translation-task-actions button {
+    width: 100%;
   }
 
   .question-translation-block > div + div {

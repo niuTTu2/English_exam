@@ -191,8 +191,37 @@ test("提交答案后的题目分析完整且英文词可追溯", () => {
     }
   }
 
+  const translationArticle = data.articleContents.translation;
+  assert.ok(translationArticle, "translation 内容对象不存在");
+  assert.equal(translationArticle.translationTasks?.length, translationArticle.sentences.length, "英译汉任务必须与句子一一对应");
+  for (const task of translationArticle.translationTasks ?? []) {
+    assert.ok(Number.isInteger(task.id), `英译汉任务 ${task.id} 的 ID 无效`);
+    assert.ok(translationArticle.sentences.some((sentence) => sentence.id === task.sentenceId), `英译汉任务 ${task.id} 定位句不存在`);
+    requireText(task.prompt, `translationTask[${task.id}].prompt`);
+    requireText(task.source, `translationTask[${task.id}].source`);
+    requireText(task.answer, `translationTask[${task.id}].answer`);
+    requireText(task.locating, `translationTask[${task.id}].locating`);
+    assert.equal(task.source, task.analysis.text, `英译汉任务 ${task.id} 的 source 必须等于 analysis.text`);
+    requireSentenceAnalysis(task.analysis, `translationTask[${task.id}].analysis`);
+    analysisTextParts.push(
+      task.prompt,
+      task.source,
+      task.answer,
+      task.locating,
+      task.analysis.text,
+      ...task.analysis.chunks.map((chunk) => chunk.text),
+      task.analysis.trunk,
+      ...task.analysis.layers.flatMap((layer) => [layer.label, layer.text]),
+      ...task.analysis.grammar,
+      task.analysis.literal,
+      task.analysis.natural,
+      task.analysis.logic,
+      ...(task.analysis.phrases ?? []),
+    );
+  }
+
   const analysisText = analysisTextParts.join(" ");
-  const tokens = [...new Set(analysisText.match(/(?:[A-Za-z]\.){2,}|(?<![0-9])[A-Za-z]+(?:-[A-Za-z]+)?(?:'[A-Za-z]+)?/g) ?? [])];
+  const tokens = [...new Set(analysisText.match(/(?:[A-Za-z]\.){2,}|(?<![0-9])[A-Za-z]+(?:-[A-Za-z]+)?(?:['’][A-Za-z]+)?/g) ?? [])];
   for (const rawToken of tokens) {
     // A/B and A-D are grammar-pattern variables, not vocabulary items.
     if (/^[A-D](?:-[A-D])?$/.test(rawToken)) continue;
@@ -219,7 +248,7 @@ test("正文、题干选项中的全部词形都有有效知识", () => {
     ...allSentences.map((sentence) => sentence.text),
     ...allQuestions.flatMap((question) => [question.prompt, ...question.options.map((option) => option.text)]),
   ].join(" ");
-  const tokens = [...new Set(corpus.toLowerCase().match(/(?:[a-z]\.){2,}|(?<![0-9])[a-z]+(?:-[a-z]+)?(?:'[a-z]+)?/g) ?? [])];
+  const tokens = [...new Set(corpus.toLowerCase().match(/(?:[a-z]\.){2,}|(?<![0-9])[a-z]+(?:-[a-z]+)?(?:['’][a-z]+)?/g) ?? [])];
 
   for (const token of tokens) {
     const guide = lexicon.getLexicalGuide(token);
@@ -269,7 +298,12 @@ test("已就绪文章与目录、题号和稳定 ID 一致", () => {
   assert.deepEqual(readyIds, Object.keys(data.articleContents), "目录中的已就绪文章必须都有完整内容对象");
   for (const article of Object.values(data.articleContents)) {
     assert.ok(article.sentences.length > 0, `${article.id} 缺少正文句子`);
-    assert.ok(article.questions.length > 0, `${article.id} 缺少题目`);
+    if (article.kind === "translation") {
+      assert.equal(article.questions.length, 0, `${article.id} 不应伪装成选择题`);
+      assert.equal(article.translationTasks?.length, article.sentences.length, `${article.id} 翻译任务数量必须与句子一致`);
+    } else {
+      assert.ok(article.questions.length > 0, `${article.id} 缺少题目`);
+    }
     article.sentences.forEach((sentence) => assert.ok(sentence.id.startsWith(`${article.id}-`), `${sentence.id} 未使用文章稳定前缀`));
     article.questions.forEach((question) => assert.ok(article.sentences.some((sentence) => sentence.id === question.sentenceId), `第 ${question.id} 题定位句不属于 ${article.id}`));
   }

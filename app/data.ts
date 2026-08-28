@@ -3,6 +3,7 @@ import { passage2Questions, passage2Sentences } from "./passage-2-data";
 import { passage3Questions, passage3Sentences } from "./passage-3-data";
 import { passage4Questions, passage4Sentences } from "./passage-4-data";
 import { passage5Questions, passage5Sentences } from "./passage-5-data";
+import { translationSentences, translationTasks } from "./translation-data";
 
 export type SyntaxRole =
   | "condition"
@@ -84,15 +85,26 @@ export type QuestionAnalysis = {
   answer?: SentenceAnalysis;
 };
 
+export type TranslationTask = {
+  id: number;
+  sentenceId: string;
+  prompt: string;
+  source: string;
+  answer: string;
+  locating: string;
+  analysis: SentenceAnalysis;
+};
+
 export type ArticleContent = {
-  id: "cloze" | "p1" | "p2" | "p3" | "p4" | "p5";
+  id: "cloze" | "p1" | "p2" | "p3" | "p4" | "p5" | "translation";
   label: string;
   badge: string;
   title: string;
   description: string;
-  kind: "cloze" | "reading";
+  kind: "cloze" | "reading" | "translation";
   sentences: SentenceAnalysis[];
   questions: Question[];
+  translationTasks?: TranslationTask[];
 };
 
 export const sections = [
@@ -102,7 +114,7 @@ export const sections = [
   { id: "p3", label: "阅读 Passage 3", meta: "13句 · 4题", status: "ready" },
   { id: "p4", label: "阅读 Passage 4", meta: "17句 · 4题", status: "ready" },
   { id: "p5", label: "阅读 Passage 5", meta: "15句 · 4题", status: "ready" },
-  { id: "translation", label: "英译汉", meta: "5句", status: "pending" },
+  { id: "translation", label: "英译汉", meta: "5句", status: "ready" },
 ] as const;
 
 export const sentences: SentenceAnalysis[] = [
@@ -1061,7 +1073,7 @@ export const questions: Question[] = [
   },
 ];
 
-export const articleContents: Record<"cloze" | "p1" | "p2" | "p3" | "p4" | "p5", ArticleContent> = {
+export const articleContents: Record<"cloze" | "p1" | "p2" | "p3" | "p4" | "p5" | "translation", ArticleContent> = {
   cloze: {
     id: "cloze",
     label: "完形填空",
@@ -1122,7 +1134,18 @@ export const articleContents: Record<"cloze" | "p1" | "p2" | "p3" | "p4" | "p5",
     sentences: passage5Sentences,
     questions: passage5Questions,
   },
+  translation: {
+    id: "translation",
+    label: "英译汉",
+    badge: "2000 · 英译汉",
+    title: "现代化进程中的经济与社会压力",
+    description: "逐句拆解英译汉长句，先看结构，再提交自己的译文并对照完整分析。",
+    kind: "translation",
+    sentences: translationSentences,
+    questions: [],
+    translationTasks,
+  },
 };
 
-export const allSentences = [...sentences, ...passage1Sentences, ...passage2Sentences, ...passage3Sentences, ...passage4Sentences, ...passage5Sentences];
+export const allSentences = [...sentences, ...passage1Sentences, ...passage2Sentences, ...passage3Sentences, ...passage4Sentences, ...passage5Sentences, ...translationSentences];
 export const allQuestions = [...questions, ...passage1Questions, ...passage2Questions, ...passage3Questions, ...passage4Questions, ...passage5Questions];

@@ -20,7 +20,7 @@
 | 4 | 阅读 Passage 3 | 已完成 | `docs/change-reports/2000-passage-3.md` |
 | 5 | 阅读 Passage 4 | 已完成 | `docs/change-reports/2000-passage-4.md` |
 | 6 | 阅读 Passage 5 | 已完成 | `docs/change-reports/2000-passage-5.md` |
-| 7 | 英译汉 | 待精审 | — |
+| 7 | 英译汉 | 已完成 | `docs/change-reports/2000-translation.md` |
 
 ## 2001—2010 年
 

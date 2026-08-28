@@ -62,6 +62,7 @@ import {
   type SentenceAnalysis,
   type Question,
   type SyntaxRole,
+  type TranslationTask,
   type VocabEntry,
 } from "./data";
 import {
@@ -122,6 +123,8 @@ type PersistedStudyState = {
   sentenceNotes: Record<string, string>;
   sentenceMarks: string[];
   answers: Record<number, string>;
+  translationAnswers: Record<string, string>;
+  submittedTranslationTasks: Record<string, boolean>;
   submitted: boolean;
   activeSection?: ArticleId;
   submittedSections?: Record<string, boolean>;
@@ -187,7 +190,7 @@ const corpusText = [
 const corpusTokens = tokenizeWords(corpusText);
 
 function tokenizeWords(text: string) {
-  return text.match(/(?:[a-z]\.){2,}|(?<![0-9])[a-z]+(?:-[a-z]+)?(?:'[a-z]+)?/g) ?? [];
+  return text.match(/(?:[a-z]\.){2,}|(?<![0-9])[a-z]+(?:-[a-z]+)?(?:['’][a-z]+)?/g) ?? [];
 }
 
 const optionLookup = new Map(
@@ -477,6 +480,10 @@ function roleClass(role: SyntaxRole) {
   return `syntax-chunk syntax-${role}`;
 }
 
+function translationAnswerKey(articleId: ArticleId, taskId: number) {
+  return `${articleId}:${taskId}`;
+}
+
 export default function StudyApp() {
   const [view, setView] = useState<AppView>("study");
   const [activeSection, setActiveSection] = useState<ArticleId>("cloze");
@@ -490,6 +497,8 @@ export default function StudyApp() {
   const [sentenceNotes, setSentenceNotes] = useState<Record<string, string>>({});
   const [sentenceMarks, setSentenceMarks] = useState<Set<string>>(new Set());
   const [answers, setAnswers] = useState<Record<number, string>>({});
+  const [translationAnswers, setTranslationAnswers] = useState<Record<string, string>>({});
+  const [submittedTranslationTasks, setSubmittedTranslationTasks] = useState<Record<string, boolean>>({});
   const [submittedSections, setSubmittedSections] = useState<Record<string, boolean>>({});
   const [revealTiming, setRevealTiming] = useState<RevealTiming>("article");
   const [unlockedTerms, setUnlockedTerms] = useState<Set<string>>(new Set());
@@ -519,6 +528,7 @@ export default function StudyApp() {
   const activeArticle = articleContents[activeSection];
   const sentences = activeArticle.sentences;
   const questions = activeArticle.questions;
+  const translationTasks = activeArticle.translationTasks ?? [];
   const submitted = Boolean(submittedSections[activeSection]);
   const selectedTermArticle = selectedTerm
     ? sentenceArticle.get(selectedTerm.sentenceId) ?? activeArticle
@@ -549,6 +559,8 @@ export default function StudyApp() {
     if (snapshot.sentenceNotes) setSentenceNotes(snapshot.sentenceNotes);
     if (Array.isArray(snapshot.sentenceMarks)) setSentenceMarks(new Set(snapshot.sentenceMarks));
     if (snapshot.answers) setAnswers(snapshot.answers);
+    if (snapshot.translationAnswers) setTranslationAnswers(snapshot.translationAnswers);
+    if (snapshot.submittedTranslationTasks) setSubmittedTranslationTasks(snapshot.submittedTranslationTasks);
     if (snapshot.activeSection && snapshot.activeSection in articleContents) setActiveSection(snapshot.activeSection);
     if (snapshot.submittedSections) setSubmittedSections(snapshot.submittedSections);
     else if (snapshot.submitted) setSubmittedSections({ cloze: true });
@@ -626,6 +638,8 @@ export default function StudyApp() {
     sentenceNotes,
     sentenceMarks: Array.from(sentenceMarks),
     answers,
+    translationAnswers,
+    submittedTranslationTasks,
     submitted: Boolean(submittedSections.cloze),
     activeSection,
     submittedSections,
@@ -634,7 +648,7 @@ export default function StudyApp() {
     lists,
     listItems,
     reviewFilter,
-  }), [activeSection, answers, expanded, listItems, lists, marks, revealTiming, reviewFilter, reviewSchedule, sentenceMarks, sentenceNotes, submittedSections, termNotes, termRatings, timerMode]);
+  }), [activeSection, answers, expanded, listItems, lists, marks, revealTiming, reviewFilter, reviewSchedule, sentenceMarks, sentenceNotes, submittedSections, submittedTranslationTasks, termNotes, termRatings, timerMode, translationAnswers]);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -673,6 +687,9 @@ export default function StudyApp() {
   const studiedCount = sentences.filter((sentence) => expanded.has(sentence.id)).length;
   const studiedProgress = Math.round((studiedCount / sentences.length) * 100);
   const selectedAnswers = questions.filter((question) => Boolean(answers[question.id])).length;
+  const submittedTranslationCount = translationTasks.filter((task) => (
+    submittedTranslationTasks[translationAnswerKey(activeArticle.id, task.id)]
+  )).length;
   const correctAnswers = submitted
     ? questions.filter((question) => answers[question.id] === question.answer).length
     : 0;
@@ -807,15 +824,40 @@ export default function StudyApp() {
   }
 
   function resetTest() {
-    setAnswers((current) => {
-      const next = { ...current };
-      questions.forEach((question) => delete next[question.id]);
-      return next;
-    });
+    if (activeArticle.kind === "translation") {
+      setTranslationAnswers((current) => {
+        const next = { ...current };
+        translationTasks.forEach((task) => delete next[translationAnswerKey(activeArticle.id, task.id)]);
+        return next;
+      });
+      setSubmittedTranslationTasks((current) => {
+        const next = { ...current };
+        translationTasks.forEach((task) => delete next[translationAnswerKey(activeArticle.id, task.id)]);
+        return next;
+      });
+    } else {
+      setAnswers((current) => {
+        const next = { ...current };
+        questions.forEach((question) => delete next[question.id]);
+        return next;
+      });
+    }
     setSubmittedSections((current) => ({ ...current, [activeSection]: false }));
     setTimerSeconds(0);
     setTimerRunning(false);
     setUnlockedTerms(new Set());
+  }
+
+  function submitTranslationTask(task: TranslationTask) {
+    const taskKey = translationAnswerKey(activeArticle.id, task.id);
+    const completesArticle = translationTasks.every((item) => (
+      item.id === task.id || submittedTranslationTasks[translationAnswerKey(activeArticle.id, item.id)]
+    ));
+    setSubmittedTranslationTasks((current) => ({ ...current, [taskKey]: true }));
+    if (completesArticle) {
+      setSubmittedSections((current) => ({ ...current, [activeSection]: true }));
+      setTimerRunning(false);
+    }
   }
 
   function selectArticle(id: ArticleId) {
@@ -907,13 +949,16 @@ export default function StudyApp() {
     setAccountOpen(false);
   }
 
-  const termIsLocked = useMemo(() => {
+  const termIsLocked = (() => {
     if (!selectedTerm || view !== "test") return false;
     if (revealTiming === "instant") return false;
-    if (submitted) return false;
+    const submittedTranslationSentence = activeArticle.kind === "translation" && (activeArticle.translationTasks ?? []).some((task) => (
+      task.sentenceId === selectedTerm.sentenceId && submittedTranslationTasks[translationAnswerKey(activeArticle.id, task.id)]
+    ));
+    if (submitted || submittedTranslationSentence) return false;
     if (revealTiming === "sentence" && unlockedTerms.has(selectedTerm.key)) return false;
     return true;
-  }, [revealTiming, selectedTerm, submitted, unlockedTerms, view]);
+  })();
 
   return (
     <div className="study-shell">
@@ -1109,89 +1154,118 @@ export default function StudyApp() {
               <div className="test-instruction">
                 <Flag />
                 <p><strong>模拟考场：</strong>{activeArticle.kind === "cloze"
-                  ? "正文只保留真正的第 1–10 空，不再显示额外句子序号。"
-                  : "先限时默读全文，再完成第 11–14 题；不提前显示逐句讲解。"} 点选项字母作答；词汇讲解按你的设置解锁。</p>
+                  ? "正文只保留真正的第 1–10 空，不再显示额外句子序号。点选项字母作答；词汇讲解按你的设置解锁。"
+                  : activeArticle.kind === "translation"
+                    ? "逐句完成英译汉。提交本句后即可对照参考译文与完整句读，五句全部提交后本篇完成。"
+                    : "先限时默读全文，再完成第 11–14 题；不提前显示逐句讲解。点选项字母作答；词汇讲解按你的设置解锁。"}</p>
               </div>
 
-              <div className="test-passage">
-                {sentences.map((sentence) => (
-                  <article key={sentence.id} className="test-sentence" aria-label={`原文第 ${sentence.number} 句`}>
-                    <p>{renderInteractiveText(sentence.testText ?? sentence.text, sentence.phrases, sentence.id, openTerm, false)}</p>
-                  </article>
-                ))}
-              </div>
+              {activeArticle.kind === "translation" ? (
+                <section className="translation-test-section">
+                  <div className="translation-test-heading">
+                    <div><span>英译汉</span><strong>{submittedTranslationCount}/{translationTasks.length} 句已提交</strong></div>
+                    {submitted && <Badge className="score-badge">本篇已完成</Badge>}
+                  </div>
+                  <div className="translation-task-list">
+                    {translationTasks.map((task) => {
+                      const taskKey = translationAnswerKey(activeArticle.id, task.id);
+                      return (
+                        <TranslationTestTask
+                          key={taskKey}
+                          task={task}
+                          answer={translationAnswers[taskKey] ?? ""}
+                          submitted={Boolean(submittedTranslationTasks[taskKey])}
+                          onAnswer={(value) => setTranslationAnswers((current) => ({ ...current, [taskKey]: value }))}
+                          onSubmit={() => submitTranslationTask(task)}
+                          onTerm={openTerm}
+                        />
+                      );
+                    })}
+                  </div>
+                </section>
+              ) : (
+                <>
+                  <div className="test-passage">
+                    {sentences.map((sentence) => (
+                      <article key={sentence.id} className="test-sentence" aria-label={`原文第 ${sentence.number} 句`}>
+                        <p>{renderInteractiveText(sentence.testText ?? sentence.text, sentence.phrases, sentence.id, openTerm, false)}</p>
+                      </article>
+                    ))}
+                  </div>
 
-              <section className="question-section">
-                <div className="question-heading">
-                  <div><span>{activeArticle.kind === "cloze" ? "完形选择" : "阅读选择"}</span><strong>{selectedAnswers}/{questions.length} 已作答</strong></div>
-                  {submitted && <Badge className="score-badge">{correctAnswers}/{questions.length}</Badge>}
-                </div>
-                <div className="question-grid">
-                  {questions.map((question) => (
-                    <article key={question.id} className="question-card">
-                      <div className="question-prompt">
-                        <span>{question.id}</span>
-                        <p>{renderWords(question.prompt, question.sentenceId, openTerm, `question-${question.id}`)}</p>
-                      </div>
-                      <div className="option-list">
-                        {question.options.map((option) => {
-                          const selected = answers[question.id] === option.key;
-                          const correct = submitted && option.key === question.answer;
-                          const wrong = submitted && selected && option.key !== question.answer;
-                          return (
-                            <div key={option.key} className={`option-row ${selected ? "is-selected" : ""} ${correct ? "is-correct" : ""} ${wrong ? "is-wrong" : ""}`}>
-                              <button
-                                type="button"
-                                className="option-choice"
-                                onClick={() => !submitted && setAnswers((current) => ({ ...current, [question.id]: option.key }))}
-                                aria-label={`选择 ${option.key} ${option.text}`}
-                              >
-                                <span>{option.key}</span>{correct && <Check />}
-                              </button>
-                              <div className="option-terms">
-                                {renderWords(option.text, question.sentenceId, openTerm, `option-${question.id}-${option.key}`)}
-                                {option.text.includes(" ") && getPhraseKnowledge(option.text) && (
+                  <section className="question-section">
+                    <div className="question-heading">
+                      <div><span>{activeArticle.kind === "cloze" ? "完形选择" : "阅读选择"}</span><strong>{selectedAnswers}/{questions.length} 已作答</strong></div>
+                      {submitted && <Badge className="score-badge">{correctAnswers}/{questions.length}</Badge>}
+                    </div>
+                    <div className="question-grid">
+                      {questions.map((question) => (
+                        <article key={question.id} className="question-card">
+                          <div className="question-prompt">
+                            <span>{question.id}</span>
+                            <p>{renderWords(question.prompt, question.sentenceId, openTerm, `question-${question.id}`)}</p>
+                          </div>
+                          <div className="option-list">
+                            {question.options.map((option) => {
+                              const selected = answers[question.id] === option.key;
+                              const correct = submitted && option.key === question.answer;
+                              const wrong = submitted && selected && option.key !== question.answer;
+                              return (
+                                <div key={option.key} className={`option-row ${selected ? "is-selected" : ""} ${correct ? "is-correct" : ""} ${wrong ? "is-wrong" : ""}`}>
                                   <button
                                     type="button"
-                                    className="phrase-action option-phrase-action"
-                                    onClick={() => openTerm(option.text, question.sentenceId, true)}
-                                    aria-label={`查看词组 ${option.text}`}
-                                  >词组</button>
-                                )}
-                              </div>
+                                    className="option-choice"
+                                    onClick={() => !submitted && setAnswers((current) => ({ ...current, [question.id]: option.key }))}
+                                    aria-label={`选择 ${option.key} ${option.text}`}
+                                  >
+                                    <span>{option.key}</span>{correct && <Check />}
+                                  </button>
+                                  <div className="option-terms">
+                                    {renderWords(option.text, question.sentenceId, openTerm, `option-${question.id}-${option.key}`)}
+                                    {option.text.includes(" ") && getPhraseKnowledge(option.text) && (
+                                      <button
+                                        type="button"
+                                        className="phrase-action option-phrase-action"
+                                        onClick={() => openTerm(option.text, question.sentenceId, true)}
+                                        aria-label={`查看词组 ${option.text}`}
+                                      >词组</button>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                          {submitted && (
+                            <div className="answer-analysis">
+                              <p className="locating"><Layers3 /><span>{renderWords(question.locating, question.sentenceId, openTerm, `locating-${question.id}`)}</span></p>
+                              {question.options.map((option) => (
+                                <p key={option.key}>
+                                  <strong>{option.key}</strong>
+                                  {renderWords(question.explanations[option.key], question.sentenceId, openTerm, `explanation-${question.id}-${option.key}`)}
+                                </p>
+                              ))}
                             </div>
-                          );
-                        })}
-                      </div>
-                      {submitted && (
-                        <div className="answer-analysis">
-                          <p className="locating"><Layers3 /><span>{renderWords(question.locating, question.sentenceId, openTerm, `locating-${question.id}`)}</span></p>
-                          {question.options.map((option) => (
-                            <p key={option.key}>
-                              <strong>{option.key}</strong>
-                              {renderWords(question.explanations[option.key], question.sentenceId, openTerm, `explanation-${question.id}-${option.key}`)}
-                            </p>
-                          ))}
-                        </div>
-                      )}
-                      {submitted && question.analysis && (
-                        <QuestionAnalysisPanel question={question} onTerm={openTerm} />
-                      )}
-                    </article>
-                  ))}
-                </div>
-                <Button
-                  size="lg"
-                  className="submit-test"
-                  disabled={selectedAnswers !== questions.length || submitted}
-                  onClick={() => {
-                    setSubmittedSections((current) => ({ ...current, [activeSection]: true }));
-                    setTimerRunning(false);
-                  }}
-                >
-                  <CircleCheck />{submitted ? "已提交" : `提交答案（${selectedAnswers}/${questions.length}）`}
-                </Button>
-              </section>
+                          )}
+                          {submitted && question.analysis && (
+                            <QuestionAnalysisPanel question={question} onTerm={openTerm} />
+                          )}
+                        </article>
+                      ))}
+                    </div>
+                    <Button
+                      size="lg"
+                      className="submit-test"
+                      disabled={selectedAnswers !== questions.length || submitted}
+                      onClick={() => {
+                        setSubmittedSections((current) => ({ ...current, [activeSection]: true }));
+                        setTimerRunning(false);
+                      }}
+                    >
+                      <CircleCheck />{submitted ? "已提交" : `提交答案（${selectedAnswers}/${questions.length}）`}
+                    </Button>
+                  </section>
+                </>
+              )}
             </TabsContent>
 
             <TabsContent value="review" className="mode-content">
@@ -1600,7 +1674,7 @@ function YearVocabularyPanel({
 
       <div className="vocabulary-scope-note">
         <Badge variant="outline">2000 · 已精审内容</Badge>
-        <p>当前覆盖完形与阅读 Passage 1 的正文、题干和选项；其余文章精审导入后会自动加入本表。</p>
+        <p>当前覆盖已导入文章的正文、题干、选项和英译汉句子；新增精审内容会自动加入本表。</p>
         <strong>{resultCount} 个结果</strong>
       </div>
 
@@ -1730,6 +1804,96 @@ function QuestionAnalysisPanel({
         />
       )}
     </section>
+  );
+}
+
+function TranslationTestTask({
+  task,
+  answer,
+  submitted,
+  onAnswer,
+  onSubmit,
+  onTerm,
+}: {
+  task: TranslationTask;
+  answer: string;
+  submitted: boolean;
+  onAnswer: (value: string) => void;
+  onSubmit: () => void;
+  onTerm: (label: string, sentenceId: string, isPhrase?: boolean) => void;
+}) {
+  return (
+    <article className={`translation-task ${submitted ? "is-submitted" : ""}`}>
+      <div className="translation-task-source">
+        <span className="translation-task-number">{task.id}</span>
+        <p>{renderInteractiveText(task.source, task.analysis.phrases, task.sentenceId, onTerm, false)}</p>
+      </div>
+      <label className="translation-answer-label" htmlFor={`translation-answer-${task.id}`}>
+        <span>我的译文</span>
+        <Textarea
+          id={`translation-answer-${task.id}`}
+          value={answer}
+          onChange={(event) => onAnswer(event.target.value)}
+          placeholder="输入你的中文译文……"
+          disabled={submitted}
+          rows={3}
+        />
+      </label>
+      <div className="translation-task-actions">
+        <Button
+          type="button"
+          size="sm"
+          onClick={onSubmit}
+          disabled={!answer.trim() || submitted}
+        >
+          <CircleCheck />{submitted ? "本句已提交" : "提交本句"}
+        </Button>
+      </div>
+      {submitted && (
+        <div className="translation-result">
+          <div className="translation-answer-comparison">
+            <span>你的译文</span>
+            <p>{answer}</p>
+          </div>
+          <div className="translation-answer-comparison is-reference">
+            <span>参考译文</span>
+            <p>{task.answer}</p>
+          </div>
+          <div className="translation-locating"><Layers3 /><p>{task.locating}</p></div>
+          <details className="translation-analysis" open>
+            <summary>查看完整句读 <ChevronDown /></summary>
+            <div className="translation-analysis-body">
+              <div className="question-colored-sentence">
+                {task.analysis.chunks.map((chunk, index) => (
+                  <span key={`${task.analysis.id}-translation-chunk-${index}`} className={roleClass(chunk.role)}>
+                    {renderInteractiveText(chunk.text, task.analysis.phrases, task.sentenceId, onTerm, true)}
+                  </span>
+                ))}
+              </div>
+              <div className="question-trunk-row"><span>主干</span><strong>{renderWords(task.analysis.trunk, task.sentenceId, onTerm, `${task.analysis.id}-translation-trunk`)}</strong></div>
+              <div className="question-analysis-columns">
+                <section>
+                  <h4><Layers3 />逐层拆解</h4>
+                  <ol className="question-layer-list">
+                    {task.analysis.layers.map((layer, index) => (
+                      <li key={`${task.analysis.id}-translation-layer-${index}`}><span>{index + 1}</span><p><strong>{layer.label}</strong>{renderWords(layer.text, task.sentenceId, onTerm, `${task.analysis.id}-translation-layer-${index}`)}</p></li>
+                    ))}
+                  </ol>
+                </section>
+                <section>
+                  <h4><Sparkles />语法提醒</h4>
+                  <ul className="question-grammar-list">
+                    {task.analysis.grammar.map((item, index) => <li key={`${task.analysis.id}-translation-grammar-${index}`}>{renderWords(item, task.sentenceId, onTerm, `${task.analysis.id}-translation-grammar-${index}`)}</li>)}
+                  </ul>
+                </section>
+              </div>
+              <div className="question-translation-block"><div><span>结构直译</span><p>{task.analysis.literal}</p></div><div><span>通顺译文</span><p>{task.analysis.natural}</p></div></div>
+              <div className="question-logic-note"><Brain /><p><strong>句间逻辑</strong>{renderWords(task.analysis.logic, task.sentenceId, onTerm, `${task.analysis.id}-translation-logic`)}</p></div>
+            </div>
+          </details>
+        </div>
+      )}
+    </article>
   );
 }
 
@@ -2154,9 +2318,9 @@ function renderWords(
       ];
     }
 
-    const parts = segment.split(/((?:[A-Za-z]\.){2,}|(?<![0-9])[A-Za-z]+(?:-[A-Za-z]+)?(?:'[A-Za-z]+)?)/g);
+    const parts = segment.split(/((?:[A-Za-z]\.){2,}|(?<![0-9])[A-Za-z]+(?:-[A-Za-z]+)?(?:['’][A-Za-z]+)?)/g);
     return parts.map((part, index) => {
-      if (!/^(?:[A-Za-z]\.){2,}$|^[A-Za-z]+(?:-[A-Za-z]+)?(?:'[A-Za-z]+)?$/.test(part)) return part;
+      if (!/^(?:[A-Za-z]\.){2,}$|^[A-Za-z]+(?:-[A-Za-z]+)?(?:['’][A-Za-z]+)?$/.test(part)) return part;
       return (
         <button
           type="button"

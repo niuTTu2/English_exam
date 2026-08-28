@@ -34,6 +34,13 @@ import {
   passage5PhraseGuides,
   passage5WordKnowledge,
 } from "./passage-5-knowledge";
+import {
+  translationCollocationGlosses,
+  translationFamilyGlosses,
+  translationPhraseAliases,
+  translationPhraseGuides,
+  translationWordKnowledge,
+} from "./translation-knowledge";
 
 type Structure = NonNullable<VocabEntry["structures"]>[number];
 type ReferenceDetail = NonNullable<VocabEntry["collocationDetails"]>[number];
@@ -626,6 +633,16 @@ function mergePhrase(existing: PhraseKnowledge | undefined, incoming: PhraseKnow
   };
 }
 
+function mergeWordKnowledge(existing: WordKnowledge | undefined, incoming: WordKnowledge): WordKnowledge {
+  if (!existing) return incoming;
+  return {
+    ...existing,
+    ...incoming,
+    structures: Array.from(new Map([...existing.structures, ...incoming.structures].map((item) => [item.pattern, item])).values()),
+    pitfalls: Array.from(new Set([...(existing.pitfalls ?? []), ...(incoming.pitfalls ?? [])])),
+  };
+}
+
 for (const [key, value] of Object.entries(passage3PhraseGuides)) {
   phraseGuides[key] = mergePhrase(phraseGuides[key], value);
 }
@@ -633,15 +650,7 @@ Object.assign(phraseAliases, passage3PhraseAliases);
 Object.assign(collocationGlosses, passage3CollocationGlosses);
 Object.assign(familyGlosses, passage3FamilyGlosses);
 for (const [key, value] of Object.entries(passage3WordKnowledge)) {
-  const existing = wordKnowledge[key];
-  wordKnowledge[key] = existing
-    ? {
-        ...existing,
-        ...value,
-        structures: Array.from(new Map([...existing.structures, ...value.structures].map((item) => [item.pattern, item])).values()),
-        pitfalls: Array.from(new Set([...(existing.pitfalls ?? []), ...(value.pitfalls ?? [])])),
-      }
-    : value;
+  wordKnowledge[key] = mergeWordKnowledge(wordKnowledge[key], value);
 }
 
 // Passage 4 adds new contexts while retaining the curated entries already
@@ -653,15 +662,7 @@ Object.assign(phraseAliases, passage4PhraseAliases);
 Object.assign(collocationGlosses, passage4CollocationGlosses);
 Object.assign(familyGlosses, passage4FamilyGlosses);
 for (const [key, value] of Object.entries(passage4WordKnowledge)) {
-  const existing = wordKnowledge[key];
-  wordKnowledge[key] = existing
-    ? {
-        ...existing,
-        ...value,
-        structures: Array.from(new Map([...existing.structures, ...value.structures].map((item) => [item.pattern, item])).values()),
-        pitfalls: Array.from(new Set([...(existing.pitfalls ?? []), ...(value.pitfalls ?? [])])),
-      }
-    : value;
+  wordKnowledge[key] = mergeWordKnowledge(wordKnowledge[key], value);
 }
 
 // Passage 5 adds new contexts while retaining the curated entries already
@@ -673,15 +674,19 @@ Object.assign(phraseAliases, passage5PhraseAliases);
 Object.assign(collocationGlosses, passage5CollocationGlosses);
 Object.assign(familyGlosses, passage5FamilyGlosses);
 for (const [key, value] of Object.entries(passage5WordKnowledge)) {
-  const existing = wordKnowledge[key];
-  wordKnowledge[key] = existing
-    ? {
-        ...existing,
-        ...value,
-        structures: Array.from(new Map([...existing.structures, ...value.structures].map((item) => [item.pattern, item])).values()),
-        pitfalls: Array.from(new Set([...(existing.pitfalls ?? []), ...(value.pitfalls ?? [])])),
-      }
-    : value;
+  wordKnowledge[key] = mergeWordKnowledge(wordKnowledge[key], value);
+}
+
+// Translation adds sentence-specific structures while reusing the stable
+// entries already established by the reading passages.
+for (const [key, value] of Object.entries(translationPhraseGuides)) {
+  phraseGuides[key] = mergePhrase(phraseGuides[key], value);
+}
+Object.assign(phraseAliases, translationPhraseAliases);
+Object.assign(collocationGlosses, translationCollocationGlosses);
+Object.assign(familyGlosses, translationFamilyGlosses);
+for (const [key, value] of Object.entries(translationWordKnowledge)) {
+  wordKnowledge[key] = mergeWordKnowledge(wordKnowledge[key], value);
 }
 
 function normalized(value: string) {
