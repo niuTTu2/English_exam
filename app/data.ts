@@ -2,6 +2,7 @@ import { passage1Questions, passage1Sentences } from "./passage-1-data";
 import { passage2Questions, passage2Sentences } from "./passage-2-data";
 import { passage3Questions, passage3Sentences } from "./passage-3-data";
 import { passage4Questions, passage4Sentences } from "./passage-4-data";
+import { passage5Questions, passage5Sentences } from "./passage-5-data";
 
 export type SyntaxRole =
   | "condition"
@@ -84,7 +85,7 @@ export type QuestionAnalysis = {
 };
 
 export type ArticleContent = {
-  id: "cloze" | "p1" | "p2" | "p3" | "p4";
+  id: "cloze" | "p1" | "p2" | "p3" | "p4" | "p5";
   label: string;
   badge: string;
   title: string;
@@ -100,7 +101,7 @@ export const sections = [
   { id: "p2", label: "阅读 Passage 2", meta: "27句 · 4题", status: "ready" },
   { id: "p3", label: "阅读 Passage 3", meta: "13句 · 4题", status: "ready" },
   { id: "p4", label: "阅读 Passage 4", meta: "17句 · 4题", status: "ready" },
-  { id: "p5", label: "阅读 Passage 5", meta: "4题", status: "pending" },
+  { id: "p5", label: "阅读 Passage 5", meta: "15句 · 4题", status: "ready" },
   { id: "translation", label: "英译汉", meta: "5句", status: "pending" },
 ] as const;
 
@@ -1060,7 +1061,7 @@ export const questions: Question[] = [
   },
 ];
 
-export const articleContents: Record<"cloze" | "p1" | "p2" | "p3" | "p4", ArticleContent> = {
+export const articleContents: Record<"cloze" | "p1" | "p2" | "p3" | "p4" | "p5", ArticleContent> = {
   cloze: {
     id: "cloze",
     label: "完形填空",
@@ -1111,7 +1112,17 @@ export const articleContents: Record<"cloze" | "p1" | "p2" | "p3" | "p4", Articl
     sentences: passage4Sentences,
     questions: passage4Questions,
   },
+  p5: {
+    id: "p5",
+    label: "阅读 Passage 5",
+    badge: "2000 · 阅读 Passage 5",
+    title: "抱负被隐藏之后的社会讽刺",
+    description: "沿着抱负的回报、受教育者的虚伪和公开表达的收缩，逐句理解作者的批评。",
+    kind: "reading",
+    sentences: passage5Sentences,
+    questions: passage5Questions,
+  },
 };
 
-export const allSentences = [...sentences, ...passage1Sentences, ...passage2Sentences, ...passage3Sentences, ...passage4Sentences];
-export const allQuestions = [...questions, ...passage1Questions, ...passage2Questions, ...passage3Questions, ...passage4Questions];
+export const allSentences = [...sentences, ...passage1Sentences, ...passage2Sentences, ...passage3Sentences, ...passage4Sentences, ...passage5Sentences];
+export const allQuestions = [...questions, ...passage1Questions, ...passage2Questions, ...passage3Questions, ...passage4Questions, ...passage5Questions];

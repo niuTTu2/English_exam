@@ -163,7 +163,7 @@ test("所有预标词组都有规范原型、中文义和语法", () => {
 
 test("提交答案后的题目分析完整且英文词可追溯", () => {
   const analysisTextParts = [];
-  for (const articleId of ["p3", "p4"]) {
+  for (const articleId of ["p3", "p4", "p5"]) {
     const article = data.articleContents[articleId];
     assert.ok(article, `${articleId} 内容对象不存在`);
     for (const question of article.questions) {
