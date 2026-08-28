@@ -750,9 +750,57 @@ button {
   background: rgba(255, 255, 255, 0.72);
 }
 
+.beginner-step-disclosure {
+  padding: 0;
+  overflow: hidden;
+}
+
+.beginner-step-summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto 16px;
+  align-items: center;
+  gap: 9px;
+  padding: 12px 13px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.beginner-step-summary::-webkit-details-marker,
+.beginner-item-summary::-webkit-details-marker {
+  display: none;
+}
+
+.beginner-step-summary > svg,
+.beginner-item-summary > svg {
+  width: 15px;
+  color: #66817d;
+  transition: transform 160ms ease;
+}
+
+.beginner-step-disclosure[open] > .beginner-step-summary > svg,
+.beginner-component-card[open] > .beginner-item-summary > svg,
+.beginner-clause-card[open] > .beginner-item-summary > svg {
+  transform: rotate(180deg);
+}
+
+.beginner-step-content {
+  padding: 0 12px 12px;
+  border-top: 1px solid #e5eae5;
+}
+
+.beginner-step-content > .beginner-component-list,
+.beginner-step-content > .beginner-clause-list,
+.beginner-step-content > .no-clause-note {
+  margin-top: 10px;
+}
+
 .beginner-step-title {
   justify-content: flex-start;
   margin-bottom: 10px;
+}
+
+.beginner-step-summary .beginner-step-title {
+  margin-bottom: 0;
 }
 
 .beginner-step-title > span {
@@ -810,6 +858,22 @@ button {
   background: #fff;
 }
 
+details.beginner-component-card,
+details.beginner-clause-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.beginner-item-summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 16px;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 11px;
+  cursor: pointer;
+  list-style: none;
+}
+
 .beginner-component-labels {
   justify-content: flex-start;
   flex-wrap: wrap;
@@ -822,8 +886,7 @@ button {
   font-size: 10px;
 }
 
-.beginner-component-card > strong,
-.beginner-clause-card > strong,
+.beginner-item-summary strong,
 .beginner-layer-list article > strong {
   display: block;
   margin-top: 7px;
@@ -836,7 +899,18 @@ button {
 .beginner-component-card dl {
   display: grid;
   gap: 6px;
-  margin: 9px 0 0;
+  margin: 0;
+  padding: 6px 11px 11px;
+}
+
+.beginner-clickable-source {
+  margin: 0;
+  padding: 9px 11px 0;
+  border-top: 1px solid #edf0eb;
+  color: #314c4b;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 13px;
+  line-height: 1.55;
 }
 
 .beginner-component-card dl > div {
@@ -930,7 +1004,7 @@ button {
 .beginner-clause-skeleton {
   display: grid;
   gap: 5px;
-  margin-top: 9px;
+  margin-top: 0;
   padding: 9px 10px;
   border-radius: 7px;
   background: #f2eff8;
@@ -942,11 +1016,22 @@ button {
   gap: 6px;
 }
 
-.beginner-clause-card > p {
+.beginner-clause-detail {
+  padding: 9px 11px 11px;
+  border-top: 1px solid #edf0eb;
+}
+
+.beginner-clause-detail .beginner-clickable-source {
+  margin-bottom: 8px;
+  padding: 0;
+  border-top: 0;
+}
+
+.beginner-clause-detail > p {
   margin-top: 7px;
 }
 
-.beginner-clause-card > p b {
+.beginner-clause-detail > p b {
   color: #3d5654;
 }
 
@@ -969,8 +1054,7 @@ button {
   background: #f4f8f4;
 }
 
-.beginner-syntax-panel.is-compact .beginner-component-card,
-.beginner-syntax-panel.is-compact .beginner-clause-card {
+.beginner-syntax-panel.is-compact .beginner-item-summary {
   padding: 9px 10px;
 }
 

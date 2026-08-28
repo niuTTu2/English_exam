@@ -26,6 +26,7 @@ const allSentences = data.allSentences ?? data.sentences;
 const allQuestions = data.allQuestions ?? data.questions;
 
 const forbiddenPlaceholder = /(待精审|后续补充|持续补充|结合本句成分理解|暂无资料|将在所属真题精审|该词未出现在)/;
+const forbiddenSyntaxPlaceholder = /(从引导词后找动作发出者|找带时态、情态或语态变化的动词|再看谓语后是否需要宾语|结合相邻主干判断)/;
 const normalizeText = (value) => value.replace(/\s+/g, " ").trim();
 
 function requireText(value, label) {
@@ -109,6 +110,19 @@ function requireBeginnerSyntax(analysis, label) {
   if (!syntaxGuide.isLegacySyntaxSentence(analysis.id)) {
     assert.ok(analysis.beginnerSyntax, `${label} 是新增句子，必须人工填写 beginnerSyntax，不能只依赖旧数据推导`);
   }
+  if (analysis.beginnerSyntax) {
+    const source = analysis.text.toLowerCase();
+    const sourceTokens = source.match(/[a-z]+(?:-[a-z]+)?/g) ?? [];
+    const trunkTokens = analysis.trunk.toLowerCase().match(/[a-z]+(?:-[a-z]+)?/g) ?? [];
+    assert.ok(trunkTokens.every((token) => sourceTokens.includes(token)), `${label}.trunk 加入了原句中不存在的英文词`);
+    for (const [index, component] of analysis.beginnerSyntax.components.entries()) {
+      assert.ok(source.includes(component.text.toLowerCase()), `${label}.beginner.components[${index}] 不是原句中的准确片段`);
+    }
+    for (const [index, clause] of analysis.beginnerSyntax.clauses.entries()) {
+      assert.ok(source.includes(clause.text.toLowerCase()), `${label}.beginner.clauses[${index}] 不是原句中的准确从句边界`);
+      assert.doesNotMatch(JSON.stringify(clause), forbiddenSyntaxPlaceholder, `${label}.beginner.clauses[${index}] 仍是自动占位提示`);
+    }
+  }
 }
 
 test("句子分析完整并可还原原文", () => {
@@ -155,6 +169,14 @@ test("零基础句法能识别词组作用、时间地点状语和从句内部�
 
   const placeGuide = syntaxGuide.buildBeginnerSyntaxGuide(allSentences.find((sentence) => sentence.id === "p4-s14"));
   assert.ok(placeGuide.components.some((item) => item.text.includes("In Japan") && item.function.includes("地点")), "In Japan 应识别为地点状语");
+
+  const complexSentence = allSentences.find((sentence) => sentence.id === "p5-s9");
+  const complexGuide = syntaxGuide.buildBeginnerSyntaxGuide(complexSentence);
+  assert.equal(complexSentence.trunk, "we are treated to fine hypocritical spectacles", "复杂句主干必须保留原文，不能改写释义");
+  assert.deepEqual(complexGuide.clauses.map((clause) => clause.marker.split("（")[0]), ["which", "who", "whose"], "p5-s9 必须完整拆出三个定语从句");
+  assert.equal(complexGuide.clauses[0].subject, "which（= fine hypocritical spectacles）");
+  assert.equal(complexGuide.clauses[1].objectOrComplement, "his meals（宾语）；in three-star restaurants（地点状语）");
+  assert.equal(complexGuide.clauses[2].subject, "whose own children（= the journalist's own children）");
 });
 
 test("自测空格、题号和答案严格对应", () => {

@@ -1890,24 +1890,26 @@ function TranslationTestTask({
                   </span>
                 ))}
               </div>
-              <div className="question-trunk-row"><span>主干</span><strong>{renderWords(task.analysis.trunk, task.sentenceId, onTerm, `${task.analysis.id}-translation-trunk`)}</strong></div>
               <BeginnerSyntaxPanel analysis={task.analysis} sentenceId={task.sentenceId} onTerm={onTerm} compact />
-              <div className="question-analysis-columns">
-                <section>
-                  <h4><Layers3 />逐层拆解</h4>
-                  <ol className="question-layer-list">
-                    {task.analysis.layers.map((layer, index) => (
-                      <li key={`${task.analysis.id}-translation-layer-${index}`}><span>{index + 1}</span><p><strong>{layer.label}</strong>{renderWords(layer.text, task.sentenceId, onTerm, `${task.analysis.id}-translation-layer-${index}`)}</p></li>
-                    ))}
-                  </ol>
-                </section>
-                <section>
-                  <h4><Sparkles />语法提醒</h4>
-                  <ul className="question-grammar-list">
-                    {task.analysis.grammar.map((item, index) => <li key={`${task.analysis.id}-translation-grammar-${index}`}>{renderWords(item, task.sentenceId, onTerm, `${task.analysis.id}-translation-grammar-${index}`)}</li>)}
-                  </ul>
-                </section>
-              </div>
+              <details className="advanced-analysis">
+                <summary>补充：原精审层级与语法规则 <ChevronDown /></summary>
+                <div className="question-analysis-columns">
+                  <section>
+                    <h4><Layers3 />逐层拆解</h4>
+                    <ol className="question-layer-list">
+                      {task.analysis.layers.map((layer, index) => (
+                        <li key={`${task.analysis.id}-translation-layer-${index}`}><span>{index + 1}</span><p><strong>{layer.label}</strong>{renderWords(layer.text, task.sentenceId, onTerm, `${task.analysis.id}-translation-layer-${index}`)}</p></li>
+                      ))}
+                    </ol>
+                  </section>
+                  <section>
+                    <h4><Sparkles />语法提醒</h4>
+                    <ul className="question-grammar-list">
+                      {task.analysis.grammar.map((item, index) => <li key={`${task.analysis.id}-translation-grammar-${index}`}>{renderWords(item, task.sentenceId, onTerm, `${task.analysis.id}-translation-grammar-${index}`)}</li>)}
+                    </ul>
+                  </section>
+                </div>
+              </details>
               <div className="question-translation-block"><div><span>结构直译</span><p>{task.analysis.literal}</p></div><div><span>通顺译文</span><p>{task.analysis.natural}</p></div></div>
               <div className="question-logic-note"><Brain /><p><strong>句间逻辑</strong>{renderWords(task.analysis.logic, task.sentenceId, onTerm, `${task.analysis.id}-translation-logic`)}</p></div>
             </div>
@@ -1951,32 +1953,31 @@ function QuestionAnalysisBlock({
             </span>
           ))}
         </div>
-        <div className="question-trunk-row">
-          <span>主干</span>
-          <strong>{renderWords(analysis.trunk, sentenceId, onTerm, `${analysis.id}-trunk`)}</strong>
-        </div>
         <BeginnerSyntaxPanel analysis={analysis} sentenceId={sentenceId} onTerm={onTerm} compact />
-        <div className="question-analysis-columns">
-          <section>
-            <h4><Layers3 />逐层拆解</h4>
-            <ol className="question-layer-list">
-              {analysis.layers.map((layer, index) => (
-                <li key={`${analysis.id}-layer-${index}`}>
-                  <span>{index + 1}</span>
-                  <p><strong>{layer.label}</strong>{renderWords(layer.text, sentenceId, onTerm, `${analysis.id}-layer-${index}`)}</p>
-                </li>
-              ))}
-            </ol>
-          </section>
-          <section>
-            <h4><Sparkles />语法提醒</h4>
-            <ul className="question-grammar-list">
-              {analysis.grammar.map((item, index) => (
-                <li key={`${analysis.id}-grammar-${index}`}>{renderWords(item, sentenceId, onTerm, `${analysis.id}-grammar-${index}`)}</li>
-              ))}
-            </ul>
-          </section>
-        </div>
+        <details className="advanced-analysis">
+          <summary>补充：原精审层级与语法规则 <ChevronDown /></summary>
+          <div className="question-analysis-columns">
+            <section>
+              <h4><Layers3 />逐层拆解</h4>
+              <ol className="question-layer-list">
+                {analysis.layers.map((layer, index) => (
+                  <li key={`${analysis.id}-layer-${index}`}>
+                    <span>{index + 1}</span>
+                    <p><strong>{layer.label}</strong>{renderWords(layer.text, sentenceId, onTerm, `${analysis.id}-layer-${index}`)}</p>
+                  </li>
+                ))}
+              </ol>
+            </section>
+            <section>
+              <h4><Sparkles />语法提醒</h4>
+              <ul className="question-grammar-list">
+                {analysis.grammar.map((item, index) => (
+                  <li key={`${analysis.id}-grammar-${index}`}>{renderWords(item, sentenceId, onTerm, `${analysis.id}-grammar-${index}`)}</li>
+                ))}
+              </ul>
+            </section>
+          </div>
+        </details>
         <div className="question-translation-block">
           <div><span>结构直译</span><p>{analysis.literal}</p></div>
           <div><span>通顺译文</span><p>{analysis.natural}</p></div>
@@ -2015,61 +2016,87 @@ function BeginnerSyntaxPanel({
         <p className="beginner-trunk">{renderWords(analysis.trunk, sentenceId, onTerm, `beginner-trunk-${analysis.id}`)}</p>
       </div>
 
-      <div className="beginner-step">
-        <div className="beginner-step-title"><span>2</span><div><strong>看每组词共同充当什么成分</strong><small>介词、副词、名词不能脱离它们所在的整组结构</small></div></div>
-        <div className="beginner-component-list">
-          {guide.components.map((component, index) => (
-            <article key={`${analysis.id}-component-${index}`} className="beginner-component-card">
-              <div className="beginner-component-labels">
-                <Badge variant="outline">{component.function}</Badge>
-                <span>{component.form}</span>
-              </div>
-              <strong>{renderWords(component.text, sentenceId, onTerm, `${analysis.id}-component-text-${index}`)}</strong>
-              <dl>
-                <div><dt>作用 / 修饰谁</dt><dd>{component.modifies}</dd></div>
-                <div><dt>怎么理解</dt><dd>{component.explanation}</dd></div>
-              </dl>
-            </article>
-          ))}
+      <details className="beginner-step beginner-step-disclosure">
+        <summary className="beginner-step-summary">
+          <div className="beginner-step-title"><span>2</span><div><strong>成分组合</strong><small>{guide.components.length} 组，按需查看它修饰谁</small></div></div>
+          <Badge variant="outline">{guide.components.length} 组</Badge>
+          <ChevronDown />
+        </summary>
+        <div className="beginner-step-content">
+          <div className="beginner-component-list">
+            {guide.components.map((component, index) => (
+              <details key={`${analysis.id}-component-${index}`} className="beginner-component-card">
+                <summary className="beginner-item-summary">
+                  <div>
+                    <div className="beginner-component-labels">
+                      <Badge variant="outline">{component.function}</Badge>
+                      <span>{component.form}</span>
+                    </div>
+                    <strong>{component.text}</strong>
+                  </div>
+                  <ChevronDown />
+                </summary>
+                <p className="beginner-clickable-source">{renderWords(component.text, sentenceId, onTerm, `${analysis.id}-component-text-${index}`)}</p>
+                <dl>
+                  <div><dt>作用 / 修饰谁</dt><dd>{component.modifies}</dd></div>
+                  <div><dt>怎么理解</dt><dd>{component.explanation}</dd></div>
+                </dl>
+              </details>
+            ))}
+          </div>
+
+          <details className="beginner-layer-details">
+            <summary>继续细分时间、地点、方式等层级 <ChevronDown /></summary>
+            <div className="beginner-layer-list">
+              {guide.layers.map((layer, index) => (
+                <article key={`${analysis.id}-beginner-layer-${index}`}>
+                  <div><Badge variant="outline">{layer.function}</Badge><span>{layer.form}</span></div>
+                  <strong>{layer.english}</strong>
+                  <p>{layer.explanation}</p>
+                  <small>{layer.question} · {layer.modifies}</small>
+                </article>
+              ))}
+            </div>
+          </details>
         </div>
+      </details>
 
-        <details className="beginner-layer-details">
-          <summary>继续细分时间、地点、方式等层级 <ChevronDown /></summary>
-          <div className="beginner-layer-list">
-            {guide.layers.map((layer, index) => (
-              <article key={`${analysis.id}-beginner-layer-${index}`}>
-                <div><Badge variant="outline">{layer.function}</Badge><span>{layer.form}</span></div>
-                <strong>{layer.english}</strong>
-                <p>{layer.explanation}</p>
-                <small>{layer.question} · {layer.modifies}</small>
-              </article>
-            ))}
-          </div>
-        </details>
-      </div>
-
-      <div className="beginner-step">
-        <div className="beginner-step-title"><span>3</span><div><strong>单独拆从句</strong><small>每个从句内部都重新找一遍主语、谓语和宾语 / 补语</small></div></div>
-        {guide.clauses.length > 0 ? (
-          <div className="beginner-clause-list">
-            {guide.clauses.map((clause, index) => (
-              <article key={`${analysis.id}-clause-${index}`} className="beginner-clause-card">
-                <div className="beginner-clause-heading"><Badge>{clause.type}</Badge><span>引导词：{clause.marker}</span></div>
-                <strong>{renderWords(clause.text, sentenceId, onTerm, `${analysis.id}-clause-text-${index}`)}</strong>
-                <div className="beginner-clause-skeleton">
-                  <p><span>从句主语</span>{clause.subject}</p>
-                  <p><span>从句谓语</span>{clause.predicate}</p>
-                  {clause.objectOrComplement && <p><span>宾语 / 补语</span>{clause.objectOrComplement}</p>}
-                </div>
-                <p><b>在主句中：</b>{clause.role}</p>
-                <p><b>翻译顺序：</b>{clause.translationOrder}</p>
-              </article>
-            ))}
-          </div>
-        ) : (
-          <p className="no-clause-note">本句没有需要单独拆解的完整从句；重点看上面的主干和短语组合。</p>
-        )}
-      </div>
+      <details className="beginner-step beginner-step-disclosure">
+        <summary className="beginner-step-summary">
+          <div className="beginner-step-title"><span>3</span><div><strong>从句结构</strong><small>{guide.clauses.length > 0 ? `${guide.clauses.length} 个，从句内部再找主谓宾` : "本句没有完整从句"}</small></div></div>
+          <Badge variant="outline">{guide.clauses.length} 个</Badge>
+          <ChevronDown />
+        </summary>
+        <div className="beginner-step-content">
+          {guide.clauses.length > 0 ? (
+            <div className="beginner-clause-list">
+              {guide.clauses.map((clause, index) => (
+                <details key={`${analysis.id}-clause-${index}`} className="beginner-clause-card">
+                  <summary className="beginner-item-summary">
+                    <div>
+                      <div className="beginner-clause-heading"><Badge>{clause.type}</Badge><span>引导词：{clause.marker}</span></div>
+                      <strong>{clause.text}</strong>
+                    </div>
+                    <ChevronDown />
+                  </summary>
+                  <div className="beginner-clause-detail">
+                    <p className="beginner-clickable-source">{renderWords(clause.text, sentenceId, onTerm, `${analysis.id}-clause-text-${index}`)}</p>
+                    <div className="beginner-clause-skeleton">
+                      <p><span>从句主语</span>{clause.subject}</p>
+                      <p><span>从句谓语</span>{clause.predicate}</p>
+                      {clause.objectOrComplement && <p><span>宾语 / 补语</span>{clause.objectOrComplement}</p>}
+                    </div>
+                    <p><b>在主句中：</b>{clause.role}</p>
+                    <p><b>翻译顺序：</b>{clause.translationOrder}</p>
+                  </div>
+                </details>
+              ))}
+            </div>
+          ) : (
+            <p className="no-clause-note">本句没有需要单独拆解的完整从句；重点看上面的主干和短语组合。</p>
+          )}
+        </div>
+      </details>
     </section>
   );
 }
@@ -2115,11 +2142,6 @@ function StudySentence({
                 {renderInteractiveText(chunk.text, sentence.phrases, sentence.id, onTerm, true)}
               </span>
             ))}
-          </div>
-
-          <div className="trunk-row">
-            <span>主干</span>
-            <strong>{renderWords(sentence.trunk, sentence.id, onTerm, `trunk-${sentence.id}`)}</strong>
           </div>
 
           <BeginnerSyntaxPanel analysis={sentence} sentenceId={sentence.id} onTerm={onTerm} />
