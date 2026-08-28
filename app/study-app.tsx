@@ -523,8 +523,22 @@ export default function StudyApp() {
   const selectedTermArticle = selectedTerm
     ? sentenceArticle.get(selectedTerm.sentenceId) ?? activeArticle
     : activeArticle;
-  const yearWordItems = useMemo(() => buildYearWordItems(), []);
-  const yearPhraseItems = useMemo(() => buildYearPhraseItems(), []);
+  // Building the complete vocabulary resolves every word and occurrence across
+  // the imported corpus. Keep the first study render lightweight and only do
+  // that work when the vocabulary view is actually opened.
+  const yearWordCount = useMemo(() => new Set(corpusTokens.map(lemmaOf)).size, []);
+  const yearPhraseCount = useMemo(() => {
+    const sources = new Set<string>();
+    allSentences.forEach((sentence) => sentence.phrases.forEach((source) => sources.add(source.toLowerCase())));
+    allQuestions.forEach((question) => question.options.forEach((option) => {
+      if (option.text.includes(" ") && getPhraseKnowledge(option.text)) sources.add(option.text.toLowerCase());
+    }));
+    return sources.size;
+  }, []);
+  const yearWordItems = useMemo(() => (view === "vocabulary" ? buildYearWordItems() : []), [view]);
+  const yearPhraseItems = useMemo(() => (view === "vocabulary" ? buildYearPhraseItems() : []), [view]);
+  const visibleYearWordCount = view === "vocabulary" ? yearWordItems.length : yearWordCount;
+  const visibleYearPhraseCount = view === "vocabulary" ? yearPhraseItems.length : yearPhraseCount;
 
   function applySnapshot(snapshot: Partial<PersistedStudyState>) {
     if (Array.isArray(snapshot.expanded)) setExpanded(new Set(snapshot.expanded));
@@ -973,7 +987,7 @@ export default function StudyApp() {
             <span className="section-icon"><BookOpenText /></span>
             <span className="section-copy">
               <strong>本年词汇总表</strong>
-              <small>{yearWordItems.length} 个单词 · {yearPhraseItems.length} 个词组</small>
+              <small>{visibleYearWordCount} 个单词 · {visibleYearPhraseCount} 个词组</small>
             </span>
             <ChevronRight />
           </button>
@@ -993,8 +1007,8 @@ export default function StudyApp() {
                 </div>
                 <div className="vocabulary-heading-stat">
                   <span>当前已收录</span>
-                  <strong>{yearWordItems.length + yearPhraseItems.length}</strong>
-                  <small>{yearWordItems.length} 词 · {yearPhraseItems.length} 词组</small>
+                  <strong>{visibleYearWordCount + visibleYearPhraseCount}</strong>
+                  <small>{visibleYearWordCount} 词 · {visibleYearPhraseCount} 词组</small>
                 </div>
               </>
             ) : (
