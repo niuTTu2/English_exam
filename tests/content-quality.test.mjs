@@ -22,12 +22,22 @@ const knowledge = await vite.ssrLoadModule("/app/knowledge-base.ts");
 const contextualVocabulary = await vite.ssrLoadModule("/app/contextual-vocabulary.ts");
 const answerKeys = await vite.ssrLoadModule("/app/verified-answer-keys.ts");
 const syntaxGuide = await vite.ssrLoadModule("/app/syntax-guide.ts");
+const verifiedSyntax = await vite.ssrLoadModule("/app/verified-syntax-2000.ts");
 const allSentences = data.allSentences ?? data.sentences;
 const allQuestions = data.allQuestions ?? data.questions;
 
 const forbiddenPlaceholder = /(待精审|后续补充|持续补充|结合本句成分理解|暂无资料|将在所属真题精审|该词未出现在)/;
 const forbiddenSyntaxPlaceholder = /(从引导词后找动作发出者|找带时态、情态或语态变化的动词|再看谓语后是否需要宾语|结合相邻主干判断)/;
 const normalizeText = (value) => value.replace(/\s+/g, " ").trim();
+const englishTokens = (value) => value.toLowerCase().match(/[a-z]+(?:-[a-z]+)?(?:['’][a-z]+)?/g) ?? [];
+
+function isTokenSubsequence(shorter, longer) {
+  let cursor = 0;
+  for (const token of longer) {
+    if (token.replaceAll("’", "'") === shorter[cursor]?.replaceAll("’", "'")) cursor += 1;
+  }
+  return cursor === shorter.length;
+}
 
 function requireText(value, label) {
   assert.equal(typeof value, "string", `${label} 必须是字符串`);
@@ -79,8 +89,13 @@ function requireSentenceAnalysis(analysis, label) {
 
 function requireBeginnerSyntax(analysis, label) {
   const guide = syntaxGuide.buildBeginnerSyntaxGuide(analysis);
+  const source = analysis.text.toLowerCase();
   assert.equal(guide.components.length, analysis.beginnerSyntax?.components?.length ?? analysis.chunks.length, `${label} 的零基础成分数量错误`);
   assert.equal(guide.layers.length, analysis.layers.length, `${label} 的细分层级数量错误`);
+  assert.ok(
+    isTokenSubsequence(englishTokens(analysis.trunk), englishTokens(analysis.text)),
+    `${label}.trunk 必须由原句按原顺序删减得到，不能换词、补词或改写释义`,
+  );
 
   for (const [index, component] of guide.components.entries()) {
     requireText(component.text, `${label}.beginner.components[${index}].text`);
@@ -88,6 +103,12 @@ function requireBeginnerSyntax(analysis, label) {
     requireText(component.function, `${label}.beginner.components[${index}].function`);
     requireText(component.modifies, `${label}.beginner.components[${index}].modifies`);
     requireText(component.explanation, `${label}.beginner.components[${index}].explanation`);
+    assert.doesNotMatch(
+      component.function,
+      /^(补充说明成分|宾语 \/ 表语|句子成分|状语 \/ 背景成分|补足说明成分)$/,
+      `${label}.beginner.components[${index}] 仍使用空泛成分标签`,
+    );
+    assert.ok(source.includes(component.text.toLowerCase()), `${label}.beginner.components[${index}] 不是原句中的准确片段`);
   }
   for (const [index, layer] of guide.layers.entries()) {
     requireText(layer.label, `${label}.beginner.layers[${index}].label`);
@@ -106,22 +127,17 @@ function requireBeginnerSyntax(analysis, label) {
     requireText(clause.subject, `${label}.beginner.clauses[${index}].subject`);
     requireText(clause.predicate, `${label}.beginner.clauses[${index}].predicate`);
     requireText(clause.translationOrder, `${label}.beginner.clauses[${index}].translationOrder`);
+    assert.ok(source.includes(clause.text.toLowerCase()), `${label}.beginner.clauses[${index}] 不是原句中的准确从句边界`);
+    assert.doesNotMatch(JSON.stringify(clause), forbiddenSyntaxPlaceholder, `${label}.beginner.clauses[${index}] 仍是自动占位提示`);
   }
   if (!syntaxGuide.isLegacySyntaxSentence(analysis.id)) {
     assert.ok(analysis.beginnerSyntax, `${label} 是新增句子，必须人工填写 beginnerSyntax，不能只依赖旧数据推导`);
   }
-  if (analysis.beginnerSyntax) {
-    const source = analysis.text.toLowerCase();
-    const sourceTokens = source.match(/[a-z]+(?:-[a-z]+)?/g) ?? [];
-    const trunkTokens = analysis.trunk.toLowerCase().match(/[a-z]+(?:-[a-z]+)?/g) ?? [];
-    assert.ok(trunkTokens.every((token) => sourceTokens.includes(token)), `${label}.trunk 加入了原句中不存在的英文词`);
-    for (const [index, component] of analysis.beginnerSyntax.components.entries()) {
-      assert.ok(source.includes(component.text.toLowerCase()), `${label}.beginner.components[${index}] 不是原句中的准确片段`);
-    }
-    for (const [index, clause] of analysis.beginnerSyntax.clauses.entries()) {
-      assert.ok(source.includes(clause.text.toLowerCase()), `${label}.beginner.clauses[${index}] 不是原句中的准确从句边界`);
-      assert.doesNotMatch(JSON.stringify(clause), forbiddenSyntaxPlaceholder, `${label}.beginner.clauses[${index}] 仍是自动占位提示`);
-    }
+  if (syntaxGuide.isLegacySyntaxSentence(analysis.id) && guide.clauses.length > 0 && !analysis.beginnerSyntax) {
+    assert.ok(
+      Object.hasOwn(verifiedSyntax.verifiedClauses2000, analysis.id),
+      `${label} 的从句必须进入 2000 年人工复核表，不能由界面自动猜测`,
+    );
   }
 }
 
@@ -177,6 +193,46 @@ test("零基础句法能识别词组作用、时间地点状语和从句内部�
   assert.equal(complexGuide.clauses[0].subject, "which（= fine hypocritical spectacles）");
   assert.equal(complexGuide.clauses[1].objectOrComplement, "his meals（宾语）；in three-star restaurants（地点状语）");
   assert.equal(complexGuide.clauses[2].subject, "whose own children（= the journalist's own children）");
+});
+
+test("2000 年全部复杂句的从句数量与人工审计基线一致", () => {
+  const expected = {
+    "cloze-s1": 1, "cloze-s3": 1, "cloze-s4": 1, "cloze-s6": 1,
+    "p1-s1": 1, "p1-s2": 1, "p1-s4": 1, "p1-s5": 2, "p1-s13": 3,
+    "p1-s16": 2, "p1-s20": 1, "p1-s24": 1, "p1-s25": 1,
+    "p2-s4": 1, "p2-s5": 2, "p2-s10": 1, "p2-s17": 1, "p2-s19": 1,
+    "p2-s20": 1, "p2-s24": 1, "p2-s25": 1, "p2-s27": 2,
+    "p3-s1": 4, "p3-s2": 3, "p3-s3": 1, "p3-s6": 1, "p3-s8": 1,
+    "p3-s10": 3, "p3-s11": 1, "p3-s12": 1,
+    "p4-s1": 1, "p4-s3": 1, "p4-s4": 1, "p4-s5": 1, "p4-s6": 1,
+    "p4-s7": 1, "p4-s8": 1, "p4-s12": 3, "p4-s14": 2, "p4-s15": 1,
+    "p4-s16": 1, "p4-s17": 1,
+    "p5-s1": 1, "p5-s2": 2, "p5-s3": 1, "p5-s4": 2, "p5-s5": 1,
+    "p5-s6": 1, "p5-s7": 1, "p5-s8": 4, "p5-s9": 3, "p5-s11": 1,
+    "p5-s12": 1, "p5-s13": 3, "p5-s14": 2, "p5-s15": 1,
+    "translation-s32": 2, "translation-s33": 1, "translation-s34": 2,
+    "p3-q20-prompt": 1, "p3-q20-answer": 1,
+    "p3-q21-prompt": 1, "p3-q21-answer": 1,
+    "p3-q22-prompt": 1, "p3-q22-answer": 1,
+    "p4-q26-answer": 1, "p5-q27-answer": 1, "p5-q28-prompt": 1,
+    "p5-q29-prompt": 1, "p5-q30-prompt": 1,
+  };
+  const analyses = [...allSentences];
+  for (const question of allQuestions) {
+    analyses.push(
+      question.analysis?.prompt,
+      ...Object.values(question.analysis?.options ?? {}),
+      question.analysis?.answer,
+    );
+  }
+  const actual = Object.fromEntries(
+    analyses
+      .filter(Boolean)
+      .map((analysis) => [analysis.id, syntaxGuide.buildBeginnerSyntaxGuide(analysis).clauses.length])
+      .filter(([, count]) => count > 0),
+  );
+  assert.deepEqual(actual, expected, "复杂句的从句有遗漏、误增或边界审计未同步");
+  assert.equal(Object.values(actual).reduce((sum, count) => sum + count, 0), 98, "人工审计从句总数应保持为 98");
 });
 
 test("自测空格、题号和答案严格对应", () => {

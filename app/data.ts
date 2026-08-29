@@ -5,6 +5,7 @@ import { passage4Questions, passage4Sentences } from "./passage-4-data";
 import { passage5Questions, passage5Sentences } from "./passage-5-data";
 import { translationSentences, translationTasks } from "./translation-data";
 import type { ContextualSubstitution } from "./contextual-vocabulary";
+import { verifiedTrunks2000 } from "./verified-syntax-2000";
 
 export type SyntaxRole =
   | "condition"
@@ -1151,6 +1152,40 @@ export const questions: Question[] = [
   },
 ];
 
+function applyVerifiedSyntax<T extends SentenceAnalysis>(analysis: T): T {
+  const trunk = verifiedTrunks2000[analysis.id];
+  return trunk && trunk !== analysis.trunk ? { ...analysis, trunk } : analysis;
+}
+
+function applyVerifiedQuestion(question: Question): Question {
+  if (!question.analysis) return question;
+  return {
+    ...question,
+    analysis: {
+      prompt: question.analysis.prompt ? applyVerifiedSyntax(question.analysis.prompt) : undefined,
+      options: question.analysis.options
+        ? Object.fromEntries(Object.entries(question.analysis.options).map(([key, value]) => [key, value ? applyVerifiedSyntax(value) : value]))
+        : undefined,
+      answer: question.analysis.answer ? applyVerifiedSyntax(question.analysis.answer) : undefined,
+    },
+  };
+}
+
+const verifiedClozeSentences = sentences.map(applyVerifiedSyntax);
+const verifiedPassage1Sentences = passage1Sentences.map(applyVerifiedSyntax);
+const verifiedPassage2Sentences = passage2Sentences.map(applyVerifiedSyntax);
+const verifiedPassage3Sentences = passage3Sentences.map(applyVerifiedSyntax);
+const verifiedPassage4Sentences = passage4Sentences.map(applyVerifiedSyntax);
+const verifiedPassage5Sentences = passage5Sentences.map(applyVerifiedSyntax);
+const verifiedTranslationSentences = translationSentences.map(applyVerifiedSyntax);
+const verifiedClozeQuestions = questions.map(applyVerifiedQuestion);
+const verifiedPassage1Questions = passage1Questions.map(applyVerifiedQuestion);
+const verifiedPassage2Questions = passage2Questions.map(applyVerifiedQuestion);
+const verifiedPassage3Questions = passage3Questions.map(applyVerifiedQuestion);
+const verifiedPassage4Questions = passage4Questions.map(applyVerifiedQuestion);
+const verifiedPassage5Questions = passage5Questions.map(applyVerifiedQuestion);
+const verifiedTranslationTasks = translationTasks.map((task) => ({ ...task, analysis: applyVerifiedSyntax(task.analysis) }));
+
 export const articleContents: Record<"cloze" | "p1" | "p2" | "p3" | "p4" | "p5" | "translation", ArticleContent> = {
   cloze: {
     id: "cloze",
@@ -1159,8 +1194,8 @@ export const articleContents: Record<"cloze" | "p1" | "p2" | "p3" | "p4" | "p5" 
     title: "从“生产剩余”读懂一段经济逻辑",
     description: "先读原句。展开句子看结构，再点带下划线的单词或词组。",
     kind: "cloze",
-    sentences,
-    questions,
+    sentences: verifiedClozeSentences,
+    questions: verifiedClozeQuestions,
   },
   p1: {
     id: "p1",
@@ -1169,8 +1204,8 @@ export const articleContents: Record<"cloze" | "p1" | "p2" | "p3" | "p4" | "p5" 
     title: "成功、危机与美国工业的重新调整",
     description: "沿着“战后优势—竞争冲击—信心危机—经济复苏”的主线逐句精读。",
     kind: "reading",
-    sentences: passage1Sentences,
-    questions: passage1Questions,
+    sentences: verifiedPassage1Sentences,
+    questions: verifiedPassage1Questions,
   },
   p2: {
     id: "p2",
@@ -1179,8 +1214,8 @@ export const articleContents: Record<"cloze" | "p1" | "p2" | "p3" | "p4" | "p5" 
     title: "人类进化为何走向停滞",
     description: "沿着生存率、生育差异和技术替代自然选择的线索，逐句理解人类身体为何几乎没有改变。",
     kind: "reading",
-    sentences: passage2Sentences,
-    questions: passage2Questions,
+    sentences: verifiedPassage2Sentences,
+    questions: verifiedPassage2Questions,
   },
   p3: {
     id: "p3",
@@ -1189,8 +1224,8 @@ export const articleContents: Record<"cloze" | "p1" | "p2" | "p3" | "p4" | "p5" 
     title: "未来主义诗歌与新的表达方式",
     description: "沿着未来主义者的理论、形式实验及作者的保留评价，逐句理解这篇评论。",
     kind: "reading",
-    sentences: passage3Sentences,
-    questions: passage3Questions,
+    sentences: verifiedPassage3Sentences,
+    questions: verifiedPassage3Questions,
   },
   p4: {
     id: "p4",
@@ -1199,8 +1234,8 @@ export const articleContents: Record<"cloze" | "p1" | "p2" | "p3" | "p4" | "p5" 
     title: "日本社会工作伦理的变化与生活压力",
     description: "沿着工作价值、教育方式和城市生活压力的线索，逐句理解日本社会观念的转变。",
     kind: "reading",
-    sentences: passage4Sentences,
-    questions: passage4Questions,
+    sentences: verifiedPassage4Sentences,
+    questions: verifiedPassage4Questions,
   },
   p5: {
     id: "p5",
@@ -1209,8 +1244,8 @@ export const articleContents: Record<"cloze" | "p1" | "p2" | "p3" | "p4" | "p5" 
     title: "抱负被隐藏之后的社会讽刺",
     description: "沿着抱负的回报、受教育者的虚伪和公开表达的收缩，逐句理解作者的批评。",
     kind: "reading",
-    sentences: passage5Sentences,
-    questions: passage5Questions,
+    sentences: verifiedPassage5Sentences,
+    questions: verifiedPassage5Questions,
   },
   translation: {
     id: "translation",
@@ -1219,11 +1254,11 @@ export const articleContents: Record<"cloze" | "p1" | "p2" | "p3" | "p4" | "p5" 
     title: "现代化进程中的经济与社会压力",
     description: "逐句拆解英译汉长句，先看结构，再提交自己的译文并对照完整分析。",
     kind: "translation",
-    sentences: translationSentences,
+    sentences: verifiedTranslationSentences,
     questions: [],
-    translationTasks,
+    translationTasks: verifiedTranslationTasks,
   },
 };
 
-export const allSentences = [...sentences, ...passage1Sentences, ...passage2Sentences, ...passage3Sentences, ...passage4Sentences, ...passage5Sentences, ...translationSentences];
-export const allQuestions = [...questions, ...passage1Questions, ...passage2Questions, ...passage3Questions, ...passage4Questions, ...passage5Questions];
+export const allSentences = [...verifiedClozeSentences, ...verifiedPassage1Sentences, ...verifiedPassage2Sentences, ...verifiedPassage3Sentences, ...verifiedPassage4Sentences, ...verifiedPassage5Sentences, ...verifiedTranslationSentences];
+export const allQuestions = [...verifiedClozeQuestions, ...verifiedPassage1Questions, ...verifiedPassage2Questions, ...verifiedPassage3Questions, ...verifiedPassage4Questions, ...verifiedPassage5Questions];

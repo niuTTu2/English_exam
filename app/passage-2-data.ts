@@ -596,8 +596,7 @@ export const passage2Sentences: SentenceAnalysis[] = [
     chunks: [
       { text: "We", role: "subject" },
       { text: " did not evolve", role: "predicate" },
-      { text: ", because machines and society", role: "condition" },
-      { text: " did it for us.", role: "predicate" },
+      { text: ", because machines and society did it for us.", role: "condition" },
     ],
     trunk: "We did not evolve because machines and society did it for us",
     layers: [
