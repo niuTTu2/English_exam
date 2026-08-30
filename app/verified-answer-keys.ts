@@ -93,3 +93,28 @@ export const verifiedAnswerSources2001Passage1 = [
     url: "https://edu.sina.com.cn/kaoyan/2015-06-25/1707475039.shtml",
   },
 ] as const;
+
+export const verifiedAnswerKey2001Passage2: Record<number, "A" | "B" | "C" | "D"> = {
+  25: "C",
+  26: "A",
+  27: "D",
+  28: "A",
+};
+
+export const verifiedAnswerSources2001Passage2 = [
+  {
+    range: "Passage 2 篇章结构与中心论证",
+    label: "中国研究生招生信息网 / 阅读真题结构与内容分析（2001）",
+    url: "https://yz.chsi.com.cn/kyzx/jyxd/200612/20061208/724533.html",
+  },
+  {
+    range: "25—28（含逐项解析）",
+    label: "2001 年考研英语真题答案及解析 / Passage 2",
+    url: "https://www.scribd.com/document/798814124/2001%E5%B9%B4%E8%80%83%E7%A0%94%E8%8B%B1%E8%AF%AD%E7%9C%9F%E9%A2%98%E7%AD%94%E6%A1%88%E5%8F%8A%E8%A7%A3%E6%9E%90",
+  },
+  {
+    range: "Passage 2 原文与校勘",
+    label: "新浪教育 / 2001 年 Passage 2",
+    url: "https://edu.sina.com.cn/kaoyan/2008-09-18/1050164911.shtml",
+  },
+] as const;

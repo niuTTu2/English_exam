@@ -55,6 +55,13 @@ import {
   passage2001P1PhraseGuides,
   passage2001P1WordKnowledge,
 } from "./2001-passage-1-knowledge";
+import {
+  passage2001P2CollocationGlosses,
+  passage2001P2FamilyGlosses,
+  passage2001P2PhraseAliases,
+  passage2001P2PhraseGuides,
+  passage2001P2WordKnowledge,
+} from "./2001-passage-2-knowledge";
 
 type Structure = NonNullable<VocabEntry["structures"]>[number];
 type ReferenceDetail = NonNullable<VocabEntry["collocationDetails"]>[number];
@@ -743,6 +750,18 @@ Object.assign(phraseAliases, passage2001P1PhraseAliases);
 Object.assign(collocationGlosses, passage2001P1CollocationGlosses);
 Object.assign(familyGlosses, passage2001P1FamilyGlosses);
 for (const [key, value] of Object.entries(passage2001P1WordKnowledge)) {
+  wordKnowledge[key] = mergeWordKnowledge(wordKnowledge[key], value);
+}
+
+// 2001 Passage 2 extends repeated vocabulary with the digital-divide,
+// infrastructure and foreign-investment contexts while keeping stable keys.
+for (const [key, value] of Object.entries(passage2001P2PhraseGuides)) {
+  phraseGuides[key] = mergePhrase(phraseGuides[key], value);
+}
+Object.assign(phraseAliases, passage2001P2PhraseAliases);
+Object.assign(collocationGlosses, passage2001P2CollocationGlosses);
+Object.assign(familyGlosses, passage2001P2FamilyGlosses);
+for (const [key, value] of Object.entries(passage2001P2WordKnowledge)) {
   wordKnowledge[key] = mergeWordKnowledge(wordKnowledge[key], value);
 }
 

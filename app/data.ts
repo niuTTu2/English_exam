@@ -6,6 +6,7 @@ import { passage5Questions, passage5Sentences } from "./passage-5-data";
 import { translationSentences, translationTasks } from "./translation-data";
 import { cloze2001Questions, cloze2001Sentences } from "./2001-cloze-data";
 import { passage2001P1Questions, passage2001P1Sentences } from "./2001-passage-1-data";
+import { passage2001P2Questions, passage2001P2Sentences } from "./2001-passage-2-data";
 import type { ContextualSubstitution } from "./contextual-vocabulary";
 import { verifiedTrunks2000 } from "./verified-syntax-2000";
 
@@ -156,7 +157,7 @@ export const sectionsByYear = {
   2001: [
     { id: "2001-cloze", label: "完形填空", meta: "9句 · 20题", status: "ready" },
     { id: "2001-p1", label: "阅读 Passage 1", meta: "16句 · 4题", status: "ready" },
-    { id: "2001-p2", label: "阅读 Passage 2", meta: "待精审", status: "pending" },
+    { id: "2001-p2", label: "阅读 Passage 2", meta: "27句 · 4题", status: "ready" },
     { id: "2001-p3", label: "阅读 Passage 3", meta: "待精审", status: "pending" },
     { id: "2001-p4", label: "阅读 Passage 4", meta: "待精审", status: "pending" },
     { id: "2001-p5", label: "阅读 Passage 5", meta: "待精审", status: "pending" },
@@ -1317,7 +1318,19 @@ export const articleContents: Record<string, ArticleContent> = {
     sentences: passage2001P1Sentences,
     questions: passage2001P1Questions,
   },
+  "2001-p2": {
+    id: "2001-p2",
+    year: 2001,
+    sectionId: "p2",
+    label: "阅读 Passage 2",
+    badge: "2001 · 阅读 Passage 2",
+    title: "数字鸿沟、互联网减贫与外国投资",
+    description: "沿着‘数字鸿沟—商业与政府扩网—互联网减贫—外资建设电子基础设施’的因果链，理解作者为何主张在监管下利用外国资本。",
+    kind: "reading",
+    sentences: passage2001P2Sentences,
+    questions: passage2001P2Questions,
+  },
 };
 
-export const allSentences = [...verifiedClozeSentences, ...verifiedPassage1Sentences, ...verifiedPassage2Sentences, ...verifiedPassage3Sentences, ...verifiedPassage4Sentences, ...verifiedPassage5Sentences, ...verifiedTranslationSentences, ...cloze2001Sentences, ...passage2001P1Sentences];
-export const allQuestions = [...verifiedClozeQuestions, ...verifiedPassage1Questions, ...verifiedPassage2Questions, ...verifiedPassage3Questions, ...verifiedPassage4Questions, ...verifiedPassage5Questions, ...cloze2001Questions, ...passage2001P1Questions];
+export const allSentences = [...verifiedClozeSentences, ...verifiedPassage1Sentences, ...verifiedPassage2Sentences, ...verifiedPassage3Sentences, ...verifiedPassage4Sentences, ...verifiedPassage5Sentences, ...verifiedTranslationSentences, ...cloze2001Sentences, ...passage2001P1Sentences, ...passage2001P2Sentences];
+export const allQuestions = [...verifiedClozeQuestions, ...verifiedPassage1Questions, ...verifiedPassage2Questions, ...verifiedPassage3Questions, ...verifiedPassage4Questions, ...verifiedPassage5Questions, ...cloze2001Questions, ...passage2001P1Questions, ...passage2001P2Questions];

@@ -373,6 +373,76 @@ test("2001 年 Passage 1 的同义替换链接均为完整知识条目", () => {
   }
 });
 
+test("2001 年 Passage 2 原文、句法与答案通过独立门禁", () => {
+  const article = data.articleContents["2001-p2"];
+  assert.ok(article, "2001 年 Passage 2 内容对象不存在");
+  assert.equal(article.sentences.length, 27, "2001 年 Passage 2 必须严格拆为 27 句");
+  assert.equal(article.questions.length, 4, "2001 年 Passage 2 必须包含第 25—28 题");
+  assert.deepEqual(article.sentences.map((sentence) => sentence.number), Array.from({ length: 27 }, (_, index) => index + 1), "2001 年 Passage 2 句号必须连续");
+  assert.deepEqual(article.questions.map((question) => question.number), [25, 26, 27, 28], "原卷显示题号必须为 25—28");
+  assert.equal(Object.keys(answerKeys.verifiedAnswerKey2001Passage2).length, 4, "2001 年 Passage 2 答案清单必须覆盖四题");
+
+  for (const question of article.questions) {
+    assert.equal(
+      question.answer,
+      answerKeys.verifiedAnswerKey2001Passage2[question.number],
+      `2001 年 Passage 2 第 ${question.number} 题答案偏离独立核验清单`,
+    );
+  }
+
+  assert.ok(answerKeys.verifiedAnswerSources2001Passage2.length >= 2, "2001 年 Passage 2 答案必须保留至少两个来源");
+  for (const source of answerKeys.verifiedAnswerSources2001Passage2) {
+    requireText(source.range, "answerSource2001P2.range");
+    requireText(source.label, "answerSource2001P2.label");
+    assert.match(source.url, /^https:\/\//, "2001 年 Passage 2 答案来源必须使用可访问链接");
+  }
+
+  const expectedClauseCounts = {
+    "2001-p2-s4": 2,
+    "2001-p2-s6": 1,
+    "2001-p2-s7": 3,
+    "2001-p2-s8": 1,
+    "2001-p2-s10": 1,
+    "2001-p2-s11": 2,
+    "2001-p2-s13": 1,
+    "2001-p2-s16": 2,
+    "2001-p2-s17": 1,
+    "2001-p2-s18": 1,
+    "2001-p2-s22": 1,
+    "2001-p2-s24": 1,
+    "2001-p2-s25": 2,
+    "2001-p2-s27": 1,
+  };
+  const actualClauseCounts = Object.fromEntries(
+    article.sentences
+      .map((sentence) => [sentence.id, syntaxGuide.buildBeginnerSyntaxGuide(sentence).clauses.length])
+      .filter(([, count]) => count > 0),
+  );
+  assert.deepEqual(actualClauseCounts, expectedClauseCounts, "2001 年 Passage 2 的从句边界或数量有遗漏");
+});
+
+test("2001 年 Passage 2 的同义替换链接均为完整知识条目", () => {
+  const article = data.articleContents["2001-p2"];
+  const contexts = Object.entries(contextualVocabulary.sentenceWordContexts)
+    .filter(([sentenceId]) => sentenceId.startsWith("2001-p2-"));
+  assert.equal(contexts.length, article.sentences.length, "2001 年 Passage 2 每句至少应有一个可靠的本句替换入口");
+
+  for (const [sentenceId, words] of contexts) {
+    assert.ok(article.sentences.some((sentence) => sentence.id === sentenceId), `同义替换指向不存在的句子：${sentenceId}`);
+    for (const context of Object.values(words)) {
+      for (const substitution of context.contextualSubstitutions ?? []) {
+        if (!substitution.target.startsWith("word:")) continue;
+        const target = substitution.target.slice("word:".length);
+        const guide = lexicon.getLexicalGuide(target);
+        requireText(guide.partOfSpeech, `${sentenceId}.${target}.partOfSpeech`);
+        assert.ok(!guide.partOfSpeech.startsWith("word（"), `${sentenceId} 的替换词 ${target} 使用了推测词性`);
+        requireText(guide.contextualMeaning, `${sentenceId}.${target}.contextualMeaning`);
+        requireText(guide.use, `${sentenceId}.${target}.use`);
+      }
+    }
+  }
+});
+
 test("同一词条按文章和句子语境显示本句义与可替换表达", () => {
   const sentenceById = new Map(allSentences.map((sentence) => [sentence.id, sentence]));
 

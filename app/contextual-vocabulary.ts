@@ -1,4 +1,4 @@
-export type ArticleLexiconId = "cloze" | "p1" | "p2" | "p3" | "p4" | "p5" | "translation" | "2001-cloze" | "2001-p1";
+export type ArticleLexiconId = "cloze" | "p1" | "p2" | "p3" | "p4" | "p5" | "translation" | "2001-cloze" | "2001-p1" | "2001-p2";
 
 export type ContextualSubstitution = {
   label: string;
@@ -584,6 +584,391 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
         rewrittenSentence: "In science generally, however, the nineteenth century must be reckoned as the decisive period for this change in the structure of science.",
         nuance: "decisive 更强调决定最终走向；crucial 强调这一时期极其关键，但未必单独决定全部结果。",
         target: "word:decisive",
+      }],
+    },
+  },
+  "2001-p2-s1": {
+    attention: {
+      contextualMeaning: "社会对数字鸿沟问题投入的关注",
+      use: "A great deal of attention 是进行时被动 is being paid 的主语；pay attention to 的对象是 digital divide。",
+      contextualSubstitutions: [{
+        label: "focus",
+        chinese: "关注；注意力焦点",
+        fit: "with-adjustment",
+        rewrittenSentence: "Today, a great deal of focus is being directed to the so-called digital divide—the division of the world into the info (information) rich and the info poor.",
+        nuance: "focus 更强调注意力集中到一个焦点；attention 是更普通的关注。",
+        adjustment: "把 attention is being paid to 改为 focus is being directed to，并把 today 移到句首使表达自然。",
+        target: "word:focus",
+      }],
+    },
+  },
+  "2001-p2-s2": {
+    exist: {
+      contextualMeaning: "数字鸿沟作为现实问题确实存在",
+      use: "does exist 是肯定句的强调谓语，does 后使用 exist 原形。",
+      contextualSubstitutions: [{
+        label: "remain",
+        chinese: "仍然存在",
+        fit: "direct",
+        rewrittenSentence: "And that divide remains today.",
+        nuance: "remain 额外强调从过去延续到现在；does exist 强调当前确实存在。",
+        target: "word:remain",
+      }],
+    },
+  },
+  "2001-p2-s3": {
+    lecture: {
+      contextualMeaning: "就数字鸿沟这一危险发表演讲",
+      use: "lectured about 后接演讲主题，twenty years ago 要求一般过去时。",
+      contextualSubstitutions: [{
+        label: "spoke",
+        chinese: "谈论；发表讲话",
+        fit: "with-adjustment",
+        rewrittenSentence: "My wife and I spoke about this looming danger twenty years ago.",
+        nuance: "spoke about 只表示谈到；lectured about 更明确地表示以演讲或授课形式系统阐述。",
+        adjustment: "speak 使用不规则过去式 spoke；其余结构不变。",
+        target: "word:speak",
+      }],
+    },
+  },
+  "2001-p2-s4": {
+    visible: {
+      contextualMeaning: "在当时容易被观察、认识到的",
+      use: "less visible 是 What 主语从句中的表语，then 是时间状语。",
+      contextualSubstitutions: [{
+        label: "apparent",
+        chinese: "明显的；显而易见的",
+        fit: "direct",
+        rewrittenSentence: "What was less apparent then, however, were the new, positive forces that work against the digital divide.",
+        nuance: "apparent 更强调在认识和判断上明显；visible 可由物理可见引申为容易察觉。",
+        target: "word:apparent",
+      }],
+    },
+  },
+  "2001-p2-s5": {
+    optimistic: {
+      contextualMeaning: "对数字鸿沟未来缩小持乐观判断",
+      use: "to be optimistic 后置修饰 reasons，表示‘保持乐观的理由’。",
+      contextualSubstitutions: [{
+        label: "hopeful",
+        chinese: "抱有希望的",
+        fit: "direct",
+        rewrittenSentence: "There are reasons to be hopeful.",
+        nuance: "hopeful 强调内心抱有希望；optimistic 更强调对未来结果作出积极判断。",
+        target: "word:hopeful",
+      }],
+    },
+  },
+  "2001-p2-s6": {
+    narrow: {
+      contextualMeaning: "数字鸿沟的差距逐渐缩小",
+      use: "will narrow 是不及物用法，主语 the digital divide 自身发生变化。",
+      contextualSubstitutions: [{
+        label: "shrink",
+        chinese: "缩小；收缩",
+        fit: "direct",
+        rewrittenSentence: "There are technological reasons to hope the digital divide will shrink.",
+        nuance: "shrink 更形象地表现总体尺寸收缩；narrow 更准确强调鸿沟两端的距离变小。",
+        target: "word:shrink",
+      }],
+    },
+  },
+  "2001-p2-s7": {
+    interest: {
+      contextualMeaning: "企业和商业界能够获得的经济利益",
+      use: "in the interest of business 是介词表语，表示普及网络接入符合商业利益；不是‘兴趣’或‘利息’。",
+      contextualSubstitutions: [{
+        label: "benefit",
+        chinese: "使商业界受益",
+        fit: "with-adjustment",
+        rewrittenSentence: "As the Internet becomes more and more commercialized, it benefits business to universalize access—after all, the more people online, the more potential customers there are.",
+        nuance: "benefit 直接说某行动使企业受益；in the interest of 更正式，强调行动与商业利益一致。",
+        adjustment: "把系表结构 is in the interest of business 改为及物结构 benefits business。",
+        target: "word:benefit",
+      }],
+    },
+  },
+  "2001-p2-s8": {
+    spread: {
+      contextualMeaning: "把互联网接入推广到更多地区和人群",
+      use: "spread 作及物动词，Internet access 是宾语；want to spread 表政府希望扩大覆盖。",
+      contextualSubstitutions: [{
+        label: "expand",
+        chinese: "扩大；扩展覆盖",
+        fit: "direct",
+        rewrittenSentence: "More and more governments, afraid their countries will be left behind, want to expand Internet access.",
+        nuance: "expand 更强调接入规模和覆盖范围增大；spread 更强调向外传播、普及的过程。",
+        target: "word:expand",
+      }],
+    },
+  },
+  "2001-p2-s9": {
+    net: {
+      contextualMeaning: "通过互联网把全球人口连接起来",
+      use: "will be netted together 是将来时被动语态；原卷 he 为排印错误，正确助动词为 be。",
+      contextualSubstitutions: [{
+        label: "connected",
+        chinese: "连接起来",
+        fit: "direct",
+        rewrittenSentence: "Within the next decade or two, one to two billion people on the planet will be connected together.",
+        nuance: "connected 是普通‘连接’；netted 更形象地突出人们被同一网络覆盖。",
+        target: "word:connect",
+      }],
+    },
+  },
+  "2001-p2-s10": {
+    narrow: {
+      contextualMeaning: "数字鸿沟在未来变小而非扩大",
+      use: "narrow 与 widen 由 rather than 并列，共用 will。",
+      contextualSubstitutions: [{
+        label: "shrink",
+        chinese: "缩小；收缩",
+        fit: "direct",
+        rewrittenSentence: "As a result, I now believe the digital divide will shrink rather than widen in the years ahead.",
+        nuance: "shrink 更形象；narrow 与 widen 构成更工整、准确的反义对照。",
+        target: "word:shrink",
+      }],
+    },
+  },
+  "2001-p2-s11": {
+    powerful: {
+      contextualMeaning: "在抗击全球贫困方面作用非常强大",
+      use: "the most powerful 是最高级，修饰 tool；for combating... 说明工具用途。",
+      contextualSubstitutions: [{
+        label: "effective",
+        chinese: "有效的；能产生预期效果的",
+        fit: "direct",
+        rewrittenSentence: "And that is very good news because the Internet may well be the most effective tool for combating world poverty that we’ve ever had.",
+        nuance: "effective 侧重实际效果；powerful 侧重工具可能产生的巨大力量和影响。",
+        target: "word:effective",
+      }],
+    },
+  },
+  "2001-p2-s12": {
+    defeat: {
+      contextualMeaning: "战胜并减少贫困问题",
+      use: "to defeat poverty 后置修饰 way，说明这种办法的目标。",
+      contextualSubstitutions: [{
+        label: "combat",
+        chinese: "抗击；与……斗争",
+        fit: "direct",
+        rewrittenSentence: "Of course, the use of the Internet isn’t the only way to combat poverty.",
+        nuance: "combat 强调持续抗击过程；defeat 更强调最终战胜这一结果。",
+        target: "word:combat",
+      }],
+    },
+  },
+  "2001-p2-s13": {
+    tool: {
+      contextualMeaning: "解决贫困问题的一种手段",
+      use: "the only tool we have 中 we have 是省略关系代词的定语从句。",
+      contextualSubstitutions: [{
+        label: "means",
+        chinese: "手段；方法",
+        fit: "direct",
+        rewrittenSentence: "And the Internet is not the only means we have.",
+        nuance: "means 完全抽象地表示解决手段；tool 保留了工具隐喻，语气更形象。",
+        target: "word:means",
+      }],
+    },
+  },
+  "2001-p2-s14": {
+    enormous: {
+      contextualMeaning: "程度极大的",
+      use: "enormous 修饰不可数名词 potential，强调互联网尚待释放的巨大潜力。",
+      contextualSubstitutions: [{
+        label: "tremendous",
+        chinese: "巨大的；惊人的",
+        fit: "direct",
+        rewrittenSentence: "But it has tremendous potential.",
+        nuance: "tremendous 带更强的赞叹感；enormous 更中性地强调规模巨大。",
+        target: "word:tremendous",
+      }],
+    },
+  },
+  "2001-p2-s15": {
+    impoverished: {
+      contextualMeaning: "经济贫困、缺乏建设资本的",
+      use: "作形容词前置修饰 countries，比普通 poor 更正式，并带有陷入贫困状态的意味。",
+      contextualSubstitutions: [{
+        label: "poor",
+        chinese: "贫困的",
+        fit: "direct",
+        rewrittenSentence: "To take advantage of this tool, some poor countries will have to get over their outdated anti-colonial prejudices with respect to foreign investment.",
+        nuance: "poor 是最普通的贫困描述；impoverished 更正式，常暗示资源被削弱或长期匮乏。",
+        target: "word:poor",
+      }],
+    },
+  },
+  "2001-p2-s16": {
+    study: {
+      contextualMeaning: "考察并分析美国基础设施建设史",
+      use: "might well study 是委婉建议；study 直接接 the history of infrastructure 作宾语。",
+      contextualSubstitutions: [{
+        label: "examine",
+        chinese: "仔细考察；研究",
+        fit: "direct",
+        rewrittenSentence: "Countries that still think foreign investment is an invasion of their sovereignty might well examine the history of infrastructure (the basic structural foundations of a society) in the United States.",
+        nuance: "examine 更强调仔细分析证据；study 既可表示系统研究，也可表示学习。",
+        target: "word:examine",
+      }],
+    },
+  },
+  "2001-p2-s17": {
+    capital: {
+      contextualMeaning: "建设工业基础设施所需的资金资本",
+      use: "the capital to do so 中不定式说明资本用途；do so 回指 build its industrial infrastructure。",
+      contextualSubstitutions: [{
+        label: "funds",
+        chinese: "资金",
+        fit: "with-adjustment",
+        rewrittenSentence: "When the United States built its industrial infrastructure, it didn’t have the funds to do so.",
+        nuance: "funds 强调可直接使用的款项；capital 更强调能够投入建设并带来长期产出的资本。",
+        adjustment: "capital 通常不可数；fund 在资金义下常用复数 funds。",
+        target: "word:fund",
+      }],
+    },
+  },
+  "2001-p2-s18": {
+    include: {
+      contextualMeaning: "列举第二次浪潮基础设施的实例",
+      use: "including 引出道路、港湾、高速公路和港口等非穷尽列举，插入成分两侧用破折号隔开。",
+      contextualSubstitutions: [{
+        label: "comprising",
+        chinese: "包括；由……构成",
+        fit: "direct",
+        rewrittenSentence: "And that is why America’s Second Wave infrastructure—comprising roads, harbors, highways, ports and so on—were built with foreign investment.",
+        nuance: "comprising 更正式，强调所包含的构成项目；including 更普通地引出若干例子。",
+        target: "word:comprise",
+      }],
+    },
+  },
+  "2001-p2-s19": {
+    invest: {
+      contextualMeaning: "把资本投入英国的前殖民地美国",
+      use: "were investing in 是过去进行时；invest 后必须用 in 引出地区或项目。",
+      contextualSubstitutions: [{
+        label: "financing",
+        chinese: "为……提供资金",
+        fit: "with-adjustment",
+        rewrittenSentence: "The English, the Germans, the Dutch and the French were financing development in Britain’s former colony.",
+        nuance: "finance 直接强调提供建设资金；invest in 还包含以获取回报为目的的投资关系。",
+        adjustment: "finance 通常直接接被资助项目，因此补出 development，并把原来的 in 保留为地点介词。",
+        target: "word:finance",
+      }],
+    },
+  },
+  "2001-p2-s20": {
+    finance: {
+      contextualMeaning: "为美国道路、港口等基础设施提供资金",
+      use: "finance 作及物动词，They 指欧洲投资者，them 指基础设施。",
+      contextualSubstitutions: [{
+        label: "funded",
+        chinese: "为……出资",
+        fit: "direct",
+        rewrittenSentence: "They funded them.",
+        nuance: "fund 更直接指提供所需款项；finance 还可包含组织融资、安排资金的过程。",
+        target: "word:fund",
+      }],
+    },
+  },
+  "2001-p2-s21": {
+    build: {
+      contextualMeaning: "实际建造这些基础设施",
+      use: "built 是 build 的不规则过去式，them 回指道路、港口等设施。",
+      contextualSubstitutions: [{
+        label: "constructed",
+        chinese: "建造；修建",
+        fit: "direct",
+        rewrittenSentence: "Immigrant Americans constructed them.",
+        nuance: "construct 更正式，常用于大型工程；build 是最普通的建造用词。",
+        target: "word:construct",
+      }],
+    },
+  },
+  "2001-p2-s22": {
+    own: {
+      contextualMeaning: "拥有这些基础设施的所有权",
+      use: "who owns them now 中 who 作从句主语，them 回指基础设施。",
+      contextualSubstitutions: [{
+        label: "possesses",
+        chinese: "拥有；持有",
+        fit: "direct",
+        rewrittenSentence: "Guess who possesses them now?",
+        nuance: "possess 更正式，强调持有；own 更明确地强调法律或实际所有权。",
+        target: "word:possess",
+      }],
+    },
+  },
+  "2001-p2-s23": {
+    american: {
+      contextualMeaning: "最终拥有这些基础设施的美国人",
+      use: "The Americans 是省略回答，完整意思为 The Americans own them now。",
+      contextualSubstitutions: [{
+        label: "U.S. citizens",
+        chinese: "美国公民",
+        fit: "with-adjustment",
+        rewrittenSentence: "U.S. citizens.",
+        nuance: "U.S. citizens 明确强调法律公民身份；the Americans 是更自然的国籍群体称呼。",
+        adjustment: "把 the + 国籍复数名词改为 U.S. + citizens，并保留省略回答形式。",
+        target: "word:citizen",
+      }],
+    },
+  },
+  "2001-p2-s24": {
+    true: {
+      contextualMeaning: "同样规律在其他国家也成立、适用",
+      use: "would be true 是 believe 宾语从句的谓语和表语；would 表基于美国案例的类比推断。",
+      contextualSubstitutions: [{
+        label: "apply",
+        chinese: "适用；同样成立",
+        fit: "with-adjustment",
+        rewrittenSentence: "I believe the same thing would apply in places like Brazil or anywhere else for that matter.",
+        nuance: "apply 更直接说明一条原则适用于其他地方；be true 强调同样事实或规律成立。",
+        adjustment: "把系表结构 would be true 改为不及物谓语 would apply。",
+        target: "word:apply",
+      }],
+    },
+  },
+  "2001-p2-s25": {
+    good: {
+      contextualMeaning: "经济和生活境况更好、更富裕",
+      use: "better off 是固定比较级表语，在 the more..., the better... 结构中被提前；不是普通的‘更好地离开’。",
+      contextualSubstitutions: [{
+        label: "prosperous",
+        chinese: "繁荣的；富裕的",
+        fit: "direct",
+        rewrittenSentence: "The more foreign capital you have helping you build your Third Wave infrastructure, which today is an electronic infrastructure, the more prosperous you’re going to be.",
+        nuance: "prosperous 明确强调经济繁荣；better off 还可泛指生活、健康或处境改善。",
+        target: "word:prosperous",
+      }],
+    },
+  },
+  "2001-p2-s26": {
+    mean: {
+      contextualMeaning: "意味着接受外资会带来某种行为或后果",
+      use: "doesn't mean 后接 lying、becoming、letting 三个动名词内容；否定的是对接受外资的错误理解。",
+      contextualSubstitutions: [{
+        label: "imply",
+        chinese: "意味着；暗含",
+        fit: "direct",
+        rewrittenSentence: "That doesn't imply lying down and becoming fooled, or letting foreign corporations run uncontrolled.",
+        nuance: "imply 更强调从一种主张逻辑上推导出的含义；mean 是最直接的‘意味着’。",
+        target: "word:imply",
+      }],
+    },
+  },
+  "2001-p2-s27": {
+    important: {
+      contextualMeaning: "外国公司在建设能源和电信基础设施方面作用重大",
+      use: "how important they can be 是 recognize 的宾语从句；how 把 important 程度提前。",
+      contextualSubstitutions: [{
+        label: "crucial",
+        chinese: "关键的；至关重要的",
+        fit: "direct",
+        rewrittenSentence: "But it does mean recognizing how crucial they can be in building the energy and telecom infrastructures needed to take full advantage of the Internet.",
+        nuance: "crucial 比 important 更强，暗示这些外企可能是建设过程中不可或缺的关键力量。",
+        target: "word:crucial",
       }],
     },
   },
