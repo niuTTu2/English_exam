@@ -1,4 +1,4 @@
-export type ArticleLexiconId = "cloze" | "p1" | "p2" | "p3" | "p4" | "p5" | "translation";
+export type ArticleLexiconId = "cloze" | "p1" | "p2" | "p3" | "p4" | "p5" | "translation" | "2001-cloze";
 
 export type ContextualSubstitution = {
   label: string;
@@ -220,6 +220,142 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
           target: "word:need",
         },
       ],
+    },
+  },
+  "2001-cloze-s1": {
+    ban: {
+      contextualMeaning: "以政府措施正式禁止",
+      use: "is to ban payments 中 ban 直接接名词宾语 payments，表示政府将通过规则禁止这种付款。",
+      contextualSubstitutions: [{
+        label: "prohibit",
+        chinese: "正式禁止",
+        fit: "direct",
+        rewrittenSentence: "The government is to prohibit payments to witnesses by newspapers seeking to buy up people involved in prominent cases such as the trial of Rosemary West.",
+        nuance: "prohibit 比 ban 更正式、更常见于法规文本；ban 更简洁，并强调形成禁令。",
+        target: "word:prohibit",
+      }],
+    },
+    prominent: {
+      contextualMeaning: "引人注目、社会关注度高的",
+      use: "prominent cases 修饰受到媒体和公众高度关注的重大案件，不是‘位置突出的案件’。",
+      contextualSubstitutions: [{
+        label: "high-profile",
+        chinese: "高关注度的；备受瞩目的",
+        fit: "direct",
+        rewrittenSentence: "The government is to ban payments to witnesses by newspapers seeking to buy up people involved in high-profile cases such as the trial of Rosemary West.",
+        nuance: "high-profile 更直接突出媒体曝光度；prominent 还可强调重要性和显著地位。",
+        target: "word:high-profile",
+      }],
+    },
+  },
+  "2001-cloze-s2": {
+    significant: {
+      contextualMeaning: "幅度和政策意义都明显的",
+      use: "significant 修饰 tightening，既表示收紧幅度可观，也表示这一变化具有制度重要性。",
+      contextualSubstitutions: [{
+        label: "substantial",
+        chinese: "实质性的；大幅的",
+        fit: "direct",
+        rewrittenSentence: "In a substantial tightening of legal controls over the press, Lord Irvine, the Lord Chancellor, will introduce a draft bill that will propose making payments to witnesses illegal and will strictly control the amount of publicity that can be given to a case before a trial begins.",
+        nuance: "substantial 更突出幅度大、内容实在；significant 还强调值得注意或意义重大。",
+        target: "word:substantial",
+      }],
+    },
+    control: {
+      contextualMeaning: "严格限制公开报道的总量",
+      use: "will strictly control 后直接接 the amount of publicity，表示用规则限制庭前曝光。",
+      contextualSubstitutions: [{
+        label: "limit",
+        chinese: "限制",
+        fit: "direct",
+        rewrittenSentence: "In a significant tightening of legal controls over the press, Lord Irvine, the Lord Chancellor, will introduce a draft bill that will propose making payments to witnesses illegal and will strictly limit the amount of publicity that can be given to a case before a trial begins.",
+        nuance: "limit 直接强调设定上限；control 范围更广，还包括管理和调节。",
+        target: "word:limit",
+      }],
+    },
+  },
+  "2001-cloze-s3": {
+    offer: {
+      contextualMeaning: "由制度提供、产生足够监管效果",
+      use: "self regulation did not offer sufficient control 中 offer 的主语是制度，宾语是制度能提供的监管作用。",
+      contextualSubstitutions: [{
+        label: "provide",
+        chinese: "提供",
+        fit: "direct",
+        rewrittenSentence: "In a letter to Gerald Kaufman, chairman of the House of Commons media select committee, Lord Irvine said he agreed with a committee report this year which said that self regulation did not provide sufficient control.",
+        nuance: "provide 更中性直接；offer 常带‘可供使用’或‘能够给予’的意味。",
+        target: "word:provide",
+      }],
+    },
+  },
+  "2001-cloze-s4": {
+    publication: {
+      contextualMeaning: "信件内容被正式公开发表这一事件",
+      use: "Publication of the letter 是主句主语，重点不是印刷，而是公众能够看到信件内容。",
+      contextualSubstitutions: [{
+        label: "release",
+        chinese: "发布；公开放出",
+        fit: "direct",
+        rewrittenSentence: "Release of the letter came two days after Lord Irvine caused a storm of media protest when he said the interpretation of privacy controls contained in European legislation would be left to judges rather than to Parliament.",
+        nuance: "release 也能表达发布，但更强调信息从保密或控制状态被放出；publication 更突出正式公之于众。",
+        target: "word:release",
+      }],
+    },
+    interpretation: {
+      contextualMeaning: "对法律规定含义和适用方式的解释",
+      use: "interpretation of privacy controls 是长宾语从句的主语，指法官对法律条文进行释义。",
+      contextualSubstitutions: [{
+        label: "construction",
+        chinese: "对法律文本的解释",
+        fit: "direct",
+        rewrittenSentence: "Publication of the letter came two days after Lord Irvine caused a storm of media protest when he said the construction of privacy controls contained in European legislation would be left to judges rather than to Parliament.",
+        nuance: "construction 是法律英语中的专业释法义；普通学习场景中 interpretation 更清楚、更通用。",
+        target: "word:construction",
+      }],
+    },
+  },
+  "2001-cloze-s5": {
+    binding: {
+      contextualMeaning: "在法律上必须遵守、具有约束力的",
+      use: "make A legally binding 中 binding 是形容词宾补，说明《欧洲人权公约》在英国获得法律效力。",
+      contextualSubstitutions: [{
+        label: "enforceable",
+        chinese: "可依法执行的",
+        fit: "direct",
+        rewrittenSentence: "The Lord Chancellor said introduction of the Human Rights Bill, which makes the European Convention on Human Rights legally enforceable in Britain, laid down that everybody was entitled to privacy and that public figures could go to court to protect themselves and their families.",
+        nuance: "enforceable 强调能够通过法院强制执行；binding 强调当事人负有遵守义务。",
+        target: "word:enforceable",
+      }],
+    },
+  },
+  "2001-cloze-s7": {
+    issue: {
+      contextualMeaning: "需要公共讨论和处理的争议问题",
+      use: "became an issue 是系表结构，说明证人收款从一种做法演变成司法与媒体争议。",
+      contextualSubstitutions: [{
+        label: "controversy",
+        chinese: "争议",
+        fit: "with-adjustment",
+        rewrittenSentence: "Witness payments became a controversy after West was sentenced to 10 life sentences in 1995.",
+        nuance: "controversy 直接强调意见冲突；issue 可中性地指需要处理的问题。替换后冠词从 an 改为 a。",
+        adjustment: "issue 前用 an；controversy 前必须改用 a。",
+        target: "word:controversy",
+      }],
+    },
+  },
+  "2001-cloze-s9": {
+    concern: {
+      contextualMeaning: "对证词可能受金钱影响的担忧",
+      use: "Concerns were raised 是被动报道表达，that 同位语从句给出担忧的完整内容。",
+      contextualSubstitutions: [{
+        label: "fear",
+        chinese: "担忧；恐怕发生某事",
+        fit: "with-adjustment",
+        rewrittenSentence: "Fears were expressed that witnesses might be encouraged exaggerate their stories in court to ensure guilty verdicts.",
+        nuance: "fear 情绪强度更高；concern 更正式、中性，适合政策讨论。",
+        adjustment: "把 Concerns were raised 整体改为 Fears were expressed，不能只替换单个名词后保留所有搭配。",
+        target: "word:fear",
+      }],
     },
   },
 };

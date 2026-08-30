@@ -217,8 +217,10 @@ test("2000 年全部复杂句的从句数量与人工审计基线一致", () => 
     "p4-q26-answer": 1, "p5-q27-answer": 1, "p5-q28-prompt": 1,
     "p5-q29-prompt": 1, "p5-q30-prompt": 1,
   };
-  const analyses = [...allSentences];
-  for (const question of allQuestions) {
+  const articles2000 = Object.values(data.articleContents).filter((article) => article.year === 2000);
+  const questions2000 = articles2000.flatMap((article) => article.questions);
+  const analyses = articles2000.flatMap((article) => article.sentences);
+  for (const question of questions2000) {
     analyses.push(
       question.analysis?.prompt,
       ...Object.values(question.analysis?.options ?? {}),
@@ -247,7 +249,7 @@ test("自测空格、题号和答案严格对应", () => {
     if (article.kind === "cloze") {
       assert.deepEqual(
         [...blankIds].sort((a, b) => a - b),
-        article.questions.map((question) => question.id).sort((a, b) => a - b),
+        article.questions.map((question) => question.number ?? question.id).sort((a, b) => a - b),
         `${article.id} 自测空格编号与题号不一致`,
       );
     } else {
@@ -273,7 +275,8 @@ test("自测空格、题号和答案严格对应", () => {
 
 test("2000 年答案与独立核验清单一致", () => {
   assert.equal(Object.keys(answerKeys.verifiedAnswerKey2000).length, 30, "2000 年答案清单必须覆盖第 1—30 题");
-  for (const question of allQuestions) {
+  const questions2000 = Object.values(data.articleContents).filter((article) => article.year === 2000).flatMap((article) => article.questions);
+  for (const question of questions2000) {
     assert.equal(
       question.answer,
       answerKeys.verifiedAnswerKey2000[question.id],
@@ -285,6 +288,26 @@ test("2000 年答案与独立核验清单一致", () => {
     requireText(source.range, "answerSource.range");
     requireText(source.label, "answerSource.label");
     assert.match(source.url, /^https:\/\//, "答案来源必须使用可访问链接");
+  }
+});
+
+test("2001 年完形答案与独立核验清单一致", () => {
+  const article = data.articleContents["2001-cloze"];
+  assert.ok(article, "2001 年完形内容对象不存在");
+  assert.equal(Object.keys(answerKeys.verifiedAnswerKey2001Cloze).length, 20, "2001 年完形答案清单必须覆盖第 1—20 题");
+  assert.equal(article.questions.length, 20, "2001 年完形必须包含 20 题");
+  for (const question of article.questions) {
+    assert.equal(
+      question.answer,
+      answerKeys.verifiedAnswerKey2001Cloze[question.number],
+      `2001 年完形第 ${question.number} 题答案偏离独立核验清单`,
+    );
+  }
+  assert.ok(answerKeys.verifiedAnswerSources2001Cloze.length >= 2, "2001 年完形答案必须保留至少两个来源");
+  for (const source of answerKeys.verifiedAnswerSources2001Cloze) {
+    requireText(source.range, "answerSource2001.range");
+    requireText(source.label, "answerSource2001.label");
+    assert.match(source.url, /^https:\/\//, "2001 年答案来源必须使用可访问链接");
   }
 });
 
@@ -484,7 +507,7 @@ test("正文、题干选项中的全部词形都有有效知识", () => {
 });
 
 test("已就绪文章与目录、题号和稳定 ID 一致", () => {
-  const readyIds = data.sections.filter((section) => section.status === "ready").map((section) => section.id);
+  const readyIds = Object.values(data.sectionsByYear).flat().filter((section) => section.status === "ready").map((section) => section.id);
   assert.deepEqual(readyIds, Object.keys(data.articleContents), "目录中的已就绪文章必须都有完整内容对象");
   for (const article of Object.values(data.articleContents)) {
     assert.ok(article.sentences.length > 0, `${article.id} 缺少正文句子`);

@@ -4,6 +4,7 @@ import { passage3Questions, passage3Sentences } from "./passage-3-data";
 import { passage4Questions, passage4Sentences } from "./passage-4-data";
 import { passage5Questions, passage5Sentences } from "./passage-5-data";
 import { translationSentences, translationTasks } from "./translation-data";
+import { cloze2001Questions, cloze2001Sentences } from "./2001-cloze-data";
 import type { ContextualSubstitution } from "./contextual-vocabulary";
 import { verifiedTrunks2000 } from "./verified-syntax-2000";
 
@@ -98,6 +99,8 @@ export type VocabEntry = {
 
 export type Question = {
   id: number;
+  /** 原卷显示题号；id 是跨年份唯一的稳定存储键。 */
+  number?: number;
   sentenceId: string;
   prompt: string;
   options: Array<{ key: "A" | "B" | "C" | "D"; text: string }>;
@@ -124,7 +127,9 @@ export type TranslationTask = {
 };
 
 export type ArticleContent = {
-  id: "cloze" | "p1" | "p2" | "p3" | "p4" | "p5" | "translation";
+  id: string;
+  year: number;
+  sectionId: "cloze" | "p1" | "p2" | "p3" | "p4" | "p5" | "translation";
   label: string;
   badge: string;
   title: string;
@@ -144,6 +149,21 @@ export const sections = [
   { id: "p5", label: "阅读 Passage 5", meta: "15句 · 4题", status: "ready" },
   { id: "translation", label: "英译汉", meta: "5句", status: "ready" },
 ] as const;
+
+export const sectionsByYear = {
+  2000: sections,
+  2001: [
+    { id: "2001-cloze", label: "完形填空", meta: "9句 · 20题", status: "ready" },
+    { id: "2001-p1", label: "阅读 Passage 1", meta: "待精审", status: "pending" },
+    { id: "2001-p2", label: "阅读 Passage 2", meta: "待精审", status: "pending" },
+    { id: "2001-p3", label: "阅读 Passage 3", meta: "待精审", status: "pending" },
+    { id: "2001-p4", label: "阅读 Passage 4", meta: "待精审", status: "pending" },
+    { id: "2001-p5", label: "阅读 Passage 5", meta: "待精审", status: "pending" },
+    { id: "2001-translation", label: "英译汉", meta: "待精审", status: "pending" },
+  ],
+} as const;
+
+export const availableYears = [2000, 2001] as const;
 
 export const sentences: SentenceAnalysis[] = [
   {
@@ -1186,9 +1206,11 @@ const verifiedPassage4Questions = passage4Questions.map(applyVerifiedQuestion);
 const verifiedPassage5Questions = passage5Questions.map(applyVerifiedQuestion);
 const verifiedTranslationTasks = translationTasks.map((task) => ({ ...task, analysis: applyVerifiedSyntax(task.analysis) }));
 
-export const articleContents: Record<"cloze" | "p1" | "p2" | "p3" | "p4" | "p5" | "translation", ArticleContent> = {
+export const articleContents: Record<string, ArticleContent> = {
   cloze: {
     id: "cloze",
+    year: 2000,
+    sectionId: "cloze",
     label: "完形填空",
     badge: "2000 · 完形填空",
     title: "从“生产剩余”读懂一段经济逻辑",
@@ -1199,6 +1221,8 @@ export const articleContents: Record<"cloze" | "p1" | "p2" | "p3" | "p4" | "p5" 
   },
   p1: {
     id: "p1",
+    year: 2000,
+    sectionId: "p1",
     label: "阅读 Passage 1",
     badge: "2000 · 阅读 Passage 1",
     title: "成功、危机与美国工业的重新调整",
@@ -1209,6 +1233,8 @@ export const articleContents: Record<"cloze" | "p1" | "p2" | "p3" | "p4" | "p5" 
   },
   p2: {
     id: "p2",
+    year: 2000,
+    sectionId: "p2",
     label: "阅读 Passage 2",
     badge: "2000 · 阅读 Passage 2",
     title: "人类进化为何走向停滞",
@@ -1219,6 +1245,8 @@ export const articleContents: Record<"cloze" | "p1" | "p2" | "p3" | "p4" | "p5" 
   },
   p3: {
     id: "p3",
+    year: 2000,
+    sectionId: "p3",
     label: "阅读 Passage 3",
     badge: "2000 · 阅读 Passage 3",
     title: "未来主义诗歌与新的表达方式",
@@ -1229,6 +1257,8 @@ export const articleContents: Record<"cloze" | "p1" | "p2" | "p3" | "p4" | "p5" 
   },
   p4: {
     id: "p4",
+    year: 2000,
+    sectionId: "p4",
     label: "阅读 Passage 4",
     badge: "2000 · 阅读 Passage 4",
     title: "日本社会工作伦理的变化与生活压力",
@@ -1239,6 +1269,8 @@ export const articleContents: Record<"cloze" | "p1" | "p2" | "p3" | "p4" | "p5" 
   },
   p5: {
     id: "p5",
+    year: 2000,
+    sectionId: "p5",
     label: "阅读 Passage 5",
     badge: "2000 · 阅读 Passage 5",
     title: "抱负被隐藏之后的社会讽刺",
@@ -1249,6 +1281,8 @@ export const articleContents: Record<"cloze" | "p1" | "p2" | "p3" | "p4" | "p5" 
   },
   translation: {
     id: "translation",
+    year: 2000,
+    sectionId: "translation",
     label: "英译汉",
     badge: "2000 · 英译汉",
     title: "现代化进程中的经济与社会压力",
@@ -1258,7 +1292,19 @@ export const articleContents: Record<"cloze" | "p1" | "p2" | "p3" | "p4" | "p5" 
     questions: [],
     translationTasks: verifiedTranslationTasks,
   },
+  "2001-cloze": {
+    id: "2001-cloze",
+    year: 2001,
+    sectionId: "cloze",
+    label: "完形填空",
+    badge: "2001 · 完形填空",
+    title: "证人付费、新闻自由与庭审公正",
+    description: "沿着‘拟议禁令—隐私解释权—证人收款风险’三条线索，逐句理解新闻监管与司法公正的冲突。",
+    kind: "cloze",
+    sentences: cloze2001Sentences,
+    questions: cloze2001Questions,
+  },
 };
 
-export const allSentences = [...verifiedClozeSentences, ...verifiedPassage1Sentences, ...verifiedPassage2Sentences, ...verifiedPassage3Sentences, ...verifiedPassage4Sentences, ...verifiedPassage5Sentences, ...verifiedTranslationSentences];
-export const allQuestions = [...verifiedClozeQuestions, ...verifiedPassage1Questions, ...verifiedPassage2Questions, ...verifiedPassage3Questions, ...verifiedPassage4Questions, ...verifiedPassage5Questions];
+export const allSentences = [...verifiedClozeSentences, ...verifiedPassage1Sentences, ...verifiedPassage2Sentences, ...verifiedPassage3Sentences, ...verifiedPassage4Sentences, ...verifiedPassage5Sentences, ...verifiedTranslationSentences, ...cloze2001Sentences];
+export const allQuestions = [...verifiedClozeQuestions, ...verifiedPassage1Questions, ...verifiedPassage2Questions, ...verifiedPassage3Questions, ...verifiedPassage4Questions, ...verifiedPassage5Questions, ...cloze2001Questions];

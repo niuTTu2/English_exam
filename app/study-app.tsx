@@ -56,8 +56,9 @@ import {
   allQuestions,
   allSentences,
   articleContents,
+  availableYears,
   basicMeanings,
-  sections,
+  sectionsByYear,
   vocab,
   type SentenceAnalysis,
   type Question,
@@ -128,6 +129,7 @@ type PersistedStudyState = {
   submittedTranslationTasks: Record<string, boolean>;
   submitted: boolean;
   activeSection?: ArticleId;
+  selectedYear?: number;
   submittedSections?: Record<string, boolean>;
   revealTiming: RevealTiming;
   timerMode: TimerMode;
@@ -196,7 +198,7 @@ function tokenizeWords(text: string) {
 
 const optionLookup = new Map(
   allQuestions.flatMap((question) => question.options.map((option) => [
-    option.text.toLowerCase(),
+    `${question.sentenceId}:${option.text.toLowerCase()}`,
     {
       explanation: question.explanations[option.key],
       correct: question.options.find((item) => item.key === question.answer)?.text ?? "",
@@ -216,7 +218,7 @@ const questionArticle = new Map(
 function lexicalContextFor(sentenceId?: string) {
   return {
     sentenceId,
-    articleId: sentenceId ? sentenceArticle.get(sentenceId)?.id : undefined,
+    articleId: sentenceId ? sentenceArticle.get(sentenceId)?.id as "cloze" | "p1" | "p2" | "p3" | "p4" | "p5" | "translation" | "2001-cloze" | undefined : undefined,
   };
 }
 
@@ -280,17 +282,17 @@ function currentOccurrences(label: string, isPhrase: boolean) {
       const tokens = tokenizeWords(lower);
       return tokens.some((token) => lemmaOf(token) === lemma);
     })
-    .map((option) => ({ questionId: question.id, text: option.text })));
+    .map((option) => ({ questionId: question.id, questionNumber: question.number ?? question.id, text: option.text })));
 
   return [
     ...sentenceMatches.map((sentence) => ({
-      year: 2000,
+      year: sentenceArticle.get(sentence.id)?.year ?? 2000,
       section: `${sentenceArticle.get(sentence.id)?.label ?? "真题"}正文`,
       excerpt: sentence.text,
     })),
     ...optionMatches.map((option) => ({
-      year: 2000,
-      section: `${questionArticle.get(option.questionId)?.label ?? "真题"}第 ${option.questionId} 题选项`,
+      year: questionArticle.get(option.questionId)?.year ?? 2000,
+      section: `${questionArticle.get(option.questionId)?.label ?? "真题"}第 ${option.questionNumber} 题选项`,
       excerpt: option.text,
     })),
   ];
@@ -298,7 +300,7 @@ function currentOccurrences(label: string, isPhrase: boolean) {
 
 function makeFallbackEntry(label: string, isPhrase = false, sentenceId?: string): VocabEntry {
   const normalized = label.toLowerCase();
-  const option = optionLookup.get(normalized);
+  const option = sentenceId ? optionLookup.get(`${sentenceId}:${normalized}`) : undefined;
   const phraseKnowledge = isPhrase ? getPhraseKnowledge(normalized) : undefined;
   const guide = isPhrase ? null : getLexicalGuide(normalized, lexicalContextFor(sentenceId));
   const wordKnowledge = guide ? getWordKnowledge(guide.headword) : undefined;
@@ -416,21 +418,43 @@ function resolveEntry(label: string, isPhrase = false, sentenceId?: string): Voc
   };
 }
 
-function sentenceIdForWord(headword: string) {
-  const sentence = allSentences.find((item) => {
+function articlesForYear(year: number) {
+  return Object.values(articleContents).filter((article) => article.year === year);
+}
+
+function sentencesForYear(year: number) {
+  return articlesForYear(year).flatMap((article) => article.sentences);
+}
+
+function questionsForYear(year: number) {
+  return articlesForYear(year).flatMap((article) => article.questions);
+}
+
+function corpusTokensForYear(year: number) {
+  const text = [
+    ...sentencesForYear(year).map((sentence) => sentence.text),
+    ...questionsForYear(year).flatMap((question) => [question.prompt, ...question.options.map((option) => option.text)]),
+  ].join(" ").toLowerCase();
+  return tokenizeWords(text);
+}
+
+function sentenceIdForWord(headword: string, year: number) {
+  const yearSentences = sentencesForYear(year);
+  const yearQuestions = questionsForYear(year);
+  const sentence = yearSentences.find((item) => {
     const tokens = tokenizeWords(item.text.toLowerCase());
     return tokens.some((token) => lemmaOf(token) === headword);
   });
   if (sentence) return sentence.id;
-  return allQuestions.find((question) => question.options.some((option) => {
+  return yearQuestions.find((question) => question.options.some((option) => {
     const tokens = tokenizeWords(option.text.toLowerCase());
     return tokens.some((token) => lemmaOf(token) === headword);
   }))?.sentenceId ?? "year-vocabulary";
 }
 
-function buildYearWordItems(): YearWordItem[] {
+function buildYearWordItems(year: number): YearWordItem[] {
   const grouped = new Map<string, Map<string, number>>();
-  corpusTokens.forEach((token) => {
+  corpusTokensForYear(year).forEach((token) => {
     const headword = lemmaOf(token);
     const forms = grouped.get(headword) ?? new Map<string, number>();
     forms.set(token, (forms.get(token) ?? 0) + 1);
@@ -439,7 +463,7 @@ function buildYearWordItems(): YearWordItem[] {
 
   return Array.from(grouped.entries())
     .map(([headword, formCounts]) => {
-      const sentenceId = sentenceIdForWord(headword);
+      const sentenceId = sentenceIdForWord(headword, year);
       const entry = resolveEntry(headword, false, sentenceId);
       const rankedForms = Array.from(formCounts.entries()).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "en"));
       return {
@@ -455,12 +479,18 @@ function buildYearWordItems(): YearWordItem[] {
     .sort((a, b) => a.headword.localeCompare(b.headword, "en"));
 }
 
-function buildYearPhraseItems(): YearPhraseItem[] {
+function buildYearPhraseItems(year: number): YearPhraseItem[] {
   const sources = new Map<string, { source: string; sentenceId: string }>();
-  allSentences.forEach((sentence) => sentence.phrases.forEach((source) => {
+  const yearSentences = sentencesForYear(year);
+  const yearQuestions = questionsForYear(year);
+  const yearCorpusText = [
+    ...yearSentences.map((sentence) => sentence.text),
+    ...yearQuestions.flatMap((question) => [question.prompt, ...question.options.map((option) => option.text)]),
+  ].join(" ").toLowerCase();
+  yearSentences.forEach((sentence) => sentence.phrases.forEach((source) => {
     sources.set(source.toLowerCase(), { source, sentenceId: sentence.id });
   }));
-  allQuestions.forEach((question) => question.options.forEach((option) => {
+  yearQuestions.forEach((question) => question.options.forEach((option) => {
     if (option.text.includes(" ") && getPhraseKnowledge(option.text)) {
       sources.set(option.text.toLowerCase(), { source: option.text, sentenceId: question.sentenceId });
     }
@@ -472,7 +502,7 @@ function buildYearPhraseItems(): YearPhraseItem[] {
       return {
         source,
         canonical: entry.canonicalForm ?? entry.headword,
-        count: currentCounts(source, true).form,
+        count: [...yearCorpusText.matchAll(new RegExp(`\\b${source.toLowerCase().replace(/[.*+?^${}()|[\\]\\\\]/g, "\\$&")}\\b`, "g"))].length,
         meaning: entry.contextualMeaning,
         type: entry.partOfSpeech,
         sentenceId,
@@ -498,6 +528,7 @@ function translationAnswerKey(articleId: ArticleId, taskId: number) {
 
 export default function StudyApp() {
   const [view, setView] = useState<AppView>("study");
+  const [selectedYear, setSelectedYear] = useState<number>(2000);
   const [activeSection, setActiveSection] = useState<ArticleId>("cloze");
   const [expanded, setExpanded] = useState<Set<string>>(new Set(["cloze-s1"]));
   const [selectedTerm, setSelectedTerm] = useState<SelectedTerm | null>(null);
@@ -548,17 +579,17 @@ export default function StudyApp() {
   // Building the complete vocabulary resolves every word and occurrence across
   // the imported corpus. Keep the first study render lightweight and only do
   // that work when the vocabulary view is actually opened.
-  const yearWordCount = useMemo(() => new Set(corpusTokens.map(lemmaOf)).size, []);
+  const yearWordCount = useMemo(() => new Set(corpusTokensForYear(selectedYear).map(lemmaOf)).size, [selectedYear]);
   const yearPhraseCount = useMemo(() => {
     const sources = new Set<string>();
-    allSentences.forEach((sentence) => sentence.phrases.forEach((source) => sources.add(source.toLowerCase())));
-    allQuestions.forEach((question) => question.options.forEach((option) => {
+    sentencesForYear(selectedYear).forEach((sentence) => sentence.phrases.forEach((source) => sources.add(source.toLowerCase())));
+    questionsForYear(selectedYear).forEach((question) => question.options.forEach((option) => {
       if (option.text.includes(" ") && getPhraseKnowledge(option.text)) sources.add(option.text.toLowerCase());
     }));
     return sources.size;
-  }, []);
-  const yearWordItems = useMemo(() => (view === "vocabulary" ? buildYearWordItems() : []), [view]);
-  const yearPhraseItems = useMemo(() => (view === "vocabulary" ? buildYearPhraseItems() : []), [view]);
+  }, [selectedYear]);
+  const yearWordItems = useMemo(() => (view === "vocabulary" ? buildYearWordItems(selectedYear) : []), [view, selectedYear]);
+  const yearPhraseItems = useMemo(() => (view === "vocabulary" ? buildYearPhraseItems(selectedYear) : []), [view, selectedYear]);
   const visibleYearWordCount = view === "vocabulary" ? yearWordItems.length : yearWordCount;
   const visibleYearPhraseCount = view === "vocabulary" ? yearPhraseItems.length : yearPhraseCount;
 
@@ -573,7 +604,12 @@ export default function StudyApp() {
     if (snapshot.answers) setAnswers(snapshot.answers);
     if (snapshot.translationAnswers) setTranslationAnswers(snapshot.translationAnswers);
     if (snapshot.submittedTranslationTasks) setSubmittedTranslationTasks(snapshot.submittedTranslationTasks);
-    if (snapshot.activeSection && snapshot.activeSection in articleContents) setActiveSection(snapshot.activeSection);
+    if (snapshot.activeSection && snapshot.activeSection in articleContents) {
+      setActiveSection(snapshot.activeSection);
+      setSelectedYear(articleContents[snapshot.activeSection].year);
+    } else if (snapshot.selectedYear && availableYears.includes(snapshot.selectedYear as (typeof availableYears)[number])) {
+      setSelectedYear(snapshot.selectedYear);
+    }
     if (snapshot.submittedSections) setSubmittedSections(snapshot.submittedSections);
     else if (snapshot.submitted) setSubmittedSections({ cloze: true });
     if (snapshot.revealTiming) setRevealTiming(snapshot.revealTiming);
@@ -654,13 +690,14 @@ export default function StudyApp() {
     submittedTranslationTasks,
     submitted: Boolean(submittedSections.cloze),
     activeSection,
+    selectedYear,
     submittedSections,
     revealTiming,
     timerMode,
     lists,
     listItems,
     reviewFilter,
-  }), [activeSection, answers, expanded, listItems, lists, marks, revealTiming, reviewFilter, reviewSchedule, sentenceMarks, sentenceNotes, submittedSections, submittedTranslationTasks, termNotes, termRatings, timerMode, translationAnswers]);
+  }), [activeSection, answers, expanded, listItems, lists, marks, revealTiming, reviewFilter, reviewSchedule, selectedYear, sentenceMarks, sentenceNotes, submittedSections, submittedTranslationTasks, termNotes, termRatings, timerMode, translationAnswers]);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -874,12 +911,22 @@ export default function StudyApp() {
 
   function selectArticle(id: ArticleId) {
     setActiveSection(id);
+    setSelectedYear(articleContents[id].year);
     setView("study");
     setSelectedTerm(null);
     setTermHistory([]);
     setTimerRunning(false);
     setTimerSeconds(0);
     setUnlockedTerms(new Set());
+  }
+
+  function selectYear(year: number) {
+    const nextSection = sectionsByYear[year as keyof typeof sectionsByYear].find((section) => (
+      section.status === "ready" && section.id in articleContents
+    ));
+    if (!nextSection) return;
+    setSelectedYear(year);
+    selectArticle(nextSection.id);
   }
 
   function createList() {
@@ -996,12 +1043,17 @@ export default function StudyApp() {
         <aside className="paper-nav" aria-label="试卷目录">
           <div className="year-card">
             <span className="year-label">当前试卷</span>
-            <strong>2000</strong>
+            <Select value={String(selectedYear)} onValueChange={(value) => selectYear(Number(value))}>
+              <SelectTrigger size="sm" aria-label="选择真题年份"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {availableYears.map((year) => <SelectItem key={year} value={String(year)}>{year}</SelectItem>)}
+              </SelectContent>
+            </Select>
             <span>全国硕士研究生入学考试英语</span>
           </div>
 
           <nav className="section-list">
-            {sections.map((section) => {
+            {sectionsByYear[selectedYear as keyof typeof sectionsByYear].map((section) => {
               const isReady = section.status === "ready" && section.id in articleContents;
               const isActive = isReady && section.id === activeSection && view !== "vocabulary";
               return (
@@ -1056,7 +1108,7 @@ export default function StudyApp() {
               <>
                 <div>
                   <div className="heading-meta">
-                    <Badge className="paper-badge">2000 · 年度词表</Badge>
+                    <Badge className="paper-badge">{selectedYear} · 年度词表</Badge>
                     <span>随精审进度更新</span>
                   </div>
                   <h2>本年单词与词组总表</h2>
@@ -1166,7 +1218,7 @@ export default function StudyApp() {
               <div className="test-instruction">
                 <Flag />
                 <p><strong>模拟考场：</strong>{activeArticle.kind === "cloze"
-                  ? "正文只保留真正的第 1–10 空，不再显示额外句子序号。点选项字母作答；词汇讲解按你的设置解锁。"
+                  ? `正文只保留真正的第 1–${questions.length} 空，不再显示额外句子序号。点选项字母作答；词汇讲解按你的设置解锁。`
                   : activeArticle.kind === "translation"
                     ? "逐句完成英译汉。提交本句后即可对照参考译文与完整句读，五句全部提交后本篇完成。"
                     : "先限时默读全文，再完成第 11–14 题；不提前显示逐句讲解。点选项字母作答；词汇讲解按你的设置解锁。"}</p>
@@ -1214,7 +1266,7 @@ export default function StudyApp() {
                       {questions.map((question) => (
                         <article key={question.id} className="question-card">
                           <div className="question-prompt">
-                            <span>{question.id}</span>
+                            <span>{question.number ?? question.id}</span>
                             <p>{renderWords(question.prompt, question.sentenceId, openTerm, `question-${question.id}`)}</p>
                           </div>
                           <div className="option-list">
@@ -1327,7 +1379,10 @@ export default function StudyApp() {
                           const article = sentenceArticle.get(sentenceId);
                           return (
                             <button key={sentenceId} type="button" onClick={() => {
-                              if (article) setActiveSection(article.id);
+                              if (article) {
+                                setActiveSection(article.id);
+                                setSelectedYear(article.year);
+                              }
                               setExpanded((current) => new Set(current).add(sentenceId));
                               setView("study");
                             }}>
@@ -1339,10 +1394,13 @@ export default function StudyApp() {
                         {visibleWrongQuestions.map((question) => (
                           <button key={`wrong-${question.id}`} type="button" onClick={() => {
                             const article = questionArticle.get(question.id);
-                            if (article) setActiveSection(article.id);
+                            if (article) {
+                              setActiveSection(article.id);
+                              setSelectedYear(article.year);
+                            }
                             setView("test");
                           }}>
-                            <span><strong>第 {question.id} 题</strong><small>{questionArticle.get(question.id)?.label ?? "真题"} · 已自动收录错题与错误选项</small></span>
+                            <span><strong>第 {question.number ?? question.id} 题</strong><small>{questionArticle.get(question.id)?.label ?? "真题"} · 已自动收录错题与错误选项</small></span>
                             <Badge variant="outline">错题</Badge>
                           </button>
                         ))}
@@ -1380,6 +1438,7 @@ export default function StudyApp() {
 
             <TabsContent value="vocabulary" className="mode-content">
               <YearVocabularyPanel
+                year={selectedYear}
                 words={yearWordItems}
                 phrases={yearPhraseItems}
                 filter={vocabularyFilter}
@@ -1641,6 +1700,7 @@ function groupByInitial<T>(items: T[], labelOf: (item: T) => string) {
 }
 
 function YearVocabularyPanel({
+  year,
   words,
   phrases,
   filter,
@@ -1649,6 +1709,7 @@ function YearVocabularyPanel({
   onSearch,
   onTerm,
 }: {
+  year: number;
   words: YearWordItem[];
   phrases: YearPhraseItem[];
   filter: VocabularyFilter;
@@ -1693,7 +1754,7 @@ function YearVocabularyPanel({
       </div>
 
       <div className="vocabulary-scope-note">
-        <Badge variant="outline">2000 · 已精审内容</Badge>
+        <Badge variant="outline">{year} · 已精审内容</Badge>
         <p>当前覆盖已导入文章的正文、题干、选项和英译汉句子；新增精审内容会自动加入本表。</p>
         <strong>{resultCount} 个结果</strong>
       </div>
@@ -1789,7 +1850,7 @@ function QuestionAnalysisPanel({
     .filter((item): item is { option: Question["options"][number]; analysis: SentenceAnalysis } => Boolean(item.analysis));
 
   return (
-    <section className="question-analysis-panel" aria-label={`第 ${question.id} 题提交后句读`}>
+    <section className="question-analysis-panel" aria-label={`第 ${question.number ?? question.id} 题提交后句读`}>
       <div className="question-analysis-heading">
         <BookOpenCheck />
         <strong>提交后句读</strong>
@@ -2358,7 +2419,7 @@ function TermDetails({
       <details>
         <summary>出现次数与年份</summary>
         <div className="detail-body">
-          <p className="count-scope">当前范围：已精审导入的 2000 年完形、五篇阅读与英译汉正文、题干和选项</p>
+          <p className="count-scope">当前范围：全部已精审导入年份的正文、题干和选项；年度词表仍按所选年份单独统计</p>
           <div className="count-grid">
             {entry.kind === "phrase" ? (
               <>

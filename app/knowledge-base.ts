@@ -41,6 +41,13 @@ import {
   translationPhraseGuides,
   translationWordKnowledge,
 } from "./translation-knowledge";
+import {
+  cloze2001CollocationGlosses,
+  cloze2001FamilyGlosses,
+  cloze2001PhraseAliases,
+  cloze2001PhraseGuides,
+  cloze2001WordKnowledge,
+} from "./2001-cloze-knowledge";
 
 type Structure = NonNullable<VocabEntry["structures"]>[number];
 type ReferenceDetail = NonNullable<VocabEntry["collocationDetails"]>[number];
@@ -705,6 +712,18 @@ Object.assign(phraseAliases, translationPhraseAliases);
 Object.assign(collocationGlosses, translationCollocationGlosses);
 Object.assign(familyGlosses, translationFamilyGlosses);
 for (const [key, value] of Object.entries(translationWordKnowledge)) {
+  wordKnowledge[key] = mergeWordKnowledge(wordKnowledge[key], value);
+}
+
+// 2001 Cloze reuses every established key it can and only appends the new
+// legal/media contexts required by the source article.
+for (const [key, value] of Object.entries(cloze2001PhraseGuides)) {
+  phraseGuides[key] = mergePhrase(phraseGuides[key], value);
+}
+Object.assign(phraseAliases, cloze2001PhraseAliases);
+Object.assign(collocationGlosses, cloze2001CollocationGlosses);
+Object.assign(familyGlosses, cloze2001FamilyGlosses);
+for (const [key, value] of Object.entries(cloze2001WordKnowledge)) {
   wordKnowledge[key] = mergeWordKnowledge(wordKnowledge[key], value);
 }
 
