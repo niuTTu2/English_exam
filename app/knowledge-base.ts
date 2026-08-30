@@ -48,6 +48,13 @@ import {
   cloze2001PhraseGuides,
   cloze2001WordKnowledge,
 } from "./2001-cloze-knowledge";
+import {
+  passage2001P1CollocationGlosses,
+  passage2001P1FamilyGlosses,
+  passage2001P1PhraseAliases,
+  passage2001P1PhraseGuides,
+  passage2001P1WordKnowledge,
+} from "./2001-passage-1-knowledge";
 
 type Structure = NonNullable<VocabEntry["structures"]>[number];
 type ReferenceDetail = NonNullable<VocabEntry["collocationDetails"]>[number];
@@ -724,6 +731,18 @@ Object.assign(phraseAliases, cloze2001PhraseAliases);
 Object.assign(collocationGlosses, cloze2001CollocationGlosses);
 Object.assign(familyGlosses, cloze2001FamilyGlosses);
 for (const [key, value] of Object.entries(cloze2001WordKnowledge)) {
+  wordKnowledge[key] = mergeWordKnowledge(wordKnowledge[key], value);
+}
+
+// 2001 Passage 1 reuses prior entries but adds the scientific-community,
+// publication-standard and professionalisation contexts required by the text.
+for (const [key, value] of Object.entries(passage2001P1PhraseGuides)) {
+  phraseGuides[key] = mergePhrase(phraseGuides[key], value);
+}
+Object.assign(phraseAliases, passage2001P1PhraseAliases);
+Object.assign(collocationGlosses, passage2001P1CollocationGlosses);
+Object.assign(familyGlosses, passage2001P1FamilyGlosses);
+for (const [key, value] of Object.entries(passage2001P1WordKnowledge)) {
   wordKnowledge[key] = mergeWordKnowledge(wordKnowledge[key], value);
 }
 

@@ -218,7 +218,7 @@ const questionArticle = new Map(
 function lexicalContextFor(sentenceId?: string) {
   return {
     sentenceId,
-    articleId: sentenceId ? sentenceArticle.get(sentenceId)?.id as "cloze" | "p1" | "p2" | "p3" | "p4" | "p5" | "translation" | "2001-cloze" | undefined : undefined,
+    articleId: sentenceId ? sentenceArticle.get(sentenceId)?.id as "cloze" | "p1" | "p2" | "p3" | "p4" | "p5" | "translation" | "2001-cloze" | "2001-p1" | undefined : undefined,
   };
 }
 

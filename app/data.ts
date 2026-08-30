@@ -5,6 +5,7 @@ import { passage4Questions, passage4Sentences } from "./passage-4-data";
 import { passage5Questions, passage5Sentences } from "./passage-5-data";
 import { translationSentences, translationTasks } from "./translation-data";
 import { cloze2001Questions, cloze2001Sentences } from "./2001-cloze-data";
+import { passage2001P1Questions, passage2001P1Sentences } from "./2001-passage-1-data";
 import type { ContextualSubstitution } from "./contextual-vocabulary";
 import { verifiedTrunks2000 } from "./verified-syntax-2000";
 
@@ -154,7 +155,7 @@ export const sectionsByYear = {
   2000: sections,
   2001: [
     { id: "2001-cloze", label: "完形填空", meta: "9句 · 20题", status: "ready" },
-    { id: "2001-p1", label: "阅读 Passage 1", meta: "待精审", status: "pending" },
+    { id: "2001-p1", label: "阅读 Passage 1", meta: "16句 · 4题", status: "ready" },
     { id: "2001-p2", label: "阅读 Passage 2", meta: "待精审", status: "pending" },
     { id: "2001-p3", label: "阅读 Passage 3", meta: "待精审", status: "pending" },
     { id: "2001-p4", label: "阅读 Passage 4", meta: "待精审", status: "pending" },
@@ -1304,7 +1305,19 @@ export const articleContents: Record<string, ArticleContent> = {
     sentences: cloze2001Sentences,
     questions: cloze2001Questions,
   },
+  "2001-p1": {
+    id: "2001-p1",
+    year: 2001,
+    sectionId: "p1",
+    label: "阅读 Passage 1",
+    badge: "2001 · 阅读 Passage 1",
+    title: "科学专业化如何把业余研究者挡在门外",
+    description: "沿着‘知识增长—训练门槛—论文标准—期刊与学会分流’的主线，理解科学专业化和职业化的形成。",
+    kind: "reading",
+    sentences: passage2001P1Sentences,
+    questions: passage2001P1Questions,
+  },
 };
 
-export const allSentences = [...verifiedClozeSentences, ...verifiedPassage1Sentences, ...verifiedPassage2Sentences, ...verifiedPassage3Sentences, ...verifiedPassage4Sentences, ...verifiedPassage5Sentences, ...verifiedTranslationSentences, ...cloze2001Sentences];
-export const allQuestions = [...verifiedClozeQuestions, ...verifiedPassage1Questions, ...verifiedPassage2Questions, ...verifiedPassage3Questions, ...verifiedPassage4Questions, ...verifiedPassage5Questions, ...cloze2001Questions];
+export const allSentences = [...verifiedClozeSentences, ...verifiedPassage1Sentences, ...verifiedPassage2Sentences, ...verifiedPassage3Sentences, ...verifiedPassage4Sentences, ...verifiedPassage5Sentences, ...verifiedTranslationSentences, ...cloze2001Sentences, ...passage2001P1Sentences];
+export const allQuestions = [...verifiedClozeQuestions, ...verifiedPassage1Questions, ...verifiedPassage2Questions, ...verifiedPassage3Questions, ...verifiedPassage4Questions, ...verifiedPassage5Questions, ...cloze2001Questions, ...passage2001P1Questions];

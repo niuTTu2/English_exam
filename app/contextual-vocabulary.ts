@@ -1,4 +1,4 @@
-export type ArticleLexiconId = "cloze" | "p1" | "p2" | "p3" | "p4" | "p5" | "translation" | "2001-cloze";
+export type ArticleLexiconId = "cloze" | "p1" | "p2" | "p3" | "p4" | "p5" | "translation" | "2001-cloze" | "2001-p1";
 
 export type ContextualSubstitution = {
   label: string;
@@ -355,6 +355,235 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
         nuance: "fear 情绪强度更高；concern 更正式、中性，适合政策讨论。",
         adjustment: "把 Concerns were raised 整体改为 Fears were expressed，不能只替换单个名词后保留所有搭配。",
         target: "word:fear",
+      }],
+    },
+  },
+  "2001-p1-s1": {
+    accumulation: {
+      contextualMeaning: "科学知识不断增加并聚集形成的总量",
+      use: "accumulation of scientific knowledge 是 problem 的内容，increasing 表示这种积累持续扩大。",
+      contextualSubstitutions: [{
+        label: "expansion",
+        chinese: "扩展；增长",
+        fit: "with-adjustment",
+        rewrittenSentence: "Specialisation can be seen as a response to the continuing expansion of scientific knowledge.",
+        nuance: "expansion 强调知识范围和总量扩张；accumulation 更强调知识一点点累积起来。",
+        adjustment: "把 the problem of an increasing accumulation 整体压缩为 the continuing expansion，避免出现生硬的 expansion accumulation。",
+        target: "word:expansion",
+      }],
+    },
+  },
+  "2001-p1-s2": {
+    split: {
+      contextualMeaning: "把学科内容细分成较小单元",
+      use: "split up A into B 中 A 是 subject matter，B 是 smaller units；By doing 整体作方式状语。",
+      contextualSubstitutions: [{
+        label: "separate",
+        chinese: "把……分成若干部分",
+        fit: "direct",
+        rewrittenSentence: "By separating the subject matter into smaller units, one man could continue to handle the information and use it as the basis for further research.",
+        nuance: "separate 强调把整体分开；split up 更突出拆成便于处理的小块。",
+        target: "word:separate",
+      }],
+    },
+  },
+  "2001-p1-s3": {
+    development: {
+      contextualMeaning: "科学交流方式中相互关联的制度变化",
+      use: "developments 是复数，专业化只是其中之一；affecting... 后置修饰这些变化。",
+      contextualSubstitutions: [{
+        label: "changes",
+        chinese: "变化",
+        fit: "direct",
+        rewrittenSentence: "But specialisation was only one of a series of related changes in science affecting the process of communication.",
+        nuance: "changes 是一般变化；developments 更强调这些变化构成逐步发展的历史进程。",
+        target: "word:change",
+      }],
+    },
+  },
+  "2001-p1-s4": {
+    grow: {
+      contextualMeaning: "职业化程度不断增强的",
+      use: "growing 作前置定语修饰 professionalisation，不是句子的谓语。",
+      contextualSubstitutions: [{
+        label: "increasing",
+        chinese: "日益增强的",
+        fit: "direct",
+        rewrittenSentence: "Another was the increasing professionalisation of scientific activity.",
+        nuance: "increasing 直接强调程度上升；growing 更自然地表现一种逐步发展的历史趋势。",
+        target: "word:increase",
+      }],
+    },
+  },
+  "2001-p1-s5": {
+    distinction: {
+      contextualMeaning: "专业人士与业余者之间可明确划定的界线",
+      use: "draw a distinction between A and B 是固定搭配，本句使用被动 can be drawn。",
+      contextualSubstitutions: [{
+        label: "separation",
+        chinese: "分界；区隔",
+        fit: "with-adjustment",
+        rewrittenSentence: "No clear-cut separation can be made between professionals and amateurs in science: exceptions can be found to any rule.",
+        nuance: "separation 更像两个群体被分开；distinction 更强调概念和标准上的区别。",
+        adjustment: "搭配需由 draw a distinction 改为 make a separation，不能只替换名词后保留 draw。",
+        target: "word:separate",
+      }],
+    },
+  },
+  "2001-p1-s6": {
+    connotation: {
+      contextualMeaning: "amateur 一词附带的、超出字面定义的联想义",
+      use: "that 同位语从句解释 connotation 的全部内容；does carry 用来强调这种含义确实存在。",
+      contextualSubstitutions: [{
+        label: "implication",
+        chinese: "暗含的意思",
+        fit: "direct",
+        rewrittenSentence: "Nevertheless, the word “amateur” does carry an implication that the person concerned is not fully integrated into the scientific community and, in particular, may not fully share its values.",
+        nuance: "implication 可表示话语暗示或潜在后果；connotation 更专门指一个词附带的联想色彩。",
+        target: "word:implication",
+      }],
+    },
+  },
+  "2001-p1-s7": {
+    imply: {
+      contextualMeaning: "客观上意味着并带来更大的参与困难",
+      use: "implied 的主语是专业化增长，宾语是 greater problems，不是某个人含蓄表达观点。",
+      contextualSubstitutions: [{
+        label: "meant",
+        chinese: "意味着",
+        fit: "direct",
+        rewrittenSentence: "The growth of specialisation in the nineteenth century, with its consequent requirement of a longer, more complex training, meant greater problems for amateur participation in science.",
+        nuance: "mean 是最直接的‘意味着’；imply 更正式，强调前一变化逻辑上包含后一结果。",
+        target: "word:mean",
+      }],
+    },
+  },
+  "2001-p1-s8": {
+    obvious: {
+      contextualMeaning: "最容易被观察到、表现最突出的",
+      use: "most obvious 是形容词最高级表语；in those areas 引出表现范围。",
+      contextualSubstitutions: [{
+        label: "clearest",
+        chinese: "最清楚的；最明显的",
+        fit: "with-adjustment",
+        rewrittenSentence: "The trend was naturally clearest in those areas of science based especially on a mathematical or laboratory training, and can be illustrated in terms of the development of geology in the United Kingdom.",
+        nuance: "clearest 强调最容易辨认；most obvious 语气更强，表示现象非常显眼。",
+        adjustment: "obvious 用 more/most 构成比较等级；clear 改用屈折最高级 clearest。",
+        target: "word:clear",
+      }],
+    },
+  },
+  "2001-p1-s9": {
+    reveal: {
+      contextualMeaning: "通过跨时期比较揭示出两项变化",
+      use: "reveals 的主语中心词 comparison 是单数，后接 not simply A but also B 两个宾语。",
+      contextualSubstitutions: [{
+        label: "shows",
+        chinese: "显示；表明",
+        fit: "direct",
+        rewrittenSentence: "A comparison of British geological publications over the last century and a half shows not simply an increasing emphasis on the primacy of research, but also a changing definition of what constitutes an acceptable research paper.",
+        nuance: "show 更普通直接；reveal 强调通过分析把原先不明显的变化揭示出来。",
+        target: "word:show",
+      }],
+    },
+  },
+  "2001-p1-s10": {
+    acceptable: {
+      contextualMeaning: "达到专业人士认可和专业期刊准入标准的",
+      use: "become acceptable to professionals 后接 only if 必要条件，说明认可不是无条件的。",
+      contextualSubstitutions: [{
+        label: "accepted",
+        chinese: "被专业人士接受",
+        fit: "with-adjustment",
+        rewrittenSentence: "Thus, in the nineteenth century, local geological studies represented worthwhile research in their own right; but, in the twentieth century, local studies have increasingly been accepted by professionals only if they incorporate, and reflect on, the wider geological picture.",
+        nuance: "be accepted by 强调实际被接纳；become acceptable to 强调逐渐达到可接受的资格标准。",
+        adjustment: "把系表结构 have become acceptable to 改为被动结构 have been accepted by。",
+        target: "word:accept",
+      }],
+    },
+  },
+  "2001-p1-s11": {
+    pursue: {
+      contextualMeaning: "持续从事、开展地方性研究",
+      use: "pursue 直接接 local studies；与 in the old way 共同说明业余者仍沿用旧研究模式。",
+      contextualSubstitutions: [{
+        label: "study",
+        chinese: "研究",
+        fit: "with-adjustment",
+        rewrittenSentence: "Amateurs, on the other hand, have continued to study local geology in the old way.",
+        nuance: "study local geology 直接描述研究对象；pursue local studies 更正式，突出长期从事一类研究项目。",
+        adjustment: "pursue 的宾语 local studies 改写为 study 的宾语 local geology，避免不自然的 study studies。",
+        target: "word:study",
+      }],
+    },
+  },
+  "2001-p1-s12": {
+    reinforce: {
+      contextualMeaning: "使业余者发表更难这一结果进一步加强",
+      use: "has been reinforced 是现在完成时被动，by 引出同行评审制度这一强化因素。",
+      contextualSubstitutions: [{
+        label: "strengthened",
+        chinese: "加强；强化",
+        fit: "direct",
+        rewrittenSentence: "The overall result has been to make entrance to professional geological journals harder for amateurs, a result that has been strengthened by the widespread introduction of refereeing, first by national journals in the nineteenth century and then by several local geological journals in the twentieth century.",
+        nuance: "strengthen 是一般‘加强’；reinforce 更像在已有结果或结构上再加一层力量。",
+        target: "word:strengthen",
+      }],
+    },
+  },
+  "2001-p1-s13": {
+    appear: {
+      contextualMeaning: "专业与业余读者各自的期刊已经形成并出现",
+      use: "have appeared 是不及物现在完成时，不使用被动；aimed... 后置修饰 journals。",
+      contextualSubstitutions: [{
+        label: "emerged",
+        chinese: "逐渐出现；形成",
+        fit: "direct",
+        rewrittenSentence: "As a logical consequence of this development, separate journals have now emerged aimed mainly towards either professional or amateur readership.",
+        nuance: "emerge 更突出在分化过程中逐渐形成；appear 只陈述已经出现这一事实。",
+        target: "word:emerge",
+      }],
+    },
+  },
+  "2001-p1-s14": {
+    differentiation: {
+      contextualMeaning: "专业群体与业余群体在组织形式上逐渐分流",
+      use: "process of differentiation 是长主语，has led to 引出专业地质学家联合的结果。",
+      contextualSubstitutions: [{
+        label: "separation",
+        chinese: "分离；分流",
+        fit: "direct",
+        rewrittenSentence: "A rather similar process of separation has led to professional geologists coming together nationally within one or two specific societies, whereas the amateurs have tended either to remain in local societies or to come together nationally in a different way.",
+        nuance: "separation 强调群体被分开；differentiation 更强调群体逐渐形成不同特征、规范和组织方式。",
+        target: "word:separate",
+      }],
+    },
+  },
+  "2001-p1-s15": {
+    consequence: {
+      contextualMeaning: "专业化与职业化造成的全部结构性影响",
+      use: "its full consequences 是主句主语，its 回指前面的 process；were delayed 表后果较晚完全显现。",
+      contextualSubstitutions: [{
+        label: "effects",
+        chinese: "影响；效果",
+        fit: "direct",
+        rewrittenSentence: "Although the process of professionalisation and specialisation was already well under way in British geology during the nineteenth century, its full effects were thus delayed until the twentieth century.",
+        nuance: "effects 中性表示产生的影响；consequences 更突出从前述过程推导出的后果，因果色彩更强。",
+        target: "word:effect",
+      }],
+    },
+  },
+  "2001-p1-s16": {
+    crucial: {
+      contextualMeaning: "对科学结构转变起决定作用的",
+      use: "the crucial period 是 reckon...as 后的主语补足语，评价十九世纪的历史地位。",
+      contextualSubstitutions: [{
+        label: "decisive",
+        chinese: "决定性的",
+        fit: "direct",
+        rewrittenSentence: "In science generally, however, the nineteenth century must be reckoned as the decisive period for this change in the structure of science.",
+        nuance: "decisive 更强调决定最终走向；crucial 强调这一时期极其关键，但未必单独决定全部结果。",
+        target: "word:decisive",
       }],
     },
   },
