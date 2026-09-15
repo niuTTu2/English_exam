@@ -1,0 +1,121 @@
+import type { PhraseKnowledge, WordKnowledge } from "./knowledge-base";
+
+type Seed = readonly [source: string, canonical: string, meaning: string, role: string, rule: string, pitfall: string];
+
+const seeds: Seed[] = [
+  ["lead to", "lead to + result", "导致；带来某种结果", "因果谓语搭配", "to 是介词，后接名词、代词或动名词作结果。", "不能写 lead to do 表示‘导致做’；应接 doing。"],
+  ["look after", "look after + person/thing", "照料；照顾", "短语动词", "look after 整体为及物短语，后接被照料对象。", "不能按字面译成‘向后看’；较正式表达可用 care for。"],
+  ["designate A as B", "designate A as B", "正式指定或认定 A 为 B", "动词 + 宾语 + as 补足结构", "A 是被认定对象，B 是被赋予的身份、类别或用途。", "不要与 appoint sb to a post 的任命结构混用。"],
+  ["be designated by an authority", "be designated by + authority", "由权威机构正式认定", "被动谓语搭配", "by 引出作出认定的机构。", "designate 的重点是正式地位，不只是发表评论。"],
+  ["come to notice", "come to notice", "受到注意；进入公众视野", "动词搭配", "主语通常是此前不受关注的事件或现象。", "notice 在此为不可数的‘注意’，不是通知单。"],
+  ["take notice of", "take notice of + noun", "注意到；重视", "动词搭配", "of 后接需要关注的人或事。", "不要漏掉 of。"],
+  ["crop up", "crop up", "突然或陆续出现", "不及物短语动词", "常以 problem、case、issue 作主语，地点可由 in 引出。", "不能直接接宾语。"],
+  ["release supplies from a stockpile", "release + supplies + from a stockpile", "从储备中调拨并投放物资", "动宾搭配 + 来源状语", "from 引出物资原先所在的储备。", "release 强调投入使用，distribute 更强调分配过程。"],
+  ["be recommended for", "be recommended for + person/use", "被建议用于某人或用途", "被动谓语搭配", "for 引出适用人群或用途。", "be recommended to do 的主语通常是接受建议的人，结构不同。"],
+  ["recommend doing", "recommend doing sth", "建议做某事", "动词 + 动名词宾语", "recommend 后可直接接 doing，不接 recommend to do。", "不能写 recommend to do sth。"],
+  ["recommend that sb (should) do", "recommend that sb (should) do", "建议某人做某事", "动词 + 宾语从句", "正式英语中从句可用 should + 原形，should 可省略。", "省略 should 后仍用动词原形。"],
+  ["care for infants", "care for + person", "照料婴儿；照顾某人", "短语动词", "care for 后接需要实际照护的对象。", "care about 表在意，不能完全替换实际照料义。"],
+  ["health care", "health care", "医疗保健；卫生服务", "复合名词", "可作整体名词，也可放在 worker/system 前作定语。", "不要逐字拆成‘健康的照顾’。"],
+  ["the outbreak of swine flu", "the outbreak of + disease", "某种疾病的暴发", "名词短语；句子主语", "outbreak 是中心词，of 引出暴发的疾病。", "outbreak 指突然暴发，不等于长期流行的 epidemic。"],
+  ["was first detected in Mexico", "be first detected in + place", "最先在某地被发现", "一般过去时被动谓语", "be detected 表被发现；first 和地点短语分别说明顺序、地点。", "detect 强调经观察或检验发现，不只是 see。"],
+  ["was declared a global epidemic", "declare A (to be) B", "被宣布为全球性疫情", "被动谓语 + 主语补足语", "主动为 declare A B；变被动后 B 说明主语的新身份。", "declare 后的身份补足语通常不加 as。"],
+  ["on June 11, 2009", "on + specific date", "在 2009 年 6 月 11 日", "具体日期时间状语", "具体到某一天用 on。", "月份或年份单独出现通常用 in。"],
+  ["the first worldwide epidemic", "the first + noun", "第一次全球性疫情", "名词短语；系表结构表语", "序数词 first 前用 the，worldwide 作定语。", "first 强调排序，不等于 firstly。"],
+  ["designated by the World Health Organization", "be designated by + authority", "由世界卫生组织正式认定", "过去分词短语；后置定语", "designate 表权威机构正式指定或认定；by 引出实施者。", "appoint 常任命人，不能替换这里的 designate。"],
+  ["in 41 years", "the first ... in + time span", "41 年来", "时间范围状语", "在 the first/best 等结构后，in + 时段给出比较范围。", "不要机械译为‘在 41 年之内’。"],
+  ["the heightened alert", "heightened + alert", "提高后的警戒级别", "名词短语；主语", "heightened 是过去分词形容词，表示已被提高的。", "alert 此处是警戒状态，不是‘提醒某人’。"],
+  ["followed an emergency meeting", "A follow B", "发生在紧急会议之后", "及物谓语 + 宾语", "A followed B 表先 B 后 A。", "不要误读为会议跟随警戒，也不要与 prompt‘促使’混淆。"],
+  ["with flu experts in Geneva", "a meeting with + participants", "有流感专家参加、在日内瓦举行", "后置修饰 meeting", "with 引出参与者，in Geneva 引出会议地点。", "不能把 in Geneva 误接到 experts 的国籍上。"],
+  ["after a sharp rise in cases", "after a sharp rise in + noun", "在……急剧上升之后", "时间兼背景状语", "rise 是名词，sharp 修饰幅度，in 引出上升对象。", "rise 为不及物词族；及物‘提高’用 raise。"],
+  ["rising numbers", "rising numbers (of + plural noun)", "不断上升的数量", "并列名词短语", "numbers 在病例语境可省略 of cases；rising 是现在分词形容词。", "可数对象用 numbers，不用 amounts。"],
+  ["in Britain, Japan, Chile and elsewhere", "in A, B, C and elsewhere", "在英国、日本、智利及其他地区", "并列地点状语", "多个地点共用介词 in，elsewhere 收束未列地点。", "elsewhere 本身是副词，前面不加 in。"],
+  ["\"moderate\" in severity", "be moderate in severity", "严重程度为中等", "系动词后的形容词表语", "in severity 限定 moderate 评价的是严重程度。", "moderate 不等于 normal，也不是‘主持会议’的动词义。"],
+  ["according to Margaret Chan", "according to + source", "据陈冯富珍所说", "信息来源状语", "according to 引出信息或判断来源。", "通常不用 according to me 表个人意见。"],
+  ["the organization's director general", "title/appositive after a name", "该组织的总干事", "同位语；补充人物身份", "逗号隔开的名词短语与前面人名指同一人。", "director general 是整体职衔，不要倒译成普通‘总导演’。"],
+  ["with the overwhelming majority of patients experiencing", "with + noun + doing", "绝大多数患者处于……的情况", "with 复合结构；伴随兼依据状语", "名词是 doing 的逻辑主语，doing 表主动或正在呈现的状态。", "不能把 experiencing 误作主句谓语。"],
+  ["mild symptoms and a full recovery", "mild symptoms and a full recovery", "轻微症状并完全康复", "experiencing 的并列宾语", "and 连接两个名词短语，only 限定整体程度。", "recovery 是康复过程/结果，不等于 treatment。"],
+  ["in the absence of any medical treatment", "in the absence of + noun", "在没有任何治疗的情况下", "条件兼伴随状语", "absence 表缺少，of 后接缺少的事物。", "与 in the presence of‘在有……时’意义相反。"],
+  ["came to global notice", "come to notice", "进入全球视野；引起全球注意", "主句谓语", "come to notice 是整体搭配，global 修饰 notice。", "不能逐字译成‘来到通知’。"],
+  ["in late April 2009", "in late + month/year", "在 2009 年 4 月下旬", "时间状语", "月份、年份前用 in；late 表该时段后半段。", "具体日期才使用 on。"],
+  ["Mexican authorities noted", "authority/authorities note + fact", "墨西哥当局注意到", "时间从句的主谓部分", "authorities 作‘当局’通常用复数；note 是及物动词。", "note 此处是‘注意到’，不是‘做笔记’。"],
+  ["an unusually large number of", "an unusually large number of + plural noun", "数量异常多的……", "数量限定结构", "a number of 后接可数复数；unusually 修饰 large。", "谓语通常随后面的复数名词用复数。"],
+  ["hospitalizations and deaths among healthy adults", "N and N among + group", "健康成年人中的住院与死亡事件", "宾语中心及群体范围", "among 引出未逐一区分的群体内部。", "between 强调可区分对象，此处不合适。"],
+  ["much of Mexico City", "much of + singular whole/place", "墨西哥城的大部分地区或活动", "as 从句主语", "much of 可指一个不可数整体或地区的大部分。", "不能说 many of Mexico City。"],
+  ["shut down", "shut down", "关闭；停摆", "不及物短语谓语", "此处无宾语，表示城市社会活动停摆。", "shut 的过去式和过去分词仍是 shut。"],
+  ["at the height of a panic", "at the height of + event/state", "在恐慌最严重时", "时间兼程度状语", "height 比喻某事达到顶峰。", "不是物理高度义。"],
+  ["began to crop up", "begin to crop up", "开始意外、陆续出现", "主句复合谓语", "crop up 是不及物短语，常以 problem/case 作主语。", "不能按 crop 的‘农作物’名词义理解。"],
+  ["the southwestern United States", "the southwestern United States", "美国西南部", "并列地点", "southwestern 作地域形容词，United States 前保留 the。", "不要误译为整个南美洲。"],
+  ["around the world", "around the world", "在世界各地", "范围地点状语", "表示全球范围，相当于 throughout the world。", "不是围绕地球移动。"],
+  ["In the United States", "in the United States", "在美国", "句首地点状语", "国家专名前的固定冠词 the 不能省略。", "United States 前必须带 the。"],
+  ["new cases", "new cases", "新增病例", "主句主语", "case 在疾病语境表示病例。", "不是法律案件义。"],
+  ["seemed to fade", "seem to + verb", "似乎在减少、消退", "系动意义谓语 + 不定式", "seem to do 表根据迹象作不确定判断。", "fade 强调逐渐变弱，不等于突然消失。"],
+  ["as warmer weather arrived", "as + clause", "随着天气转暖", "时间/伴随状语从句", "as 连接两个同步变化；weather 是主语，arrived 是谓语。", "此处 as 不是‘因为’或‘作为’。"],
+  ["in late September 2009", "in late + month/year", "在 2009 年 9 月下旬", "时间状语", "与上文 warmer weather 形成时间推进。", "月份前用 in。"],
+  ["significant flu activity", "significant + activity", "显著的流感活动", "there be 句实际主语", "significant 表达到值得关注的程度。", "不是 magnificent‘壮丽的’。"],
+  ["in almost every state", "in almost every + singular noun", "在几乎每一个州", "范围地点状语", "every 后接单数；almost 修饰 every。", "不能写 almost every states。"],
+  ["virtually all the samples tested", "virtually all + noun + past participle", "几乎所有受检样本", "并列分句主语", "tested 是过去分词后置修饰 samples；virtually 表几乎。", "sample 是检测样本，不是 example。"],
+  ["the new swine flu", "the new swine flu", "这种新型猪流感", "系表结构表语", "the 表特指前述病毒，new 与 seasonal 对比。", "flu 通常不可数。"],
+  ["also known as (A) H1N1", "be known as + name", "也称为（甲型）H1N1", "过去分词插入说明", "be known as 引出名称；此处补充同一病毒的别称。", "be known for 引出出名原因，不能混用。"],
+  ["not seasonal flu", "not A but/contrast B", "而不是季节性流感", "省略式对比表语", "not 否定类别 seasonal flu，与 new swine flu 对照。", "seasonal 修饰 flu，不是时间状语。"],
+  ["In the U.S.", "in the U.S.", "在美国", "地点范围状语", "U.S. 是 United States 的缩写。", "作名词前通常使用 the。"],
+  ["has infected more than one million people", "infect + people", "已使一百多万人感染", "现在完成时谓语与宾语", "infect 是病毒使人患病；has infected 连接过去至统计时点。", "不能用 inject‘注射’替换。"],
+  ["caused more than 600 deaths", "cause + result", "造成 600 多人死亡", "并列谓语与结果宾语", "cause 直接接结果名词 deaths。", "不要写 cause to 600 deaths。"],
+  ["more than 6,000 hospitalizations", "more than + number + plural noun", "六千多例住院", "caused 的并列宾语", "more than 表超过；hospitalization 在统计中可数。", "数字大于而非约等于。"],
+  ["Federal health officials", "federal health officials", "联邦卫生官员", "主句主语", "federal 限定政府层级，health 限定职责领域。", "official 此处是官员名词。"],
+  ["released Tamiflu for children", "release medicine/supplies for + group", "投放供儿童使用的达菲", "谓语、宾语及用途对象", "release 表从储备中调拨投放；for 引出适用群体。", "不是 relieve‘缓解’。"],
+  ["from the national stockpile", "from a/the stockpile", "从国家储备中", "来源状语", "from 引出物资调出的来源；stockpile 指应急储备。", "不能理解为普通商店库存。"],
+  ["began taking orders", "begin taking orders", "开始接受订单", "并列谓语", "take orders 表接单；begin 后可接 doing。", "place orders 才是下单，方向相反。"],
+  ["orders from the states", "orders from + customer/source", "来自各州的订单", "orders 的来源后置定语", "from 说明谁提出订购。", "states 此处指美国各州，不是状态。"],
+  ["for the new swine flu vaccine", "order(s) for + product", "针对新型猪流感疫苗的订单", "后置介词短语", "for 引出订购对象。", "不要误接为官员‘为了疫苗而开始’。"],
+  ["the new vaccine", "the new vaccine", "这种新疫苗", "主语", "the 回指前句的新型猪流感疫苗。", "vaccine 是疫苗，不是 vaccination‘接种行为’。"],
+  ["is different from", "be different from + noun", "与……不同", "形容词表语搭配", "different 后在英美通用表达中接 from。", "考试中优先不用 different with。"],
+  ["the annual flu vaccine", "annual flu vaccine", "年度季节性流感疫苗", "介词宾语", "annual 表每年一次或每年使用。", "annual 不等于 perennial。"],
+  ["is available", "be available", "可以获得；可供应", "形容词表语", "物作主语表示可取得，人作主语可表示有空。", "此处不是‘有空闲’。"],
+  ["ahead of expectations", "ahead of expectations/schedule", "早于预期", "比较性时间状语", "ahead of 表进度在预期之前。", "不表示空间上站在预期前面。"],
+  ["more than three million doses", "more than + number + doses", "三百多万剂", "主句主语", "dose 是药品或疫苗的一剂，数量大于三百万。", "dose 不等于 bottle。"],
+  ["were to be made available", "be to be made available", "计划被供应", "be to do 的被动结构", "were to 表计划；be made available 表被提供。", "不是普通过去时，含预定安排。"],
+  ["in early October 2009", "in early + month/year", "在 2009 年 10 月初", "时间状语", "early 修饰月份内部的前一段。", "具体日才用 on。"],
+  ["most of those initial doses", "most of those + plural noun", "那些首批剂量中的大多数", "though 从句主语", "most of 后有指示限定词 those；initial 表时间上的首批。", "initial 不等于 principal‘主要的’。"],
+  ["the FluMist nasal spray type", "the + product + type", "FluMist 鼻喷剂型", "of 后的类型表语", "be of the ... type 表属于某一类型。", "type 指剂型类别，不是打字。"],
+  ["recommended for", "be recommended for + person/use", "被建议用于……", "被动谓语搭配", "for 引出适用对象；否定式表示不建议该人群使用。", "recommend sb to do 在此不如 recommend that.../recommend doing 规范。"],
+  ["pregnant women", "pregnant women", "孕妇", "for 的并列宾语", "pregnant 只能描述怀孕状态，修饰 women。", "不能用 pregnanted。"],
+  ["people over 50", "people over + age", "50 岁以上的人", "并列人群名词短语", "over + 数字在年龄中表示超过该年龄。", "不是人在数字上方。"],
+  ["those with breathing difficulties", "those with + health condition", "有呼吸困难的人", "并列人群名词短语", "those 代替 people，with 引出所患状况。", "those 后谓语按复数。"],
+  ["heart disease", "heart disease", "心脏病", "with 的并列宾语", "disease 作疾病类别常用单数/不可数概念。", "heart trouble 更口语，范围也可能更宽。"],
+  ["several other problems", "several other + plural noun", "其他几种健康问题", "with 的并列宾语", "several 后接复数，other 位于数词与名词之间。", "issues 在此不如 health problems 具体。"],
+  ["it was still possible to vaccinate", "It be possible to do sth", "仍然可以接种……", "形式主语结构", "it 是形式主语，to vaccinate... 是真正主语。", "possible 不能以人作主语说 people are possible to...。"],
+  ["people in other high-risk groups", "people in + risk group", "其他高风险群体中的人", "vaccinate 的宾语及后置定语", "in 引出所属群体；high-risk 是复合形容词。", "名词前 high-risk 通常加连字符。"],
+  ["health care workers", "health care workers", "医护人员", "冒号后的同位列举", "health care 作名词定语修饰 workers。", "不要只译成照顾健康的工人。"],
+  ["people caring for infants", "people caring for + person", "照料婴儿的人", "现在分词短语后置定语", "caring for 修饰 people，care for 表照料。", "care about 是关心，不表示实际照料。"],
+  ["healthy young people", "healthy young people", "健康的年轻人", "并列同位列举", "healthy 和 young 共同修饰 people。", "healthy 指健康状态，不等于 healthful‘有益健康的’。"],
+];
+
+const slug = (source: string) => source.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+
+export const cloze2010PhraseGuides: Record<string, PhraseKnowledge> = Object.fromEntries(seeds.map((seed) => {
+  const [source, canonical, meaning, grammarRole, rule, pitfall] = seed;
+  const key = `2010-${slug(source)}`;
+  return [key, { key, sourceExpression: source, canonical, type: "真题词组/句法结构", meaning, summary: `${meaning}。${rule}`, grammarRole, structures: [{ pattern: canonical, meaning, rule, examples: [{ english: source, chinese: meaning }] }], pitfalls: [pitfall] }];
+}));
+
+export const cloze2010PhraseAliases: Record<string, string> = Object.fromEntries(seeds.map(([source]) => [source.toLowerCase(), `2010-${slug(source)}`]));
+export const cloze2010CollocationGlosses: Record<string, { meaning: string; note: string }> = Object.fromEntries(seeds.map(([source, , meaning, , rule]) => [source.toLowerCase(), { meaning, note: rule }]));
+
+export const cloze2010FamilyGlosses: Record<string, string> = {
+  detect: "发现；查明", detection: "发现；检测", declare: "宣布；声明", declaration: "宣布；声明",
+  designate: "正式指定；认定", designation: "名称；指定", severe: "严重的", severity: "严重程度",
+  recover: "康复；恢复", recovery: "康复；恢复", absent: "缺席的；不存在的", absence: "缺少；缺席",
+  hospitalize: "使住院", hospitalization: "住院；住院病例", infect: "使感染", infected: "已感染的", infection: "感染", infectious: "传染性的",
+  recommend: "推荐；建议", recommendation: "建议；推荐", breathe: "呼吸", breathing: "呼吸的；呼吸过程",
+  significant: "显著的；重要的", significance: "重要性；显著性", significantly: "显著地；大幅地",
+  vaccine: "疫苗", vaccinate: "给……接种", vaccination: "接种疫苗",
+};
+
+export const cloze2010WordKnowledge: Record<string, WordKnowledge> = {
+  that: { grammarRole: "关系代词；引导限制性定语从句", grammarSummary: "that 在本篇分别回指 swine flu 与 flu experts/meeting，并在从句中充当主语；先找先行词，再找从句谓语。", structures: [{ pattern: "noun + that + predicate", meaning: "……的名词", rule: "that 在从句中必须承担主语或宾语成分；作宾语时可省略。" }], pitfalls: ["不能只看最近名词，还要核对语义上谁能执行从句动作。"] },
+  with: { grammarRole: "介词；本篇重点构成 with 复合结构", grammarSummary: "with + 名词 + doing 中，名词是 doing 的逻辑主语，整组作伴随或依据状语。", structures: [{ pattern: "with + noun + doing", meaning: "在……做……的情况下", rule: "doing 表逻辑主语主动执行或呈现的动作。" }], pitfalls: ["不要把 with 后的 doing 误判成主句谓语。"] },
+  as: { grammarRole: "从属连词；引导时间/伴随状语从句", grammarSummary: "本篇两个 as 都表示两种情况同步发展，可译为‘当……时/随着……’。", structures: [{ pattern: "as + subject + predicate, main clause", meaning: "随着/当……时", rule: "两边通常为同期变化或同期事件。" }], pitfalls: ["as 还可表原因、方式、身份，必须按句内逻辑判断。"] },
+  though: { grammarRole: "从属连词；引导让步状语从句", grammarSummary: "though 引入对主句利好信息的限制：虽有三百多万剂，但首批剂型不适合若干人群。", structures: [{ pattern: "main clause, though + clause", meaning: "……，不过/尽管……", rule: "主句先给结论，though 从句补充相反或限制性事实。" }], pitfalls: ["同一句中通常不再与 but 连用。"] },
+  which: { grammarRole: "关系代词；引导非限制性定语从句", grammarSummary: "which 回指 FluMist nasal spray type，在从句中作主语；逗号表示补充说明而非限定范围。", structures: [{ pattern: "noun, which + predicate", meaning: "该名词……", rule: "非限制性定语从句用逗号隔开，which 一般不能换成 that。" }], pitfalls: ["翻译时应先明确 which 的具体指代。"] },
+  it: { grammarRole: "代词；可作指代词或形式主语", grammarSummary: "has infected 中 it 指病毒；it was possible 中 it 不指任何事物，而替代后置不定式真正主语。", structures: [{ pattern: "It be adjective to do sth", meaning: "做某事是……的", rule: "it 为形式主语，to do 是真正主语。" }], pitfalls: ["同一篇中的 it 不能一律按同一种指代解释。"] },
+};

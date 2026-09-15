@@ -443,6 +443,58 @@ test("2001 年 Passage 2 的同义替换链接均为完整知识条目", () => {
   }
 });
 
+test("2010 年完形原文、20 题答案与零基础句法通过独立门禁", () => {
+  const article = data.articleContents["2010-cloze"];
+  assert.ok(article, "2010 年完形内容对象不存在");
+  assert.equal(article.sentences.length, 13, "2010 年完形必须严格拆为 13 句");
+  assert.equal(article.questions.length, 20, "2010 年完形必须包含 20 题");
+  assert.deepEqual(article.sentences.map((sentence) => sentence.number), Array.from({ length: 13 }, (_, index) => index + 1), "2010 年完形句号必须连续");
+  assert.equal(Object.keys(answerKeys.verifiedAnswerKey2010Cloze).length, 20, "2010 年完形答案清单必须覆盖第 1—20 题");
+  for (const question of article.questions) {
+    assert.equal(question.answer, answerKeys.verifiedAnswerKey2010Cloze[question.number], `2010 年完形第 ${question.number} 题答案偏离独立核验清单`);
+  }
+  assert.ok(answerKeys.verifiedAnswerSources2010Cloze.length >= 2, "2010 年完形必须保留至少两个核验来源");
+  for (const source of answerKeys.verifiedAnswerSources2010Cloze) {
+    requireText(source.range, "answerSource2010.range");
+    requireText(source.label, "answerSource2010.label");
+    assert.match(source.url, /^https:\/\//, "2010 年答案来源必须使用可访问链接");
+  }
+
+  const expectedClauseCounts = {
+    "2010-cloze-s1": 1,
+    "2010-cloze-s3": 1,
+    "2010-cloze-s5": 1,
+    "2010-cloze-s6": 1,
+    "2010-cloze-s7": 1,
+    "2010-cloze-s8": 2,
+    "2010-cloze-s11": 1,
+    "2010-cloze-s12": 2,
+  };
+  const actualClauseCounts = Object.fromEntries(article.sentences.map((sentence) => [sentence.id, syntaxGuide.buildBeginnerSyntaxGuide(sentence).clauses.length]).filter(([, count]) => count > 0));
+  assert.deepEqual(actualClauseCounts, expectedClauseCounts, "2010 年完形的从句边界或数量有遗漏");
+});
+
+test("2010 年完形每句都有语境化同义替换且链接有效", () => {
+  const article = data.articleContents["2010-cloze"];
+  const contexts = Object.entries(contextualVocabulary.sentenceWordContexts).filter(([sentenceId]) => sentenceId.startsWith("2010-cloze-"));
+  assert.equal(contexts.length, 13, "2010 年完形 13 句每句至少应有一个本句替换入口");
+  for (const [sentenceId, words] of contexts) {
+    assert.ok(article.sentences.some((sentence) => sentence.id === sentenceId), `同义替换指向不存在的句子：${sentenceId}`);
+    for (const context of Object.values(words)) {
+      for (const substitution of context.contextualSubstitutions ?? []) {
+        if (substitution.target.startsWith("word:")) {
+          const guide = lexicon.getLexicalGuide(substitution.target.slice(5), { articleId: "2010-cloze" });
+          requireText(guide.contextualMeaning, `${sentenceId}.replacement.meaning`);
+          requireText(guide.use, `${sentenceId}.replacement.use`);
+          assert.ok(!guide.partOfSpeech.startsWith("word（"), `${sentenceId} 的替换词使用了推测词性`);
+        } else {
+          assert.ok(knowledge.getPhraseKnowledge(substitution.target.slice(7)), `${sentenceId} 的替换词组没有完整知识链接`);
+        }
+      }
+    }
+  }
+});
+
 test("同一词条按文章和句子语境显示本句义与可替换表达", () => {
   const sentenceById = new Map(allSentences.map((sentence) => [sentence.id, sentence]));
 

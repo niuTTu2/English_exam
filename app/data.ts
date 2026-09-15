@@ -7,6 +7,7 @@ import { translationSentences, translationTasks } from "./translation-data";
 import { cloze2001Questions, cloze2001Sentences } from "./2001-cloze-data";
 import { passage2001P1Questions, passage2001P1Sentences } from "./2001-passage-1-data";
 import { passage2001P2Questions, passage2001P2Sentences } from "./2001-passage-2-data";
+import { cloze2010Questions, cloze2010Sentences } from "./2010-cloze-data";
 import type { ContextualSubstitution } from "./contextual-vocabulary";
 import { verifiedTrunks2000 } from "./verified-syntax-2000";
 
@@ -163,9 +164,18 @@ export const sectionsByYear = {
     { id: "2001-p5", label: "阅读 Passage 5", meta: "待精审", status: "pending" },
     { id: "2001-translation", label: "英译汉", meta: "待精审", status: "pending" },
   ],
+  2010: [
+    { id: "2010-cloze", label: "完形填空", meta: "13句 · 20题", status: "ready" },
+    { id: "2010-p1", label: "阅读 Text 1", meta: "待精审", status: "pending" },
+    { id: "2010-p2", label: "阅读 Text 2", meta: "待精审", status: "pending" },
+    { id: "2010-p3", label: "阅读 Text 3", meta: "待精审", status: "pending" },
+    { id: "2010-p4", label: "阅读 Text 4", meta: "待精审", status: "pending" },
+    { id: "2010-p5", label: "阅读 Part B", meta: "待精审", status: "pending" },
+    { id: "2010-translation", label: "英译汉", meta: "待精审", status: "pending" },
+  ],
 } as const;
 
-export const availableYears = [2000, 2001] as const;
+export const availableYears = [2000, 2001, 2010] as const;
 
 export const sentences: SentenceAnalysis[] = [
   {
@@ -1330,7 +1340,19 @@ export const articleContents: Record<string, ArticleContent> = {
     sentences: passage2001P2Sentences,
     questions: passage2001P2Questions,
   },
+  "2010-cloze": {
+    id: "2010-cloze",
+    year: 2010,
+    sectionId: "cloze",
+    label: "完形填空",
+    badge: "2010 · 完形填空",
+    title: "甲型 H1N1 疫情与疫苗应对",
+    description: "沿着‘全球定级—传播与病例—药品和疫苗供应—高风险人群’的时间线，掌握公共卫生报道中的词义、搭配与逻辑衔接。",
+    kind: "cloze",
+    sentences: cloze2010Sentences,
+    questions: cloze2010Questions,
+  },
 };
 
-export const allSentences = [...verifiedClozeSentences, ...verifiedPassage1Sentences, ...verifiedPassage2Sentences, ...verifiedPassage3Sentences, ...verifiedPassage4Sentences, ...verifiedPassage5Sentences, ...verifiedTranslationSentences, ...cloze2001Sentences, ...passage2001P1Sentences, ...passage2001P2Sentences];
-export const allQuestions = [...verifiedClozeQuestions, ...verifiedPassage1Questions, ...verifiedPassage2Questions, ...verifiedPassage3Questions, ...verifiedPassage4Questions, ...verifiedPassage5Questions, ...cloze2001Questions, ...passage2001P1Questions, ...passage2001P2Questions];
+export const allSentences = [...verifiedClozeSentences, ...verifiedPassage1Sentences, ...verifiedPassage2Sentences, ...verifiedPassage3Sentences, ...verifiedPassage4Sentences, ...verifiedPassage5Sentences, ...verifiedTranslationSentences, ...cloze2001Sentences, ...passage2001P1Sentences, ...passage2001P2Sentences, ...cloze2010Sentences];
+export const allQuestions = [...verifiedClozeQuestions, ...verifiedPassage1Questions, ...verifiedPassage2Questions, ...verifiedPassage3Questions, ...verifiedPassage4Questions, ...verifiedPassage5Questions, ...cloze2001Questions, ...passage2001P1Questions, ...passage2001P2Questions, ...cloze2010Questions];

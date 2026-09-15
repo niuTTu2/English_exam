@@ -52,6 +52,12 @@ import {
   passage2001P2Lexicon,
 } from "./2001-passage-2-lexicon";
 import {
+  cloze2010FamilyAliases,
+  cloze2010FormPartOfSpeech,
+  cloze2010LemmaAliases,
+  cloze2010Lexicon,
+} from "./2010-cloze-lexicon";
+import {
   getSentenceWordContext,
   type ArticleLexiconId,
   type ContextualSubstitution,
@@ -115,6 +121,7 @@ export const familyAliases: Record<string, string> = {
   his: "he",
   wishes: "wish",
 };
+Object.assign(familyAliases, cloze2010FamilyAliases);
 
 const partOfSpeech: Record<string, string> = {
   a: "art.（不定冠词）",
@@ -329,6 +336,7 @@ Object.assign(formPartOfSpeech, passage2001P2FormPartOfSpeech);
 Object.assign(familyAliases, translationFamilyAliases);
 Object.assign(formPartOfSpeech, translationFormPartOfSpeech);
 Object.assign(lemmaAliases, cloze2001LemmaAliases);
+Object.assign(lemmaAliases, cloze2010LemmaAliases);
 Object.assign(formPartOfSpeech, cloze2001FormPartOfSpeech);
 
 const specialForms: Record<string, string[]> = {
@@ -661,6 +669,7 @@ export function getLexicalGuide(token: string, context?: LexicalContext): Lexica
   const cloze2001Entry = cloze2001Lexicon[headword];
   const passage2001P1Entry = passage2001P1Lexicon[headword];
   const passage2001P2Entry = passage2001P2Lexicon[headword];
+  const cloze2010Entry = cloze2010Lexicon[headword];
   const articleEntries = {
     cloze: undefined,
     p1: passage1Entry,
@@ -672,12 +681,13 @@ export function getLexicalGuide(token: string, context?: LexicalContext): Lexica
     "2001-cloze": cloze2001Entry,
     "2001-p1": passage2001P1Entry,
     "2001-p2": passage2001P2Entry,
+    "2010-cloze": cloze2010Entry,
   } satisfies Record<ArticleLexiconId, typeof passage1Entry | undefined>;
   const articleEntry = context?.articleId ? articleEntries[context.articleId] : undefined;
-  const globalPassageEntry = passage2001P2Entry ?? passage2001P1Entry ?? cloze2001Entry ?? passage3Entry ?? passage1Entry ?? passage2Entry ?? passage4Entry ?? passage5Entry ?? translationEntry;
+  const globalPassageEntry = passage2001P2Entry ?? passage2001P1Entry ?? cloze2001Entry ?? passage3Entry ?? passage1Entry ?? passage2Entry ?? passage4Entry ?? passage5Entry ?? translationEntry ?? cloze2010Entry;
   const passageEntry = context?.articleId ? articleEntry ?? globalPassageEntry : globalPassageEntry;
   const sentenceContext = getSentenceWordContext(context?.sentenceId, headword);
-  const pos = formPartOfSpeech[normalized] ?? passageEntry?.partOfSpeech ?? partOfSpeech[headword] ?? inferPartOfSpeech(headword);
+  const pos = cloze2010FormPartOfSpeech[normalized] ?? formPartOfSpeech[normalized] ?? passageEntry?.partOfSpeech ?? partOfSpeech[headword] ?? inferPartOfSpeech(headword);
   const isStructureWord = /art\.|prep\.|conj\.|pron\.|det\.|modal/.test(pos);
   const mergedCollocations = Array.from(new Set([...(collocations[headword] ?? []), ...(passage2001P2Entry?.collocations ?? []), ...(passage2001P1Entry?.collocations ?? []), ...(cloze2001Entry?.collocations ?? []), ...(passage2Entry?.collocations ?? []), ...(passage1Entry?.collocations ?? []), ...(passage3Entry?.collocations ?? []), ...(passage4Entry?.collocations ?? []), ...(passage5Entry?.collocations ?? []), ...(translationEntry?.collocations ?? [])]));
   const mergedMeanings = Array.from(new Set([...(otherMeanings[headword] ?? []), ...(passage2001P2Entry?.otherMeanings ?? []), ...(passage2001P1Entry?.otherMeanings ?? []), ...(cloze2001Entry?.otherMeanings ?? []), ...(passage2Entry?.otherMeanings ?? []), ...(passage1Entry?.otherMeanings ?? []), ...(passage3Entry?.otherMeanings ?? []), ...(passage4Entry?.otherMeanings ?? []), ...(passage5Entry?.otherMeanings ?? []), ...(translationEntry?.otherMeanings ?? [])]));
@@ -690,12 +700,12 @@ export function getLexicalGuide(token: string, context?: LexicalContext): Lexica
     partOfSpeech: pos,
     contextualMeaning: sentenceContext?.contextualMeaning ?? passageEntry?.contextualMeaning ?? contextualMeaning[headword],
     use: sentenceContext?.use ?? passageEntry?.use ?? usage[headword],
-    specialForms: mergedSpecialForms.length > 0 ? mergedSpecialForms : [isStructureWord ? "结构词：无普通词形变化，重点看句法位置" : "无需要单独记忆的不规则变形"],
-    examSynonyms: mergedExamSynonyms.length > 0 ? mergedExamSynonyms : [isStructureWord ? "结构词通常不能脱离句型直接替换" : "本词暂无需要成组强记的考研近义词"],
-    collocations: mergedCollocations,
-    otherMeanings: mergedMeanings,
-    wordFamily: mergedFamily,
-    confusions: mergedConfusions,
+    specialForms: Array.from(new Set([...(cloze2010Entry?.specialForms ?? []), ...(mergedSpecialForms.length > 0 ? mergedSpecialForms : [isStructureWord ? "结构词：无普通词形变化，重点看句法位置" : "无需要单独记忆的不规则变形"])])),
+    examSynonyms: Array.from(new Set([...(cloze2010Entry?.examSynonyms ?? []), ...(mergedExamSynonyms.length > 0 ? mergedExamSynonyms : [isStructureWord ? "结构词通常不能脱离句型直接替换" : "本词暂无需要成组强记的考研近义词"])])),
+    collocations: Array.from(new Set([...(cloze2010Entry?.collocations ?? []), ...mergedCollocations])),
+    otherMeanings: Array.from(new Set([...(cloze2010Entry?.otherMeanings ?? []), ...mergedMeanings])),
+    wordFamily: Array.from(new Set([...(cloze2010Entry?.wordFamily ?? []), ...mergedFamily])),
+    confusions: Array.from(new Set([...(cloze2010Entry?.confusions ?? []), ...mergedConfusions])),
     contextualSubstitutions: sentenceContext?.contextualSubstitutions ?? passageEntry?.contextualSubstitutions ?? [],
   };
 }

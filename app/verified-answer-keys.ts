@@ -118,3 +118,28 @@ export const verifiedAnswerSources2001Passage2 = [
     url: "https://edu.sina.com.cn/kaoyan/2008-09-18/1050164911.shtml",
   },
 ] as const;
+
+export const verifiedAnswerKey2010Cloze: Record<number, "A" | "B" | "C" | "D"> = {
+  1: "D", 2: "C", 3: "B", 4: "A", 5: "A",
+  6: "B", 7: "D", 8: "C", 9: "B", 10: "A",
+  11: "C", 12: "D", 13: "D", 14: "A", 15: "C",
+  16: "B", 17: "D", 18: "C", 19: "A", 20: "B",
+};
+
+export const verifiedAnswerSources2010Cloze = [
+  {
+    range: "1—20（原文填空交叉核验）",
+    label: "中国研究生招生信息网 / 2010 年考研英语二完形原文",
+    url: "https://yz.chsi.com.cn/kyzx/en/201001/20100113/61655286.html",
+  },
+  {
+    range: "1—20（整篇原文与选项）",
+    label: "中国教育在线 / 2010 年考研英语二真题",
+    url: "https://kaoyan.eol.cn/shiti/yingyu/201605/t20160513_1397756.shtml",
+  },
+  {
+    range: "1—20（答案序列）",
+    label: "2010 年考研英语二答案速查",
+    url: "https://zemengzhou.com/kaoyan/english/past-papers/ying-yu-er/2010/10-da-an-su-cha/",
+  },
+] as const;
