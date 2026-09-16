@@ -49,3 +49,11 @@
 本机没有已配置的Cloudflare API令牌或默认Wrangler登录文件，原生迁移尝试还遇到本机esbuild的spawn EPERM，没有成功执行生产SQL。未索取或读取任何真实凭证。
 
 为让实际构建入口执行同一迁移，在`npm run build`的postbuild增加Cloudflare main专用门禁：只在官方注入的`WORKERS_CI=1`且分支为main时运行原幂等SQL，其他构建不连接生产库；不在HTTP接口里偷偷建表。若既有CI凭据缺少D1权限仍会停止，须由部署管理员在控制台处理，不绕过权限。新增2项部署守卫测试覆盖跳过边界和只读目标核验。
+
+### 最终线上核验
+
+迁移修正提交`2878a809736055fa294a7006c3875ab70bc8b4f0`已推送。2026-09-16晚，两个既有生产域名均返回HTTP200，匿名session为`configured=true`、`passwordConfigured=true`，此前false的凭证表能力检查已恢复。线上浏览器实际可见密码/验证码切换和恢复入口，新密码路由空输入400、未登录设置401。线上资源包含本次密码及读后写同步实现；没有设置用户实际密码或访问生产学习记录。
+
+GitHub提交状态API仍受403限流，没有拿到Cloudflare控制台的对应SHA状态回执。功能生效由线上资源、路由、界面及新表能力共同核验，不冒充获得了控制台部署日志。Git推送后HEAD与origin/main差异为0/0。
+
+上线后体验及知识库审查见`docs/change-reports/user-experience-audit.md`。其中其他问题是后续建议，未混入本次密码代码。
