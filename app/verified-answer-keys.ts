@@ -143,3 +143,20 @@ export const verifiedAnswerSources2010Cloze = [
     url: "https://zemengzhou.com/kaoyan/english/past-papers/ying-yu-er/2010/10-da-an-su-cha/",
   },
 ] as const;
+
+export const verifiedAnswerKey2010Passage1: Record<number, "A" | "B" | "C" | "D"> = {
+  21: "D", 22: "A", 23: "B", 24: "C", 25: "C",
+};
+
+export const verifiedAnswerSources2010Passage1 = [
+  {
+    range: "Text 1 原文与 21—25 题",
+    label: "中国研究生招生信息网 / 2010 年考研英语二真题",
+    url: "https://yz.chsi.com.cn/kyzx/en/201001/20100113/61655286.html",
+  },
+  {
+    range: "Text 1 原文、题目与选项交叉核验",
+    label: "中国教育在线 / 2010 年考研英语二真题",
+    url: "https://kaoyan.eol.cn/shiti/yingyu/201605/t20160513_1397756_1.shtml",
+  },
+] as const;

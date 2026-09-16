@@ -705,3 +705,23 @@ test("已就绪文章与目录、题号和稳定 ID 一致", () => {
     article.questions.forEach((question) => assert.ok(article.sentences.some((sentence) => sentence.id === question.sentenceId), `第 ${question.id} 题定位句不属于 ${article.id}`));
   }
 });
+
+test("2010 Text 1 以单篇门禁覆盖句法、答案、词组和同义替换", () => {
+  const article = data.articleContents["2010-p1"];
+  assert.equal(article.sentences.length, 19, "2010 Text 1 必须保留 19 个稳定句子");
+  assert.equal(article.questions.length, 5, "2010 Text 1 必须覆盖第 21—25 题");
+  assert.deepEqual(article.questions.map((question) => [question.number, question.answer]), [[21, "D"], [22, "A"], [23, "B"], [24, "C"], [25, "C"]]);
+  assert.deepEqual(article.questions.map((question) => question.answer), Object.values(answerKeys.verifiedAnswerKey2010Passage1));
+  assert.ok(answerKeys.verifiedAnswerSources2010Passage1.length >= 2, "2010 Text 1 必须保留至少两个核验来源");
+
+  for (const sentence of article.sentences) {
+    assert.ok(sentence.beginnerSyntax?.components.length >= 3, `${sentence.id} 缺少初学者句内成分拆解`);
+    requireText(sentence.literal, `${sentence.id}.literal`);
+    requireText(sentence.natural, `${sentence.id}.natural`);
+    requireText(sentence.logic, `${sentence.id}.logic`);
+    assert.ok(sentence.phrases.length > 0, `${sentence.id} 缺少预标词组`);
+    for (const phrase of sentence.phrases) assert.ok(knowledge.getPhraseKnowledge(phrase), `${sentence.id} 的词组没有正式知识页：${phrase}`);
+    const contexts = contextualVocabulary.sentenceWordContexts[sentence.id] ?? {};
+    assert.ok(Object.values(contexts).some((entry) => entry.contextualSubstitutions?.length), `${sentence.id} 缺少原句同义替换`);
+  }
+});

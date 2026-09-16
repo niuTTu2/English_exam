@@ -58,6 +58,12 @@ import {
   cloze2010Lexicon,
 } from "./2010-cloze-lexicon";
 import {
+  passage2010P1FamilyAliases,
+  passage2010P1FormPartOfSpeech,
+  passage2010P1LemmaAliases,
+  passage2010P1Lexicon,
+} from "./2010-passage-1-lexicon";
+import {
   getSentenceWordContext,
   type ArticleLexiconId,
   type ContextualSubstitution,
@@ -105,6 +111,7 @@ export const lemmaAliases: Record<string, string> = {
   succeeds: "succeed",
   succeeding: "succeed",
 };
+Object.assign(lemmaAliases, passage2010P1LemmaAliases);
 
 export const familyAliases: Record<string, string> = {
   consumption: "consume",
@@ -121,6 +128,7 @@ export const familyAliases: Record<string, string> = {
   his: "he",
   wishes: "wish",
 };
+Object.assign(familyAliases, passage2010P1FamilyAliases);
 Object.assign(familyAliases, cloze2010FamilyAliases);
 
 const partOfSpeech: Record<string, string> = {
@@ -338,6 +346,7 @@ Object.assign(formPartOfSpeech, translationFormPartOfSpeech);
 Object.assign(lemmaAliases, cloze2001LemmaAliases);
 Object.assign(lemmaAliases, cloze2010LemmaAliases);
 Object.assign(formPartOfSpeech, cloze2001FormPartOfSpeech);
+Object.assign(formPartOfSpeech, passage2010P1FormPartOfSpeech);
 
 const specialForms: Record<string, string[]> = {
   bad: ["bad（原级）", "worse（比较级）", "worst（最高级）"],
@@ -670,6 +679,7 @@ export function getLexicalGuide(token: string, context?: LexicalContext): Lexica
   const passage2001P1Entry = passage2001P1Lexicon[headword];
   const passage2001P2Entry = passage2001P2Lexicon[headword];
   const cloze2010Entry = cloze2010Lexicon[headword];
+  const passage2010P1Entry = passage2010P1Lexicon[headword];
   const articleEntries = {
     cloze: undefined,
     p1: passage1Entry,
@@ -682,30 +692,31 @@ export function getLexicalGuide(token: string, context?: LexicalContext): Lexica
     "2001-p1": passage2001P1Entry,
     "2001-p2": passage2001P2Entry,
     "2010-cloze": cloze2010Entry,
+    "2010-p1": passage2010P1Entry,
   } satisfies Record<ArticleLexiconId, typeof passage1Entry | undefined>;
   const articleEntry = context?.articleId ? articleEntries[context.articleId] : undefined;
-  const globalPassageEntry = passage2001P2Entry ?? passage2001P1Entry ?? cloze2001Entry ?? passage3Entry ?? passage1Entry ?? passage2Entry ?? passage4Entry ?? passage5Entry ?? translationEntry ?? cloze2010Entry;
+  const globalPassageEntry = passage2001P2Entry ?? passage2001P1Entry ?? cloze2001Entry ?? passage3Entry ?? passage1Entry ?? passage2Entry ?? passage4Entry ?? passage5Entry ?? translationEntry ?? cloze2010Entry ?? passage2010P1Entry;
   const passageEntry = context?.articleId ? articleEntry ?? globalPassageEntry : globalPassageEntry;
   const sentenceContext = getSentenceWordContext(context?.sentenceId, headword);
-  const pos = cloze2010FormPartOfSpeech[normalized] ?? formPartOfSpeech[normalized] ?? passageEntry?.partOfSpeech ?? partOfSpeech[headword] ?? inferPartOfSpeech(headword);
+  const pos = passage2010P1FormPartOfSpeech[normalized] ?? cloze2010FormPartOfSpeech[normalized] ?? formPartOfSpeech[normalized] ?? passageEntry?.partOfSpeech ?? partOfSpeech[headword] ?? inferPartOfSpeech(headword);
   const isStructureWord = /art\.|prep\.|conj\.|pron\.|det\.|modal/.test(pos);
-  const mergedCollocations = Array.from(new Set([...(collocations[headword] ?? []), ...(passage2001P2Entry?.collocations ?? []), ...(passage2001P1Entry?.collocations ?? []), ...(cloze2001Entry?.collocations ?? []), ...(passage2Entry?.collocations ?? []), ...(passage1Entry?.collocations ?? []), ...(passage3Entry?.collocations ?? []), ...(passage4Entry?.collocations ?? []), ...(passage5Entry?.collocations ?? []), ...(translationEntry?.collocations ?? [])]));
-  const mergedMeanings = Array.from(new Set([...(otherMeanings[headword] ?? []), ...(passage2001P2Entry?.otherMeanings ?? []), ...(passage2001P1Entry?.otherMeanings ?? []), ...(cloze2001Entry?.otherMeanings ?? []), ...(passage2Entry?.otherMeanings ?? []), ...(passage1Entry?.otherMeanings ?? []), ...(passage3Entry?.otherMeanings ?? []), ...(passage4Entry?.otherMeanings ?? []), ...(passage5Entry?.otherMeanings ?? []), ...(translationEntry?.otherMeanings ?? [])]));
-  const mergedFamily = Array.from(new Set([...(wordFamily[headword] ?? []), ...(passage2001P2Entry?.wordFamily ?? []), ...(passage2001P1Entry?.wordFamily ?? []), ...(cloze2001Entry?.wordFamily ?? []), ...(passage2Entry?.wordFamily ?? []), ...(passage1Entry?.wordFamily ?? []), ...(passage3Entry?.wordFamily ?? []), ...(passage4Entry?.wordFamily ?? []), ...(passage5Entry?.wordFamily ?? []), ...(translationEntry?.wordFamily ?? [])]));
-  const mergedConfusions = Array.from(new Set([...(confusions[headword] ?? []), ...(passage2001P2Entry?.confusions ?? []), ...(passage2001P1Entry?.confusions ?? []), ...(cloze2001Entry?.confusions ?? []), ...(passage2Entry?.confusions ?? []), ...(passage1Entry?.confusions ?? []), ...(passage3Entry?.confusions ?? []), ...(passage4Entry?.confusions ?? []), ...(passage5Entry?.confusions ?? []), ...(translationEntry?.confusions ?? [])]));
-  const mergedSpecialForms = Array.from(new Set([...(specialForms[headword] ?? []), ...(passage2001P2Entry?.specialForms ?? []), ...(passage2001P1Entry?.specialForms ?? []), ...(cloze2001Entry?.specialForms ?? []), ...(passage2Entry?.specialForms ?? []), ...(passage1Entry?.specialForms ?? []), ...(passage3Entry?.specialForms ?? []), ...(passage4Entry?.specialForms ?? []), ...(passage5Entry?.specialForms ?? []), ...(translationEntry?.specialForms ?? [])]));
-  const mergedExamSynonyms = Array.from(new Set([...(examSynonyms[headword] ?? []), ...(passage2001P2Entry?.examSynonyms ?? []), ...(passage2001P1Entry?.examSynonyms ?? []), ...(cloze2001Entry?.examSynonyms ?? []), ...(passage2Entry?.examSynonyms ?? []), ...(passage1Entry?.examSynonyms ?? []), ...(passage3Entry?.examSynonyms ?? []), ...(passage4Entry?.examSynonyms ?? []), ...(passage5Entry?.examSynonyms ?? []), ...(translationEntry?.examSynonyms ?? [])]));
+  const mergedCollocations = Array.from(new Set([...(collocations[headword] ?? []), ...(passage2001P2Entry?.collocations ?? []), ...(passage2001P1Entry?.collocations ?? []), ...(cloze2001Entry?.collocations ?? []), ...(passage2Entry?.collocations ?? []), ...(passage1Entry?.collocations ?? []), ...(passage3Entry?.collocations ?? []), ...(passage4Entry?.collocations ?? []), ...(passage5Entry?.collocations ?? []), ...(translationEntry?.collocations ?? []), ...(passage2010P1Entry?.collocations ?? [])]));
+  const mergedMeanings = Array.from(new Set([...(otherMeanings[headword] ?? []), ...(passage2001P2Entry?.otherMeanings ?? []), ...(passage2001P1Entry?.otherMeanings ?? []), ...(cloze2001Entry?.otherMeanings ?? []), ...(passage2Entry?.otherMeanings ?? []), ...(passage1Entry?.otherMeanings ?? []), ...(passage3Entry?.otherMeanings ?? []), ...(passage4Entry?.otherMeanings ?? []), ...(passage5Entry?.otherMeanings ?? []), ...(translationEntry?.otherMeanings ?? []), ...(passage2010P1Entry?.otherMeanings ?? [])]));
+  const mergedFamily = Array.from(new Set([...(wordFamily[headword] ?? []), ...(passage2001P2Entry?.wordFamily ?? []), ...(passage2001P1Entry?.wordFamily ?? []), ...(cloze2001Entry?.wordFamily ?? []), ...(passage2Entry?.wordFamily ?? []), ...(passage1Entry?.wordFamily ?? []), ...(passage3Entry?.wordFamily ?? []), ...(passage4Entry?.wordFamily ?? []), ...(passage5Entry?.wordFamily ?? []), ...(translationEntry?.wordFamily ?? []), ...(passage2010P1Entry?.wordFamily ?? [])]));
+  const mergedConfusions = Array.from(new Set([...(confusions[headword] ?? []), ...(passage2001P2Entry?.confusions ?? []), ...(passage2001P1Entry?.confusions ?? []), ...(cloze2001Entry?.confusions ?? []), ...(passage2Entry?.confusions ?? []), ...(passage1Entry?.confusions ?? []), ...(passage3Entry?.confusions ?? []), ...(passage4Entry?.confusions ?? []), ...(passage5Entry?.confusions ?? []), ...(translationEntry?.confusions ?? []), ...(passage2010P1Entry?.confusions ?? [])]));
+  const mergedSpecialForms = Array.from(new Set([...(specialForms[headword] ?? []), ...(passage2001P2Entry?.specialForms ?? []), ...(passage2001P1Entry?.specialForms ?? []), ...(cloze2001Entry?.specialForms ?? []), ...(passage2Entry?.specialForms ?? []), ...(passage1Entry?.specialForms ?? []), ...(passage3Entry?.specialForms ?? []), ...(passage4Entry?.specialForms ?? []), ...(passage5Entry?.specialForms ?? []), ...(translationEntry?.specialForms ?? []), ...(passage2010P1Entry?.specialForms ?? [])]));
+  const mergedExamSynonyms = Array.from(new Set([...(examSynonyms[headword] ?? []), ...(passage2001P2Entry?.examSynonyms ?? []), ...(passage2001P1Entry?.examSynonyms ?? []), ...(cloze2001Entry?.examSynonyms ?? []), ...(passage2Entry?.examSynonyms ?? []), ...(passage1Entry?.examSynonyms ?? []), ...(passage3Entry?.examSynonyms ?? []), ...(passage4Entry?.examSynonyms ?? []), ...(passage5Entry?.examSynonyms ?? []), ...(translationEntry?.examSynonyms ?? []), ...(passage2010P1Entry?.examSynonyms ?? [])]));
   return {
     headword,
     partOfSpeech: pos,
     contextualMeaning: sentenceContext?.contextualMeaning ?? passageEntry?.contextualMeaning ?? contextualMeaning[headword],
     use: sentenceContext?.use ?? passageEntry?.use ?? usage[headword],
-    specialForms: Array.from(new Set([...(cloze2010Entry?.specialForms ?? []), ...(mergedSpecialForms.length > 0 ? mergedSpecialForms : [isStructureWord ? "结构词：无普通词形变化，重点看句法位置" : "无需要单独记忆的不规则变形"])])),
-    examSynonyms: Array.from(new Set([...(cloze2010Entry?.examSynonyms ?? []), ...(mergedExamSynonyms.length > 0 ? mergedExamSynonyms : [isStructureWord ? "结构词通常不能脱离句型直接替换" : "本词暂无需要成组强记的考研近义词"])])),
-    collocations: Array.from(new Set([...(cloze2010Entry?.collocations ?? []), ...mergedCollocations])),
-    otherMeanings: Array.from(new Set([...(cloze2010Entry?.otherMeanings ?? []), ...mergedMeanings])),
-    wordFamily: Array.from(new Set([...(cloze2010Entry?.wordFamily ?? []), ...mergedFamily])),
-    confusions: Array.from(new Set([...(cloze2010Entry?.confusions ?? []), ...mergedConfusions])),
+    specialForms: Array.from(new Set([...(cloze2010Entry?.specialForms ?? []), ...(passage2010P1Entry?.specialForms ?? []), ...(mergedSpecialForms.length > 0 ? mergedSpecialForms : [isStructureWord ? "结构词：无普通词形变化，重点看句法位置" : "无需要单独记忆的不规则变形"])])),
+    examSynonyms: Array.from(new Set([...(cloze2010Entry?.examSynonyms ?? []), ...(passage2010P1Entry?.examSynonyms ?? []), ...(mergedExamSynonyms.length > 0 ? mergedExamSynonyms : [isStructureWord ? "结构词通常不能脱离句型直接替换" : "本词暂无需要成组强记的考研近义词"])])),
+    collocations: Array.from(new Set([...(cloze2010Entry?.collocations ?? []), ...(passage2010P1Entry?.collocations ?? []), ...mergedCollocations])),
+    otherMeanings: Array.from(new Set([...(cloze2010Entry?.otherMeanings ?? []), ...(passage2010P1Entry?.otherMeanings ?? []), ...mergedMeanings])),
+    wordFamily: Array.from(new Set([...(cloze2010Entry?.wordFamily ?? []), ...(passage2010P1Entry?.wordFamily ?? []), ...mergedFamily])),
+    confusions: Array.from(new Set([...(cloze2010Entry?.confusions ?? []), ...(passage2010P1Entry?.confusions ?? []), ...mergedConfusions])),
     contextualSubstitutions: sentenceContext?.contextualSubstitutions ?? passageEntry?.contextualSubstitutions ?? [],
   };
 }

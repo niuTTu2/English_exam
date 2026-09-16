@@ -8,6 +8,7 @@ import { cloze2001Questions, cloze2001Sentences } from "./2001-cloze-data";
 import { passage2001P1Questions, passage2001P1Sentences } from "./2001-passage-1-data";
 import { passage2001P2Questions, passage2001P2Sentences } from "./2001-passage-2-data";
 import { cloze2010Questions, cloze2010Sentences } from "./2010-cloze-data";
+import { passage2010P1Questions, passage2010P1Sentences } from "./2010-passage-1-data";
 import type { ContextualSubstitution } from "./contextual-vocabulary";
 import { verifiedTrunks2000 } from "./verified-syntax-2000";
 
@@ -166,7 +167,7 @@ export const sectionsByYear = {
   ],
   2010: [
     { id: "2010-cloze", label: "完形填空", meta: "13句 · 20题", status: "ready" },
-    { id: "2010-p1", label: "阅读 Text 1", meta: "待精审", status: "pending" },
+    { id: "2010-p1", label: "阅读 Text 1", meta: "19句 · 5题", status: "ready" },
     { id: "2010-p2", label: "阅读 Text 2", meta: "待精审", status: "pending" },
     { id: "2010-p3", label: "阅读 Text 3", meta: "待精审", status: "pending" },
     { id: "2010-p4", label: "阅读 Text 4", meta: "待精审", status: "pending" },
@@ -1352,7 +1353,19 @@ export const articleContents: Record<string, ArticleContent> = {
     sentences: cloze2010Sentences,
     questions: cloze2010Questions,
   },
+  "2010-p1": {
+    id: "2010-p1",
+    year: 2010,
+    sectionId: "p1",
+    label: "阅读 Text 1",
+    badge: "2010 · 阅读 Text 1",
+    title: "金融危机中的艺术市场：需求尚在，供给惜售",
+    description: "沿着‘牛市最后胜利—危机冲击—成交与价格下跌—买家仍在但卖家观望’的链条，理解艺术市场衰退及其供给矛盾。",
+    kind: "reading",
+    sentences: passage2010P1Sentences,
+    questions: passage2010P1Questions,
+  },
 };
 
-export const allSentences = [...verifiedClozeSentences, ...verifiedPassage1Sentences, ...verifiedPassage2Sentences, ...verifiedPassage3Sentences, ...verifiedPassage4Sentences, ...verifiedPassage5Sentences, ...verifiedTranslationSentences, ...cloze2001Sentences, ...passage2001P1Sentences, ...passage2001P2Sentences, ...cloze2010Sentences];
-export const allQuestions = [...verifiedClozeQuestions, ...verifiedPassage1Questions, ...verifiedPassage2Questions, ...verifiedPassage3Questions, ...verifiedPassage4Questions, ...verifiedPassage5Questions, ...cloze2001Questions, ...passage2001P1Questions, ...passage2001P2Questions, ...cloze2010Questions];
+export const allSentences = [...verifiedClozeSentences, ...verifiedPassage1Sentences, ...verifiedPassage2Sentences, ...verifiedPassage3Sentences, ...verifiedPassage4Sentences, ...verifiedPassage5Sentences, ...verifiedTranslationSentences, ...cloze2001Sentences, ...passage2001P1Sentences, ...passage2001P2Sentences, ...cloze2010Sentences, ...passage2010P1Sentences];
+export const allQuestions = [...verifiedClozeQuestions, ...verifiedPassage1Questions, ...verifiedPassage2Questions, ...verifiedPassage3Questions, ...verifiedPassage4Questions, ...verifiedPassage5Questions, ...cloze2001Questions, ...passage2001P1Questions, ...passage2001P2Questions, ...cloze2010Questions, ...passage2010P1Questions];
