@@ -161,6 +161,14 @@ export const verifiedAnswerSources2010Passage1 = [
   },
 ] as const;
 
+export const verifiedAnswerKey2010Passage3: Record<number, "A" | "B" | "C" | "D"> = {
+  31: "A", 32: "A", 33: "D", 34: "C", 35: "B",
+};
+
+export const verifiedAnswerSources2010Passage3 = [
+  { range: "31—35答案表：A A D C B；与原卷第2—7段定位逐项对照", label: "新东方在线 / 2010年考研英语二真题及答案（2018-10-15）", url: "https://kaoyan.koolearn.com/20181015/1023400.html" },
+] as const;
+
 export const verifiedAnswerKey2010Passage2: Record<number, "A" | "B" | "C" | "D"> = {
   26: "A", 27: "C", 28: "B", 29: "D", 30: "B",
 };

@@ -719,6 +719,52 @@ test("已就绪文章与目录、题号和稳定 ID 一致", () => {
   }
 });
 
+test("2010 Text 3 原卷哈希、答案及逐句从句边界一致", () => {
+  const article = data.articleContents["2010-p3"];
+  const hash = text => createHash("sha256").update(normalizeText(text)).digest("hex");
+  assert.equal(hash(article.sentences.map(sentence => sentence.text).join(" ")), "811788c373f1cccaa2e4f080e51e7c3c6fd3ce5766c5d25b94c957f8a5c701f4");
+  assert.equal(hash(article.questions.flatMap(question => [question.prompt, ...question.options.map(option => option.text)]).join(" ")), "ac8c7dd741af57e610a700b8909fe8a77a53d9d644b2087ff2ce6143e90eda62");
+  assert.deepEqual(article.sentences.map(sentence => sentence.number), Array.from({ length: 16 }, (_, index) => index + 1));
+  assert.deepEqual(article.questions.map(question => question.number), [31, 32, 33, 34, 35]);
+  assert.deepEqual(article.sentences.map(sentence => sentence.beginnerSyntax.clauses.length), [0, 1, 2, 1, 2, 3, 0, 0, 0, 0, 0, 0, 3, 0, 1, 2]);
+  for (const question of article.questions) assert.equal(question.answer, answerKeys.verifiedAnswerKey2010Passage3[question.number]);
+  assert.ok(answerKeys.verifiedAnswerSources2010Passage3.length);
+  assert.match(article.sentences[0].text, /had perfected/);
+  assert.match(article.questions[4].explanations.B, /批评/);
+});
+
+test("2010 Text 3 词汇语境隔离、全词形覆盖及词组复用", async () => {
+  const article = data.articleContents["2010-p3"];
+  for (const sentence of article.sentences) {
+    for (const token of englishTokens(sentence.text)) {
+      const guide = lexicon.getLexicalGuide(token, { articleId: article.id, sentenceId: sentence.id });
+      requireText(guide.contextualMeaning, `${sentence.id}.${token}.meaning`);
+      requireText(guide.use, `${sentence.id}.${token}.use`);
+      assert.ok(!guide.partOfSpeech.startsWith("word（"));
+    }
+  }
+  const guide = (token, number) => lexicon.getLexicalGuide(token, { articleId: article.id, sentenceId: `2010-p3-s${number}` });
+  assert.match(guide("art", 1).contextualMeaning, /技巧|手法/);
+  assert.match(lexicon.getLexicalGuide("art", { articleId: "2010-p1" }).contextualMeaning, /艺术/);
+  assert.equal(guide("finding", 5).headword, "find");
+  assert.match(guide("wipes", 6).contextualMeaning, /湿巾/);
+  assert.match(guide("use", 11).contextualMeaning, /名词/);
+  assert.match(guide("it's", 14).contextualMeaning, /培养/);
+  assert.equal(lexicon.canonicalLemma("advertising", { articleId: article.id }), "advertising");
+  assert.equal(lexicon.canonicalLemma("best", { articleId: "2010-p2", sentenceId: "2010-p2-s19" }), "best");
+  assert.equal(knowledge.getPhraseKnowledge("between hair brushing and putting on makeup").key, "between-a-and-b");
+  const entries = await vite.ssrLoadModule("/app/2010-passage-3-lexicon.ts");
+  for (const entry of Object.values(entries.passage2010P3Lexicon)) {
+    for (const detail of knowledge.getSynonymDetails(entry.examSynonyms)) {
+      if (!detail.target?.startsWith("word:")) continue;
+      const target = lexicon.getLexicalGuide(detail.target.slice(5), { articleId: article.id });
+      requireText(target.contextualMeaning, `${detail.target}.meaning`);
+      requireText(target.use, `${detail.target}.use`);
+      assert.ok(!target.partOfSpeech.startsWith("word（"));
+    }
+  }
+});
+
 test("2010 Text 1 以单篇门禁覆盖句法、答案、词组和同义替换", () => {
   const article = data.articleContents["2010-p1"];
   assert.equal(article.sentences.length, 19, "2010 Text 1 必须保留 19 个稳定句子");

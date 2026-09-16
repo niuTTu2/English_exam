@@ -1,3 +1,4 @@
+import { passage2010P3Questions, passage2010P3Sentences } from "./2010-passage-3-data";
 import { passage1Questions, passage1Sentences } from "./passage-1-data";
 import { passage2Questions, passage2Sentences } from "./passage-2-data";
 import { passage3Questions, passage3Sentences } from "./passage-3-data";
@@ -170,7 +171,7 @@ export const sectionsByYear = {
     { id: "2010-cloze", label: "完形填空", meta: "13句 · 20题", status: "ready" },
     { id: "2010-p1", label: "阅读 Text 1", meta: "19句 · 5题", status: "ready" },
     { id: "2010-p2", label: "阅读 Text 2", meta: "19句 · 5题", status: "ready" },
-    { id: "2010-p3", label: "阅读 Text 3", meta: "待精审", status: "pending" },
+    { id: "2010-p3", label: "阅读 Text 3", meta: "16句 · 5题", status: "ready" },
     { id: "2010-p4", label: "阅读 Text 4", meta: "待精审", status: "pending" },
     { id: "2010-p5", label: "阅读 Part B", meta: "待精审", status: "pending" },
     { id: "2010-translation", label: "英译汉", meta: "待精审", status: "pending" },
@@ -1378,7 +1379,13 @@ export const articleContents: Record<string, ArticleContent> = {
     sentences: passage2010P2Sentences,
     questions: passage2010P2Questions,
   },
+  "2010-p3": {
+    id: "2010-p3", year: 2010, sectionId: "p3", label: "阅读 Text 3", badge: "2010 · 阅读 Text 3",
+    title: "消费习惯的商业塑造与公共卫生",
+    description: "从肥皂洗手到瓶装水、口香糖和润肤品，理解广告如何借日常提示塑造习惯，并区分企业证言与作者的批评态度。",
+    kind: "reading", sentences: passage2010P3Sentences, questions: passage2010P3Questions,
+  },
 };
 
-export const allSentences = [...verifiedClozeSentences, ...verifiedPassage1Sentences, ...verifiedPassage2Sentences, ...verifiedPassage3Sentences, ...verifiedPassage4Sentences, ...verifiedPassage5Sentences, ...verifiedTranslationSentences, ...cloze2001Sentences, ...passage2001P1Sentences, ...passage2001P2Sentences, ...cloze2010Sentences, ...passage2010P1Sentences, ...passage2010P2Sentences];
-export const allQuestions = [...verifiedClozeQuestions, ...verifiedPassage1Questions, ...verifiedPassage2Questions, ...verifiedPassage3Questions, ...verifiedPassage4Questions, ...verifiedPassage5Questions, ...cloze2001Questions, ...passage2001P1Questions, ...passage2001P2Questions, ...cloze2010Questions, ...passage2010P1Questions, ...passage2010P2Questions];
+export const allSentences = [...verifiedClozeSentences, ...verifiedPassage1Sentences, ...verifiedPassage2Sentences, ...verifiedPassage3Sentences, ...verifiedPassage4Sentences, ...verifiedPassage5Sentences, ...verifiedTranslationSentences, ...cloze2001Sentences, ...passage2001P1Sentences, ...passage2001P2Sentences, ...cloze2010Sentences, ...passage2010P1Sentences, ...passage2010P2Sentences, ...passage2010P3Sentences];
+export const allQuestions = [...verifiedClozeQuestions, ...verifiedPassage1Questions, ...verifiedPassage2Questions, ...verifiedPassage3Questions, ...verifiedPassage4Questions, ...verifiedPassage5Questions, ...cloze2001Questions, ...passage2001P1Questions, ...passage2001P2Questions, ...cloze2010Questions, ...passage2010P1Questions, ...passage2010P2Questions, ...passage2010P3Questions];

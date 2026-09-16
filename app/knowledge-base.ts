@@ -1,3 +1,4 @@
+import { passage2010P3PhraseGuides, passage2010P3PhraseAliases, passage2010P3CollocationGlosses } from "./2010-passage-3-knowledge";
 import type { VocabEntry } from "./data";
 import {
   passage1CollocationGlosses,
@@ -815,6 +816,12 @@ Object.assign(familyGlosses, passage2010P2FamilyGlosses);
 function normalized(value: string) {
   return value.trim().toLowerCase().replace(/\s+/g, " ");
 }
+
+for (const [key, value] of Object.entries(passage2010P3PhraseGuides)) {
+  if (!phraseGuides[key]) phraseGuides[key] = value;
+}
+Object.assign(phraseAliases, passage2010P3PhraseAliases);
+Object.assign(collocationGlosses, passage2010P3CollocationGlosses);
 
 export function getPhraseKnowledge(source: string): PhraseKnowledge | undefined {
   const clean = normalized(source);
