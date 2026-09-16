@@ -8,6 +8,13 @@
       "when": 1787752034542,
       "tag": "0000_serious_galactus",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1789560320153,
+      "tag": "0001_password_login",
+      "breakpoints": true
     }
   ]
 }

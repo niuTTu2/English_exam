@@ -129,6 +129,24 @@ Connect the `main` branch to the existing `english-exam` Worker with these setti
 
 The deploy command uses the Wrangler configuration generated in `dist/server`, including the production `zhenti-judu-prod` D1 binding. Runtime secrets such as `RESEND_API_KEY` stay in Cloudflare Worker Secrets and must not be committed to this repository. The production custom domains are `onehjt.dpdns.org` and `english.onehjt.dpdns.org`.
 
+### 邮箱密码登录
+
+- 首次使用：打开右上角个人账号，切换“验证码登录”；登录后再次打开账号面板，设置并确认密码。
+- 密码为8—128个字符，无需组合大小写或特殊符号；下次使用原邮箱和密码即可登录同一账号。
+- 忘记密码：用邮箱验证码登录，在账号面板重新设置密码；没有共享或默认密码。
+- 邮件服务暂不可用时，已设置密码的账号仍可登录。密码能力需要原D1、邮箱允许范围、OTP_PEPPER，不依赖邮件发送密钥。
+- 读取云端失败时暂停上传并保留本机记录；在账号面板点击“重试同步”。两种登录均先读取云端，再开启上传。
+
+### 密码增量迁移与发布
+
+`npm run deploy:cloudflare`先核对既有Worker和D1目标，执行`drizzle/0001_password_login.sql`，成功后才发布Worker。SQL只幂等创建`user_passwords`，不重建或修改原用户、会话、学习记录；不重复执行旧的0000建表脚本。新表保留不影响回滚到旧Worker。
+
+既有Cloudflare Builds部署凭据需要对绑定D1具有执行增量SQL的权限；权限不足时发布会停止，不能绕过迁移继续部署。不要把令牌或验证码写入仓库。可先运行`node scripts/deploy-cloudflare.mjs --check`只检查构建目标，不连接数据库或发布。
+
+验证：`node --test tests/password.test.mjs tests/auth.test.mjs tests/study-sync.test.mjs`使用合成凭证和隔离内存数据库，不发送邮件、不读取生产数据；`tests/auth.test.mjs`通过现有工具链的Miniflare在Workers运行时验证真实路由。
+
+基础保护与边界：密码保存为PBKDF2-SHA-256（600000次、每次独立随机盐），不存明文；本人设置要求有效会话和同源请求，既有邮箱允许范围不变；已有密码账号10分钟内最多5次尝试。密码不进入学习记录或浏览器持久存储。该轻量方案不增加多因素认证或外部风控，限流可能暂时影响被重复尝试的账号，可用验证码恢复。学习同步仍是整份快照策略，多设备同时编辑的冲突合并不在本次范围。
+
 ## Learn More
 
 - [vinext Documentation](https://github.com/cloudflare/vinext)

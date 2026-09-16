@@ -29,7 +29,7 @@ import {
   Trash2,
   WifiOff,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -75,6 +75,7 @@ import {
   getWordKnowledge,
 } from "./knowledge-base";
 import { canonicalLemma, familyAliases, getLexicalGuide, type LexicalContext } from "./lexicon";
+import { prepareLocalSnapshot, readRemoteSnapshot } from "./study-sync";
 
 type AppView = "study" | "test" | "review" | "vocabulary";
 type ArticleId = keyof typeof articleContents;
@@ -558,11 +559,25 @@ export default function StudyApp() {
   const [accountEmail, setAccountEmail] = useState("");
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [emailConfigured, setEmailConfigured] = useState(false);
+  const [passwordConfigured, setPasswordConfigured] = useState(false);
+  const [hasPassword, setHasPassword] = useState(false);
+  const [authMode, setAuthMode] = useState<"password" | "code">("password");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [passwordConfirmation, setPasswordConfirmation] = useState("");
+  const [authMessage, setAuthMessage] = useState("");
+  const [syncError, setSyncError] = useState("");
   const [requestId, setRequestId] = useState<string | null>(null);
   const [otpCode, setOtpCode] = useState("");
   const [authBusy, setAuthBusy] = useState(false);
   const [authError, setAuthError] = useState("");
   const [remoteReady, setRemoteReady] = useState(false);
+  const snapshotRef = useRef<PersistedStudyState | null>(null);
+  const initialUpdatedAt = useRef(0);
+  const syncGeneration = useRef(0);
+  const restoringAccount = useRef(false);
+  const uploadController = useRef<AbortController | null>(null);
+  const previousOnline = useRef(true);
   const activeArticle = articleContents[activeSection];
   const sentences = activeArticle.sentences;
   const questions = activeArticle.questions;
@@ -588,7 +603,7 @@ export default function StudyApp() {
   const visibleYearWordCount = view === "vocabulary" ? yearWordItems.length : yearWordCount;
   const visibleYearPhraseCount = view === "vocabulary" ? yearPhraseItems.length : yearPhraseCount;
 
-  function applySnapshot(snapshot: Partial<PersistedStudyState>) {
+  const applySnapshot = useCallback((snapshot: Partial<PersistedStudyState>) => {
     if (Array.isArray(snapshot.expanded)) setExpanded(new Set(snapshot.expanded));
     if (snapshot.marks) setMarks(snapshot.marks);
     if (snapshot.termRatings) setTermRatings(snapshot.termRatings);
@@ -612,10 +627,42 @@ export default function StudyApp() {
     if (Array.isArray(snapshot.lists)) setLists(snapshot.lists);
     if (snapshot.listItems) setListItems(snapshot.listItems);
     if (snapshot.reviewFilter) setReviewFilter(snapshot.reviewFilter);
-  }
+  }, []);
+
+  const restoreAccount = useCallback(async (email: string) => {
+    if (restoringAccount.current) return false;
+    restoringAccount.current = true;
+    const generation = ++syncGeneration.current;
+    uploadController.current?.abort();
+    setUserEmail(email);
+    setAccountEmail(email);
+    setRemoteReady(false);
+    setSyncError("");
+    setSyncState("saving");
+    try {
+      const remote = await readRemoteSnapshot(() => snapshotRef.current);
+      if (generation !== syncGeneration.current) return false;
+      if (remote) {
+        snapshotRef.current = null;
+        initialUpdatedAt.current = remote.updatedAt;
+        applySnapshot(remote);
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(remote));
+      }
+      setRemoteReady(true);
+      return true;
+    } catch (error) {
+      if (generation === syncGeneration.current) {
+        setSyncError(error instanceof Error ? error.message : "同步暂不可用，请重试；本机记录已保留。");
+        setSyncState(navigator.onLine ? "local" : "offline");
+      }
+      return false;
+    } finally {
+      if (generation === syncGeneration.current) restoringAccount.current = false;
+    }
+  }, [applySnapshot]);
 
   useEffect(() => {
-    const handleOnline = () => { setOnline(true); setSyncState(userEmail ? "saving" : "local"); };
+    const handleOnline = () => { setOnline(true); };
     const handleOffline = () => { setOnline(false); setSyncState("offline"); };
     window.addEventListener("online", handleOnline);
     window.addEventListener("offline", handleOffline);
@@ -629,6 +676,7 @@ export default function StudyApp() {
     }
     queueMicrotask(() => {
       setOnline(navigator.onLine);
+      initialUpdatedAt.current = savedSnapshot?.updatedAt ?? 0;
       if (savedSnapshot) applySnapshot(savedSnapshot);
       setHydrated(true);
     });
@@ -640,25 +688,17 @@ export default function StudyApp() {
         .catch(() => undefined);
     }
 
+    const sessionGeneration = syncGeneration.current;
     void fetch("/api/auth/session")
-      .then((response) => response.json() as Promise<{ configured?: boolean; user?: { email: string } | null }>)
+      .then((response) => response.json() as Promise<{ configured?: boolean; passwordConfigured?: boolean; user?: { email: string; hasPassword?: boolean } | null }>)
       .then(async (session) => {
+        if (sessionGeneration !== syncGeneration.current) return;
         setEmailConfigured(Boolean(session.configured));
+        setPasswordConfigured(Boolean(session.passwordConfigured));
+        if (!session.passwordConfigured) setAuthMode("code");
         if (!session.user) return;
-        setUserEmail(session.user.email);
-        setAccountEmail(session.user.email);
-        const response = await fetch("/api/study-state");
-        if (response.ok) {
-          const remote = await response.json() as { state?: PersistedStudyState | null; updatedAt?: number | null };
-          const localRaw = window.localStorage.getItem(STORAGE_KEY);
-          const local = localRaw ? JSON.parse(localRaw) as PersistedStudyState : null;
-          if (remote.state && (remote.updatedAt ?? 0) > (local?.updatedAt ?? 0)) {
-            applySnapshot(remote.state);
-            window.localStorage.setItem(STORAGE_KEY, JSON.stringify(remote.state));
-          }
-        }
-        setRemoteReady(true);
-        setSyncState("synced");
+        setHasPassword(Boolean(session.user.hasPassword));
+        await restoreAccount(session.user.email);
       })
       .catch(() => undefined);
 
@@ -669,6 +709,12 @@ export default function StudyApp() {
     // The initial load intentionally runs once; later saves are handled below.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    const reconnected = online && !previousOnline.current;
+    previousOnline.current = online;
+    if (reconnected && userEmail) void restoreAccount(userEmail);
+  }, [online, userEmail, restoreAccount]);
 
   const persistedState = useMemo<PersistedStudyState>(() => ({
     version: 1,
@@ -696,20 +742,34 @@ export default function StudyApp() {
 
   useEffect(() => {
     if (!hydrated) return;
+    const snapshot = prepareLocalSnapshot(persistedState, snapshotRef.current, initialUpdatedAt.current);
+    snapshotRef.current = snapshot;
+    const generation = syncGeneration.current;
     const id = window.setTimeout(() => {
-      const snapshot = { ...persistedState, updatedAt: Date.now() };
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
-      if (!userEmail || !remoteReady || !navigator.onLine) {
+      if (!userEmail || !remoteReady || restoringAccount.current || generation !== syncGeneration.current || !navigator.onLine) {
         setSyncState(navigator.onLine ? "local" : "offline");
         return;
       }
       setSyncState("saving");
+      uploadController.current?.abort();
+      const controller = new AbortController();
+      uploadController.current = controller;
       void fetch("/api/study-state", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ state: snapshot }),
-      }).then((response) => setSyncState(response.ok ? "synced" : "local"))
-        .catch(() => setSyncState("offline"));
+        signal: controller.signal,
+      }).then((response) => {
+        if (generation !== syncGeneration.current) return;
+        setSyncState(response.ok ? "synced" : "local");
+        if (!response.ok) setSyncError("上传未成功，本机记录已保留。请重试同步。");
+      }).catch(() => {
+        if (!controller.signal.aborted && generation === syncGeneration.current) {
+          setSyncState("offline");
+          setSyncError("网络暂不可用，本机记录已保留。恢复网络后可重试同步。");
+        }
+      });
     }, 450);
     return () => window.clearTimeout(id);
   }, [hydrated, persistedState, remoteReady, userEmail]);
@@ -952,6 +1012,7 @@ export default function StudyApp() {
   }
 
   async function requestLoginCode() {
+    if (authBusy) return;
     setAuthBusy(true);
     setAuthError("");
     try {
@@ -971,7 +1032,7 @@ export default function StudyApp() {
   }
 
   async function verifyLoginCode() {
-    if (!requestId) return;
+    if (!requestId || authBusy) return;
     setAuthBusy(true);
     setAuthError("");
     try {
@@ -982,12 +1043,17 @@ export default function StudyApp() {
       });
       const result = await response.json() as { user?: { email: string }; error?: string };
       if (!response.ok || !result.user) throw new Error(result.error ?? "登录失败。");
-      setUserEmail(result.user.email);
-      setRemoteReady(true);
-      setSyncState("saving");
-      setAccountOpen(false);
+      const restored = await restoreAccount(result.user.email);
+      setAccountOpen(!restored);
       setOtpCode("");
       setRequestId(null);
+      setHasPassword(false);
+      const session = await fetch("/api/auth/session")
+        .then((response) => response.ok ? response.json() as Promise<{ user?: { hasPassword?: boolean } }> : null)
+        .catch(() => null);
+      if (session) {
+        setHasPassword(Boolean(session.user?.hasPassword));
+      }
     } catch (error) {
       setAuthError(error instanceof Error ? error.message : "登录失败。");
     } finally {
@@ -995,12 +1061,96 @@ export default function StudyApp() {
     }
   }
 
+  async function loginWithPassword() {
+    if (authBusy) return;
+    setAuthBusy(true);
+    setAuthError("");
+    setAuthMessage("");
+    try {
+      const response = await fetch("/api/auth/password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: accountEmail, password: loginPassword }),
+      });
+      const result = await response.json() as { user?: { email: string }; error?: string };
+      if (!response.ok || !result.user) throw new Error(result.error ?? "登录失败，请稍后重试。");
+      setLoginPassword("");
+      setHasPassword(true);
+      const restored = await restoreAccount(result.user.email);
+      setAccountOpen(!restored);
+    } catch (error) {
+      setAuthError(error instanceof Error && !(error instanceof TypeError) && !(error instanceof SyntaxError) ? error.message : "暂时无法连接，请检查网络后重试。");
+    } finally {
+      setAuthBusy(false);
+    }
+  }
+
+  async function saveAccountPassword() {
+    if (authBusy) return;
+    setAuthError("");
+    setAuthMessage("");
+    if (newPassword.length < 8 || newPassword.length > 128) {
+      setAuthError("密码长度须为 8—128 个字符。");
+      return;
+    }
+    if (newPassword !== passwordConfirmation) {
+      setAuthError("两次输入的密码不一致。");
+      return;
+    }
+    setAuthBusy(true);
+    try {
+      const response = await fetch("/api/auth/password", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: newPassword, confirmation: passwordConfirmation }),
+      });
+      const result = await response.json() as { error?: string };
+      if (!response.ok) throw new Error(result.error ?? "密码保存失败，请重试。");
+      setHasPassword(true);
+      setNewPassword("");
+      setPasswordConfirmation("");
+      setAuthMessage("密码已保存。下次可直接使用邮箱和密码登录。");
+    } catch (error) {
+      setAuthError(error instanceof Error && !(error instanceof TypeError) && !(error instanceof SyntaxError) ? error.message : "密码保存失败，请检查网络。");
+    } finally {
+      setAuthBusy(false);
+    }
+  }
+
+  function changeAuthMode(mode: "password" | "code") {
+    setAuthMode(mode);
+    setLoginPassword("");
+    setOtpCode("");
+    setRequestId(null);
+    setAuthError("");
+    setAuthMessage("");
+  }
+
   async function signOut() {
-    await fetch("/api/auth/session", { method: "DELETE" }).catch(() => undefined);
-    setUserEmail(null);
+    if (authBusy) return;
+    setAuthBusy(true);
+    syncGeneration.current += 1;
+    restoringAccount.current = false;
+    uploadController.current?.abort();
     setRemoteReady(false);
-    setSyncState(navigator.onLine ? "local" : "offline");
-    setAccountOpen(false);
+    try {
+      const response = await fetch("/api/auth/session", { method: "DELETE" });
+      if (!response.ok) throw new Error("退出未成功，请重试。");
+      setUserEmail(null);
+      setHasPassword(false);
+      setNewPassword("");
+      setPasswordConfirmation("");
+      setLoginPassword("");
+      setAuthError("");
+      setAuthMessage("");
+      setSyncError("");
+      setSyncState(navigator.onLine ? "local" : "offline");
+      setAccountOpen(false);
+    } catch {
+      setAuthError("退出未成功，请联网后重试。");
+    } finally {
+      setAuthBusy(false);
+    }
   }
 
   const termIsLocked = (() => {
@@ -1607,12 +1757,21 @@ export default function StudyApp() {
         </SheetContent>
       </Sheet>
 
-      <Sheet open={accountOpen} onOpenChange={setAccountOpen}>
+      <Sheet open={accountOpen} onOpenChange={(open) => {
+        setAccountOpen(open);
+        if (!open) {
+          setLoginPassword("");
+          setNewPassword("");
+          setPasswordConfirmation("");
+          setAuthError("");
+          setAuthMessage("");
+        }
+      }}>
         <SheetContent className="account-sheet sm:max-w-md">
           <SheetHeader>
             <div className="account-icon"><Mail /></div>
             <SheetTitle>个人账号与同步</SheetTitle>
-            <SheetDescription>最终采用独立邮箱验证码登录；本机数据始终可以离线使用。</SheetDescription>
+            <SheetDescription>邮箱密码快捷登录，验证码用于首次登录或重设密码。本机记录仍可离线使用。</SheetDescription>
           </SheetHeader>
 
           {userEmail ? (
@@ -1625,21 +1784,51 @@ export default function StudyApp() {
                 <p><Cloud /><span>手机与电脑联网后自动同步学习记录</span></p>
                 <p><WifiOff /><span>离线时继续学习，恢复网络后补传</span></p>
               </div>
-              <Button variant="outline" onClick={signOut}><LogOut />退出账号</Button>
+              {syncError && <p className="auth-error" role="alert">{syncError}</p>}
+              {(syncError || !remoteReady) && <Button type="button" variant="outline" disabled={authBusy || syncState === "saving"} onClick={() => void restoreAccount(userEmail)}>重试同步</Button>}
+              {passwordConfigured ? (
+                <form className="account-form" onSubmit={(event) => { event.preventDefault(); void saveAccountPassword(); }}>
+                  <h3>{hasPassword ? "更新密码" : "设置密码"}</h3>
+                  <label htmlFor="new-account-password">新密码</label>
+                  <Input id="new-account-password" type="password" autoComplete="new-password" minLength={8} maxLength={128} required disabled={authBusy} value={newPassword} onChange={(event) => setNewPassword(event.target.value)} />
+                  <label htmlFor="confirm-account-password">确认新密码</label>
+                  <Input id="confirm-account-password" type="password" autoComplete="new-password" minLength={8} maxLength={128} required disabled={authBusy} value={passwordConfirmation} onChange={(event) => setPasswordConfirmation(event.target.value)} />
+                  <small>8—128 个字符即可，无需组合大小写或特殊符号。忘记密码时可使用邮箱验证码登录后重设。</small>
+                  <Button type="submit" disabled={authBusy || !newPassword || !passwordConfirmation}>{authBusy ? "正在保存…" : "保存密码"}</Button>
+                </form>
+              ) : <small>密码服务暂不可用，已有邮箱验证码登录不受影响。</small>}
+              {authError && <p className="auth-error" role="alert">{authError}</p>}
+              {authMessage && <p className="auth-success" role="status">{authMessage}</p>}
+              <Button type="button" variant="outline" disabled={authBusy} onClick={signOut}><LogOut />退出账号</Button>
             </div>
-          ) : emailConfigured ? (
-            <div className="account-content">
+          ) : emailConfigured || passwordConfigured ? (
+            <form className="account-content" onSubmit={(event) => {
+              event.preventDefault();
+              if (authMode === "password") void loginWithPassword();
+              else if (requestId) void verifyLoginCode();
+              else void requestLoginCode();
+            }}>
+              <div className="account-methods" role="group" aria-label="登录方式">
+                <Button type="button" variant={authMode === "password" ? "default" : "outline"} aria-pressed={authMode === "password"} disabled={authBusy || !passwordConfigured} onClick={() => changeAuthMode("password")}>密码登录</Button>
+                <Button type="button" variant={authMode === "code" ? "default" : "outline"} aria-pressed={authMode === "code"} disabled={authBusy || !emailConfigured} onClick={() => changeAuthMode("code")}>验证码登录</Button>
+              </div>
               <label htmlFor="account-email">邮箱</label>
               <Input
                 id="account-email"
                 type="email"
-                autoComplete="email"
+                autoComplete="username"
+                required
                 value={accountEmail}
                 onChange={(event) => setAccountEmail(event.target.value)}
                 placeholder="name@example.com"
-                disabled={Boolean(requestId)}
+                disabled={authBusy || Boolean(requestId)}
               />
-              {requestId && (
+              {authMode === "password" ? (
+                <>
+                  <label htmlFor="account-password">密码</label>
+                  <Input id="account-password" type="password" autoComplete="current-password" minLength={8} maxLength={128} required disabled={authBusy} value={loginPassword} onChange={(event) => setLoginPassword(event.target.value)} />
+                </>
+              ) : requestId && (
                 <>
                   <label htmlFor="otp-code">6 位验证码</label>
                   <Input
@@ -1647,6 +1836,8 @@ export default function StudyApp() {
                     inputMode="numeric"
                     autoComplete="one-time-code"
                     maxLength={6}
+                    required
+                    disabled={authBusy}
                     value={otpCode}
                     onChange={(event) => setOtpCode(event.target.value.replace(/\D/g, ""))}
                     placeholder="000000"
@@ -1654,17 +1845,23 @@ export default function StudyApp() {
                   />
                 </>
               )}
-              {authError && <p className="auth-error">{authError}</p>}
-              {requestId ? (
+              {authError && <p className="auth-error" role="alert">{authError}</p>}
+              {authMode === "password" ? (
                 <>
-                  <Button onClick={verifyLoginCode} disabled={authBusy || otpCode.length !== 6}>{authBusy ? "正在验证…" : "验证并登录"}</Button>
-                  <Button variant="ghost" onClick={() => { setRequestId(null); setOtpCode(""); setAuthError(""); }}>更换邮箱</Button>
+                  <Button type="submit" disabled={authBusy || !accountEmail.trim() || loginPassword.length < 8}>{authBusy ? "正在登录…" : "登录"}</Button>
+                  <Button type="button" variant="ghost" disabled={authBusy || !emailConfigured} onClick={() => changeAuthMode("code")}>首次使用 / 忘记密码？用验证码登录</Button>
+                </>
+              ) : requestId ? (
+                <>
+                  <Button type="submit" disabled={authBusy || otpCode.length !== 6}>{authBusy ? "正在验证…" : "验证并登录"}</Button>
+                  <Button type="button" variant="ghost" disabled={authBusy} onClick={() => { setRequestId(null); setOtpCode(""); setAuthError(""); }}>更换邮箱 / 重新获取</Button>
                 </>
               ) : (
-                <Button onClick={requestLoginCode} disabled={authBusy || !accountEmail.trim()}>{authBusy ? "正在发送…" : "发送验证码"}</Button>
+                <Button type="submit" disabled={authBusy || !accountEmail.trim()}>{authBusy ? "正在发送…" : "发送验证码"}</Button>
               )}
-              <small>验证码有效期 10 分钟。登录成功后，不需要设置密码。</small>
-            </div>
+              <small>{authMode === "code" ? "验证码有效期 10 分钟。首次登录后，可在此面板设置密码，下次直接登录。" : "已有验证码账号仍是同一个账号，学习记录不变。首次使用需先通过验证码登录并设置密码。"}</small>
+              {!emailConfigured && <small>邮件服务暂不可用，已设置密码的账号仍可登录。</small>}
+            </form>
           ) : (
             <div className="account-content">
               <div className="provider-pending">

@@ -29,6 +29,15 @@ export function emailServiceReady() {
   );
 }
 
+export function passwordServiceReady() {
+  const config = runtimeConfig();
+  return Boolean(config.DB && (config.OWNER_EMAIL || config.ALLOWED_EMAIL_DOMAINS) && config.OTP_PEPPER);
+}
+
+export function isSameOrigin(request: Request) {
+  return request.headers.get("Origin") === new URL(request.url).origin;
+}
+
 export function normalizeEmail(value: string) {
   return value.trim().toLowerCase();
 }
@@ -91,6 +100,18 @@ export function readCookie(request: Request, name: string) {
 
 export function sessionCookie(token: string, maxAge = SESSION_MAX_AGE) {
   return `${SESSION_COOKIE}=${encodeURIComponent(token)}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${maxAge}`;
+}
+
+export async function createSession(userId: string) {
+  const token = randomToken();
+  const now = Date.now();
+  await getDb().insert(sessions).values({
+    tokenHash: await hashSessionToken(token),
+    userId,
+    createdAt: now,
+    expiresAt: now + SESSION_MAX_AGE * 1000,
+  });
+  return sessionCookie(token);
 }
 
 export async function getSessionUser(request: Request) {

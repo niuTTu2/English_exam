@@ -36,3 +36,11 @@ export const studyStates = sqliteTable("study_states", {
   payload: text("payload").notNull().default("{}"),
   updatedAt: integer("updated_at").notNull(),
 });
+
+export const userPasswords = sqliteTable("user_passwords", {
+  userId: text("user_id").primaryKey().references(() => users.id, { onDelete: "cascade" }),
+  passwordHash: text("password_hash").notNull(),
+  failedAttempts: integer("failed_attempts").notNull().default(0),
+  attemptWindowStartedAt: integer("attempt_window_started_at").notNull().default(0),
+  updatedAt: integer("updated_at").notNull(),
+});

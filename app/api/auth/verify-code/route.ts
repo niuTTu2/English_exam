@@ -1,13 +1,12 @@
 import { and, eq } from "drizzle-orm";
 
 import { getDb } from "../../../../db";
-import { loginCodes, sessions, users } from "../../../../db/schema";
+import { loginCodes, users } from "../../../../db/schema";
 import {
+  createSession,
   hashLoginCode,
-  hashSessionToken,
+  isAllowedEmail,
   normalizeEmail,
-  randomToken,
-  sessionCookie,
 } from "../../_lib/auth";
 
 export async function POST(request: Request) {
@@ -22,6 +21,9 @@ export async function POST(request: Request) {
     const code = payload.code?.trim() ?? "";
     if (!requestId || !/^\d{6}$/.test(code)) {
       return Response.json({ error: "请输入邮件中的 6 位验证码。" }, { status: 400 });
+    }
+    if (!isAllowedEmail(email)) {
+      return Response.json({ error: "此邮箱暂不支持登录。" }, { status: 403 });
     }
 
     const db = getDb();
@@ -51,22 +53,14 @@ export async function POST(request: Request) {
       user = { id, email, createdAt: now };
     }
 
-    const token = randomToken();
-    const tokenHash = await hashSessionToken(token);
-    await db.insert(sessions).values({
-      tokenHash,
-      userId: user.id,
-      createdAt: now,
-      expiresAt: now + 30 * 24 * 60 * 60_000,
-    });
+    const cookie = await createSession(user.id);
     await db.update(loginCodes).set({ consumedAt: now }).where(eq(loginCodes.id, requestId));
 
     return Response.json(
       { user: { email: user.email } },
-      { headers: { "Set-Cookie": sessionCookie(token) } },
+      { headers: { "Set-Cookie": cookie, "Cache-Control": "no-store" } },
     );
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Unexpected error";
-    return Response.json({ error: `暂时无法登录：${message}` }, { status: 500 });
+  } catch {
+    return Response.json({ error: "暂时无法登录，请稍后重试。" }, { status: 500 });
   }
 }

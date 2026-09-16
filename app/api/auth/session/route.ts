@@ -1,11 +1,12 @@
 import { eq } from "drizzle-orm";
 
 import { getDb } from "../../../../db";
-import { sessions } from "../../../../db/schema";
+import { sessions, userPasswords } from "../../../../db/schema";
 import {
   emailServiceReady,
   getSessionUser,
   hashSessionToken,
+  passwordServiceReady,
   readCookie,
   SESSION_COOKIE,
   sessionCookie,
@@ -14,12 +15,25 @@ import {
 export async function GET(request: Request) {
   try {
     const user = await getSessionUser(request);
+    let passwordConfigured = passwordServiceReady();
+    let hasPassword = false;
+    if (passwordConfigured) {
+      try {
+        const [credential] = await getDb().select({ userId: userPasswords.userId })
+          .from(userPasswords).where(eq(userPasswords.userId, user?.id ?? "")).limit(1);
+        hasPassword = Boolean(credential);
+      } catch {
+        passwordConfigured = false;
+      }
+    }
     return Response.json({
       configured: emailServiceReady(),
-      user: user ? { email: user.email } : null,
-    });
+      passwordConfigured,
+      user: user ? { email: user.email, hasPassword } : null,
+    }, { headers: { "Cache-Control": "no-store" } });
   } catch {
-    return Response.json({ configured: emailServiceReady(), user: null });
+    return Response.json({ configured: emailServiceReady(), passwordConfigured: false, user: null },
+      { headers: { "Cache-Control": "no-store" } });
   }
 }
 
