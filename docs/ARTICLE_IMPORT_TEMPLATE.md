@@ -2,6 +2,20 @@
 
 每次只复制一份模板，先完成内容清单，再写入项目。字段名称与 `app/data.ts` 的现有类型保持一致。
 
+执行检查以 `RELEASE_CHECKLIST.md` 为准，不在本模板再维护另一套重复审计。以下示意 ID 不可直接复制用于正式数据。
+
+## 现有接入位置
+
+- 单篇数据：沿用 `app/<year>-passage-<n>-data.ts`、`-lexicon.ts`、`-knowledge.ts`，字段类型见 `app/data.ts`；旧文件仅作结构参考，不视为语义免审样板。
+- `app/data.ts`：目录状态、文章对象、句子/题目汇总；保留已有 ID，题目 `id` 为跨卷稳定键，`number` 为原卷题号。
+- `app/contextual-vocabulary.ts`：文章类型与逐句本句义/替换；键用规范 headword，不用过去式等表层词形。
+- `app/lexicon.ts`、`app/knowledge-base.ts`：复用并扩充规范条目与关联，避免全局覆盖旧语境或把派生词当作屈折词形。
+- `app/study-app.tsx`：仅在现有文章类型列表确需扩充时做最小接入，不顺手修改界面逻辑。
+- `app/verified-answer-keys.ts` 与 `tests/content-quality.test.mjs`：答案依据和必要单篇断言；同义替换测试须检查目标内容与实际语境入口，不能只数条目。
+- `docs/IMPORT_PROGRESS.md` 与本篇报告：同步总表、分表和下一接续点。
+
+`phrases`、成分和从句的 `text` 必须保存原文连续片段，不能填规范结构或省略号。规范结构放进知识字段，例如原文 `called out bids`，规范 `call out + bids`。新增文章不等于需要重构上述公共模块。
+
 ## 文章信息
 
 ```text
@@ -146,7 +160,8 @@
 
 ```ts
 {
-  id: 1,
+  id: 201026, // 示例：跨卷稳定键；确认全库唯一后使用
+  number: 26, // 原卷题号，与稳定键分开
   sentenceId: "对应定位句 ID",
   prompt: "题干或挖空片段",
   options: [

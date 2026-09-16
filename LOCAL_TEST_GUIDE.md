@@ -18,10 +18,11 @@
 
 ## 运行质量检查
 
-Windows 直接运行环境如果没有 Bash，可使用 Docker：
+普通文章导入只运行内容检查与生产构建。Windows 没有 Bash/GNU timeout 时可使用 WSL 或 Docker：
 
 ```powershell
-docker compose -f docker-compose.local.yml run --rm app npm run quality
+docker compose -f docker-compose.local.yml run --rm app npm run quality:content
+docker compose -f docker-compose.local.yml run --rm app npm run build
 ```
 
 内容检查也可以直接运行：
@@ -29,6 +30,8 @@ docker compose -f docker-compose.local.yml run --rm app npm run quality
 ```powershell
 npm run quality:content
 ```
+
+通过后不要叠加执行 `npm run quality` 或 `npm test`；失败仅修复并重跑受影响项。纯文档修改不运行内容测试和构建，UI或运行逻辑修改按 `docs/RELEASE_CHECKLIST.md` 追加对应验证。
 
 ## 停止 Docker 测试
 

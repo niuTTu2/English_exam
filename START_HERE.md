@@ -4,7 +4,7 @@
 
 ## 最快测试方法（Windows）
 
-1. 安装 Node.js 22 或更高版本。
+1. 安装 Node.js 22.13 或更高版本。生产构建需要 Bash 与 GNU timeout；Windows 可使用 WSL 或 Docker。
 2. 解压项目，双击 `START_LOCAL_TEST_WINDOWS.bat`。
 3. 首次运行会安装依赖，完成后浏览器打开 `http://localhost:5173`。
 4. 测试结束时，在命令窗口按 `Ctrl+C`。
@@ -29,14 +29,14 @@
 
 ## 每次添加文章的固定流程
 
-1. 一次只处理一篇。
-2. 逐字核对正文、题干、选项、标点和题号。
-3. 完成句子、单词、词组和题目全部精审。
-4. 执行 `npm run quality`。
-5. 依据 `docs/CHANGE_REPORT_TEMPLATE.md` 在 `docs/change-reports/` 新建本篇报告。
-6. 按 `docs/RELEASE_CHECKLIST.md` 完成交付自审，并测试手机与电脑页面。
-7. 更新 `docs/IMPORT_PROGRESS.md`。
-8. 只提交本篇及必要索引，形成独立 Git 提交并推送 `origin/main`。
-9. 核验 Cloudflare 线上版本后，再开始下一篇。
+1. 查看 `git status`，保护已有改动；工作区干净时执行 `git pull --ff-only origin main`。分叉、冲突或权限问题先处理，禁止强推。
+2. 阅读 `docs/IMPORT_PROGRESS.md` 的当前接续点，确认能读取对应原卷，再处理一篇文章。
+3. 完成正文、题目、句法、词汇词组、语境同义替换与索引接入；语义自审随录入完成。
+4. 以 `docs/RELEASE_CHECKLIST.md` 为唯一执行清单：内容导入运行一次 `npm run quality:content` 与一次 `npm run build`；修复失败后仅重跑受影响检查。
+5. 新建本篇交付报告，更新进度；不重复审计旧文章，不复制多份勾选表。
+6. 审阅差异，仅提交本篇和必要索引，独立提交并推送 `origin/main`。
+7. 有权限时核验该提交的 Cloudflare 部署状态；无权限则记录“推送已完成，部署未核验”，不得宣称上线成功。
+
+同事可将 `PROMPT_FOR_FRIEND_GPT.md` 全文交给 Codex。原卷附件不会自动随 Git 克隆；缺少时请提供原文件，不要依赖上一会话的临时路径。当前接续点：2010 年英语二 Text 2（26—30）；以后以进度台账为准。
 
 禁止把正式邮件密钥、数据库内容或验证码写入仓库和聊天。除既有 GitHub → Cloudflare 自动部署外，新增服务器、域名、网络端口或外部服务仍需单独授权。
