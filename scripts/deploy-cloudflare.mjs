@@ -2,6 +2,12 @@ import { readFile } from "node:fs/promises";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
+const ciMigration = process.argv.includes("--ci-migrate");
+if (ciMigration && (process.env.WORKERS_CI !== "1" || process.env.WORKERS_CI_BRANCH !== "main")) {
+  console.log("非 Cloudflare main 生产构建，跳过远端迁移。");
+  process.exit(0);
+}
+
 const root = fileURLToPath(new URL("..", import.meta.url));
 const configPath = "dist/server/wrangler.json";
 const config = JSON.parse(await readFile(new URL(`../${configPath}`, import.meta.url), "utf8"));
@@ -16,7 +22,7 @@ if (process.argv.includes("--check")) {
   const wrangler = fileURLToPath(import.meta.resolve("wrangler/bin/wrangler.js"));
   const commands = [
     ["d1", "execute", database.database_name, "--remote", "--config", configPath, "--file", "drizzle/0001_password_login.sql", "--yes"],
-    ["deploy", "--config", configPath],
+    ...(ciMigration ? [] : [["deploy", "--config", configPath]]),
   ];
   for (const args of commands) {
     const result = spawnSync(process.execPath, [wrangler, ...args], { cwd: root, stdio: "inherit" });

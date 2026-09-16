@@ -141,6 +141,8 @@ The deploy command uses the Wrangler configuration generated in `dist/server`, i
 
 `npm run deploy:cloudflare`先核对既有Worker和D1目标，执行`drizzle/0001_password_login.sql`，成功后才发布Worker。SQL只幂等创建`user_passwords`，不重建或修改原用户、会话、学习记录；不重复执行旧的0000建表脚本。新表保留不影响回滚到旧Worker。
 
+为兼容Cloudflare控制台仍使用默认`npx wrangler deploy`的情况，`npm run build`的`postbuild`也执行迁移门禁，但严格限定`WORKERS_CI=1`且`WORKERS_CI_BRANCH=main`。本地、其他CI及预览分支构建全部跳过远端迁移。两处重复执行仍是幂等新增表，不重复改写用户数据。
+
 既有Cloudflare Builds部署凭据需要对绑定D1具有执行增量SQL的权限；权限不足时发布会停止，不能绕过迁移继续部署。不要把令牌或验证码写入仓库。可先运行`node scripts/deploy-cloudflare.mjs --check`只检查构建目标，不连接数据库或发布。
 
 验证：`node --test tests/password.test.mjs tests/auth.test.mjs tests/study-sync.test.mjs`使用合成凭证和隔离内存数据库，不发送邮件、不读取生产数据；`tests/auth.test.mjs`通过现有工具链的Miniflare在Workers运行时验证真实路由。
