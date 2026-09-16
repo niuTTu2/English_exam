@@ -204,9 +204,12 @@ export const passage2001P2WordKnowledge: Record<string, WordKnowledge> = {
     pitfalls: passage2001P2PhraseGuides["how-important-can-be"].pitfalls,
   },
   mean: {
-    grammarRole: "及物动词；后接动名词表示‘意味着’",
-    grammarSummary: "mean doing 表某事意味着什么后果；mean to do 表主语打算做什么。本文用 doesn't/does mean 形成否定误解与肯定正解。",
-    structures: passage2001P2PhraseGuides["doesnt-mean-lying"].structures,
+    grammarRole: "及物动词；可接名词、动名词或内容从句，说明词义或后果",
+    grammarSummary: "mean 可表示某个词或表达的含义，也可表示某事意味着什么后果；mean doing 表‘意味着做’，mean to do 则表‘打算做’。按当前宾语辨义，不把旧例句的否定或动名词结构套入所有语境。",
+    structures: [
+      { pattern: "mean + noun / doing / that-clause", meaning: "意为……；意味着……", rule: "宾语可以是名词、动名词或that内容从句；单数主语的一般现在时用means。", examples: [{ english: "This sign means danger.", chinese: "这个标志表示危险。" }, { english: "Accepting funds does not mean lying down.", chinese: "接受资金并不意味着消极听任摆布。" }] },
+      { pattern: "mean to do something", meaning: "打算做某事", rule: "后接to do时强调主语的意图，与mean doing所表达的后果不同。", examples: [{ english: "I mean to explain the difference.", chinese: "我打算解释这个区别。" }] },
+    ],
     pitfalls: passage2001P2PhraseGuides["doesnt-mean-lying"].pitfalls,
   },
   capital: {

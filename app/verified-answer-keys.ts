@@ -160,3 +160,25 @@ export const verifiedAnswerSources2010Passage1 = [
     url: "https://kaoyan.eol.cn/shiti/yingyu/201605/t20160513_1397756_1.shtml",
   },
 ] as const;
+
+export const verifiedAnswerKey2010Passage2: Record<number, "A" | "B" | "C" | "D"> = {
+  26: "A", 27: "C", 28: "B", 29: "D", 30: "B",
+};
+
+export const verifiedAnswerSources2010Passage2 = [
+  {
+    range: "26—30：标准答案表为 A C B D B",
+    label: "新东方在线 / 2010 年考研英语二真题及答案（2018-10-15）",
+    url: "https://kaoyan.koolearn.com/20181015/1023400.html",
+  },
+  {
+    range: "26—30逐项解析；第28题明确区分离婚率与沟通失败所致离婚的占比",
+    label: "华慧考研 / 2010 考研英语二阅读理解 Text 2 真题附答案详解（2021-05-19）",
+    url: "http://kaoyan.hhkaobo.com/news/16527.html",
+  },
+  {
+    range: "旧转载异文记录：第28题列为D，未采用；以用户原文、上述答案和比例逻辑取B",
+    label: "中国研究生招生信息网 / 2010 年真题及答案（2010-01-13旧转载）",
+    url: "https://yz.chsi.com.cn/kyzx/en/201001/20100113/61655286-2.html",
+  },
+] as const;

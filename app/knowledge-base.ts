@@ -76,6 +76,12 @@ import {
   passage2010P1PhraseGuides,
   passage2010P1WordKnowledge,
 } from "./2010-passage-1-knowledge";
+import {
+  passage2010P2CollocationGlosses,
+  passage2010P2FamilyGlosses,
+  passage2010P2PhraseAliases,
+  passage2010P2PhraseGuides,
+} from "./2010-passage-2-knowledge";
 
 type Structure = NonNullable<VocabEntry["structures"]>[number];
 type ReferenceDetail = NonNullable<VocabEntry["collocationDetails"]>[number];
@@ -112,8 +118,8 @@ const phraseGuides: Record<string, PhraseKnowledge> = {
     canonical: "between A and B",
     type: "介词结构",
     meaning: "在 A 和 B 之间；连接两个对应端点、对象或范围",
-    summary: "between 后先接 A，再用 and 引出 B。原句中整个介词短语后置修饰 gap。",
-    grammarRole: "介词短语；本句作后置定语，说明 gap 存在于哪两项之间",
+    summary: "between 可用 and 连接两个平行对象，也可直接接复数名词；结合中心名词判断是在说明差距、交流还是其他相互关系。",
+    grammarRole: "介词短语；后置修饰 gap、communication、patterns 等名词时，限定所涉及的对象或双方",
     structures: [
       s("between A and B", "在 A 和 B 之间", "A、B 必须是语法上平行的名词、代词或 -ing 结构。", [
         { english: "There is a gap between income and spending.", chinese: "收入与支出之间存在差距。" },
@@ -798,6 +804,13 @@ Object.assign(familyGlosses, passage2010P1FamilyGlosses);
 for (const [key, value] of Object.entries(passage2010P1WordKnowledge)) {
   wordKnowledge[key] = mergeWordKnowledge(wordKnowledge[key], value);
 }
+
+for (const [key, value] of Object.entries(passage2010P2PhraseGuides)) {
+  phraseGuides[key] = mergePhrase(phraseGuides[key], value);
+}
+Object.assign(phraseAliases, passage2010P2PhraseAliases);
+Object.assign(collocationGlosses, passage2010P2CollocationGlosses);
+Object.assign(familyGlosses, passage2010P2FamilyGlosses);
 
 function normalized(value: string) {
   return value.trim().toLowerCase().replace(/\s+/g, " ");

@@ -1,4 +1,6 @@
-export type ArticleLexiconId = "cloze" | "p1" | "p2" | "p3" | "p4" | "p5" | "translation" | "2001-cloze" | "2001-p1" | "2001-p2" | "2010-cloze" | "2010-p1";
+import { passage2010P2SentenceContexts } from "./2010-passage-2-lexicon";
+
+export type ArticleLexiconId = "cloze" | "p1" | "p2" | "p3" | "p4" | "p5" | "translation" | "2001-cloze" | "2001-p1" | "2001-p2" | "2010-cloze" | "2010-p1" | "2010-p2";
 
 export type ContextualSubstitution = {
   label: string;
@@ -22,6 +24,11 @@ export type SentenceWordContext = {
  * a different sense, use and replacement set in every source sentence.
  */
 export const sentenceWordContexts: Record<string, Record<string, SentenceWordContext>> = {
+  ...passage2010P2SentenceContexts,
+  "p2-s5": { mean: { contextualMeaning: "意味着将出现某种结果", use: "This means that... 中 means 为第三人称单数，that从句解释男女数量差异会导致择偶年龄段的男性过剩。" } },
+  "p2-s19": { mean: { contextualMeaning: "意味着；表明这一结果", use: "主语 The grand mediocrity of today 对应单数谓语 means，that从句说明自然选择作用减弱；不是名词‘手段’。" } },
+  "p2-s20": { mean: { contextualMeaning: "意味着", use: "this means that... 引出作者对进化状态的结论，that内容从句充当宾语，不是mean doing结构。" } },
+  "translation-s35": { means: { contextualMeaning: "手段；工具", use: "by modern means of transport 中 means 为名词，of transport说明运输用途；means单复数同形，不计入动词mean。" } },
   "cloze-s1": {
     wish: {
       contextualSubstitutions: [
@@ -994,7 +1001,7 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
   "2010-p1-s7": { down: { contextualMeaning: "市场规模下降到500亿美元", use: "come down to 中 to 引出下降终点。", contextualSubstitutions: [{ label: "fall", chinese: "下降", fit: "direct", rewrittenSentence: "Since then it may have fallen to $50 billion.", nuance: "fall to 是直接的数量下降；come down to 语气稍口语并突出从高位回落。", target: "word:fall" }] } },
   "2010-p1-s8": { generate: { contextualMeaning: "引发远超市场体量的关注", use: "generate interest 是主句谓语和宾语。", contextualSubstitutions: [{ label: "attract", chinese: "吸引", fit: "direct", rewrittenSentence: "But the market attracts interest far beyond its size because it brings together great wealth, enormous egos, greed, passion and controversy in a way matched by few other industries.", nuance: "attract 强调把既有注意力吸引过来；generate 强调这种市场特性产生了关注。", target: "word:attract" }] } },
   "2010-p1-s9": { unfashionable: { contextualMeaning: "在危机中变得不得人心", use: "became deeply unfashionable 为系表结构。", contextualSubstitutions: [{ label: "unpopular", chinese: "不受欢迎的", fit: "direct", rewrittenSentence: "In the weeks and months that followed Mr. Hirst's sale, spending of any sort became deeply unpopular.", nuance: "unpopular 是一般的不受欢迎；unfashionable 更贴合消费风气突然逆转。", target: "word:unpopular" }] } },
-  "2010-p1-s10": { away: { contextualMeaning: "不再进入或参与艺术品交易场所", use: "stay away from galleries and salerooms 是整体谓语搭配。", contextualSubstitutions: [{ label: "avoid", chinese: "避开", fit: "with-adjustment", rewrittenSentence: "In the art world that meant collectors avoided galleries and salerooms.", nuance: "avoid 可直接接地点作宾语；stay away from 更强调持续不露面、不参与。", adjustment: "删除 stay 和介词 from，改为及物动词 avoided。", target: "word:avoid" }] } },
+  "2010-p1-s10": { mean: { contextualMeaning: "意味着", use: "meant 是mean的过去式；前面的that是指示代词主语，宾语内容为collectors stayed away from galleries and salerooms，连接词that省略。不是动名词宾语或否定对照。" }, away: { contextualMeaning: "不再进入或参与艺术品交易场所", use: "stay away from galleries and salerooms 是整体谓语搭配。", contextualSubstitutions: [{ label: "avoid", chinese: "避开", fit: "with-adjustment", rewrittenSentence: "In the art world that meant collectors avoided galleries and salerooms.", nuance: "avoid 可直接接地点作宾语；stay away from 更强调持续不露面、不参与。", adjustment: "删除 stay 和介词 from，改为及物动词 avoided。", target: "word:avoid" }] } },
   "2010-p1-s11": { fall: { contextualMeaning: "销售额大幅下降", use: "fell by two-thirds 中 by 引出降幅。", contextualSubstitutions: [{ label: "decline", chinese: "下降", fit: "with-adjustment", rewrittenSentence: "Sales of contemporary art declined by two-thirds, and in the most overheated sector, they were down by nearly 90% in the year to November 2008.", nuance: "decline 更正式、中性；fall 更直观地呈现快速下落。", adjustment: "将 fell 改为一般过去时 declined。", target: "word:decline" }] } },
   "2010-p1-s12": { pay: { contextualMeaning: "因担保承诺而大额赔付", use: "pay out nearly $200m 是 had to 后的动词短语。", contextualSubstitutions: [{ label: "disburse", chinese: "支付；拨付", fit: "with-adjustment", rewrittenSentence: "Within weeks the world's two biggest auction houses, Sotheby's and Christie's, had to disburse nearly $200m in guarantees to clients who had placed works for sale with them.", nuance: "disburse 是正式财务用语；pay out 更自然地暗示因责任、索赔或担保而付出大笔款项。", adjustment: "disburse 为及物动词，不保留 out。", target: "word:disburse" }] } },
   "2010-p1-s13": { downturn: { contextualMeaning: "艺术市场当前这轮低迷", use: "downturn in the art market 是主语中心。", contextualSubstitutions: [{ label: "decline", chinese: "衰退；下降", fit: "direct", rewrittenSentence: "The current decline in the art market is the worst since the Japanese stopped buying Impressionists at the end of 1989.", nuance: "decline 泛指下降过程；downturn 更像经济周期中的下行阶段。", target: "word:decline" }] } },

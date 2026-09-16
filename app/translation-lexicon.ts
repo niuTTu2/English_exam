@@ -233,7 +233,7 @@ export const translationLexicon: Record<string, PassageLexiconEntry> = {
     specialForms: ["custom（单数）", "customs（复数）"],
     examSynonyms: ["traditions（传统；强调代际传承）", "practices（做法；范围更广）"],
   }),
-  ideas: entry("n.（复数）", "思想；观念", "ideas 与 customs 并列，表示人们接触到的新观念。", {
+  idea: entry("n.", "思想；观念", "ideas 与 customs 并列，表示人们接触到的新观念。", {
     specialForms: ["idea（单数）", "ideas（复数）"],
     examSynonyms: ["notions（观念；有时带主观看法色彩）", "concepts（概念；更抽象或专业）"],
   }),
@@ -394,7 +394,7 @@ export const translationLemmaAliases: Record<string, string> = {
   being: "being",
   exposed: "expose",
   customs: "customs",
-  ideas: "ideas",
+  ideas: "idea",
   governments: "government",
   often: "often",
   forced: "force",

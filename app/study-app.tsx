@@ -74,7 +74,7 @@ import {
   getSynonymDetails,
   getWordKnowledge,
 } from "./knowledge-base";
-import { canonicalLemma, familyAliases, getLexicalGuide } from "./lexicon";
+import { canonicalLemma, familyAliases, getLexicalGuide, type LexicalContext } from "./lexicon";
 
 type AppView = "study" | "test" | "review" | "vocabulary";
 type ArticleId = keyof typeof articleContents;
@@ -186,11 +186,19 @@ const phraseGlosses: Record<string, string> = {
   "not frequently obtainable": "并不经常能够获得",
 };
 
-const corpusText = [
-  ...allSentences.map((sentence) => sentence.text.toLowerCase()),
-  ...allQuestions.flatMap((question) => [question.prompt, ...question.options.map((option) => option.text)].map((text) => text.toLowerCase())),
-].join(" ");
-const corpusTokens = tokenizeWords(corpusText);
+const corpusSources = Object.values(articleContents).flatMap((article) => [
+  ...article.sentences.map((sentence) => ({ id: sentence.id, sentenceId: sentence.id, article, text: sentence.text, section: `${article.label}正文` })),
+  ...article.questions.flatMap((question) => [
+    { id: `question-${question.id}-prompt`, sentenceId: undefined, article, text: question.prompt, section: `${article.label}第 ${question.number ?? question.id} 题题干` },
+    ...question.options.map((option) => ({ id: `question-${question.id}-option-${option.key}`, sentenceId: undefined, article, text: option.text, section: `${article.label}第 ${question.number ?? question.id} 题选项${option.key}` })),
+  ]),
+]);
+const sourceById = new Map(corpusSources.map((source) => [source.id, source]));
+const corpusText = corpusSources.map((source) => source.text.toLowerCase()).join(" ");
+const corpusTokens = corpusSources.flatMap((source) => tokenizeWords(source.text.toLowerCase()).map((form) => {
+  const lemma = canonicalLemma(form, { sourceId: source.id, sentenceId: source.sentenceId });
+  return { form, lemma, family: familyAliases[lemma] ?? lemma, sourceId: source.id, year: source.article.year };
+}));
 
 function tokenizeWords(text: string) {
   return text.match(/(?:[a-z]\.){2,}|(?<![0-9])[a-z]+(?:-[a-z]+)?(?:['’][a-z]+)?/g) ?? [];
@@ -208,27 +216,24 @@ const optionLookup = new Map(
 );
 
 const sentenceArticle = new Map(
-  Object.values(articleContents).flatMap((article) => article.sentences.map((sentence) => [sentence.id, article] as const)),
+  corpusSources.map((source) => [source.id, source.article] as const),
 );
 
 const questionArticle = new Map(
   Object.values(articleContents).flatMap((article) => article.questions.map((question) => [question.id, article] as const)),
 );
 
-function lexicalContextFor(sentenceId?: string) {
+function lexicalContextFor(sourceId?: string): LexicalContext {
+  const source = sourceId ? sourceById.get(sourceId) : undefined;
   return {
-    sentenceId,
-    articleId: sentenceId ? sentenceArticle.get(sentenceId)?.id as "cloze" | "p1" | "p2" | "p3" | "p4" | "p5" | "translation" | "2001-cloze" | "2001-p1" | "2001-p2" | "2010-cloze" | "2010-p1" | undefined : undefined,
+    sourceId,
+    sentenceId: source?.sentenceId,
+    articleId: source?.article.id as LexicalContext["articleId"],
   };
 }
 
-function lemmaOf(token: string) {
-  return canonicalLemma(token);
-}
-
-function familyOf(token: string) {
-  const lemma = lemmaOf(token);
-  return familyAliases[lemma] ?? lemma;
+function lemmaOf(token: string, sourceId?: string) {
+  return canonicalLemma(token, lexicalContextFor(sourceId));
 }
 
 function countPhrase(phrase: string) {
@@ -236,7 +241,7 @@ function countPhrase(phrase: string) {
   return [...corpusText.matchAll(new RegExp(`\\b${escaped}\\b`, "g"))].length;
 }
 
-function currentCounts(label: string, isPhrase: boolean) {
+export function currentCounts(label: string, isPhrase: boolean, sourceId?: string) {
   const normalized = label.toLowerCase();
   if (isPhrase) {
     const exact = countPhrase(normalized);
@@ -250,18 +255,22 @@ function currentCounts(label: string, isPhrase: boolean) {
       : exact;
     return { form: exact, lemma: pattern, family: pattern };
   }
-  const lemma = lemmaOf(normalized);
-  const family = familyOf(normalized);
+  const lemma = lemmaOf(normalized, sourceId);
+  const family = familyAliases[lemma] ?? lemma;
   return {
-    form: corpusTokens.filter((token) => token === normalized).length,
-    lemma: corpusTokens.filter((token) => lemmaOf(token) === lemma).length,
-    family: corpusTokens.filter((token) => familyOf(token) === family).length,
+    form: corpusTokens.filter((token) => token.form === normalized).length,
+    lemma: corpusTokens.filter((token) => token.lemma === lemma).length,
+    family: corpusTokens.filter((token) => token.family === family).length,
   };
 }
 
-function currentOccurrences(label: string, isPhrase: boolean) {
+export function currentOccurrences(label: string, isPhrase: boolean, sourceId?: string) {
   const normalized = label.toLowerCase();
-  const lemma = lemmaOf(normalized);
+  const lemma = lemmaOf(normalized, sourceId);
+  if (!isPhrase) {
+    const matchingIds = new Set(corpusTokens.filter((token) => token.lemma === lemma).map((token) => token.sourceId));
+    return corpusSources.filter((source) => matchingIds.has(source.id)).map((source) => ({ year: source.article.year, section: source.section, excerpt: source.text }));
+  }
   const phraseKey = isPhrase ? getPhraseKnowledge(normalized)?.key : undefined;
   const sentenceMatches = allSentences.filter((sentence) => {
     const lower = sentence.text.toLowerCase();
@@ -304,7 +313,7 @@ function makeFallbackEntry(label: string, isPhrase = false, sentenceId?: string)
   const phraseKnowledge = isPhrase ? getPhraseKnowledge(normalized) : undefined;
   const guide = isPhrase ? null : getLexicalGuide(normalized, lexicalContextFor(sentenceId));
   const wordKnowledge = guide ? getWordKnowledge(guide.headword) : undefined;
-  const counts = currentCounts(label, isPhrase);
+  const counts = currentCounts(label, isPhrase, sentenceId);
   if (phraseKnowledge) {
     return {
       key: `pattern:${phraseKnowledge.key}`,
@@ -371,11 +380,11 @@ function makeFallbackEntry(label: string, isPhrase = false, sentenceId?: string)
     contextualSubstitutions: guide?.contextualSubstitutions ?? [],
     counts,
     knowledgeLevel: guide?.use || wordKnowledge ? "curated" : "related",
-    occurrences: currentOccurrences(label, isPhrase),
+    occurrences: currentOccurrences(label, isPhrase, sentenceId),
   };
 }
 
-function resolveEntry(label: string, isPhrase = false, sentenceId?: string): VocabEntry {
+export function resolveEntry(label: string, isPhrase = false, sentenceId?: string): VocabEntry {
   const normalized = label.toLowerCase();
   const phraseKnowledge = isPhrase ? getPhraseKnowledge(normalized) : undefined;
   const guide = isPhrase ? null : getLexicalGuide(normalized, lexicalContextFor(sentenceId));
@@ -412,9 +421,9 @@ function resolveEntry(label: string, isPhrase = false, sentenceId?: string): Voc
     otherMeanings: Array.from(new Set([...(entry.otherMeanings ?? []), ...(guide?.otherMeanings ?? [])])),
     wordFamily: mergedFamily,
     confusions: Array.from(new Set([...(entry.confusions ?? []), ...(guide?.confusions ?? [])])),
-    counts: currentCounts(label, isPhrase),
+    counts: currentCounts(label, isPhrase, sentenceId),
     knowledgeLevel: entry.knowledgeLevel ?? (entry.use || guide?.use || wordKnowledge ? "curated" : "related"),
-    occurrences: currentOccurrences(label, isPhrase),
+    occurrences: currentOccurrences(label, isPhrase, sentenceId),
   };
 }
 
@@ -431,33 +440,19 @@ function questionsForYear(year: number) {
 }
 
 function corpusTokensForYear(year: number) {
-  const text = [
-    ...sentencesForYear(year).map((sentence) => sentence.text),
-    ...questionsForYear(year).flatMap((question) => [question.prompt, ...question.options.map((option) => option.text)]),
-  ].join(" ").toLowerCase();
-  return tokenizeWords(text);
+  return corpusTokens.filter((token) => token.year === year);
 }
 
 function sentenceIdForWord(headword: string, year: number) {
-  const yearSentences = sentencesForYear(year);
-  const yearQuestions = questionsForYear(year);
-  const sentence = yearSentences.find((item) => {
-    const tokens = tokenizeWords(item.text.toLowerCase());
-    return tokens.some((token) => lemmaOf(token) === headword);
-  });
-  if (sentence) return sentence.id;
-  return yearQuestions.find((question) => question.options.some((option) => {
-    const tokens = tokenizeWords(option.text.toLowerCase());
-    return tokens.some((token) => lemmaOf(token) === headword);
-  }))?.sentenceId ?? "year-vocabulary";
+  return corpusTokens.find((token) => token.year === year && token.lemma === headword)?.sourceId ?? "year-vocabulary";
 }
 
-function buildYearWordItems(year: number): YearWordItem[] {
+export function buildYearWordItems(year: number): YearWordItem[] {
   const grouped = new Map<string, Map<string, number>>();
   corpusTokensForYear(year).forEach((token) => {
-    const headword = lemmaOf(token);
+    const headword = token.lemma;
     const forms = grouped.get(headword) ?? new Map<string, number>();
-    forms.set(token, (forms.get(token) ?? 0) + 1);
+    forms.set(token.form, (forms.get(token.form) ?? 0) + 1);
     grouped.set(headword, forms);
   });
 
@@ -465,10 +460,10 @@ function buildYearWordItems(year: number): YearWordItem[] {
     .map(([headword, formCounts]) => {
       const sentenceId = sentenceIdForWord(headword, year);
       const entry = resolveEntry(headword, false, sentenceId);
-      const rankedForms = Array.from(formCounts.entries()).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "en"));
+      const sourceForm = corpusTokens.find((token) => token.sourceId === sentenceId && token.lemma === headword)?.form ?? headword;
       return {
         headword,
-        sourceForm: formCounts.has(headword) ? headword : rankedForms[0][0],
+        sourceForm,
         forms: Array.from(formCounts.keys()).sort((a, b) => a.localeCompare(b, "en")),
         count: Array.from(formCounts.values()).reduce((sum, value) => sum + value, 0),
         meaning: entry.contextualMeaning,
@@ -579,7 +574,7 @@ export default function StudyApp() {
   // Building the complete vocabulary resolves every word and occurrence across
   // the imported corpus. Keep the first study render lightweight and only do
   // that work when the vocabulary view is actually opened.
-  const yearWordCount = useMemo(() => new Set(corpusTokensForYear(selectedYear).map(lemmaOf)).size, [selectedYear]);
+  const yearWordCount = useMemo(() => new Set(corpusTokensForYear(selectedYear).map((token) => token.lemma)).size, [selectedYear]);
   const yearPhraseCount = useMemo(() => {
     const sources = new Set<string>();
     sentencesForYear(selectedYear).forEach((sentence) => sentence.phrases.forEach((source) => sources.add(source.toLowerCase())));
@@ -1267,7 +1262,7 @@ export default function StudyApp() {
                         <article key={question.id} className="question-card">
                           <div className="question-prompt">
                             <span>{question.number ?? question.id}</span>
-                            <p>{renderWords(question.prompt, question.sentenceId, openTerm, `question-${question.id}`)}</p>
+                            <p>{renderWords(question.prompt, `question-${question.id}-prompt`, openTerm, `question-${question.id}`)}</p>
                           </div>
                           <div className="option-list">
                             {question.options.map((option) => {
@@ -1285,7 +1280,7 @@ export default function StudyApp() {
                                     <span>{option.key}</span>{correct && <Check />}
                                   </button>
                                   <div className="option-terms">
-                                    {renderWords(option.text, question.sentenceId, openTerm, `option-${question.id}-${option.key}`)}
+                                    {renderWords(option.text, `question-${question.id}-option-${option.key}`, openTerm, `option-${question.id}-${option.key}`)}
                                     {option.text.includes(" ") && getPhraseKnowledge(option.text) && (
                                       <button
                                         type="button"
