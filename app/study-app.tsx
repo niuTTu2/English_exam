@@ -208,12 +208,12 @@ const phraseAnnotations = Object.values(articleContents).flatMap((article) => [
 const phraseOccurrenceCache = new Map<string, Array<{ source: (typeof corpusSources)[number]; start: number; end: number; label: string }>>();
 const termContextCache = new Map<string, SavedTermContext[]>();
 const corpusTokens = corpusSources.flatMap((source) => tokenizeWords(source.text.toLowerCase()).map((form) => {
-  const lemma = canonicalLemma(form, { sourceId: source.id, sentenceId: source.sentenceId });
+  const lemma = canonicalLemma(form, { articleId: source.article.id as LexicalContext["articleId"], sourceId: source.id, sentenceId: source.sentenceId });
   return { form, lemma, family: familyAliases[lemma] ?? lemma, sourceId: source.id, year: source.article.year };
 }));
 
 function tokenizeWords(text: string) {
-  return text.match(/(?:[a-z]\.){2,}|(?<![0-9])[a-z]+(?:-[a-z]+)?(?:['’][a-z]+)?/g) ?? [];
+  return text.match(/\d+(?:st|nd|rd|th)\b|\d{4}s\b|(?:[a-z]\.){2,}|(?<![a-z0-9])[a-z]+(?:-[a-z]+)?(?:['’][a-z]+)?/g) ?? [];
 }
 
 const optionLookup = new Map(
@@ -2937,9 +2937,9 @@ function renderWords(
       ];
     }
 
-    const parts = segment.split(/((?:[A-Za-z]\.){2,}|(?<![0-9])[A-Za-z]+(?:-[A-Za-z]+)?(?:['’][A-Za-z]+)?)/g);
+    const parts = segment.split(/(\d+(?:st|nd|rd|th)\b|\d{4}s\b|(?:[A-Za-z]\.){2,}|(?<![A-Za-z0-9])[A-Za-z]+(?:-[A-Za-z]+)?(?:['’][A-Za-z]+)?)/g);
     return parts.map((part, index) => {
-      if (!/^(?:[A-Za-z]\.){2,}$|^[A-Za-z]+(?:-[A-Za-z]+)?(?:['’][A-Za-z]+)?$/.test(part)) return part;
+      if (!/^\d+(?:st|nd|rd|th)$|^\d{4}s$|^(?:[A-Za-z]\.){2,}$|^[A-Za-z]+(?:-[A-Za-z]+)?(?:['’][A-Za-z]+)?$/.test(part)) return part;
       return (
         <button
           type="button"

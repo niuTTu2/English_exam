@@ -161,6 +161,13 @@ export const verifiedAnswerSources2010Passage1 = [
   },
 ] as const;
 
+export const verifiedAnswerKey2010Passage4: Record<number, "A" | "B" | "C" | "D"> = {
+  36: "D", 37: "A", 38: "C", 39: "B", 40: "D",
+};
+export const verifiedAnswerSources2010Passage4 = [
+  { range: "36—40答案表：D A C B D；37题让步逻辑，39题1968/1975时间区分，40题传统与发展", label: "新东方在线 / 2010年考研英语二真题及答案（2018-10-15）", url: "https://kaoyan.koolearn.com/20181015/1023400.html" },
+] as const;
+
 export const verifiedAnswerKey2010Passage3: Record<number, "A" | "B" | "C" | "D"> = {
   31: "A", 32: "A", 33: "D", 34: "C", 35: "B",
 };

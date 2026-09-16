@@ -1,3 +1,4 @@
+import { passage2010P4PhraseGuides, passage2010P4PhraseAliases, passage2010P4CollocationGlosses } from "./2010-passage-4-knowledge";
 import { passage2010P3PhraseGuides, passage2010P3PhraseAliases, passage2010P3CollocationGlosses } from "./2010-passage-3-knowledge";
 import type { VocabEntry } from "./data";
 import {
@@ -822,6 +823,15 @@ for (const [key, value] of Object.entries(passage2010P3PhraseGuides)) {
 }
 Object.assign(phraseAliases, passage2010P3PhraseAliases);
 Object.assign(collocationGlosses, passage2010P3CollocationGlosses);
+
+for (const [key, value] of Object.entries(passage2010P4PhraseGuides)) {
+  if (!phraseGuides[key]) phraseGuides[key] = value;
+}
+Object.assign(phraseAliases, passage2010P4PhraseAliases);
+Object.assign(collocationGlosses, passage2010P4CollocationGlosses);
+phraseGuides["entitled-to-privacy"].meaning = "有权享有某项权利或利益";
+phraseGuides["entitled-to-privacy"].summary = "be entitled to + 权利或利益；既可表示有权享有隐私，也可表示有权接受同侪审判。";
+phraseGuides["entitled-to-privacy"].structures = phraseGuides["entitled-to-privacy"].structures.map(structure => ({ ...structure, meaning: "有权享有某项权利或利益" }));
 
 export function getPhraseKnowledge(source: string): PhraseKnowledge | undefined {
   const clean = normalized(source);

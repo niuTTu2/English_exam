@@ -1,3 +1,4 @@
+import { passage2010P4Questions, passage2010P4Sentences } from "./2010-passage-4-data";
 import { passage2010P3Questions, passage2010P3Sentences } from "./2010-passage-3-data";
 import { passage1Questions, passage1Sentences } from "./passage-1-data";
 import { passage2Questions, passage2Sentences } from "./passage-2-data";
@@ -172,7 +173,7 @@ export const sectionsByYear = {
     { id: "2010-p1", label: "阅读 Text 1", meta: "19句 · 5题", status: "ready" },
     { id: "2010-p2", label: "阅读 Text 2", meta: "19句 · 5题", status: "ready" },
     { id: "2010-p3", label: "阅读 Text 3", meta: "16句 · 5题", status: "ready" },
-    { id: "2010-p4", label: "阅读 Text 4", meta: "待精审", status: "pending" },
+    { id: "2010-p4", label: "阅读 Text 4", meta: "14句 · 5题", status: "ready" },
     { id: "2010-p5", label: "阅读 Part B", meta: "待精审", status: "pending" },
     { id: "2010-translation", label: "英译汉", meta: "待精审", status: "pending" },
   ],
@@ -1385,7 +1386,13 @@ export const articleContents: Record<string, ArticleContent> = {
     description: "从肥皂洗手到瓶装水、口香糖和润肤品，理解广告如何借日常提示塑造习惯，并区分企业证言与作者的批评态度。",
     kind: "reading", sentences: passage2010P3Sentences, questions: passage2010P3Questions,
   },
+  "2010-p4": {
+    id: "2010-p4", year: 2010, sectionId: "p4", label: "阅读 Text 4", badge: "2010 · 阅读 Text 4",
+    title: "美国陪审制度的民主传统与历史改革",
+    description: "从五项民主原则出发，梳理精英筛选、女性代表性与1968年法案和1975年判决，掌握让步论证、时间定位及主旨范围。",
+    kind: "reading", sentences: passage2010P4Sentences, questions: passage2010P4Questions,
+  },
 };
 
-export const allSentences = [...verifiedClozeSentences, ...verifiedPassage1Sentences, ...verifiedPassage2Sentences, ...verifiedPassage3Sentences, ...verifiedPassage4Sentences, ...verifiedPassage5Sentences, ...verifiedTranslationSentences, ...cloze2001Sentences, ...passage2001P1Sentences, ...passage2001P2Sentences, ...cloze2010Sentences, ...passage2010P1Sentences, ...passage2010P2Sentences, ...passage2010P3Sentences];
-export const allQuestions = [...verifiedClozeQuestions, ...verifiedPassage1Questions, ...verifiedPassage2Questions, ...verifiedPassage3Questions, ...verifiedPassage4Questions, ...verifiedPassage5Questions, ...cloze2001Questions, ...passage2001P1Questions, ...passage2001P2Questions, ...cloze2010Questions, ...passage2010P1Questions, ...passage2010P2Questions, ...passage2010P3Questions];
+export const allSentences = [...verifiedClozeSentences, ...verifiedPassage1Sentences, ...verifiedPassage2Sentences, ...verifiedPassage3Sentences, ...verifiedPassage4Sentences, ...verifiedPassage5Sentences, ...verifiedTranslationSentences, ...cloze2001Sentences, ...passage2001P1Sentences, ...passage2001P2Sentences, ...cloze2010Sentences, ...passage2010P1Sentences, ...passage2010P2Sentences, ...passage2010P3Sentences, ...passage2010P4Sentences];
+export const allQuestions = [...verifiedClozeQuestions, ...verifiedPassage1Questions, ...verifiedPassage2Questions, ...verifiedPassage3Questions, ...verifiedPassage4Questions, ...verifiedPassage5Questions, ...cloze2001Questions, ...passage2001P1Questions, ...passage2001P2Questions, ...cloze2010Questions, ...passage2010P1Questions, ...passage2010P2Questions, ...passage2010P3Questions, ...passage2010P4Questions];

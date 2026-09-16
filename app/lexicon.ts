@@ -1,3 +1,4 @@
+import { passage2010P4Lexicon, passage2010P4LemmaAliases, passage2010P4FamilyAliases, passage2010P4FormPartOfSpeech } from "./2010-passage-4-lexicon";
 import { passage2010P3Lexicon, passage2010P3LemmaAliases, passage2010P3FamilyAliases, passage2010P3FormPartOfSpeech } from "./2010-passage-3-lexicon";
 import {
   passage1FamilyAliases,
@@ -144,6 +145,10 @@ Object.assign(familyAliases, passage2010P1FamilyAliases);
 Object.assign(familyAliases, cloze2010FamilyAliases);
 Object.assign(familyAliases, passage2010P2FamilyAliases);
 Object.assign(familyAliases, passage2010P3FamilyAliases);
+Object.assign(familyAliases, passage2010P4FamilyAliases);
+for (const [form, lemma] of Object.entries(passage2010P4LemmaAliases)) {
+  if (form !== lemma && !lemmaAliases[form]) lemmaAliases[form] = lemma;
+}
 
 const partOfSpeech: Record<string, string> = {
   a: "art.（不定冠词）",
@@ -685,7 +690,7 @@ const sourceLemmaAliases: Record<string, Record<string, string>> = {
 export function canonicalLemma(token: string, context?: LexicalContext) {
   const normalized = token.trim().toLowerCase().replace(/[’‘]/g, "'");
   const sourceId = context?.sourceId ?? context?.sentenceId;
-  return (context?.articleId === "2010-p3" ? passage2010P3LemmaAliases[normalized] : undefined) ?? (sourceId ? sourceLemmaAliases[sourceId]?.[normalized] : undefined) ?? lemmaAliases[normalized] ?? normalized;
+  return (context?.articleId === "2010-p4" ? passage2010P4LemmaAliases[normalized] : undefined) ?? (context?.articleId === "2010-p3" ? passage2010P3LemmaAliases[normalized] : undefined) ?? (sourceId ? sourceLemmaAliases[sourceId]?.[normalized] : undefined) ?? lemmaAliases[normalized] ?? normalized;
 }
 
 export function getLexicalGuide(token: string, context?: LexicalContext): LexicalGuide {
@@ -704,6 +709,8 @@ export function getLexicalGuide(token: string, context?: LexicalContext): Lexica
   const passage2010P1Entry = passage2010P1Lexicon[headword];
   const passage2010P2Entry = passage2010P2Lexicon[headword];
   const passage2010P3Entry = passage2010P3Lexicon[headword];
+  const passage2010P4Entry = passage2010P4Lexicon[headword];
+  const passage2010P4Extra = context?.articleId && context.articleId !== "2010-p4" ? undefined : passage2010P4Entry;
   const passage2010P3Extra = context?.articleId && context.articleId !== "2010-p3" ? undefined : passage2010P3Entry;
   const passage2010P2Extra = context?.articleId && context.articleId !== "2010-p2" ? undefined : passage2010P2Entry;
   const articleEntries = {
@@ -721,12 +728,22 @@ export function getLexicalGuide(token: string, context?: LexicalContext): Lexica
     "2010-p1": passage2010P1Entry,
     "2010-p2": passage2010P2Entry,
     "2010-p3": passage2010P3Entry,
+    "2010-p4": passage2010P4Entry,
   } satisfies Record<ArticleLexiconId, typeof passage1Entry | undefined>;
   const articleEntry = context?.articleId ? articleEntries[context.articleId] : undefined;
-  const globalPassageEntry = passage2001P2Entry ?? passage2001P1Entry ?? cloze2001Entry ?? passage3Entry ?? passage1Entry ?? passage2Entry ?? passage4Entry ?? passage5Entry ?? translationEntry ?? cloze2010Entry ?? passage2010P1Entry ?? passage2010P2Entry ?? passage2010P3Entry;
-  const passageEntry = context?.articleId ? articleEntry ?? globalPassageEntry : globalPassageEntry;
+  const globalPassageEntry = passage2001P2Entry ?? passage2001P1Entry ?? cloze2001Entry ?? passage3Entry ?? passage1Entry ?? passage2Entry ?? passage4Entry ?? passage5Entry ?? translationEntry ?? cloze2010Entry ?? passage2010P1Entry ?? passage2010P2Entry ?? passage2010P3Entry ?? passage2010P4Entry;
+  const ordinal = normalized.match(/^([0-9]+)(?:st|nd|rd|th)$/);
+  const decade = normalized.match(/^([0-9]{4})s$/);
+  const chronologicalEntry: typeof passage1Entry | undefined = ordinal || decade ? {
+    partOfSpeech: ordinal ? "序数词" : "年代表达",
+    contextualMeaning: ordinal ? `第${ordinal[1]}` : `${decade![1]}—${Number(decade![1]) + 9}年这一年代`,
+    use: ordinal ? "数字与序数后缀组成完整词形，用于表示顺序；修饰century时表示第几个世纪。" : "年份后的s表示整个十年时段；通常与the连用，不能拆成独立字母s。",
+    specialForms: [ordinal ? "序数数字与st/nd/rd/th后缀不可拆分；不是普通单复数变化。" : "年代标记s不是普通名词复数；数字部分必须整体保留。"],
+    examSynonyms: [],
+  } : undefined;
+  const passageEntry = chronologicalEntry ?? (context?.articleId ? articleEntry ?? globalPassageEntry : globalPassageEntry);
   const sentenceContext = getSentenceWordContext(context?.sentenceId, headword);
-  const pos = (context?.articleId === "2010-p3" ? passage2010P3FormPartOfSpeech[normalized] ?? passage2010P3Entry?.partOfSpeech : undefined) ?? (context?.articleId === "2010-p2" ? passage2010P2FormPartOfSpeech[normalized] ?? passage2010P2Entry?.partOfSpeech : undefined) ?? passage2010P1FormPartOfSpeech[normalized] ?? cloze2010FormPartOfSpeech[normalized] ?? formPartOfSpeech[normalized] ?? passageEntry?.partOfSpeech ?? partOfSpeech[headword] ?? inferPartOfSpeech(headword);
+  const pos = chronologicalEntry?.partOfSpeech ?? (context?.articleId === "2010-p4" ? passage2010P4FormPartOfSpeech[normalized] ?? passage2010P4Entry?.partOfSpeech : undefined) ?? (context?.articleId === "2010-p3" ? passage2010P3FormPartOfSpeech[normalized] ?? passage2010P3Entry?.partOfSpeech : undefined) ?? (context?.articleId === "2010-p2" ? passage2010P2FormPartOfSpeech[normalized] ?? passage2010P2Entry?.partOfSpeech : undefined) ?? passage2010P1FormPartOfSpeech[normalized] ?? cloze2010FormPartOfSpeech[normalized] ?? formPartOfSpeech[normalized] ?? passageEntry?.partOfSpeech ?? partOfSpeech[headword] ?? inferPartOfSpeech(headword);
   const isStructureWord = /art\.|prep\.|conj\.|pron\.|det\.|modal/.test(pos);
   const mergedCollocations = Array.from(new Set([...(collocations[headword] ?? []), ...(passage2001P2Entry?.collocations ?? []), ...(passage2001P1Entry?.collocations ?? []), ...(cloze2001Entry?.collocations ?? []), ...(passage2Entry?.collocations ?? []), ...(passage1Entry?.collocations ?? []), ...(passage3Entry?.collocations ?? []), ...(passage4Entry?.collocations ?? []), ...(passage5Entry?.collocations ?? []), ...(translationEntry?.collocations ?? []), ...(passage2010P1Entry?.collocations ?? [])]));
   const mergedMeanings = Array.from(new Set([...(otherMeanings[headword] ?? []), ...(passage2001P2Entry?.otherMeanings ?? []), ...(passage2001P1Entry?.otherMeanings ?? []), ...(cloze2001Entry?.otherMeanings ?? []), ...(passage2Entry?.otherMeanings ?? []), ...(passage1Entry?.otherMeanings ?? []), ...(passage3Entry?.otherMeanings ?? []), ...(passage4Entry?.otherMeanings ?? []), ...(passage5Entry?.otherMeanings ?? []), ...(translationEntry?.otherMeanings ?? []), ...(passage2010P1Entry?.otherMeanings ?? [])]));
@@ -739,8 +756,8 @@ export function getLexicalGuide(token: string, context?: LexicalContext): Lexica
     partOfSpeech: pos,
     contextualMeaning: sentenceContext?.contextualMeaning ?? passageEntry?.contextualMeaning ?? contextualMeaning[headword],
     use: sentenceContext?.use ?? passageEntry?.use ?? usage[headword],
-    specialForms: Array.from(new Set([...(passage2010P3Extra?.specialForms ?? []), ...(passage2010P2Extra?.specialForms ?? []), ...(cloze2010Entry?.specialForms ?? []), ...(passage2010P1Entry?.specialForms ?? []), ...(mergedSpecialForms.length > 0 ? mergedSpecialForms : [isStructureWord ? "结构词：无普通词形变化，重点看句法位置" : "无需要单独记忆的不规则变形"])])),
-    examSynonyms: context?.articleId === "2010-p3" && passage2010P3Extra ? passage2010P3Extra.examSynonyms : Array.from(new Set([...(passage2010P3Extra?.examSynonyms ?? []), ...(passage2010P2Extra?.examSynonyms ?? []), ...(cloze2010Entry?.examSynonyms ?? []), ...(passage2010P1Entry?.examSynonyms ?? []), ...(mergedExamSynonyms.length > 0 ? mergedExamSynonyms : [isStructureWord ? "结构词通常不能脱离句型直接替换" : "本词暂无需要成组强记的考研近义词"])])),
+    specialForms: Array.from(new Set([...(passage2010P4Extra?.specialForms ?? []), ...(passage2010P3Extra?.specialForms ?? []), ...(passage2010P2Extra?.specialForms ?? []), ...(cloze2010Entry?.specialForms ?? []), ...(passage2010P1Entry?.specialForms ?? []), ...(mergedSpecialForms.length > 0 ? mergedSpecialForms : [isStructureWord ? "结构词：无普通词形变化，重点看句法位置" : "无需要单独记忆的不规则变形"])])),
+    examSynonyms: context?.articleId === "2010-p4" && passage2010P4Extra ? passage2010P4Extra.examSynonyms : context?.articleId === "2010-p3" && passage2010P3Extra ? passage2010P3Extra.examSynonyms : Array.from(new Set([...(passage2010P4Extra?.examSynonyms ?? []), ...(passage2010P3Extra?.examSynonyms ?? []), ...(passage2010P2Extra?.examSynonyms ?? []), ...(cloze2010Entry?.examSynonyms ?? []), ...(passage2010P1Entry?.examSynonyms ?? []), ...(mergedExamSynonyms.length > 0 ? mergedExamSynonyms : [isStructureWord ? "结构词通常不能脱离句型直接替换" : "本词暂无需要成组强记的考研近义词"])])),
     collocations: Array.from(new Set([...(passage2010P2Extra?.collocations ?? []), ...(cloze2010Entry?.collocations ?? []), ...(passage2010P1Entry?.collocations ?? []), ...mergedCollocations])),
     otherMeanings: Array.from(new Set([...(passage2010P2Extra?.otherMeanings ?? []), ...(cloze2010Entry?.otherMeanings ?? []), ...(passage2010P1Entry?.otherMeanings ?? []), ...mergedMeanings])),
     wordFamily: Array.from(new Set([...(passage2010P2Extra?.wordFamily ?? []), ...(cloze2010Entry?.wordFamily ?? []), ...(passage2010P1Entry?.wordFamily ?? []), ...mergedFamily])),

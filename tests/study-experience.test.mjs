@@ -11,6 +11,16 @@ const study = await vite.ssrLoadModule("/app/study-app.tsx");
 const { articleContents } = await vite.ssrLoadModule("/app/data.ts");
 const { prepareLocalSnapshot, readRemoteSnapshot } = await vite.ssrLoadModule("/app/study-sync.ts");
 
+test("2010 ordinal tokens and scoped lemmas stay whole in annual vocabulary", () => {
+  const words = study.buildYearWordItems(2010);
+  assert.ok(words.find(word => word.headword === "twentieth")?.forms.includes("20th"));
+  assert.ok(words.find(word => word.headword === "1940s"));
+  assert.ok(words.find(word => word.headword === "1960s"));
+  assert.ok(!words.some(word => word.headword === "h"));
+  assert.ok(words.find(word => word.headword === "find")?.forms.includes("finding"));
+  assert.ok(words.find(word => word.headword === "including"));
+});
+
 test("punctuation-ending source expressions have matching counts and occurrences", () => {
   const counts = study.currentCounts("In the U.S.", true);
   assert.ok(counts.form > 0, "2010完形原文中的In the U.S.不能显示0次");
