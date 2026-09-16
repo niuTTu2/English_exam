@@ -82,10 +82,13 @@ type ArticleId = keyof typeof articleContents;
 type RevealTiming = "instant" | "sentence" | "article";
 type TimerMode = "up" | "down";
 type ReviewFilter = "all" | "word" | "phrase" | "sentence" | "question";
+type ReviewScope = "due" | "overdue" | "all";
 type VocabularyFilter = "word" | "phrase";
 type MarkTag = "完全不会" | "有些陌生" | "不会搭配" | "容易混淆";
 type Rating = "正确" | "模糊" | "错误";
 type ReviewSchedule = { dueAt: number; intervalDays: number; repetitions: number };
+type SavedTermContext = { articleId: string; sourceId: string; headword: string; label: string; kind: "word" | "phrase" };
+type TermContexts = Record<string, SavedTermContext[]>;
 
 type SelectedTerm = {
   key: string;
@@ -122,6 +125,7 @@ type PersistedStudyState = {
   marks: Record<string, MarkTag[]>;
   termRatings: Record<string, Rating>;
   reviewSchedule: Record<string, ReviewSchedule>;
+  termContexts?: TermContexts;
   termNotes: Record<string, string>;
   sentenceNotes: Record<string, string>;
   sentenceMarks: string[];
@@ -195,7 +199,14 @@ const corpusSources = Object.values(articleContents).flatMap((article) => [
   ]),
 ]);
 const sourceById = new Map(corpusSources.map((source) => [source.id, source]));
-const corpusText = corpusSources.map((source) => source.text.toLowerCase()).join(" ");
+const phraseAnnotations = Object.values(articleContents).flatMap((article) => [
+  ...article.sentences.flatMap((sentence) => sentence.phrases.map((label) => ({ label, sourceId: sentence.id }))),
+  ...article.questions.flatMap((question) => question.options
+    .filter((option) => option.text.includes(" ") && getPhraseKnowledge(option.text))
+    .map((option) => ({ label: option.text, sourceId: `question-${question.id}-option-${option.key}` }))),
+]).map((annotation) => ({ ...annotation, patternKey: getPhraseKnowledge(annotation.label)?.key }));
+const phraseOccurrenceCache = new Map<string, Array<{ source: (typeof corpusSources)[number]; start: number; end: number; label: string }>>();
+const termContextCache = new Map<string, SavedTermContext[]>();
 const corpusTokens = corpusSources.flatMap((source) => tokenizeWords(source.text.toLowerCase()).map((form) => {
   const lemma = canonicalLemma(form, { sourceId: source.id, sentenceId: source.sentenceId });
   return { form, lemma, family: familyAliases[lemma] ?? lemma, sourceId: source.id, year: source.article.year };
@@ -237,23 +248,45 @@ function lemmaOf(token: string, sourceId?: string) {
   return canonicalLemma(token, lexicalContextFor(sourceId));
 }
 
-function countPhrase(phrase: string) {
-  const escaped = phrase.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  return [...corpusText.matchAll(new RegExp(`\\b${escaped}\\b`, "g"))].length;
+function normalizePhrase(value: string) {
+  return value.normalize("NFKC").toLowerCase().replace(/[‘’]/g, "'").replace(/[‐‑‒–—]/g, "-").replace(/\s+/g, " ").trim();
+}
+
+export function phraseMatchRanges(text: string, phrase: string) {
+  const normalized = normalizePhrase(phrase);
+  if (!normalized) return [];
+  const escaped = normalized.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const pattern = new RegExp(`(?<![\\p{L}\\p{N}_])${escaped}(?![\\p{L}\\p{N}_])`, "gu");
+  return Array.from(normalizePhrase(text).matchAll(pattern), (match) => ({ start: match.index, end: match.index + match[0].length }));
+}
+
+export function findPhraseOccurrences(label: string, includeStructure = false) {
+  const normalized = normalizePhrase(label);
+  const patternKey = includeStructure ? getPhraseKnowledge(label)?.key : undefined;
+  const cacheKey = JSON.stringify([normalized, patternKey]);
+  const cached = phraseOccurrenceCache.get(cacheKey);
+  if (cached) return cached;
+  const expressions = new Map([[normalized, label]]);
+  if (patternKey) phraseAnnotations.filter((item) => item.patternKey === patternKey)
+    .forEach((item) => expressions.set(normalizePhrase(item.label), item.label));
+  const occurrences = corpusSources.flatMap((source) => {
+    const matches = new Map<string, { source: typeof source; start: number; end: number; label: string }>();
+    for (const expression of expressions.values()) {
+      for (const range of phraseMatchRanges(source.text, expression)) {
+        matches.set(`${range.start}:${range.end}`, { source, ...range, label: expression });
+      }
+    }
+    return Array.from(matches.values());
+  });
+  phraseOccurrenceCache.set(cacheKey, occurrences);
+  return occurrences;
 }
 
 export function currentCounts(label: string, isPhrase: boolean, sourceId?: string) {
   const normalized = label.toLowerCase();
   if (isPhrase) {
-    const exact = countPhrase(normalized);
-    const patternKey = getPhraseKnowledge(normalized)?.key;
-    const annotatedPhrases = [
-      ...allSentences.flatMap((sentence) => sentence.phrases),
-      ...allQuestions.flatMap((question) => question.options.map((option) => option.text).filter((text) => text.includes(" "))),
-    ];
-    const pattern = patternKey
-      ? annotatedPhrases.filter((phrase) => getPhraseKnowledge(phrase)?.key === patternKey).length
-      : exact;
+    const exact = findPhraseOccurrences(label).length;
+    const pattern = findPhraseOccurrences(label, true).length;
     return { form: exact, lemma: pattern, family: pattern };
   }
   const lemma = lemmaOf(normalized, sourceId);
@@ -272,40 +305,8 @@ export function currentOccurrences(label: string, isPhrase: boolean, sourceId?: 
     const matchingIds = new Set(corpusTokens.filter((token) => token.lemma === lemma).map((token) => token.sourceId));
     return corpusSources.filter((source) => matchingIds.has(source.id)).map((source) => ({ year: source.article.year, section: source.section, excerpt: source.text }));
   }
-  const phraseKey = isPhrase ? getPhraseKnowledge(normalized)?.key : undefined;
-  const sentenceMatches = allSentences.filter((sentence) => {
-    const lower = sentence.text.toLowerCase();
-    if (isPhrase) {
-      if (phraseKey) return sentence.phrases.some((phrase) => getPhraseKnowledge(phrase)?.key === phraseKey);
-      return lower.includes(normalized);
-    }
-    const tokens = tokenizeWords(lower);
-    return tokens.some((token) => lemmaOf(token) === lemma);
-  });
-  const optionMatches = allQuestions.flatMap((question) => question.options
-    .filter((option) => {
-      const lower = option.text.toLowerCase();
-      if (isPhrase) {
-        if (phraseKey) return getPhraseKnowledge(option.text)?.key === phraseKey;
-        return lower === normalized;
-      }
-      const tokens = tokenizeWords(lower);
-      return tokens.some((token) => lemmaOf(token) === lemma);
-    })
-    .map((option) => ({ questionId: question.id, questionNumber: question.number ?? question.id, text: option.text })));
-
-  return [
-    ...sentenceMatches.map((sentence) => ({
-      year: sentenceArticle.get(sentence.id)?.year ?? 2000,
-      section: `${sentenceArticle.get(sentence.id)?.label ?? "真题"}正文`,
-      excerpt: sentence.text,
-    })),
-    ...optionMatches.map((option) => ({
-      year: questionArticle.get(option.questionId)?.year ?? 2000,
-      section: `${questionArticle.get(option.questionId)?.label ?? "真题"}第 ${option.questionNumber} 题选项`,
-      excerpt: option.text,
-    })),
-  ];
+  const sources = new Map(findPhraseOccurrences(label, true).map(({ source }) => [source.id, source]));
+  return Array.from(sources.values(), (source) => ({ year: source.article.year, section: source.section, excerpt: source.text }));
 }
 
 function makeFallbackEntry(label: string, isPhrase = false, sentenceId?: string): VocabEntry {
@@ -396,7 +397,7 @@ export function resolveEntry(label: string, isPhrase = false, sentenceId?: strin
       ? normalized
       : aliasToVocab[normalized] ?? guide?.headword ?? normalized;
   const entry = vocab[key] ?? makeFallbackEntry(label, isPhrase, sentenceId);
-  if (phraseKnowledge) return entry;
+  if (phraseKnowledge) return { ...entry, display: label, counts: currentCounts(label, true, sentenceId), occurrences: currentOccurrences(label, true, sentenceId) };
   const mergedCollocations = Array.from(new Set([...(entry.collocations ?? []), ...(guide?.collocations ?? [])]));
   const mergedSynonyms = guide?.examSynonyms ?? entry.examSynonyms ?? [];
   const mergedFamily = Array.from(new Set([...(entry.wordFamily ?? []), ...(guide?.wordFamily ?? [])]));
@@ -426,18 +427,6 @@ export function resolveEntry(label: string, isPhrase = false, sentenceId?: strin
     knowledgeLevel: entry.knowledgeLevel ?? (entry.use || guide?.use || wordKnowledge ? "curated" : "related"),
     occurrences: currentOccurrences(label, isPhrase, sentenceId),
   };
-}
-
-function articlesForYear(year: number) {
-  return Object.values(articleContents).filter((article) => article.year === year);
-}
-
-function sentencesForYear(year: number) {
-  return articlesForYear(year).flatMap((article) => article.sentences);
-}
-
-function questionsForYear(year: number) {
-  return articlesForYear(year).flatMap((article) => article.questions);
 }
 
 function corpusTokensForYear(year: number) {
@@ -475,22 +464,12 @@ export function buildYearWordItems(year: number): YearWordItem[] {
     .sort((a, b) => a.headword.localeCompare(b.headword, "en"));
 }
 
-function buildYearPhraseItems(year: number): YearPhraseItem[] {
+export function buildYearPhraseItems(year: number): YearPhraseItem[] {
   const sources = new Map<string, { source: string; sentenceId: string }>();
-  const yearSentences = sentencesForYear(year);
-  const yearQuestions = questionsForYear(year);
-  const yearCorpusText = [
-    ...yearSentences.map((sentence) => sentence.text),
-    ...yearQuestions.flatMap((question) => [question.prompt, ...question.options.map((option) => option.text)]),
-  ].join(" ").toLowerCase();
-  yearSentences.forEach((sentence) => sentence.phrases.forEach((source) => {
-    sources.set(source.toLowerCase(), { source, sentenceId: sentence.id });
-  }));
-  yearQuestions.forEach((question) => question.options.forEach((option) => {
-    if (option.text.includes(" ") && getPhraseKnowledge(option.text)) {
-      sources.set(option.text.toLowerCase(), { source: option.text, sentenceId: question.sentenceId });
-    }
-  }));
+  phraseAnnotations.filter((item) => sourceById.get(item.sourceId)?.article.year === year).forEach((item) => {
+    const key = normalizePhrase(item.label);
+    if (!sources.has(key)) sources.set(key, { source: item.label, sentenceId: item.sourceId });
+  });
 
   return Array.from(sources.values())
     .map(({ source, sentenceId }) => {
@@ -498,13 +477,133 @@ function buildYearPhraseItems(year: number): YearPhraseItem[] {
       return {
         source,
         canonical: entry.canonicalForm ?? entry.headword,
-        count: [...yearCorpusText.matchAll(new RegExp(`\\b${source.toLowerCase().replace(/[.*+?^${}()|[\\]\\\\]/g, "\\$&")}\\b`, "g"))].length,
+        count: findPhraseOccurrences(source).filter((item) => item.source.article.year === year).length,
         meaning: entry.contextualMeaning,
         type: entry.partOfSpeech,
         sentenceId,
       };
     })
     .sort((a, b) => a.source.localeCompare(b.source, "en"));
+}
+
+export function termContextKey(key: string, list?: string) {
+  return JSON.stringify(list === undefined ? ["review", key] : ["list", list, key]);
+}
+
+function termKind(key: string) {
+  return vocab[key]?.kind ?? (key.startsWith("pattern:") || key.includes(" ") ? "phrase" : "word");
+}
+
+export function findTermContexts(key: string): SavedTermContext[] {
+  const cached = termContextCache.get(key);
+  if (cached) return cached;
+  const contexts = new Map<string, SavedTermContext>();
+  if (termKind(key) === "phrase") {
+    const annotation = phraseAnnotations.find((item) => key === `pattern:${item.patternKey}` || normalizePhrase(item.label) === normalizePhrase(key));
+    for (const occurrence of findPhraseOccurrences(annotation?.label ?? key, Boolean(annotation?.patternKey))) {
+      contexts.set(occurrence.source.id, { articleId: occurrence.source.article.id, sourceId: occurrence.source.id,
+        headword: getPhraseKnowledge(occurrence.label)?.canonical ?? occurrence.label, label: occurrence.label, kind: "phrase" });
+    }
+  } else {
+    for (const token of corpusTokens.filter((item) => item.lemma === key || aliasToVocab[item.form] === key)) {
+      const source = sourceById.get(token.sourceId);
+      if (source && !contexts.has(source.id)) contexts.set(source.id, { articleId: source.article.id, sourceId: source.id,
+        headword: token.lemma, label: token.form, kind: "word" });
+    }
+  }
+  const options = Array.from(contexts.values());
+  termContextCache.set(key, options);
+  return options;
+}
+
+export function resolveSavedTermContext(key: string, saved: SavedTermContext[] = []) {
+  const options = findTermContexts(key);
+  const previous = Array.isArray(saved) ? saved : [];
+  for (const context of previous) {
+    const valid = options.find((option) => option.sourceId === context?.sourceId && option.articleId === context.articleId
+      && option.headword === context.headword && option.kind === context.kind);
+    if (valid) {
+      const source = sourceById.get(valid.sourceId)!;
+      const label = typeof context.label === "string" && phraseMatchRanges(source.text, context.label).length ? context.label : valid.label;
+      return { options, selected: { ...valid, label } };
+    }
+  }
+  return { options, selected: options.length === 1 ? options[0] : undefined };
+}
+
+export function rememberTermContext(current: TermContexts, key: string, context: SavedTermContext, list?: string): TermContexts {
+  const storageKey = termContextKey(key, list);
+  const previous = Array.isArray(current[storageKey]) ? current[storageKey] : [];
+  return { ...current, [storageKey]: [context, ...previous.filter((item) => item.sourceId !== context.sourceId)] };
+}
+
+function sourceCaption(sourceId: string) {
+  const source = sourceById.get(sourceId);
+  if (!source) return "通用词条";
+  const sentence = source.sentenceId ? allSentences.find((item) => item.id === source.sentenceId) : undefined;
+  return `${source.article.year} · ${source.section}${sentence ? ` · 第 ${sentence.number} 句` : ""}`;
+}
+
+function dueTime(schedule?: ReviewSchedule) {
+  return schedule && Number.isFinite(schedule.dueAt) ? schedule.dueAt : 0;
+}
+
+function startOfReviewDay(now: number) {
+  const date = new Date(now);
+  date.setHours(0, 0, 0, 0);
+  return date.getTime();
+}
+
+export function filterReviewKeys(keys: string[], schedules: Record<string, ReviewSchedule>, scope: ReviewScope, now: number) {
+  return keys.filter((key) => scope === "all" || (scope === "overdue"
+    ? Boolean(schedules[key]) && dueTime(schedules[key]) < startOfReviewDay(now)
+    : dueTime(schedules[key]) <= now))
+    .sort((left, right) => dueTime(schedules[left]) - dueTime(schedules[right]));
+}
+
+export function formatReviewDue(schedule: ReviewSchedule | undefined, now: number) {
+  if (!schedule || !Number.isFinite(schedule.dueAt)) return "今天复习";
+  const due = new Date(schedule.dueAt);
+  const current = new Date(now);
+  const days = Math.round((Date.UTC(due.getFullYear(), due.getMonth(), due.getDate())
+    - Date.UTC(current.getFullYear(), current.getMonth(), current.getDate())) / 86_400_000);
+  if (days < 0) return `逾期 ${-days} 天`;
+  if (days === 0) return schedule.dueAt <= now ? "今天复习" : `今天 ${String(due.getHours()).padStart(2, "0")}:${String(due.getMinutes()).padStart(2, "0")}`;
+  if (days === 1) return "明天";
+  return `${due.getFullYear() === current.getFullYear() ? "" : `${due.getFullYear()}年`}${due.getMonth() + 1}月${due.getDate()}日`;
+}
+
+export function nextReviewSchedule(previous: ReviewSchedule | undefined, rating: Rating, now: number): ReviewSchedule {
+  const intervals = [1, 3, 7, 14, 30, 60];
+  let repetitions = previous?.repetitions ?? 0;
+  let intervalDays = 0;
+  if (rating === "正确") {
+    repetitions += 1;
+    intervalDays = intervals[Math.min(repetitions - 1, intervals.length - 1)];
+  } else if (rating === "模糊") {
+    repetitions = Math.max(0, repetitions - 1);
+    intervalDays = 1;
+  } else repetitions = 0;
+  const due = new Date(now);
+  due.setDate(due.getDate() + intervalDays);
+  return { repetitions, intervalDays, dueAt: due.getTime() };
+}
+
+export function questionNumberLabel(questions: Pick<Question, "id" | "number">[], unit = "题") {
+  const numbers = Array.from(new Set(questions.map((question) => question.number ?? question.id))).sort((left, right) => left - right);
+  if (numbers.length === 0) return "本篇题目";
+  const ranges: string[] = [];
+  let start = numbers[0];
+  let end = start;
+  for (const number of numbers.slice(1)) {
+    if (number === end + 1) end = number;
+    else {
+      ranges.push(start === end ? String(start) : `${start}–${end}`);
+      start = end = number;
+    }
+  }
+  ranges.push(start === end ? String(start) : `${start}–${end}`);
+  return `第 ${ranges.join("、")} ${unit}`;
 }
 
 function formatSeconds(value: number) {
@@ -532,6 +631,12 @@ export default function StudyApp() {
   const [marks, setMarks] = useState<Record<string, MarkTag[]>>({});
   const [termRatings, setTermRatings] = useState<Record<string, Rating>>({});
   const [reviewSchedule, setReviewSchedule] = useState<Record<string, ReviewSchedule>>({});
+  const [termContexts, setTermContexts] = useState<TermContexts>({});
+  const [contextPicker, setContextPicker] = useState<{ key: string; list?: string; options: SavedTermContext[] } | null>(null);
+  const firstContextOption = useRef<HTMLButtonElement | null>(null);
+  const [reviewContextTarget, setReviewContextTarget] = useState<{ key: string; list?: string } | null>(null);
+  const [reviewScope, setReviewScope] = useState<ReviewScope>("due");
+  const [reviewNow, setReviewNow] = useState(Date.now);
   const [termNotes, setTermNotes] = useState<Record<string, string>>({});
   const [sentenceNotes, setSentenceNotes] = useState<Record<string, string>>({});
   const [sentenceMarks, setSentenceMarks] = useState<Set<string>>(new Set());
@@ -583,20 +688,14 @@ export default function StudyApp() {
   const questions = activeArticle.questions;
   const translationTasks = activeArticle.translationTasks ?? [];
   const submitted = Boolean(submittedSections[activeSection]);
-  const selectedTermArticle = selectedTerm
-    ? sentenceArticle.get(selectedTerm.sentenceId) ?? activeArticle
-    : activeArticle;
+  const selectedTermSource = selectedTerm ? sourceById.get(selectedTerm.sentenceId) : undefined;
   // Building the complete vocabulary resolves every word and occurrence across
   // the imported corpus. Keep the first study render lightweight and only do
   // that work when the vocabulary view is actually opened.
   const yearWordCount = useMemo(() => new Set(corpusTokensForYear(selectedYear).map((token) => token.lemma)).size, [selectedYear]);
   const yearPhraseCount = useMemo(() => {
-    const sources = new Set<string>();
-    sentencesForYear(selectedYear).forEach((sentence) => sentence.phrases.forEach((source) => sources.add(source.toLowerCase())));
-    questionsForYear(selectedYear).forEach((question) => question.options.forEach((option) => {
-      if (option.text.includes(" ") && getPhraseKnowledge(option.text)) sources.add(option.text.toLowerCase());
-    }));
-    return sources.size;
+    return new Set(phraseAnnotations.filter((item) => sourceById.get(item.sourceId)?.article.year === selectedYear)
+      .map((item) => normalizePhrase(item.label))).size;
   }, [selectedYear]);
   const yearWordItems = useMemo(() => (view === "vocabulary" ? buildYearWordItems(selectedYear) : []), [view, selectedYear]);
   const yearPhraseItems = useMemo(() => (view === "vocabulary" ? buildYearPhraseItems(selectedYear) : []), [view, selectedYear]);
@@ -608,6 +707,7 @@ export default function StudyApp() {
     if (snapshot.marks) setMarks(snapshot.marks);
     if (snapshot.termRatings) setTermRatings(snapshot.termRatings);
     if (snapshot.reviewSchedule) setReviewSchedule(snapshot.reviewSchedule);
+    setTermContexts(snapshot.termContexts && typeof snapshot.termContexts === "object" && !Array.isArray(snapshot.termContexts) ? snapshot.termContexts : {});
     if (snapshot.termNotes) setTermNotes(snapshot.termNotes);
     if (snapshot.sentenceNotes) setSentenceNotes(snapshot.sentenceNotes);
     if (Array.isArray(snapshot.sentenceMarks)) setSentenceMarks(new Set(snapshot.sentenceMarks));
@@ -723,6 +823,7 @@ export default function StudyApp() {
     marks,
     termRatings,
     reviewSchedule,
+    ...(Object.keys(termContexts).length ? { termContexts } : {}),
     termNotes,
     sentenceNotes,
     sentenceMarks: Array.from(sentenceMarks),
@@ -738,7 +839,23 @@ export default function StudyApp() {
     lists,
     listItems,
     reviewFilter,
-  }), [activeSection, answers, expanded, listItems, lists, marks, revealTiming, reviewFilter, reviewSchedule, selectedYear, sentenceMarks, sentenceNotes, submittedSections, submittedTranslationTasks, termNotes, termRatings, timerMode, translationAnswers]);
+  }), [activeSection, answers, expanded, listItems, lists, marks, revealTiming, reviewFilter, reviewSchedule, selectedYear, sentenceMarks, sentenceNotes, submittedSections, submittedTranslationTasks, termContexts, termNotes, termRatings, timerMode, translationAnswers]);
+
+  useEffect(() => {
+    if (contextPicker) firstContextOption.current?.focus();
+  }, [contextPicker]);
+
+  useEffect(() => {
+    const refreshReviewClock = () => setReviewNow(Date.now());
+    const interval = window.setInterval(refreshReviewClock, 30_000);
+    window.addEventListener("focus", refreshReviewClock);
+    document.addEventListener("visibilitychange", refreshReviewClock);
+    return () => {
+      window.clearInterval(interval);
+      window.removeEventListener("focus", refreshReviewClock);
+      document.removeEventListener("visibilitychange", refreshReviewClock);
+    };
+  }, []);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -802,16 +919,19 @@ export default function StudyApp() {
     const article = questionArticle.get(question.id);
     return Boolean(article && submittedSections[article.id] && answers[question.id] !== question.answer);
   });
-  const reviewCount = markedKeys.length + sentenceMarks.size + wrongQuestions.length;
-  const visibleMarkedKeys = markedKeys.filter((key) => {
+  const markedSentenceIds = Array.from(sentenceMarks).filter((id) => sourceById.get(id)?.sentenceId === id);
+  const dueKeys = filterReviewKeys(markedKeys, reviewSchedule, "due", reviewNow);
+  const overdueKeys = filterReviewKeys(markedKeys, reviewSchedule, "overdue", reviewNow);
+  const reviewCount = dueKeys.length + markedSentenceIds.length + wrongQuestions.length;
+  const allReviewCount = markedKeys.length + markedSentenceIds.length + wrongQuestions.length;
+  const visibleMarkedKeys = filterReviewKeys(markedKeys, reviewSchedule, reviewScope, reviewNow).filter((key) => {
     if (reviewFilter === "all") return true;
-    const kind = vocab[key]?.kind ?? (key.includes(" ") ? "phrase" : "word");
-    return reviewFilter === kind;
+    return reviewFilter === termKind(key);
   });
-  const visibleSentenceMarks = reviewFilter === "all" || reviewFilter === "sentence"
-    ? Array.from(sentenceMarks)
+  const visibleSentenceMarks = reviewScope !== "overdue" && (reviewFilter === "all" || reviewFilter === "sentence")
+    ? markedSentenceIds
     : [];
-  const visibleWrongQuestions = reviewFilter === "all" || reviewFilter === "question"
+  const visibleWrongQuestions = reviewScope !== "overdue" && (reviewFilter === "all" || reviewFilter === "question")
     ? wrongQuestions
     : [];
   const visibleReviewCount = visibleMarkedKeys.length + visibleSentenceMarks.length + visibleWrongQuestions.length;
@@ -838,9 +958,37 @@ export default function StudyApp() {
   }
 
   function openTerm(label: string, sentenceId: string, isPhrase = false) {
+    setReviewContextTarget(null);
     const entry = resolveEntry(label, isPhrase, sentenceId);
     if (selectedTerm) setTermHistory((current) => [...current, selectedTerm].slice(-8));
     setSelectedTerm({ key: entry.key, label, entry, sentenceId });
+  }
+
+  function rememberSelectedContext(key: string, list?: string) {
+    if (!selectedTerm || selectedTerm.key !== key) return;
+    const context = findTermContexts(key).find((item) => item.sourceId === selectedTerm.sentenceId);
+    if (context) setTermContexts((current) => rememberTermContext(current, key, { ...context, label: selectedTerm.label }, list));
+  }
+
+  function openSavedTerm(key: string, list?: string) {
+    const resolution = resolveSavedTermContext(key, termContexts[termContextKey(key, list)]);
+    setTermHistory([]);
+    if (!resolution.selected && resolution.options.length > 1) {
+      setContextPicker({ key, list, options: resolution.options });
+      return;
+    }
+    const context = resolution.selected;
+    openTerm(context?.label ?? vocab[key]?.headword ?? key, context?.sourceId ?? "", context?.kind === "phrase" || termKind(key) === "phrase");
+    setReviewContextTarget({ key, list });
+  }
+
+  function chooseTermContext(context: SavedTermContext) {
+    if (!contextPicker) return;
+    const target = { key: contextPicker.key, list: contextPicker.list };
+    setTermContexts((current) => rememberTermContext(current, target.key, context, target.list));
+    setContextPicker(null);
+    openTerm(context.label, context.sourceId, context.kind === "phrase");
+    setReviewContextTarget(target);
   }
 
   function openReference(detail: ReferenceDetail, source: VocabEntry, sentenceId: string) {
@@ -887,44 +1035,26 @@ export default function StudyApp() {
     });
   }
 
-  function toggleMark(key: string, tag: MarkTag) {
+  function toggleMark(key: string, tag: MarkTag, now: number) {
     const existing = marks[key] ?? [];
     const next = existing.includes(tag)
       ? existing.filter((item) => item !== tag)
       : [...existing, tag];
     setMarks((current) => ({ ...current, [key]: next }));
     if (next.length > 0) {
+      setReviewNow(now);
+      if (!existing.includes(tag)) rememberSelectedContext(key);
       setReviewSchedule((schedule) => schedule[key]
         ? schedule
-        : { ...schedule, [key]: { dueAt: Date.now(), intervalDays: 0, repetitions: 0 } });
+        : { ...schedule, [key]: { dueAt: now, intervalDays: 0, repetitions: 0 } });
     }
   }
 
-  function rateTerm(key: string, rating: Rating) {
+  function rateTerm(key: string, rating: Rating, now: number) {
+    setReviewNow(now);
+    if (marks[key]?.length) rememberSelectedContext(key);
     setTermRatings((current) => ({ ...current, [key]: rating }));
-    setReviewSchedule((current) => {
-      const previous = current[key] ?? { dueAt: Date.now(), intervalDays: 0, repetitions: 0 };
-      const intervals = [1, 3, 7, 14, 30, 60];
-      let repetitions = previous.repetitions;
-      let intervalDays = 0;
-      if (rating === "正确") {
-        repetitions += 1;
-        intervalDays = intervals[Math.min(repetitions - 1, intervals.length - 1)];
-      } else if (rating === "模糊") {
-        repetitions = Math.max(0, repetitions - 1);
-        intervalDays = 1;
-      } else {
-        repetitions = 0;
-      }
-      return {
-        ...current,
-        [key]: {
-          repetitions,
-          intervalDays,
-          dueAt: Date.now() + intervalDays * 24 * 60 * 60_000,
-        },
-      };
-    });
+    setReviewSchedule((current) => ({ ...current, [key]: nextReviewSchedule(current[key], rating, now) }));
   }
 
   function resetTest() {
@@ -999,9 +1129,15 @@ export default function StudyApp() {
       delete next[name];
       return next;
     });
+    setTermContexts((current) => {
+      const next = { ...current };
+      for (const key of listItems[name] ?? []) delete next[termContextKey(key, name)];
+      return next;
+    });
   }
 
   function toggleListItem(list: string, key: string) {
+    if (!listItems[list]?.includes(key)) rememberSelectedContext(key, list);
     setListItems((current) => {
       const existing = current[list] ?? [];
       const next = existing.includes(key)
@@ -1363,10 +1499,10 @@ export default function StudyApp() {
               <div className="test-instruction">
                 <Flag />
                 <p><strong>模拟考场：</strong>{activeArticle.kind === "cloze"
-                  ? `正文只保留真正的第 1–${questions.length} 空，不再显示额外句子序号。点选项字母作答；词汇讲解按你的设置解锁。`
+                  ? `正文只保留真正的${questionNumberLabel(questions, "空")}，不再显示额外句子序号。点选项字母作答；词汇讲解按你的设置解锁。`
                   : activeArticle.kind === "translation"
-                    ? "逐句完成英译汉。提交本句后即可对照参考译文与完整句读，五句全部提交后本篇完成。"
-                    : "先限时默读全文，再完成第 11–14 题；不提前显示逐句讲解。点选项字母作答；词汇讲解按你的设置解锁。"}</p>
+                    ? `逐句完成英译汉。提交本句后即可对照参考译文与完整句读，全部 ${translationTasks.length} 句提交后本篇完成。`
+                    : `先限时默读全文，再完成${questionNumberLabel(questions)}；不提前显示逐句讲解。点选项字母作答；词汇讲解按你的设置解锁。`}</p>
               </div>
 
               {activeArticle.kind === "translation" ? (
@@ -1483,37 +1619,47 @@ export default function StudyApp() {
                   <div>
                     <Badge className="paper-badge">个人复习库</Badge>
                     <h3>把今天暴露的问题留到明天解决</h3>
-                    <p>自动间隔复习与自定义清单并行；同一词可以同时拥有多个问题标签。</p>
+                    <p>按实际到期时间安排复习；整句与错题未设间隔，列入已到期。同一词可保留多个语境。</p>
                   </div>
-                  <div className="review-stat"><span>待复习</span><strong>{reviewCount}</strong></div>
+                  <div className="review-stat"><span>今日待复习</span><strong>{reviewCount}</strong></div>
                 </div>
 
                 <div className="review-columns">
                   <div className="review-panel">
                     <div className="panel-heading"><ListChecks /><strong>自动复习队列</strong></div>
+                    <div className="review-filters" aria-label="选择复习时间">
+                      {([
+                        ["due", `已到期 ${reviewCount}`],
+                        ["overdue", `逾期 ${overdueKeys.length}`],
+                        ["all", `全部 ${allReviewCount}`],
+                      ] as Array<[ReviewScope, string]>).map(([value, label]) => (
+                        <Button key={value} size="sm" aria-pressed={reviewScope === value} variant={reviewScope === value ? "default" : "outline"} onClick={() => setReviewScope(value)}>{label}</Button>
+                      ))}
+                    </div>
                     <div className="review-filters" aria-label="选择复习范围">
                       {([
-                        ["all", "全部"],
+                        ["all", "全部类型"],
                         ["word", "单词"],
                         ["phrase", "词组"],
                         ["sentence", "整句"],
                         ["question", "错题"],
                       ] as Array<[ReviewFilter, string]>).map(([value, label]) => (
-                        <Button key={value} size="sm" variant={reviewFilter === value ? "default" : "outline"} onClick={() => setReviewFilter(value)}>{label}</Button>
+                        <Button key={value} size="sm" aria-pressed={reviewFilter === value} variant={reviewFilter === value ? "default" : "outline"} onClick={() => setReviewFilter(value)}>{label}</Button>
                       ))}
                     </div>
                     {visibleReviewCount === 0 ? (
-                      <div className="empty-review"><Sparkles /><p>{reviewCount === 0 ? "还没有标记内容。去自测模式点一个陌生词试试。" : "这个复习范围里暂时没有项目。"}</p></div>
+                      <div className="empty-review"><Sparkles /><p>{allReviewCount === 0 ? "还没有标记内容。去自测模式点一个陌生词试试。"
+                        : reviewScope === "due" && reviewCount === 0 ? "暂无到期项目，可在“全部”查看后续复习安排。"
+                          : "这个复习范围里暂时没有项目。"}</p></div>
                     ) : (
                       <div className="marked-list">
                         {visibleMarkedKeys.map((key) => {
-                          const schedule = reviewSchedule[key];
-                          const dueLabel = !schedule || schedule.intervalDays === 0
-                            ? "今天复习"
-                            : `${schedule.intervalDays} 天后`;
+                          const dueLabel = formatReviewDue(reviewSchedule[key], reviewNow);
+                          const context = resolveSavedTermContext(key, termContexts[termContextKey(key)]);
                           return (
-                            <button key={key} type="button" onClick={() => openTerm(key, "review", key.includes(" "))}>
-                              <span><strong>{key}</strong><small>{marks[key].join(" · ")}</small></span>
+                            <button key={key} type="button" onClick={() => openSavedTerm(key)}>
+                              <span><strong>{context.selected?.headword ?? context.options[0]?.headword ?? key}</strong><small>{marks[key].join(" · ")}</small>
+                                <small>{context.selected ? sourceCaption(context.selected.sourceId) : context.options.length > 1 ? `${context.options.length} 个出处 · 点击选择复习语境` : "通用词条"}</small></span>
                               <Badge variant="outline">{dueLabel}</Badge>
                             </button>
                           );
@@ -1569,7 +1715,7 @@ export default function StudyApp() {
                           {(listItems[list]?.length ?? 0) > 0 && (
                             <div className="custom-list-items">
                               {listItems[list].map((key) => (
-                                <button key={key} type="button" onClick={() => openTerm(key, "review", key.includes(" "))}>{key}</button>
+                                <button key={key} type="button" onClick={() => openSavedTerm(key, list)}>{vocab[key]?.headword ?? findTermContexts(key)[0]?.headword ?? key}</button>
                               ))}
                             </div>
                           )}
@@ -1598,22 +1744,40 @@ export default function StudyApp() {
       </div>
 
       <Sheet
-        open={Boolean(selectedTerm)}
+        open={Boolean(selectedTerm || contextPicker)}
         onOpenChange={(open) => {
           if (!open) {
+            setContextPicker(null);
             setSelectedTerm(null);
             setTermHistory([]);
+            setReviewContextTarget(null);
           }
         }}
       >
         <SheetContent className="term-sheet sm:max-w-lg">
-          {selectedTerm && (
+          {contextPicker ? (
+            <>
+              <SheetHeader className="term-sheet-header">
+                <SheetTitle>选择复习语境</SheetTitle>
+                <SheetDescription>选择要复习的真实出处；此选择只影响当前复习项或清单，不改动词条和笔记。</SheetDescription>
+              </SheetHeader>
+              <div className="term-context-options">
+                {contextPicker.options.map((context, index) => (
+                  <button type="button" key={context.sourceId} ref={index === 0 ? firstContextOption : undefined} onClick={() => chooseTermContext(context)}>
+                    <strong>{sourceCaption(context.sourceId)}</strong>
+                    <span>{sourceById.get(context.sourceId)?.text}</span>
+                    <small>{resolveEntry(context.label, context.kind === "phrase", context.sourceId).contextualMeaning}</small>
+                  </button>
+                ))}
+              </div>
+            </>
+          ) : selectedTerm && (
             <>
               <SheetHeader className="term-sheet-header">
                 <div className="term-header-row">
                   <div className="term-kicker">
                     <Badge variant="outline">{termIsLocked ? "自测标记" : selectedTerm.entry.kind === "phrase" ? "语法 / 搭配" : selectedTerm.entry.partOfSpeech}</Badge>
-                    <span>{selectedTermArticle.badge}</span>
+                    <span>{selectedTermSource?.article.badge ?? "通用词条"}</span>
                   </div>
                   {termHistory.length > 0 && (
                     <button type="button" className="term-back" onClick={goBackTerm}>
@@ -1634,6 +1798,20 @@ export default function StudyApp() {
               <div className="term-sheet-scroll">
                 {!termIsLocked && (
                   <>
+                    {selectedTermSource && (
+                      <section className="term-source-context" aria-label="当前词条出处">
+                        <strong>{sourceCaption(selectedTermSource.id)}</strong>
+                        <p>{selectedTermSource.text}</p>
+                        {reviewContextTarget?.key === selectedTerm.key && findTermContexts(selectedTerm.key).length > 1 && (
+                          <Button size="sm" variant="outline" onClick={() => {
+                            if (!reviewContextTarget || reviewContextTarget.key !== selectedTerm.key) return;
+                            setContextPicker({ ...reviewContextTarget, options: findTermContexts(selectedTerm.key) });
+                            setSelectedTerm(null);
+                            setTermHistory([]);
+                          }}>切换复习语境</Button>
+                        )}
+                      </section>
+                    )}
                     <section className="term-facts" aria-label="词条基本信息">
                       {selectedTerm.entry.kind === "phrase" ? (
                         <>
@@ -1651,7 +1829,7 @@ export default function StudyApp() {
                     </section>
 
                     <section className="term-meaning">
-                      <span>本句义</span>
+                      <span>{selectedTermSource ? "本句义" : "词条释义"}</span>
                       <strong>{selectedTerm.entry.contextualMeaning}</strong>
                       <p>{selectedTerm.entry.use}</p>
                     </section>
@@ -1690,7 +1868,7 @@ export default function StudyApp() {
                         key={tag}
                         size="sm"
                         variant={marks[selectedTerm.key]?.includes(tag) ? "default" : "outline"}
-                        onClick={() => toggleMark(selectedTerm.key, tag)}
+                        onClick={() => toggleMark(selectedTerm.key, tag, Date.now())}
                       >{tag}</Button>
                     ))}
                   </div>
@@ -1735,7 +1913,7 @@ export default function StudyApp() {
                           key={rating}
                           size="sm"
                           variant={termRatings[selectedTerm.key] === rating ? "default" : "ghost"}
-                          onClick={() => rateTerm(selectedTerm.key, rating)}
+                          onClick={() => rateTerm(selectedTerm.key, rating, Date.now())}
                         >{rating}</Button>
                       ))}
                     </div>
@@ -2002,7 +2180,7 @@ function YearVocabularyPanel({
                       <span className="canonical-pattern">规范结构：{item.canonical}</span>
                     )}
                     <span className="vocabulary-entry-meaning">{item.meaning}</span>
-                    <span className="vocabulary-entry-meta"><span>点击查看完整语法与搭配</span><b>{item.count} 次</b></span>
+                    <span className="vocabulary-entry-meta"><span>本年度原文表达次数</span><b>{item.count} 次</b></span>
                   </button>
                 ))}
               </div>
