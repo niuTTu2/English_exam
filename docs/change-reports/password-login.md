@@ -57,3 +57,20 @@
 GitHub提交状态API仍受403限流，没有拿到Cloudflare控制台的对应SHA状态回执。功能生效由线上资源、路由、界面及新表能力共同核验，不冒充获得了控制台部署日志。Git推送后HEAD与origin/main差异为0/0。
 
 上线后体验及知识库审查见`docs/change-reports/user-experience-audit.md`。其中其他问题是后续建议，未混入本次密码代码。
+
+### 2026-09-16 保存失败修复
+
+用户反馈保存时出现统一503提示。此前线上只核验匿名会话、表可读能力和输入/权限拒绝，没有验证真实账号保存；`passwordConfigured=true`不代表密码计算或写入成功。本次不索取用户密码、验证码、Cookie或生产数据。
+
+定位依据：Cloudflare workerd的`src/workerd/io/limit-enforcer.h`默认PBKDF2上限为100000，`src/workerd/api/crypto/impl.c++`超限抛出`NotSupportedError`，而`src/workerd/server/server.c++`的本地实现取消了该上限。以2026-09-16读取的[官方默认限制源码](https://github.com/cloudflare/workerd/blob/main/src/workerd/io/limit-enforcer.h)、[异常实现](https://github.com/cloudflare/workerd/blob/main/src/workerd/api/crypto/impl.c%2B%2B)及[本地运行实现](https://github.com/cloudflare/workerd/blob/main/src/workerd/server/server.c%2B%2B)为依据。在原密码实现和真实路由测试中注入相同上限后，两项新增回归均失败：计算抛出`NotSupportedError`、保存返回503，复现用户症状。没有取得用户那次请求的生产日志，不将此复现冒充生产异常回执。
+
+修复决策与范围：
+
+- 新密码使用100000次PBKDF2-SHA-256及独立随机盐，保留8—128字符和原有权限/限流。此为现有托管环境的兼容性折中，不宣称与原600000次具有相同离线抗猜测强度；没有改为明文或快速摘要。
+- 凭证解析只允许100000、600000两种已知参数；旧密码在支持环境中继续校验。旧参数被托管环境拒绝时，返回409和验证码登录后重设指引，不签发会话、不改写旧凭证。原账号会话仍可重新设置密码，原用户及学习记录不变。
+- 保存异常按会话、计算、写入阶段返回固定参考码，日志不含异常原文、邮箱、密码、哈希或SQL。写入失败保持原密码可用。
+- 没有新增依赖、数据库迁移、发布目标或知识库改动。
+
+修复后最终检查：密码/认证/同步/部署守卫专项20/20，构建后UI/产物5/5，`npm run lint`、`npm run build`、`git diff --check`及既有发布目标只读核验均通过；认证目录7文件安全规则扫描无命中。密码专项包含托管限制下真实设置/更新/登录、成功响应与会话状态、旧凭证校验与恢复、并发限流、数据保留、写入失败后原密码可用和提示脱敏。同步测试输出已有HMR端口占用警告但全部断言通过，构建仍提示主包较大；不改动无关工具端口或知识库。完整类型检查的既有10项诊断未纳入本次修复，也不记为通过。
+
+发布仍经既有`origin/main` → Cloudflare流程。匿名线上请求只能证明服务端新版本和拒绝边界，不能代替用户本人最后一次保存验证；不代用户设置真实密码。

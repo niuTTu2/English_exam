@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { createHash } from "node:crypto";
+import { createHash, pbkdf2Sync } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import test, { after } from "node:test";
 import { fileURLToPath } from "node:url";
@@ -13,6 +13,13 @@ const bundled = await build({
     import * as session from './app/api/auth/session/route.ts';
     import * as code from './app/api/auth/verify-code/route.ts';
     import * as study from './app/api/study-state/route.ts';
+    const deriveBits = crypto.subtle.deriveBits.bind(crypto.subtle);
+    crypto.subtle.deriveBits = (algorithm, ...args) => {
+      if (algorithm.name === 'PBKDF2' && algorithm.iterations > 100000) {
+        return Promise.reject(new DOMException('Pbkdf2 failed: iteration counts above 100000 are not supported', 'NotSupportedError'));
+      }
+      return deriveBits(algorithm, ...args);
+    };
     const routes = { '/api/auth/password': password, '/api/auth/session': session, '/api/auth/verify-code': code, '/api/study-state': study };
     export default { async fetch(request) {
       return routes[new URL(request.url).pathname]?.[request.method]?.(request) ?? new Response('Not found', { status: 404 });
@@ -69,7 +76,10 @@ test("password login works without email sending and preserves the existing acco
   assert.equal(initial.configured, false);
   assert.equal(initial.passwordConfigured, true);
   assert.equal(initial.user.hasPassword, false);
-  assert.equal((await savePassword(user)).status, 200);
+  const saved = await savePassword(user);
+  assert.equal(saved.status, 200);
+  assert.deepEqual(await saved.json(), { ok: true });
+  assert.equal((await (await request("/api/auth/session", "GET", undefined, user.cookie)).json()).user.hasPassword, true);
   const login = await request("/api/auth/password", "POST", { email: `  ${user.email.toUpperCase()}  `, password: passphrase });
   assert.equal(login.status, 200);
   assert.deepEqual(await login.json(), { user: { email: user.email, hasPassword: true } });
@@ -101,6 +111,9 @@ test("setting passwords requires same origin, an active allowed account and matc
   const outside = await seedUser("outside", "blocked.test");
   assert.equal((await request("/api/auth/password", "PUT", { password: passphrase, confirmation: passphrase })).status, 401);
   assert.equal((await request("/api/auth/password", "PUT", {}, user.cookie, "https://attacker.test")).status, 403);
+  const malformedSession = await request("/api/auth/password", "PUT", {}, "zhenti_session=%");
+  assert.equal(malformedSession.status, 503);
+  assert.match((await malformedSession.json()).error, /PWD-SAVE-SESSION/);
   assert.equal((await savePassword(outside)).status, 403);
   assert.equal((await savePassword(user, "short")).status, 400);
   assert.equal((await savePassword(user, passphrase, { confirmation: "different" })).status, 400);
@@ -144,6 +157,40 @@ test("existing email verification still creates a session for the same account",
   assert.deepEqual(await response.json(), { user: { email: user.email } });
   assert.match(response.headers.get("Set-Cookie"), /zhenti_session=/);
   assert.equal((await request("/api/auth/verify-code", "POST", { requestId, email: user.email, code })).status, 400);
+});
+
+test("legacy passwords exceeding the runtime limit can be reset through the existing account", async () => {
+  const user = await seedUser("legacy");
+  const salt = "0123456789abcdef0123456789abcdef";
+  const hash = pbkdf2Sync(passphrase, Buffer.from(salt, "hex"), 600_000, 32, "sha256").toString("hex");
+  const encoded = `pbkdf2-sha256$600000$${salt}$${hash}`;
+  await database.prepare("INSERT INTO user_passwords(user_id,password_hash,updated_at) VALUES (?,?,?)")
+    .bind(user.userId, encoded, Date.now()).run();
+  const response = await request("/api/auth/password", "POST", { email: user.email, password: passphrase });
+  assert.equal(response.status, 409);
+  assert.match((await response.json()).error, /验证码.*重新设置密码/);
+  assert.equal(response.headers.has("Set-Cookie"), false);
+  assert.equal((await database.prepare("SELECT password_hash FROM user_passwords WHERE user_id=?").bind(user.userId).first()).password_hash, encoded);
+  assert.equal((await savePassword(user, "synthetic-reset-password")).status, 200);
+  assert.equal((await request("/api/auth/password", "POST", { email: user.email, password: "synthetic-reset-password" })).status, 200);
+  assert.equal((await database.prepare("SELECT id FROM users WHERE email=?").bind(user.email).first()).id, user.userId);
+});
+
+test("storage failures expose only a safe reference and preserve the previous password", async () => {
+  const user = await seedUser("storage-failure");
+  assert.equal((await savePassword(user)).status, 200);
+  await database.prepare("CREATE TRIGGER reject_password_update BEFORE UPDATE OF password_hash ON user_passwords BEGIN SELECT RAISE(ABORT, 'synthetic-sensitive-database-detail'); END").run();
+  try {
+    const response = await savePassword(user, "synthetic-new-password");
+    assert.equal(response.status, 503);
+    const body = await response.json();
+    assert.match(body.error, /PWD-SAVE-STORAGE/);
+    assert.doesNotMatch(JSON.stringify(body), /synthetic|example\.test|SQL|D1|password_hash/);
+    assert.equal(response.headers.get("Cache-Control"), "no-store");
+  } finally {
+    await database.prepare("DROP TRIGGER reject_password_update").run();
+  }
+  assert.equal((await request("/api/auth/password", "POST", { email: user.email, password: passphrase })).status, 200);
 });
 
 test("a missing password migration does not discard an existing valid session", async () => {

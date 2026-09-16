@@ -3,11 +3,12 @@ import { and, eq, lt, lte, or, sql } from "drizzle-orm";
 import { getDb } from "../../../../db";
 import { userPasswords, users } from "../../../../db/schema";
 import { createSession, getSessionUser, isAllowedEmail, isEmail, isSameOrigin, normalizeEmail, passwordServiceReady } from "../../_lib/auth";
-import { hashPassword, isValidPassword, verifyPassword } from "../../_lib/password";
+import { hashPassword, isValidPassword, PasswordResetRequiredError, verifyPassword } from "../../_lib/password";
 
 const ATTEMPT_WINDOW = 10 * 60_000;
 const MAX_ATTEMPTS = 5;
 const LOGIN_ERROR = "邮箱或密码不正确。首次使用或忘记密码，请改用邮箱验证码登录。";
+const SAVE_FAILURE_REFERENCES = { session: "PWD-SAVE-SESSION", hash: "PWD-SAVE-HASH", storage: "PWD-SAVE-STORAGE" };
 
 function failure(error: string, status: number, retryAfter?: number) {
   return Response.json({ error }, { status, headers: {
@@ -55,7 +56,9 @@ export async function POST(request: Request) {
     return Response.json({ user: { email, hasPassword: true } }, {
       headers: { "Set-Cookie": await createSession(credential.userId), "Cache-Control": "no-store" },
     });
-  } catch {
+  } catch (error) {
+    if (error instanceof PasswordResetRequiredError) return failure(error.message, 409);
+    console.error("password_login_failed");
     return failure("密码登录暂不可用，请稍后重试或使用邮箱验证码。", 503);
   }
 }
@@ -63,6 +66,7 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
   if (!isSameOrigin(request)) return failure("请从本站账号面板设置密码。", 403);
   if (!passwordServiceReady()) return failure("密码服务暂不可用，请稍后重试。", 503);
+  let stage: keyof typeof SAVE_FAILURE_REFERENCES = "session";
   try {
     const user = await getSessionUser(request);
     if (!user) return failure("请先通过邮箱验证码或密码登录。", 401);
@@ -70,12 +74,16 @@ export async function PUT(request: Request) {
     const payload = await readPayload(request);
     if (!isValidPassword(payload.password)) return failure("密码长度须为 8—128 个字符。", 400);
     if (payload.password !== payload.confirmation) return failure("两次输入的密码不一致。", 400);
+    stage = "hash";
     const passwordHash = await hashPassword(payload.password);
     const values = { passwordHash, updatedAt: Date.now(), failedAttempts: 0, attemptWindowStartedAt: 0 };
+    stage = "storage";
     await getDb().insert(userPasswords).values({ userId: user.id, ...values })
       .onConflictDoUpdate({ target: userPasswords.userId, set: values });
     return Response.json({ ok: true }, { headers: { "Cache-Control": "no-store" } });
   } catch {
-    return failure("暂时无法保存密码，请稍后重试。", 503);
+    const reference = SAVE_FAILURE_REFERENCES[stage];
+    console.error("password_save_failed", { reference });
+    return failure(`暂时无法保存密码，请稍后重试。（${reference}）`, 503);
   }
 }

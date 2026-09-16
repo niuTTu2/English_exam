@@ -145,9 +145,11 @@ The deploy command uses the Wrangler configuration generated in `dist/server`, i
 
 既有Cloudflare Builds部署凭据需要对绑定D1具有执行增量SQL的权限；权限不足时发布会停止，不能绕过迁移继续部署。不要把令牌或验证码写入仓库。可先运行`node scripts/deploy-cloudflare.mjs --check`只检查构建目标，不连接数据库或发布。
 
-验证：`node --test tests/password.test.mjs tests/auth.test.mjs tests/study-sync.test.mjs`使用合成凭证和隔离内存数据库，不发送邮件、不读取生产数据；`tests/auth.test.mjs`通过现有工具链的Miniflare在Workers运行时验证真实路由。
+验证：`node --test tests/password.test.mjs tests/auth.test.mjs tests/study-sync.test.mjs`使用合成凭证和隔离内存数据库，不发送邮件、不读取生产数据；`tests/auth.test.mjs`通过现有工具链的Miniflare验证真实路由，并额外模拟托管环境的PBKDF2迭代上限，避免本地无限制运行时掩盖线上错误。
 
-基础保护与边界：密码保存为PBKDF2-SHA-256（600000次、每次独立随机盐），不存明文；本人设置要求有效会话和同源请求，既有邮箱允许范围不变；已有密码账号10分钟内最多5次尝试。密码不进入学习记录或浏览器持久存储。该轻量方案不增加多因素认证或外部风控，限流可能暂时影响被重复尝试的账号，可用验证码恢复。学习同步仍是整份快照策略，多设备同时编辑的冲突合并不在本次范围。
+基础保护与边界：新密码保存为PBKDF2-SHA-256（100000次、每次独立随机盐），不存明文；该迭代数适配现有托管运行时限制，是兼容性折中，并不等同于600000次的离线猜测防护。旧600000次凭证仍按原参数校验；若运行时拒绝该参数，则提示本人通过验证码登录后重新设置，不静默改写或清空旧凭证。本人设置要求有效会话和同源请求，既有邮箱允许范围不变；已有密码账号10分钟内最多5次尝试。密码不进入学习记录或浏览器持久存储。该轻量方案不增加多因素认证或外部风控，限流可能暂时影响被重复尝试的账号，可用验证码恢复。学习同步仍是整份快照策略，多设备同时编辑的冲突合并不在本次范围。
+
+保存失败提示末尾的`PWD-SAVE-SESSION`、`PWD-SAVE-HASH`或`PWD-SAVE-STORAGE`分别标记会话检查、密码计算、凭证写入阶段。反馈时只提供提示或参考码，不提供密码、验证码、Cookie或数据库内容。服务端仅记录固定事件名和阶段码，不记录原始异常或凭证。
 
 ## Learn More
 
