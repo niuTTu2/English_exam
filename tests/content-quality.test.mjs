@@ -30,7 +30,7 @@ const allQuestions = data.allQuestions ?? data.questions;
 const forbiddenPlaceholder = /(待精审|后续补充|持续补充|结合本句成分理解|暂无资料|将在所属真题精审|该词未出现在)/;
 const forbiddenSyntaxPlaceholder = /(从引导词后找动作发出者|找带时态、情态或语态变化的动词|再看谓语后是否需要宾语|结合相邻主干判断)/;
 const normalizeText = (value) => value.replace(/\s+/g, " ").trim();
-const englishTokens = (value) => value.toLowerCase().match(/\d+(?:st|nd|rd|th)\b|\d{4}s\b|[a-z]+(?:-[a-z]+)?(?:['’][a-z]+)?/g) ?? [];
+const englishTokens = (value) => value.toLowerCase().match(/[a-z]+(?:\d+[a-z]*)+\b|\d+(?:st|nd|rd|th)\b|\d{4}s\b|[a-z]+(?:-[a-z]+)?(?:['’][a-z]+)?/g) ?? [];
 
 function isTokenSubsequence(shorter, longer) {
   let cursor = 0;
@@ -265,7 +265,13 @@ test("自测空格、题号和答案严格对应", () => {
     assert.ok(sentenceIds.has(question.sentenceId), `第 ${question.id} 题定位句不存在`);
     requireText(question.prompt, `question[${question.id}].prompt`);
     requireText(question.locating, `question[${question.id}].locating`);
-    assert.deepEqual(question.options.map((option) => option.key), ["A", "B", "C", "D"], `第 ${question.id} 题选项键错误`);
+    if (question.format === "true-false") {
+      assert.deepEqual(question.options, [{ key: "T", text: "True" }, { key: "F", text: "False" }], `第 ${question.id} 题必须保留原卷T/F选项`);
+      assert.deepEqual(Object.keys(question.explanations).sort(), ["F", "T"], `第 ${question.id} 题必须只有两项真实判断理由`);
+    } else {
+      assert.ok(question.format === undefined || question.format === "multiple-choice");
+      assert.deepEqual(question.options.map((option) => option.key), ["A", "B", "C", "D"], `第 ${question.id} 题选项键错误`);
+    }
     assert.ok(question.options.some((option) => option.key === question.answer), `第 ${question.id} 题答案不在选项中`);
     for (const option of question.options) {
       requireText(option.text, `question[${question.id}].option[${option.key}]`);
@@ -503,7 +509,7 @@ test("同一词条按文章和句子语境显示本句义与可替换表达", ()
   for (const [sentenceId, wordContexts] of Object.entries(contextualVocabulary.sentenceWordContexts)) {
     const sentence = sentenceById.get(sentenceId);
     assert.ok(sentence, `语境词条指向不存在的句子：${sentenceId}`);
-    const sourceTokens = sentence.text.toLowerCase().match(/\d+(?:st|nd|rd|th)\b|\d{4}s\b|(?:[a-z]\.){2,}|(?<![a-z0-9])[a-z]+(?:-[a-z]+)?(?:['’][a-z]+)?/g) ?? [];
+    const sourceTokens = sentence.text.toLowerCase().match(/[a-z]+(?:\d+[a-z]*)+\b|\d+(?:st|nd|rd|th)\b|\d{4}s\b|(?:[a-z]\.){2,}|(?<![a-z0-9])[a-z]+(?:-[a-z]+)?(?:['’][a-z]+)?/g) ?? [];
 
     for (const [headword, context] of Object.entries(wordContexts)) {
       const lexicalContext = { articleId: articleBySentence.get(sentenceId), sentenceId };
@@ -631,7 +637,7 @@ test("提交答案后的题目分析完整且英文词可追溯", () => {
   }
 
   const analysisText = analysisTextParts.join(" ");
-  const tokens = [...new Set(analysisText.match(/\d+(?:st|nd|rd|th)\b|\d{4}s\b|(?:[A-Za-z]\.){2,}|(?<![A-Za-z0-9])[A-Za-z]+(?:-[A-Za-z]+)?(?:['’][A-Za-z]+)?/g) ?? [])];
+  const tokens = [...new Set(analysisText.match(/[A-Za-z]+(?:\d+[A-Za-z]*)+\b|\d+(?:st|nd|rd|th)\b|\d{4}s\b|(?:[A-Za-z]\.){2,}|(?<![A-Za-z0-9])[A-Za-z]+(?:-[A-Za-z]+)?(?:['’][A-Za-z]+)?/g) ?? [])];
   for (const rawToken of tokens) {
     // A/B and A-D are grammar-pattern variables, not vocabulary items.
     if (/^[A-D](?:-[A-D])?$/.test(rawToken)) continue;
@@ -658,7 +664,7 @@ test("正文、题干选项中的全部词形都有有效知识", () => {
     ...allSentences.map((sentence) => sentence.text),
     ...allQuestions.flatMap((question) => [question.prompt, ...question.options.map((option) => option.text)]),
   ].join(" ");
-  const tokens = [...new Set(corpus.toLowerCase().match(/\d+(?:st|nd|rd|th)\b|\d{4}s\b|(?:[a-z]\.){2,}|(?<![a-z0-9])[a-z]+(?:-[a-z]+)?(?:['’][a-z]+)?/g) ?? [])];
+  const tokens = [...new Set(corpus.toLowerCase().match(/[a-z]+(?:\d+[a-z]*)+\b|\d+(?:st|nd|rd|th)\b|\d{4}s\b|(?:[a-z]\.){2,}|(?<![a-z0-9])[a-z]+(?:-[a-z]+)?(?:['’][a-z]+)?/g) ?? [])];
 
   for (const token of tokens) {
     const guide = lexicon.getLexicalGuide(token);
@@ -765,6 +771,96 @@ test("2010 Text 3 词汇语境隔离、全词形覆盖及词组复用", async ()
   }
 });
 
+test("2010 Part B 原卷哈希、真实T/F与全部从句一致", () => {
+  const article = data.articleContents["2010-p5"];
+  const hash = text => createHash("sha256").update(normalizeText(text)).digest("hex");
+  assert.equal(article.title, "Copying Birds May Save Aircraft Fuel");
+  assert.equal(hash(article.sentences.map(sentence => sentence.text).join(" ")), "9b06d766d0665d36fbbec9a06e1b4b46a31bf430b90866788cb1caff2799b210");
+  assert.equal(hash(article.questions.flatMap(question => [question.prompt, ...question.options.map(option => option.text)]).join(" ")), "5da9cfc2f0f9130dfbce3ae78e9d65cb933b5995e9bea0500104ef17bab93c21");
+  assert.deepEqual(article.sentences.map(sentence => sentence.number), Array.from({ length: 28 }, (_, index) => index + 1));
+  assert.deepEqual(article.questions.map(question => question.number), [41, 42, 43, 44, 45]);
+  assert.deepEqual(article.sentences.map(sentence => sentence.beginnerSyntax.clauses.length), [0, 0, 1, 1, 1, 0, 0, 2, 1, 3, 1, 0, 0, 0, 0, 1, 0, 2, 2, 0, 2, 1, 1, 1, 1, 3, 1, 0]);
+  for (const question of article.questions) {
+    assert.equal(question.format, "true-false");
+    assert.equal(question.answer, answerKeys.verifiedAnswerKey2010Passage5[question.number]);
+    assert.deepEqual(question.options, [{ key: "T", text: "True" }, { key: "F", text: "False" }]);
+    for (const option of question.options) assert.equal(data.questionExplanation(question, option.key), question.explanations[option.key]);
+    assert.throws(() => data.questionExplanation(question, "A"), /Missing explanation/);
+  }
+  assert.ok(answerKeys.verifiedAnswerSources2010Passage5.some(source => source.url.includes("koolearn.com") && source.range.includes("F T F T F")));
+  assert.match(article.sentences[8].beginnerSyntax.clauses[0].predicate, /省略are/);
+  assert.equal(article.sentences[9].beginnerSyntax.clauses[1].predicate, "were to assemble / assume / change / proceed");
+  assert.match(article.sentences[17].beginnerSyntax.clauses[0].type, /主语从句/);
+  assert.match(article.sentences[22].beginnerSyntax.clauses[0].objectOrComplement, /省略easier to reschedule/);
+  assert.match(article.sentences[25].beginnerSyntax.clauses[0].type, /同位语/);
+  assert.match(article.sentences[26].beginnerSyntax.components.find(component => component.text.includes("lost over Berlin")).modifies, /Lancaster/);
+  assert.match(article.questions[2].explanations.T, /因果|might/);
+  assert.match(article.questions[4].explanations.T, /未经证实/);
+  const reading = Object.values(data.articleContents).filter(item => item.year === 2010 && item.kind === "reading");
+  assert.deepEqual(reading.map(item => item.id), ["2010-p1", "2010-p2", "2010-p3", "2010-p4", "2010-p5"]);
+  assert.deepEqual(reading.flatMap(item => item.questions.map(question => question.number)), Array.from({ length: 25 }, (_, index) => index + 21));
+});
+
+test("2010 Part B 全词形、搭配、语境隔离与关联目标可用", async () => {
+  const article = data.articleContents["2010-p5"];
+  const imported = await vite.ssrLoadModule("/app/2010-passage-5-lexicon.ts");
+  const sources = [...article.sentences.map(sentence => ({ text: sentence.text, sentenceId: sentence.id })), ...article.questions.flatMap(question => [{ text: question.prompt, sourceId: `question-${question.id}-prompt` }, ...question.options.map(option => ({ text: option.text, sourceId: `question-${question.id}-option-${option.key}` }))])];
+  const forms = new Set();
+  for (const source of sources) for (const token of englishTokens(source.text)) {
+    forms.add(token);
+    const guide = lexicon.getLexicalGuide(token, { articleId: article.id, ...source });
+    requireText(guide.contextualMeaning, `${token}.meaning`);
+    requireText(guide.use, `${token}.use`);
+    assert.ok(!guide.partOfSpeech.startsWith("word（"), `${token} 不得使用推测词性`);
+  }
+  assert.equal(forms.size, 318);
+  for (const sentence of article.sentences) {
+    const context = { articleId: article.id, sentenceId: sentence.id };
+    const lemmas = englishTokens(sentence.text).map(token => lexicon.canonicalLemma(token, context));
+    for (const [headword, entry] of Object.entries(imported.passage2010P5SentenceContexts[sentence.id])) {
+      assert.ok(lemmas.includes(headword), `${sentence.id} 不包含语境词 ${headword}`);
+      assert.equal(lexicon.getLexicalGuide(headword, context).use, entry.use);
+      for (const substitution of entry.contextualSubstitutions ?? []) {
+        const target = lexicon.getLexicalGuide(substitution.target.slice(5), { articleId: article.id });
+        requireText(target.contextualMeaning, `${substitution.target}.meaning`);
+        requireText(target.use, `${substitution.target}.use`);
+        assert.ok(!target.partOfSpeech.startsWith("word（"));
+      }
+    }
+  }
+  for (const entry of Object.values(imported.passage2010P5Lexicon)) {
+    for (const detail of knowledge.getCollocationDetails(entry.collocations)) {
+      requireText(detail.meaning, detail.label);
+      assert.ok(knowledge.getPhraseKnowledge(detail.label), `${detail.label} 搭配必须可打开`);
+    }
+    for (const detail of knowledge.getSynonymDetails(entry.examSynonyms)) {
+      assert.ok(detail.target?.startsWith("word:"));
+      const guide = lexicon.getLexicalGuide(detail.target.slice(5), { articleId: article.id });
+      requireText(guide.contextualMeaning, `${detail.target}.meaning`);
+      requireText(guide.use, `${detail.target}.use`);
+      assert.ok(!guide.partOfSpeech.startsWith("word（"));
+    }
+  }
+  const guideAt = (token, number) => lexicon.getLexicalGuide(token, { articleId: article.id, sentenceId: `2010-p5-s${number}` });
+  assert.match(guideAt("company", 15).contextualMeaning, /结伴/);
+  assert.match(guideAt("peering", 17).contextualMeaning, /张望/);
+  assert.match(lexicon.getLexicalGuide("peers", { articleId: "2010-p4" }).contextualMeaning, /同侪|同等/);
+  assert.match(guideAt("wakes", 20).contextualMeaning, /尾流/);
+  assert.match(guideAt("should", 28).use, /推断/);
+  assert.notEqual(guideAt("seen", 19).contextualMeaning, guideAt("see", 17).contextualMeaning);
+  assert.equal(lexicon.canonicalLemma("findings", { articleId: article.id }), "finding");
+  assert.equal(lexicon.canonicalLemma("finding", { articleId: "2010-p3" }), "find");
+  assert.equal(lexicon.canonicalLemma("including", { articleId: "2010-p4" }), "including");
+  for (const [derived, base] of [["reduction", "reduce"], ["separation", "separate"], ["departure", "depart"], ["clearly", "clear"], ["flight", "fly"]]) {
+    assert.equal(lexicon.canonicalLemma(derived, { articleId: article.id }), derived);
+    assert.equal(lexicon.familyAliases[derived], base);
+  }
+  assert.equal(guideAt("peer", 17).contextualSubstitutions[0].rewrittenSentence, article.sentences[16].text.replace("peering", "looking"));
+  assert.equal(guideAt("unsubstantiated", 26).contextualSubstitutions[0].rewrittenSentence, article.sentences[25].text.replace("unsubstantiated", "unconfirmed"));
+  assert.equal(knowledge.getPhraseKnowledge("known as upwash").key, knowledge.getPhraseKnowledge("also known as (A) H1N1").key);
+  assert.equal(knowledge.getPhraseKnowledge("one of the areas").key, "one-of-series");
+});
+
 test("2010 Text 4 原卷、五项原则、年份和答案精审一致", async () => {
   const article = data.articleContents["2010-p4"];
   const hash = text => createHash("sha256").update(normalizeText(text)).digest("hex");
@@ -843,7 +939,7 @@ test("2010 Text 2 保留用户原卷、题号、答案依据及复杂句边界",
 test("2010 Text 2 词义按句隔离且屈折词形与派生词族分开", () => {
   const guideFor = (token, number) => lexicon.getLexicalGuide(token, { articleId: "2010-p2", sentenceId: `2010-p2-s${number}` });
   for (const sentence of data.articleContents["2010-p2"].sentences) {
-    const sourceTokens = sentence.text.toLowerCase().match(/\d+(?:st|nd|rd|th)\b|\d{4}s\b|(?:[a-z]\.){2,}|(?<![a-z0-9])[a-z]+(?:-[a-z]+)?(?:['’][a-z]+)?/g) ?? [];
+    const sourceTokens = sentence.text.toLowerCase().match(/[a-z]+(?:\d+[a-z]*)+\b|\d+(?:st|nd|rd|th)\b|\d{4}s\b|(?:[a-z]\.){2,}|(?<![a-z0-9])[a-z]+(?:-[a-z]+)?(?:['’][a-z]+)?/g) ?? [];
     for (const [headword, context] of Object.entries(contextualVocabulary.sentenceWordContexts[sentence.id])) {
       assert.ok(sourceTokens.some((token) => lexicon.canonicalLemma(token) === headword), `${sentence.id} 中不存在语境词 ${headword}`);
       requireText(context.contextualMeaning, `${sentence.id}.${headword}.meaning`);
@@ -918,7 +1014,7 @@ test("means 的语境原形贯通词卡、题干出处和年度次数且不误�
         ...article.questions.flatMap((question) => [[`question-${question.id}-prompt`, question.prompt], ...question.options.map((option) => [`question-${question.id}-option-${option.key}`, option.text])]),
       ];
       for (const [sourceId, text] of sources) {
-        const tokens = text.toLowerCase().match(/\d+(?:st|nd|rd|th)\b|\d{4}s\b|(?:[a-z]\.){2,}|(?<![a-z0-9])[a-z]+(?:-[a-z]+)?(?:['’][a-z]+)?/g) ?? [];
+        const tokens = text.toLowerCase().match(/[a-z]+(?:\d+[a-z]*)+\b|\d+(?:st|nd|rd|th)\b|\d{4}s\b|(?:[a-z]\.){2,}|(?<![a-z0-9])[a-z]+(?:-[a-z]+)?(?:['’][a-z]+)?/g) ?? [];
         for (const token of tokens) {
           const headword = lexicon.canonicalLemma(token, { sourceId, articleId: article.id });
           if (headword !== "mean" && headword !== "means") continue;

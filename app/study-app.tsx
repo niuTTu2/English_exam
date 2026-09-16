@@ -61,7 +61,9 @@ import {
   sectionsByYear,
   vocab,
   type SentenceAnalysis,
-  type Question,
+  type AnyQuestion as Question,
+  type QuestionOptionKey,
+  questionExplanation,
   type SyntaxRole,
   type TranslationTask,
   type VocabEntry,
@@ -213,14 +215,14 @@ const corpusTokens = corpusSources.flatMap((source) => tokenizeWords(source.text
 }));
 
 function tokenizeWords(text: string) {
-  return text.match(/\d+(?:st|nd|rd|th)\b|\d{4}s\b|(?:[a-z]\.){2,}|(?<![a-z0-9])[a-z]+(?:-[a-z]+)?(?:['’][a-z]+)?/g) ?? [];
+  return text.match(/[a-z]+(?:\d+[a-z]*)+\b|\d+(?:st|nd|rd|th)\b|\d{4}s\b|(?:[a-z]\.){2,}|(?<![a-z0-9])[a-z]+(?:-[a-z]+)?(?:['’][a-z]+)?/g) ?? [];
 }
 
 const optionLookup = new Map(
   allQuestions.flatMap((question) => question.options.map((option) => [
     `${question.sentenceId}:${option.text.toLowerCase()}`,
     {
-      explanation: question.explanations[option.key],
+      explanation: questionExplanation(question, option.key),
       correct: question.options.find((item) => item.key === question.answer)?.text ?? "",
       isCorrect: option.key === question.answer,
     },
@@ -1540,7 +1542,7 @@ export default function StudyApp() {
 
                   <section className="question-section">
                     <div className="question-heading">
-                      <div><span>{activeArticle.kind === "cloze" ? "完形选择" : "阅读选择"}</span><strong>{selectedAnswers}/{questions.length} 已作答</strong></div>
+                      <div><span>{activeArticle.kind === "cloze" ? "完形选择" : questions.every(question => question.format === "true-false") ? "阅读判断（T / F）" : "阅读选择"}</span><strong>{selectedAnswers}/{questions.length} 已作答</strong></div>
                       {submitted && <Badge className="score-badge">{correctAnswers}/{questions.length}</Badge>}
                     </div>
                     <div className="question-grid">
@@ -1586,7 +1588,7 @@ export default function StudyApp() {
                               {question.options.map((option) => (
                                 <p key={option.key}>
                                   <strong>{option.key}</strong>
-                                  {renderWords(question.explanations[option.key], question.sentenceId, openTerm, `explanation-${question.id}-${option.key}`)}
+                                  {renderWords(questionExplanation(question, option.key), question.sentenceId, openTerm, `explanation-${question.id}-${option.key}`)}
                                 </p>
                               ))}
                             </div>
@@ -2215,8 +2217,9 @@ function QuestionAnalysisPanel({
   const analysis = question.analysis;
   if (!analysis) return null;
 
+  const analysisByOption: Partial<Record<QuestionOptionKey, SentenceAnalysis>> | undefined = analysis.options;
   const optionAnalyses = question.options
-    .map((option) => ({ option, analysis: analysis.options?.[option.key] }))
+    .map((option) => ({ option, analysis: analysisByOption?.[option.key] }))
     .filter((item): item is { option: Question["options"][number]; analysis: SentenceAnalysis } => Boolean(item.analysis));
 
   return (
@@ -2937,9 +2940,9 @@ function renderWords(
       ];
     }
 
-    const parts = segment.split(/(\d+(?:st|nd|rd|th)\b|\d{4}s\b|(?:[A-Za-z]\.){2,}|(?<![A-Za-z0-9])[A-Za-z]+(?:-[A-Za-z]+)?(?:['’][A-Za-z]+)?)/g);
+    const parts = segment.split(/([A-Za-z]+(?:\d+[A-Za-z]*)+\b|\d+(?:st|nd|rd|th)\b|\d{4}s\b|(?:[A-Za-z]\.){2,}|(?<![A-Za-z0-9])[A-Za-z]+(?:-[A-Za-z]+)?(?:['’][A-Za-z]+)?)/g);
     return parts.map((part, index) => {
-      if (!/^\d+(?:st|nd|rd|th)$|^\d{4}s$|^(?:[A-Za-z]\.){2,}$|^[A-Za-z]+(?:-[A-Za-z]+)?(?:['’][A-Za-z]+)?$/.test(part)) return part;
+      if (!/^[A-Za-z]+(?:\d+[A-Za-z]*)+$|^\d+(?:st|nd|rd|th)$|^\d{4}s$|^(?:[A-Za-z]\.){2,}$|^[A-Za-z]+(?:-[A-Za-z]+)?(?:['’][A-Za-z]+)?$/.test(part)) return part;
       return (
         <button
           type="button"

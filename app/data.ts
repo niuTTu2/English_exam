@@ -1,3 +1,4 @@
+import { passage2010P5Questions, passage2010P5Sentences } from "./2010-passage-5-data";
 import { passage2010P4Questions, passage2010P4Sentences } from "./2010-passage-4-data";
 import { passage2010P3Questions, passage2010P3Sentences } from "./2010-passage-3-data";
 import { passage1Questions, passage1Sentences } from "./passage-1-data";
@@ -105,6 +106,7 @@ export type VocabEntry = {
 };
 
 export type Question = {
+  format?: "multiple-choice";
   id: number;
   /** 原卷显示题号；id 是跨年份唯一的稳定存储键。 */
   number?: number;
@@ -122,6 +124,22 @@ export type QuestionAnalysis = {
   options?: Partial<Record<"A" | "B" | "C" | "D", SentenceAnalysis>>;
   answer?: SentenceAnalysis;
 };
+
+export type TrueFalseQuestion = Omit<Question, "format" | "options" | "answer" | "explanations" | "analysis"> & {
+  format: "true-false";
+  options: [{ key: "T"; text: "True" }, { key: "F"; text: "False" }];
+  answer: "T" | "F";
+  explanations: Record<"T" | "F", string>;
+  analysis?: Omit<QuestionAnalysis, "options"> & { options?: Partial<Record<"T" | "F", SentenceAnalysis>> };
+};
+
+export type AnyQuestion = Question | TrueFalseQuestion;
+export type QuestionOptionKey = AnyQuestion["answer"];
+export function questionExplanation(question: AnyQuestion, key: QuestionOptionKey): string {
+  const reasons: Partial<Record<QuestionOptionKey, string>> = question.explanations;
+  if (!reasons[key]) throw new Error(`Missing explanation: ${question.id}/${key}`);
+  return reasons[key];
+}
 
 export type TranslationTask = {
   id: number;
@@ -143,7 +161,7 @@ export type ArticleContent = {
   description: string;
   kind: "cloze" | "reading" | "translation";
   sentences: SentenceAnalysis[];
-  questions: Question[];
+  questions: AnyQuestion[];
   translationTasks?: TranslationTask[];
 };
 
@@ -174,7 +192,7 @@ export const sectionsByYear = {
     { id: "2010-p2", label: "阅读 Text 2", meta: "19句 · 5题", status: "ready" },
     { id: "2010-p3", label: "阅读 Text 3", meta: "16句 · 5题", status: "ready" },
     { id: "2010-p4", label: "阅读 Text 4", meta: "14句 · 5题", status: "ready" },
-    { id: "2010-p5", label: "阅读 Part B", meta: "待精审", status: "pending" },
+    { id: "2010-p5", label: "阅读 Part B", meta: "28句 · 5道判断题", status: "ready" },
     { id: "2010-translation", label: "英译汉", meta: "待精审", status: "pending" },
   ],
 } as const;
@@ -1392,7 +1410,13 @@ export const articleContents: Record<string, ArticleContent> = {
     description: "从五项民主原则出发，梳理精英筛选、女性代表性与1968年法案和1975年判决，掌握让步论证、时间定位及主旨范围。",
     kind: "reading", sentences: passage2010P4Sentences, questions: passage2010P4Questions,
   },
+  "2010-p5": {
+    id: "2010-p5", year: 2010, sectionId: "p5", label: "阅读 Part B", badge: "2010 · 阅读 Part B",
+    title: "Copying Birds May Save Aircraft Fuel",
+    description: "模仿鸟类可能节省飞机燃油：从上洗气流、模型节能效果到安全、天气与调度约束，辨别可能性、确定性与未经证实的报道。原卷41—45题为T/F判断题。",
+    kind: "reading", sentences: passage2010P5Sentences, questions: passage2010P5Questions,
+  },
 };
 
-export const allSentences = [...verifiedClozeSentences, ...verifiedPassage1Sentences, ...verifiedPassage2Sentences, ...verifiedPassage3Sentences, ...verifiedPassage4Sentences, ...verifiedPassage5Sentences, ...verifiedTranslationSentences, ...cloze2001Sentences, ...passage2001P1Sentences, ...passage2001P2Sentences, ...cloze2010Sentences, ...passage2010P1Sentences, ...passage2010P2Sentences, ...passage2010P3Sentences, ...passage2010P4Sentences];
-export const allQuestions = [...verifiedClozeQuestions, ...verifiedPassage1Questions, ...verifiedPassage2Questions, ...verifiedPassage3Questions, ...verifiedPassage4Questions, ...verifiedPassage5Questions, ...cloze2001Questions, ...passage2001P1Questions, ...passage2001P2Questions, ...cloze2010Questions, ...passage2010P1Questions, ...passage2010P2Questions, ...passage2010P3Questions, ...passage2010P4Questions];
+export const allSentences = [...verifiedClozeSentences, ...verifiedPassage1Sentences, ...verifiedPassage2Sentences, ...verifiedPassage3Sentences, ...verifiedPassage4Sentences, ...verifiedPassage5Sentences, ...verifiedTranslationSentences, ...cloze2001Sentences, ...passage2001P1Sentences, ...passage2001P2Sentences, ...cloze2010Sentences, ...passage2010P1Sentences, ...passage2010P2Sentences, ...passage2010P3Sentences, ...passage2010P4Sentences, ...passage2010P5Sentences];
+export const allQuestions = [...verifiedClozeQuestions, ...verifiedPassage1Questions, ...verifiedPassage2Questions, ...verifiedPassage3Questions, ...verifiedPassage4Questions, ...verifiedPassage5Questions, ...cloze2001Questions, ...passage2001P1Questions, ...passage2001P2Questions, ...cloze2010Questions, ...passage2010P1Questions, ...passage2010P2Questions, ...passage2010P3Questions, ...passage2010P4Questions, ...passage2010P5Questions];

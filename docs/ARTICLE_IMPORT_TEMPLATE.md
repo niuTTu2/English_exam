@@ -158,6 +158,8 @@
 
 ## 题目对象
 
+下列对象为四选一模板。若用户原卷为 T/F 判断题，使用 `TrueFalseQuestion` 与 `format: "true-false"`，选项严格为 `[{ key: "T", text: "True" }, { key: "F", text: "False" }]`，答案及理由只用 T/F 键；不能将判断题伪装成 A–D 四选一。
+
 ```ts
 {
   id: 201026, // 示例：跨卷稳定键；确认全库唯一后使用

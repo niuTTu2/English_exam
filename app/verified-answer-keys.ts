@@ -161,6 +161,11 @@ export const verifiedAnswerSources2010Passage1 = [
   },
 ] as const;
 
+export const verifiedAnswerKey2010Passage5: Record<number, "T" | "F"> = { 41: "F", 42: "T", 43: "F", 44: "T", 45: "F" };
+export const verifiedAnswerSources2010Passage5 = [
+  { range: "41—45答案表：F T F T F；对照原卷购新机、减阻节能、舒适性、天气与未经证实的报道", label: "新东方在线 / 2010年考研英语二真题及答案（2018-10-15）", url: "https://kaoyan.koolearn.com/20181015/1023400.html" },
+] as const;
+
 export const verifiedAnswerKey2010Passage4: Record<number, "A" | "B" | "C" | "D"> = {
   36: "D", 37: "A", 38: "C", 39: "B", 40: "D",
 };

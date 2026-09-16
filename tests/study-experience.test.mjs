@@ -11,6 +11,27 @@ const study = await vite.ssrLoadModule("/app/study-app.tsx");
 const { articleContents } = await vite.ssrLoadModule("/app/data.ts");
 const { prepareLocalSnapshot, readRemoteSnapshot } = await vite.ssrLoadModule("/app/study-sync.ts");
 
+test("2010 Part B uses real T/F sources and annual indexes", () => {
+  const article = articleContents["2010-p5"];
+  assert.equal(study.questionNumberLabel(article.questions), "第 41–45 题");
+  assert.equal(article.questions.filter(question => ["F", "T", "F", "T", "F"][question.number - 41] === question.answer).length, 5);
+  const words = study.buildYearWordItems(2010);
+  assert.ok(words.find(word => word.headword === "upwash"));
+  assert.ok(words.find(word => word.headword === "a350")?.forms.includes("a350"));
+  assert.ok(words.find(word => word.headword === "h1n1")?.forms.includes("h1n1"));
+  assert.match(study.resolveEntry("A350", false, "2010-p5-s1").contextualMeaning, /空客/);
+  assert.match(study.resolveEntry("H1N1", false, "2010-cloze-s8").contextualMeaning, /H1N1/);
+  assert.ok(words.find(word => word.headword === "finding")?.forms.includes("findings"));
+  assert.ok(words.find(word => word.headword === "find")?.forms.includes("finding"));
+  assert.match(study.resolveEntry("company", false, "2010-p5-s15").contextualMeaning, /结伴/);
+  assert.match(study.resolveEntry("peering", false, "2010-p5-s17").contextualMeaning, /张望/);
+  assert.match(study.resolveEntry("True", false, "question-201042-option-T").contextualMeaning, /正确/);
+  const phrase = study.buildYearPhraseItems(2010).find(item => item.source === "remains to be seen");
+  assert.ok(phrase);
+  assert.equal(phrase.sentenceId, "2010-p5-s19");
+  assert.ok(phrase.count > 0);
+});
+
 test("2010 ordinal tokens and scoped lemmas stay whole in annual vocabulary", () => {
   const words = study.buildYearWordItems(2010);
   assert.ok(words.find(word => word.headword === "twentieth")?.forms.includes("20th"));

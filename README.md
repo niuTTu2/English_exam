@@ -7,6 +7,8 @@ GitHub 是唯一代码源，`main` 已连接既有 Cloudflare 部署。维护者
 Windows 用户先阅读 `START_HERE.md`，最快可直接双击 `START_LOCAL_TEST_WINDOWS.bat`。
 好友的 GPT/Codex 在修改前必须阅读根目录 `AGENTS.md` 和 `docs/` 中的质量规范。
 
+2010 年英语二阅读包含 Text 1—4 和 Part B，原卷题号连续覆盖 21—45。Part B 保留真实 T/F 判断题；从年度目录进入「阅读 Part B」，在自测中作答后查看定位和两项理由。其余阅读仍采用原有 A—D 四选一，不改旧题号或学习记录键。
+
 下面保留原项目的技术说明。
 
 # vinext-starter

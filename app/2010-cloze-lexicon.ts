@@ -41,6 +41,11 @@ const rows: Record<string, [string, string, string]> = {
 };
 
 export const cloze2010Lexicon: Record<string, Cloze2010LexiconEntry> = Object.fromEntries(Object.entries(rows).map(([word, [pos, meaning, use]]) => [word, e(pos, meaning, use)]));
+cloze2010Lexicon.h1n1 = {
+  partOfSpeech: "proper n.（病毒名称代号）", contextualMeaning: "甲型H1N1流感病毒名称",
+  use: "原文also known as (A) H1N1给新型猪流感补充名称；H1N1由字母数字组成，需整体识别，不拆成H或N。",
+  specialForms: ["代号整体保留，无普通单复数屈折变化"], examSynonyms: [], collocations: ["also known as (A) H1N1"],
+};
 Object.assign(cloze2010Lexicon, {
   designate: e("v.", "正式指定；认定", "designated by WHO 是过去分词后置定语。", { specialForms:["designate—designated—designated—designating"], examSynonyms:["classify（归类，常接 as）", "declare（正式宣布）"], collocations:["designate A as B", "be designated by an authority"] }),
   follow: e("v.", "发生在……之后", "A followed B 表先 B 后 A。", { specialForms:["follow—followed—followed—following"], examSynonyms:["come after（随后发生）", "ensue（随后发生，常不及物）"], confusions:["follow 表 A 在 B 后；prompt 表 A 促使 B，方向不同。"] }),

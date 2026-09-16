@@ -1,8 +1,9 @@
+import { passage2010P5SentenceContexts } from "./2010-passage-5-lexicon";
 import { passage2010P4SentenceContexts } from "./2010-passage-4-lexicon";
 import { passage2010P3SentenceContexts } from "./2010-passage-3-lexicon";
 import { passage2010P2SentenceContexts } from "./2010-passage-2-lexicon";
 
-export type ArticleLexiconId = "cloze" | "p1" | "p2" | "p3" | "p4" | "p5" | "translation" | "2001-cloze" | "2001-p1" | "2001-p2" | "2010-cloze" | "2010-p1" | "2010-p2" | "2010-p3" | "2010-p4";
+export type ArticleLexiconId = "cloze" | "p1" | "p2" | "p3" | "p4" | "p5" | "translation" | "2001-cloze" | "2001-p1" | "2001-p2" | "2010-cloze" | "2010-p1" | "2010-p2" | "2010-p3" | "2010-p4" | "2010-p5";
 
 export type ContextualSubstitution = {
   label: string;
@@ -29,6 +30,7 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
   ...passage2010P2SentenceContexts,
   ...passage2010P3SentenceContexts,
   ...passage2010P4SentenceContexts,
+  ...passage2010P5SentenceContexts,
   "p2-s5": { mean: { contextualMeaning: "意味着将出现某种结果", use: "This means that... 中 means 为第三人称单数，that从句解释男女数量差异会导致择偶年龄段的男性过剩。" } },
   "p2-s19": { mean: { contextualMeaning: "意味着；表明这一结果", use: "主语 The grand mediocrity of today 对应单数谓语 means，that从句说明自然选择作用减弱；不是名词‘手段’。" } },
   "p2-s20": { mean: { contextualMeaning: "意味着", use: "this means that... 引出作者对进化状态的结论，that内容从句充当宾语，不是mean doing结构。" } },
