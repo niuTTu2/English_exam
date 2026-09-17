@@ -256,6 +256,8 @@ export type ArticleContent = {
   kind: "cloze" | "reading" | "translation" | "writing";
   sentences: SentenceAnalysis[];
   questions: AnyQuestion[];
+  /** 来自原卷的段落边界，不能用教学主题自动分段。 */
+  paragraphs?: Array<{ id: string; sentenceIds: string[] }>;
   translationTasks?: TranslationTask[];
   writingTasks?: WritingTask[];
 };
@@ -1504,6 +1506,8 @@ export const articleContents: Record<string, ArticleContent> = {
     kind: "reading",
     sentences: passage2010P1Sentences,
     questions: passage2010P1Questions,
+    paragraphs: [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [13, 14, 15], [16, 17, 18, 19]]
+      .map((numbers, index) => ({ id: `2010-p1-paragraph-${index + 1}`, sentenceIds: numbers.map(number => `2010-p1-s${number}`) })),
   },
   "2010-p2": {
     id: "2010-p2",

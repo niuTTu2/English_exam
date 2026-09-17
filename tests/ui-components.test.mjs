@@ -33,8 +33,7 @@ test("句法首屏突出本句关键，细节折叠且父子关系保留", async
   assert.doesNotMatch(html, /<details[^>]*\sopen(?:=|\s|>)/);
   assert.doesNotMatch(html, /从句内部|0 个|继续细分时间/);
   const disclosureNames = [...html.matchAll(/<details[^>]* name="([^"]+)"/g)].map(match => match[1]);
-  assert.equal(disclosureNames.length, 2);
-  assert.equal(new Set(disclosureNames).size, 1, "同句的外层详情采用互斥展开以控制长度");
+  assert.equal(disclosureNames.length, 0, "读者可以同时打开关系树和本句难点对照");
   assert.match(html, /aria-label="rising bewilderingly since 2003 的内部结构"/);
   assert.match(html, /data-syntax-component="since 2003"/);
   assert.match(html, /先后顺序（结合上下文）/);
@@ -47,6 +46,29 @@ test("句法首屏突出本句关键，细节折叠且父子关系保留", async
   const old = renderToStaticMarkup(React.createElement(SentenceSyntaxPanel, { analysis: articleContents.cloze.sentences[0], renderText }));
   assert.match(old, /条件状语从句/);
   assert.doesNotMatch(old, /本句难在哪里/);
+});
+
+test("2010初读按原卷五段连续呈现，读句和结构不混入查词按钮", async () => {
+  const { OriginalPassage } = await vite.ssrLoadModule("/app/original-passage.tsx");
+  const { StudySentence } = await vite.ssrLoadModule("/app/study-app.tsx");
+  const { articleContents } = await vite.ssrLoadModule("/app/data.ts");
+  const article = articleContents["2010-p1"];
+  assert.deepEqual(article.paragraphs.map(p => p.sentenceIds.length), [4, 4, 4, 3, 4]);
+  assert.deepEqual(article.paragraphs.flatMap(p => p.sentenceIds), article.sentences.map(s => s.id));
+  const html = renderToStaticMarkup(React.createElement(OriginalPassage, { article, marked: new Set(), onMark() {} }));
+  assert.equal((html.match(/class="original-paragraph"/g) ?? []).length, 5);
+  assert.doesNotMatch(html, /word-button|phrase-action|主干|供给惜售/);
+  const props = { sentence: article.sentences[0], isExpanded: true, isMarked: false, note: "", onToggle() {}, onMark() {}, onTerm() {}, onNote() {} };
+  const read = renderToStaticMarkup(React.createElement(StudySentence, props));
+  assert.doesNotMatch(read, /class="word-button|phrase-action|colored-sentence/);
+  assert.match(read, /完整语法资料/);
+  assert.match(read, /翻译与句间关系/);
+  const structure = renderToStaticMarkup(React.createElement(StudySentence, { ...props, mode: "structure" }));
+  assert.match(structure, /按词块查看语法作用/);
+  assert.doesNotMatch(structure, /class="word-button|phrase-action/);
+  const words = renderToStaticMarkup(React.createElement(StudySentence, { ...props, mode: "words" }));
+  assert.match(words, /本句词组/);
+  assert.doesNotMatch(words, /colored-sentence/);
 });
 
 test("2012满意度表支持三态度列、精确数据和原图尺寸", async () => {

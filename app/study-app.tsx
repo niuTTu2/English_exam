@@ -1,6 +1,7 @@
 "use client";
 
 import { chunkVisualRole, chunkDescription, visualRoleLabels } from "./reviewed-syntax";
+import { OriginalPassage } from "./original-passage";
 
 import {
   ArrowLeft,
@@ -92,6 +93,7 @@ import {
 } from "./study-sync";
 
 type AppView = "study" | "test" | "review" | "vocabulary";
+type SentenceMode = "read" | "words" | "structure";
 type ArticleId = keyof typeof articleContents;
 type RevealTiming = "instant" | "sentence" | "article";
 type TimerMode = "up" | "down";
@@ -764,7 +766,9 @@ function translationAnswerKey(articleId: ArticleId, taskId: number) {
 }
 
 export default function StudyApp() {
-  const [view, setView] = useState<AppView>("study");
+  const [view, setView] = useState<AppView>("test");
+  const [sentenceMode, setSentenceMode] = useState<SentenceMode>("read");
+  const [showPhrases, setShowPhrases] = useState(true);
   const [selectedYear, setSelectedYear] = useState<number>(2000);
   const [activeSection, setActiveSection] = useState<ArticleId>("cloze");
   const [expanded, setExpanded] = useState<Set<string>>(new Set(["cloze-s1"]));
@@ -1339,7 +1343,7 @@ export default function StudyApp() {
   function selectArticle(id: ArticleId) {
     setActiveSection(id);
     setSelectedYear(articleContents[id].year);
-    setView("study");
+    setView("test");
     setSelectedTerm(null);
     setTermHistory([]);
     setTimerRunning(false);
@@ -1721,13 +1725,13 @@ export default function StudyApp() {
                 <div>
                   <div className="heading-meta">
                     <Badge className="paper-badge">{activeArticle.badge}</Badge>
-                    <span>精审完成</span>
+                    <span>{activeArticle.id === "2010-p1" ? "新版句法已完成 · 训练模板升级中" : activeArticle.id === "2010-p2" ? "新版句法已完成 · 训练层尚未升级" : "既有精审 · 新版句法教学尚未升级"}</span>
                   </div>
-                  <h2>{activeArticle.title}</h2>
-                  <p>{activeArticle.description}</p>
+                  <h2>{view === "test" ? `${activeArticle.year} · ${activeArticle.label}` : activeArticle.title}</h2>
+                  <p>{view === "test" ? "先独立阅读、作答，再进入精读与复盘。" : activeArticle.description}</p>
                 </div>
                 <div className="paper-progress">
-                  <div><span>学习进度</span><strong>{studiedCount}/{sentences.length} 句</strong></div>
+                  <div><span>已查看（不代表掌握）</span><strong>{studiedCount}/{sentences.length} 句</strong></div>
                   <Progress value={studiedProgress} />
                 </div>
               </>
@@ -1737,27 +1741,34 @@ export default function StudyApp() {
           <Tabs value={view} onValueChange={(value) => setView(value as AppView)} className="mode-tabs">
             <div className="mode-toolbar">
               <TabsList className="mode-list">
-                <TabsTrigger value="study"><BookOpenCheck />学习模式</TabsTrigger>
-                <TabsTrigger value="test"><Clock3 />自测模式</TabsTrigger>
-                <TabsTrigger value="review"><Brain />复习清单</TabsTrigger>
+                <TabsTrigger value="test"><Clock3 />考场初读</TabsTrigger>
+                <TabsTrigger value="study"><BookOpenCheck />初学精读</TabsTrigger>
+                <TabsTrigger value="review"><Brain />错题复盘</TabsTrigger>
               </TabsList>
               <Badge variant="outline" className="offline-badge">{offlineReady ? "离线内容已缓存" : "正在准备离线内容"}</Badge>
             </div>
 
             <TabsContent value="study" className="mode-content">
+              <div className="sentence-mode-controls" aria-label="原句交互方式">
+                {([["read", "读句"], ["words", "词汇"], ["structure", "结构"]] as const).map(([mode, label]) => <Button key={mode} variant={sentenceMode === mode ? "default" : "outline"} aria-pressed={sentenceMode === mode} onClick={() => setSentenceMode(mode)}>{label}</Button>)}
+                {sentenceMode === "words" && <label><input type="checkbox" checked={showPhrases} onChange={event => setShowPhrases(event.target.checked)} />显示词组入口</label>}
+                <p>{sentenceMode === "read" ? "先读原句，点右侧箭头进入学习。" : sentenceMode === "words" ? "点原句中的单词查词；整组表达在句子下方单独选择。" : "按完整词块看句法关系，点词块查看它的作用。"}</p>
+              </div>
               {writingTasks.map(task => <section key={task.id}><WritingPromptChart task={task} /><WritingStudyGuide task={task} /></section>)}
-              <div className="legend-row" aria-label="句子颜色图例">
+              {sentenceMode === "structure" && <div className="legend-row" aria-label="句子颜色图例">
                 {sentences.every(sentence => sentence.chunks.every(chunk => chunk.visualRole))
                   ? Object.entries(visualRoleLabels).map(([role, label]) => (
                     <span key={role}><i className={`legend-dot legend-${role}`} />{label}</span>
                   ))
                   : <span>本篇配色区分词块，具体语法作用请看成分讲解。</span>}
-              </div>
+              </div>}
               <div className="sentence-stack">
                 {sentences.map((sentence) => (
                   <StudySentence
                     key={sentence.id}
                     sentence={sentence}
+                    mode={sentenceMode}
+                    showPhrases={showPhrases}
                     isExpanded={expanded.has(sentence.id)}
                     isMarked={sentenceMarks.has(sentence.id)}
                     note={sentenceNotes[sentence.id] ?? ""}
@@ -1798,7 +1809,7 @@ export default function StudyApp() {
                     <Button size="icon-sm" variant="ghost" onClick={resetTest} aria-label="重置"><RotateCcw /></Button>
                   </div>
                 </div>
-                <div className="reveal-setting">
+                {!activeArticle.paragraphs && <div className="reveal-setting">
                   <Settings2 />
                   <div>
                     <span>讲解解锁</span>
@@ -1811,7 +1822,7 @@ export default function StudyApp() {
                       </SelectContent>
                     </Select>
                   </div>
-                </div>
+                </div>}
               </section>
 
               <div className="test-instruction">
@@ -1824,7 +1835,7 @@ export default function StudyApp() {
                     ? isPassageTranslation
                       ? "按原卷整篇完成英译汉，一次提交全文。提交后对照参考译文，并按需展开逐句解析；不作自动评分。"
                       : `逐句完成英译汉。提交本句后即可对照参考译文与完整句读，全部 ${translationTasks.length} 句提交后本篇完成。`
-                    : `先限时默读全文，再完成${questionNumberLabel(questions)}；不提前显示逐句讲解。点选项字母作答；词汇讲解按你的设置解锁。`}</p>
+                    : activeArticle.paragraphs ? `按原卷段落限时默读，再完成${questionNumberLabel(questions)}。初读不提供查词提示；可在文末标记难句，提交后查看解析。` : `先限时默读全文，再完成${questionNumberLabel(questions)}；不提前显示逐句讲解。点选项字母作答；词汇讲解按你的设置解锁。`}</p>
               </div>
 
               {activeArticle.kind === "writing" ? (
@@ -1865,13 +1876,13 @@ export default function StudyApp() {
                 </section>
               ) : (
                 <>
-                  <div className="test-passage">
+                  {activeArticle.paragraphs ? <OriginalPassage article={activeArticle} marked={sentenceMarks} onMark={id => setSentenceMarks(current => { const next = new Set(current); if (next.has(id)) next.delete(id); else next.add(id); return next; })} /> : <div className="test-passage">
                     {sentences.map((sentence) => (
                       <article key={sentence.id} className="test-sentence" aria-label={`原文第 ${sentence.number} 句`}>
                         <p>{renderInteractiveText(sentence.testText ?? sentence.text, sentence.phrases, sentence.id, openTerm, false)}</p>
                       </article>
                     ))}
-                  </div>
+                  </div>}
 
                   <section className="question-section">
                     <div className="question-heading">
@@ -1884,7 +1895,7 @@ export default function StudyApp() {
                         <article key={question.id} className="question-card">
                           <div className="question-prompt" id={`source-question-${question.id}-prompt`} tabIndex={-1} data-source-location>
                             <span>{question.number ?? question.id}</span>
-                            <p>{renderWords(question.prompt, `question-${question.id}-prompt`, openTerm, `question-${question.id}`)}</p>
+                            <p>{activeArticle.paragraphs && !submitted ? question.prompt : renderWords(question.prompt, `question-${question.id}-prompt`, openTerm, `question-${question.id}`)}</p>
                           </div>
                           <div className={`option-list ${question.format === "matching" ? "matching-choices" : ""}`}>
                             {question.options.map((option) => {
@@ -1903,8 +1914,8 @@ export default function StudyApp() {
                                     <span>{option.key}</span>{correct && <Check />}
                                   </button>
                                   {question.format !== "matching" && <div className="option-terms">
-                                    {renderWords(option.text, `question-${question.id}-option-${option.key}`, openTerm, `option-${question.id}-${option.key}`)}
-                                    {option.text.includes(" ") && getPhraseKnowledge(option.text) && (
+                                    {activeArticle.paragraphs && !submitted ? <button className="plain-option-text" type="button" onClick={() => setAnswers(current => ({ ...current, [question.id]: option.key }))}>{option.text}</button> : renderWords(option.text, `question-${question.id}-option-${option.key}`, openTerm, `option-${question.id}-${option.key}`)}
+                                    {(!activeArticle.paragraphs || submitted) && option.text.includes(" ") && getPhraseKnowledge(option.text) && (
                                       <button
                                         type="button"
                                         className="phrase-action option-phrase-action"
@@ -2873,8 +2884,10 @@ function BeginnerSyntaxPanel({
   return <SentenceSyntaxPanel analysis={analysis} compact={compact} renderText={(text, key) => renderWords(text, sentenceId, onTerm, key)} />;
 }
 
-function StudySentence({
+export function StudySentence({
   sentence,
+  mode = "read",
+  showPhrases = true,
   isExpanded,
   isMarked,
   note,
@@ -2884,6 +2897,8 @@ function StudySentence({
   onNote,
 }: {
   sentence: SentenceAnalysis;
+  mode?: SentenceMode;
+  showPhrases?: boolean;
   isExpanded: boolean;
   isMarked: boolean;
   note: string;
@@ -2892,11 +2907,13 @@ function StudySentence({
   onTerm: (label: string, sentenceId: string, isPhrase?: boolean) => void;
   onNote: (value: string) => void;
 }) {
+  const [selectedChunk, setSelectedChunk] = useState<number | null>(null);
+  const detailText = (text: string, key: string) => mode === "words" ? renderWords(text, sentence.id, onTerm, key) : text;
   return (
     <article className={`sentence-card ${isExpanded ? "is-open" : ""}`} id={`source-${sentence.id}`} tabIndex={-1} data-source-location>
-      <div className="sentence-toggle" onClick={onToggle}>
+      <div className="sentence-toggle">
         <span className="sentence-number">{sentence.number}</span>
-        <p>{renderInteractiveText(sentence.text, sentence.phrases, sentence.id, onTerm, false)}</p>
+        <p>{mode === "words" ? renderWords(sentence.text, sentence.id, onTerm, `${sentence.id}-words`) : sentence.text}</p>
         <button
           type="button"
           className="expand-icon"
@@ -2905,22 +2922,24 @@ function StudySentence({
           aria-label={isExpanded ? `收起第 ${sentence.number} 句讲解` : `展开第 ${sentence.number} 句讲解`}
         >{isExpanded ? <ChevronDown /> : <ChevronRight />}</button>
       </div>
+      {mode === "words" && showPhrases && sentence.phrases.length > 0 && <details className="sentence-phrase-picker"><summary>本句词组（{sentence.phrases.length}）</summary><div>{sentence.phrases.map(phrase => <button key={phrase} type="button" onClick={() => onTerm(phrase, sentence.id, true)}>{phrase}</button>)}</div></details>}
 
       {isExpanded && (
         <div className="sentence-analysis">
-          <div className="colored-sentence">
+          {mode === "structure" && <div className="colored-sentence" aria-label="按词块查看语法作用">
             {sentence.chunks.map((chunk, index) => (
-              <span key={`${sentence.id}-${index}`} className={roleClass(chunk)} title={chunkDescription(chunk)} data-grammar-function={chunk.grammarFunction}>
-                {renderInteractiveText(chunk.text, sentence.phrases, sentence.id, onTerm, true)}
+              <button type="button" key={`${sentence.id}-${index}`} className={roleClass(chunk)} title={chunkDescription(chunk)} data-grammar-function={chunk.grammarFunction} aria-pressed={selectedChunk === index} onClick={() => setSelectedChunk(selectedChunk === index ? null : index)}>
+                {chunk.text}
                 {chunk.visualRole && <small className="syntax-role-caption">{chunk.grammarFunction}</small>}
-              </span>
+              </button>
             ))}
-          </div>
+            {selectedChunk !== null && <p className="selected-chunk-relation">{sentence.chunks[selectedChunk]?.visualRole ? <>{sentence.chunks[selectedChunk].relation}。{sentence.chunks[selectedChunk].explanation}</> : "该篇第一层仍采用旧词块分类，精确关系见下方原精审讲解。"}</p>}
+          </div>}
 
-          <BeginnerSyntaxPanel analysis={sentence} sentenceId={sentence.id} onTerm={onTerm} />
+          <SentenceSyntaxPanel analysis={sentence} renderText={detailText} />
 
           <details className="advanced-analysis">
-            <summary>补充：原精审层级与语法规则 <ChevronDown /></summary>
+            <summary>完整语法资料（原精审） <ChevronDown /></summary>
             <div className="analysis-grid">
               <section>
                 <h3><Layers3 />逐层拆解</h3>
@@ -2928,7 +2947,7 @@ function StudySentence({
                   {sentence.layers.map((layer, index) => (
                     <li key={layer.label}>
                       <span>{index + 1}</span>
-                      <p><strong>{layer.label}</strong>{renderWords(layer.text, sentence.id, onTerm, `layer-${sentence.id}-${index}`)}</p>
+                      <p><strong>{layer.label}</strong>{detailText(layer.text, `layer-${sentence.id}-${index}`)}</p>
                     </li>
                   ))}
                 </ol>
@@ -2937,19 +2956,19 @@ function StudySentence({
                 <h3><Sparkles />语法提醒</h3>
                 <ul className="grammar-list">
                   {sentence.grammar.map((item, index) => (
-                    <li key={item}>{renderWords(item, sentence.id, onTerm, `grammar-${sentence.id}-${index}`)}</li>
+                    <li key={item}>{detailText(item, `grammar-${sentence.id}-${index}`)}</li>
                   ))}
                 </ul>
               </section>
             </div>
           </details>
 
-          <div className="translation-block">
+          <details className="sentence-translation"><summary>翻译与句间关系</summary><div className="translation-block">
             <div><span>结构直译</span><p>{sentence.literal}</p></div>
             <div className="natural-translation"><span>通顺译文</span><p>{sentence.natural}</p></div>
           </div>
 
-          <div className="logic-note"><Brain /><p><strong>句间逻辑</strong>{sentence.logic}</p></div>
+          <div className="logic-note"><Brain /><p><strong>句间逻辑</strong>{sentence.logic}</p></div></details>
 
           <div className="sentence-note">
             <div className="sentence-note-heading">
