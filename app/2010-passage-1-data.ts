@@ -1,5 +1,7 @@
 import { withReviewedSyntax } from "./reviewed-syntax";
 import { passage2010P1BlockTranslations } from "./2010-passage-1-guide";
+import { passage2010P1Reasoning } from "./2010-passage-1-evidence";
+import { passage2010P1QuestionAnalysis } from "./2010-passage-1-question-analysis";
 import { passage2010P1Reading } from "./2010-passage-1-reading";
 import type { BeginnerSyntaxComponent, Question, SentenceAnalysis, SyntaxVisualRole } from "./data";
 
@@ -1370,7 +1372,7 @@ export const passage2010P1Sentences: SentenceAnalysis[] = passage2010P1Drafts.ma
 const q = (number: number, sentenceId: string, prompt: string, options: [string, string, string, string], answer: "A" | "B" | "C" | "D", locating: string, explanations: Question["explanations"]): Question => ({
   id: 201000 + number, number, sentenceId, prompt,
   options: (["A", "B", "C", "D"] as const).map((key, index) => ({ key, text: options[index] })),
-  answer, locating, explanations,
+  answer, locating, explanations, reasoning: passage2010P1Reasoning[number], analysis: passage2010P1QuestionAnalysis[number],
 });
 
 export const passage2010P1Questions: Question[] = [

@@ -1,0 +1,71 @@
+import type { QuestionReasoning } from "./article-teaching";
+const e = (id: string, n: number, quote: string, role: string, strength: "直接证据" | "上下文推断" | "全文概括" = "直接证据") => ({ id, sentenceId: `2010-p1-s${n}`, quote, role, strength });
+export const passage2010P1Reasoning: Record<number, QuestionReasoning> = {
+  21: {
+    questionType: "短语含义与原因推断", scope: "adjacent-sentences",
+    restatement: "为什么这场成功拍卖被称为‘最后的胜利’？", keyInstruction: "既要解释victory，也要解释last。只证明成功还不够。",
+    evidence: [e("success", 2, "All but two pieces sold, fetching more than £70m", "拍卖确实成功"), e("last", 3, "It was a last victory", "题眼"), e("crisis", 4, "Lehman Brothers, filed for bankruptcy", "紧接着的危机信号", "上下文推断"), e("name", 1, "Beautiful Inside My Head Forever", "拍卖名称")],
+    paraphrases: [{ evidenceIds: ["success", "last", "crisis"], meaning: "成功拍卖处在金融危机冲击市场的转折关头，所以成为最后一次胜利。", optionText: "it was successfully made just before the world financial crisis", relation: "同义转换", limit: "原文用As并置同时发生的拍卖和破产；D概括危机全面冲击前的成功，不要据此编出两件事相隔多少天。" }],
+    options: {
+      A: { judgment: "排除", errorType: "无中生有", evidenceIds: ["success", "last"], reasoning: "原文证明的是本次拍卖成功；长期牛市不等于逐场连续胜利，也未解释last。" },
+      B: { judgment: "排除", errorType: "与原文相反", evidenceIds: ["success"], reasoning: "all but two是除两件外都售出，不是那两件以最高价卖出。" },
+      C: { judgment: "排除", errorType: "偷换对象", evidenceIds: ["name"], reasoning: "把拍卖会名称当成战胜所有杰作的作品或竞赛主体，原文没有这种比较。" },
+      D: { judgment: "选入", evidenceIds: ["success", "last", "crisis"], reasoning: "同时回应成功和转折背景，是last victory的语境概括。" },
+    },
+    transfer: "解释评价性短语时，先拆评价中的两个信息点，再向前找事实、向后找解释。",
+  },
+  22: {
+    questionType: "引句含义", scope: "adjacent-sentences",
+    restatement: "作者说消费变得不合时宜，在艺术市场里具体指什么？", keyInstruction: "先找引用句，再读紧随其后的作者解释。",
+    evidence: [e("quoted", 9, "spending of any sort became deeply unfashionable", "引用的现象"), e("means", 10, "that meant collectors stayed away from galleries and salerooms", "作者对现象的解释"), e("buyers", 16, "there are still buyers in the market", "防止扩大为再无需求")],
+    paraphrases: [{ evidenceIds: ["means"], meaning: "收藏家远离画廊与拍卖场，即不再积极参与这类交易。", optionText: "collectors were no longer actively involved in art-market auctions", relation: "同义转换", limit: "描述参与交易的行为，不是判断艺术品是否值得买，也不等于所有支出都彻底停止。" }],
+    options: {
+      A: { judgment: "选入", evidenceIds: ["means"], reasoning: "stayed away与no longer actively involved对应，场所salerooms与拍卖活动对应。" },
+      B: { judgment: "排除", errorType: "过度绝对", evidenceIds: ["quoted", "means"], reasoning: "从消费不受推崇跳到people stopped every kind of spending，添加了人人停止所有支出的绝对事实。" },
+      C: { judgment: "排除", errorType: "偷换对象", evidenceIds: ["quoted"], reasoning: "原句评价spending，不是说收藏艺术这一时尚失去了吸引力。" },
+      D: { judgment: "排除", errorType: "无中生有", evidenceIds: ["quoted", "buyers"], reasoning: "把花钱不受推崇改为作品过时，并添上不值得买的因果；原文仍说有买家。" },
+    },
+    transfer: "遇到that meant等解释信号，优先让作者解释作者；不要把情绪评价改成绝对事实。",
+  },
+  23: {
+    questionType: "多处事实核对（选不正确项）", scope: "whole-passage",
+    restatement: "四项中哪一个不符合原文？", keyInstruction: "NOT：找到不成立的一项。其余三项因为事实成立而排除，不能把它们标成原文错误。",
+    evidence: [e("sales", 11, "Sales of contemporary art fell by two-thirds", "A与C的销售下跌依据"), e("period", 11, "in the year to November 2008", "2007—2008统计区间"), e("attention", 8, "generates interest far beyond its size", "比较的是关注度"), e("way", 8, "in a way matched by few other industries", "行业比较限定汇聚方式"), e("momentum", 5, "had already been losing momentum", "势头实际减弱"), e("size", 7, "may have come down to $50 billion", "规模回落"), e("prices", 14, "prices are about 40% down on their peak on average", "价格下降"), e("waiting", 19, "waiting for confidence to return", "卖方等待更好环境")],
+    paraphrases: [{ evidenceIds: ["attention", "way", "momentum"], meaning: "原文比较关注度与汇聚方式，并未说增长势头超过其他行业；反而写了势头减弱。", optionText: "The art market surpassed many other industries in momentum.", relation: "矛盾对照", limit: "B偷换比较维度，正因为不成立才应选B；不是把interest翻译成momentum。" }],
+    options: {
+      A: { judgment: "排除", errorType: "事实成立，非本题所求", evidenceIds: ["sales", "period"], reasoning: "销售大幅下降符合原文；截至2008年11月的一年对应2007—2008的统计背景。" },
+      B: { judgment: "选入", errorType: "偷换对象", evidenceIds: ["attention", "way", "momentum"], reasoning: "把关注及汇聚方式的比较换成增长势头比较，不符合原文，正是NOT题要求找出的项。" },
+      C: { judgment: "排除", errorType: "事实成立，非本题所求", evidenceIds: ["momentum", "size", "sales", "prices"], reasoning: "势头、规模、销售、价格共同支持various ways；并非只凭一句。" },
+      D: { judgment: "排除", errorType: "事实成立，非本题所求", evidenceIds: ["waiting"], reasoning: "some限定部分卖方，等待信心恢复支持等待较好交易环境。不能扩大为所有人都退出。" },
+    },
+    transfer: "事实核对题逐项保留对象、时间、数量与比较维度；反向题要分清‘事实真伪’和‘是否选入’。",
+  },
+  24: {
+    questionType: "语境概括", scope: "sentence",
+    restatement: "死亡、债务和离婚这三个D，在文中起什么作用？", keyInstruction: "看名词后面的谓语deliver，问这些因素导致了什么。",
+    evidence: [e("causes", 18, "The three Ds – death, debt and divorce", "三个因素的所指"), e("deliver", 18, "still deliver works of art to the market", "导致作品进入市场")],
+    paraphrases: [{ evidenceIds: ["causes", "deliver"], meaning: "这些变故促使持有人把作品拿到市场出售，也就是促进流通的因素。", optionText: "factors promoting artwork circulation", relation: "同义转换", limit: "是供给进入市场的原因，不是艺术风格、流行趋势或拍卖行的偏好。" }],
+    options: {
+      A: { judgment: "排除", errorType: "无中生有", evidenceIds: ["deliver"], reasoning: "促成作品上市不能推出拍卖行喜欢死亡或离婚等事件。" },
+      B: { judgment: "排除", errorType: "偷换对象", evidenceIds: ["causes"], reasoning: "三类人生变故不属于当代艺术潮流。" },
+      C: { judgment: "选入", evidenceIds: ["deliver"], reasoning: "把deliver works…to the market概括为promoting artwork circulation。" },
+      D: { judgment: "排除", errorType: "偷换对象", evidenceIds: ["causes"], reasoning: "印象派在上一段作历史背景，与三个D的含义无关。" },
+    },
+    wordingNotes: [{ sourceId: "question-201024-option-C", text: "factors promoting artwork circulation", explanation: "这是名词短语。中心词factors；promoting artwork circulation是-ing后置修饰，说明哪些因素。promoting的动作由factors引起，artwork circulation是它的宾语；并非一个独立完整句。" }],
+    transfer: "不熟悉的概括名词，常能从定位句的‘主语做什么’换出来。",
+  },
+  25: {
+    questionType: "标题题", scope: "whole-passage",
+    restatement: "哪个标题能覆盖全文持续讨论的问题？", keyInstruction: "把五段压缩成同一主线，再排除只覆盖一个局部的标题。",
+    evidence: [e("end", 1, "bull run in a century of art-market history ended", "第一段：繁荣结束", "全文概括"), e("turn", 3, "a last victory", "首段转折点", "上下文推断"), e("momentum", 5, "had already been losing momentum", "第二段：先前转弱"), e("sales", 11, "fell by two-thirds", "第三段：销售下降"), e("prices", 14, "prices are about 40% down on their peak on average", "第四段：价格下降"), e("supply", 17, "not a lack of demand but a lack of good work to sell", "第五段：本轮低迷特点"), e("waiting", 19, "is keeping away, waiting for confidence to return", "结尾：卖方观望")],
+    paraphrases: [{ evidenceIds: ["end", "momentum", "sales", "prices", "supply", "waiting"], meaning: "由繁荣结束写到多项衰退表现，再讨论衰退中的供需特点，全文中心始终是艺术市场下滑。", optionText: "Art Market in Decline", relation: "同义转换", limit: "decline概括全篇，不表示所有交易归零；买家仍在并不推翻整体低迷。" }],
+    options: {
+      A: { judgment: "排除", errorType: "范围过窄", evidenceIds: ["prices", "sales", "supply"], reasoning: "价格波动只是局部，无法覆盖销售、担保赔付及卖家观望。" },
+      B: { judgment: "排除", errorType: "把局部当全文", evidenceIds: ["end", "turn", "waiting"], reasoning: "拍卖只是引入市场转折的事件，文章不是最新拍卖资讯。" },
+      C: { judgment: "选入", evidenceIds: ["end", "momentum", "sales", "prices", "supply", "waiting"], reasoning: "能统摄五段的共同话题及发展方向，又容纳最后一段的细化。" },
+      D: { judgment: "排除", errorType: "偷换对象", evidenceIds: ["sales", "supply", "waiting"], reasoning: "交易意愿和供给的变化不能替换成人们的艺术兴趣转向了别处。" },
+    },
+    wordingNotes: [{ sourceId: "question-201025-option-C", text: "Art Market in Decline", explanation: "标题是名词短语，中心是Art Market；in Decline说明市场处于衰退状态。它没有有限谓语，不能为凑句型而把in Decline叫作现成句子的表语。" }],
+    transfer: "标题题用全文主线检验每个选项；结尾提供的细节应当能纳入主线，而非取代全文。",
+  },
+};

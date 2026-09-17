@@ -3,6 +3,7 @@
 import { chunkVisualRole, chunkDescription, visualRoleLabels } from "./reviewed-syntax";
 import { OriginalPassage } from "./original-passage";
 import { ArticleGuidePanel } from "./article-guide-panel";
+import { QuestionEvidencePanel } from "./question-evidence-panel";
 
 import {
   ArrowLeft,
@@ -1932,7 +1933,7 @@ export default function StudyApp() {
                             })}
                           </div>
                           {question.format === "matching" && answers[question.id] && <p className="matching-selected">已选 {answers[question.id]}：{question.options.find(option => option.key === answers[question.id])?.text}</p>}
-                          {submitted && (
+                          {submitted && (question.reasoning ? <QuestionEvidencePanel question={question} onSentence={id => { setView("study"); setExpanded(current => new Set(current).add(id)); window.setTimeout(() => document.getElementById(`source-${id}`)?.scrollIntoView({ behavior: "smooth", block: "center" }), 0); }} /> : (
                             <div className="answer-analysis">
                               <p className="locating"><Layers3 /><span>{renderWords(question.locating, question.sentenceId, openTerm, `locating-${question.id}`)}</span></p>
                               {question.options.map((option) => (
@@ -1942,7 +1943,7 @@ export default function StudyApp() {
                                 </p>
                               ))}
                             </div>
-                          )}
+                          ))}
                           {submitted && question.analysis && (
                             <QuestionAnalysisPanel question={question} onTerm={openTerm} />
                           )}
@@ -2604,19 +2605,18 @@ function QuestionAnalysisPanel({
     .filter((item): item is { option: Question["options"][number]; analysis: SentenceAnalysis } => Boolean(item.analysis));
 
   return (
-    <section className="question-analysis-panel" aria-label={`第 ${question.number ?? question.id} 题提交后句读`}>
-      <div className="question-analysis-heading">
+    <details className="question-analysis-panel" aria-label={`第 ${question.number ?? question.id} 题提交后句读`}>
+      <summary className="question-analysis-heading">
         <BookOpenCheck />
-        <strong>提交后句读</strong>
+        <strong>题干与选项按需拆句</strong>
         <span>题干、选项与正确答案的结构对照</span>
-      </div>
+      </summary>
       {analysis.prompt && (
         <QuestionAnalysisBlock
           label="题干"
           analysis={analysis.prompt}
           sentenceId={`question-${question.id}-prompt`}
           onTerm={onTerm}
-          defaultOpen
         />
       )}
       {optionAnalyses.map(({ option, analysis: optionAnalysis }) => (
@@ -2634,11 +2634,10 @@ function QuestionAnalysisPanel({
           analysis={analysis.answer}
           sentenceId={question.sentenceId}
           onTerm={onTerm}
-          defaultOpen
           answer
         />
       )}
-    </section>
+    </details>
   );
 }
 

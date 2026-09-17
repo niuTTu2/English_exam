@@ -32,7 +32,7 @@ import { passage2001P2Questions, passage2001P2Sentences } from "./2001-passage-2
 import { cloze2010Questions, cloze2010Sentences } from "./2010-cloze-data";
 import { passage2010P1Questions, passage2010P1Sentences } from "./2010-passage-1-data";
 import { passage2010P1Guide } from "./2010-passage-1-guide";
-import type { ArticleGuide } from "./article-teaching";
+import type { ArticleGuide, QuestionReasoning } from "./article-teaching";
 import { passage2010P2Questions, passage2010P2Sentences } from "./2010-passage-2-data";
 import type { ContextualSubstitution } from "./contextual-vocabulary";
 import type { VocabularySenseGuide } from "./vocabulary-senses";
@@ -176,6 +176,7 @@ export type Question = {
   locating: string;
   explanations: Record<"A" | "B" | "C" | "D", string>;
   analysis?: QuestionAnalysis;
+  reasoning?: QuestionReasoning;
 };
 
 export type QuestionAnalysis = {

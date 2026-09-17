@@ -596,6 +596,13 @@ button {
 .translation-alignment > div { padding: 9px 0; border-bottom: 1px solid #dfe4de; }
 .translation-alignment dt { font: 1rem/1.6 Georgia, serif; }
 .translation-alignment dd, .translation-note { margin: 5px 0; font-size: .85rem; line-height: 1.7; color: #52645c; }
+.question-evidence-panel { margin-top: 16px; padding-top: 16px; border-top: 1px solid #cdd9d4; }
+.question-evidence-panel p { font-size: .875rem; line-height: 1.8; margin: 7px 0; }
+.question-evidence-panel summary { cursor: pointer; min-height: 44px; padding: 12px 0; font-size: .875rem; }
+.question-evidence-panel h4, .question-evidence-panel h5 { font-size: .9rem; font-weight: 650; }
+.question-evidence, .option-reasoning, .paraphrase-chain { padding: 10px 0; border-top: 1px solid #e2e5df; }
+.question-evidence-panel blockquote { font: 1rem/1.7 Georgia, serif; border-left: 2px solid #a4beb3; margin: 8px 0; padding-left: 10px; overflow-wrap: anywhere; }
+.evidence-type, .question-transfer { color: #30675c; }
 @media (max-width: 640px) { .mode-list { width: 100%; } .mode-list button { flex: 1; padding-inline: 8px; font-size: .8rem; } .syntax-relation-tree .syntax-relation-tree { padding-left: .55rem; margin-left: .25rem; } }
 .legend-modifier,
 .syntax-modifier { background: #f3dfd6; border-color: #bf7c63 !important; }
