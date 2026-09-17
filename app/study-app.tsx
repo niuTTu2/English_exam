@@ -2,6 +2,7 @@
 
 import { chunkVisualRole, chunkDescription, visualRoleLabels } from "./reviewed-syntax";
 import { OriginalPassage } from "./original-passage";
+import { ArticleGuidePanel } from "./article-guide-panel";
 
 import {
   ArrowLeft,
@@ -1749,6 +1750,7 @@ export default function StudyApp() {
             </div>
 
             <TabsContent value="study" className="mode-content">
+              <ArticleGuidePanel article={activeArticle} onSentence={id => { setExpanded(current => new Set(current).add(id)); sourceNavigation.current = id; window.setTimeout(() => document.getElementById(`source-${id}`)?.scrollIntoView({ behavior: "smooth", block: "center" }), 0); }} />
               <div className="sentence-mode-controls" aria-label="原句交互方式">
                 {([["read", "读句"], ["words", "词汇"], ["structure", "结构"]] as const).map(([mode, label]) => <Button key={mode} variant={sentenceMode === mode ? "default" : "outline"} aria-pressed={sentenceMode === mode} onClick={() => setSentenceMode(mode)}>{label}</Button>)}
                 {sentenceMode === "words" && <label><input type="checkbox" checked={showPhrases} onChange={event => setShowPhrases(event.target.checked)} />显示词组入口</label>}
@@ -1769,6 +1771,7 @@ export default function StudyApp() {
                     sentence={sentence}
                     mode={sentenceMode}
                     showPhrases={showPhrases}
+                    passageRole={activeArticle.guide?.sentenceRoles[sentence.id]}
                     isExpanded={expanded.has(sentence.id)}
                     isMarked={sentenceMarks.has(sentence.id)}
                     note={sentenceNotes[sentence.id] ?? ""}
@@ -2888,6 +2891,7 @@ export function StudySentence({
   sentence,
   mode = "read",
   showPhrases = true,
+  passageRole,
   isExpanded,
   isMarked,
   note,
@@ -2899,6 +2903,7 @@ export function StudySentence({
   sentence: SentenceAnalysis;
   mode?: SentenceMode;
   showPhrases?: boolean;
+  passageRole?: string;
   isExpanded: boolean;
   isMarked: boolean;
   note: string;
@@ -2963,12 +2968,15 @@ export function StudySentence({
             </div>
           </details>
 
-          <details className="sentence-translation"><summary>翻译与句间关系</summary><div className="translation-block">
+          <details className="sentence-translation"><summary>词块对应 · 翻译与篇章作用</summary>
+          {sentence.translationAlignment && <dl className="translation-alignment">{sentence.translationAlignment.map((block, index) => <div key={index}><dt>{block.english}</dt><dd>{block.chinese}</dd></div>)}</dl>}
+          <div className="translation-block">
             <div><span>结构直译</span><p>{sentence.literal}</p></div>
             <div className="natural-translation"><span>通顺译文</span><p>{sentence.natural}</p></div>
           </div>
 
-          <div className="logic-note"><Brain /><p><strong>句间逻辑</strong>{sentence.logic}</p></div></details>
+          {sentence.translationNotes?.map(note => <p className="translation-note" key={note}>{note}</p>)}
+          <div className="logic-note"><Brain /><p><strong>{passageRole ? "本句在段落中的作用" : "句间逻辑"}</strong>{passageRole ?? sentence.logic}</p></div></details>
 
           <div className="sentence-note">
             <div className="sentence-note-heading">

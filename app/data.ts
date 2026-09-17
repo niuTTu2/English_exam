@@ -31,6 +31,8 @@ import { passage2001P1Questions, passage2001P1Sentences } from "./2001-passage-1
 import { passage2001P2Questions, passage2001P2Sentences } from "./2001-passage-2-data";
 import { cloze2010Questions, cloze2010Sentences } from "./2010-cloze-data";
 import { passage2010P1Questions, passage2010P1Sentences } from "./2010-passage-1-data";
+import { passage2010P1Guide } from "./2010-passage-1-guide";
+import type { ArticleGuide } from "./article-teaching";
 import { passage2010P2Questions, passage2010P2Sentences } from "./2010-passage-2-data";
 import type { ContextualSubstitution } from "./contextual-vocabulary";
 import type { VocabularySenseGuide } from "./vocabulary-senses";
@@ -112,6 +114,8 @@ export type SentenceAnalysis = {
   beginnerSyntax?: BeginnerSyntax;
   literal: string;
   natural: string;
+  translationAlignment?: Array<{ english: string; chinese: string }>;
+  translationNotes?: string[];
   logic: string;
   phrases: string[];
   answerWords?: string[];
@@ -258,6 +262,7 @@ export type ArticleContent = {
   questions: AnyQuestion[];
   /** 来自原卷的段落边界，不能用教学主题自动分段。 */
   paragraphs?: Array<{ id: string; sentenceIds: string[] }>;
+  guide?: ArticleGuide;
   translationTasks?: TranslationTask[];
   writingTasks?: WritingTask[];
 };
@@ -1506,6 +1511,7 @@ export const articleContents: Record<string, ArticleContent> = {
     kind: "reading",
     sentences: passage2010P1Sentences,
     questions: passage2010P1Questions,
+    guide: passage2010P1Guide,
     paragraphs: [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [13, 14, 15], [16, 17, 18, 19]]
       .map((numbers, index) => ({ id: `2010-p1-paragraph-${index + 1}`, sentenceIds: numbers.map(number => `2010-p1-s${number}`) })),
   },

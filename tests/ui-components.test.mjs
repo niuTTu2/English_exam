@@ -62,7 +62,7 @@ test("2010初读按原卷五段连续呈现，读句和结构不混入查词按�
   const read = renderToStaticMarkup(React.createElement(StudySentence, props));
   assert.doesNotMatch(read, /class="word-button|phrase-action|colored-sentence/);
   assert.match(read, /完整语法资料/);
-  assert.match(read, /翻译与句间关系/);
+  assert.match(read, /翻译与篇章作用/);
   const structure = renderToStaticMarkup(React.createElement(StudySentence, { ...props, mode: "structure" }));
   assert.match(structure, /按词块查看语法作用/);
   assert.doesNotMatch(structure, /class="word-button|phrase-action/);

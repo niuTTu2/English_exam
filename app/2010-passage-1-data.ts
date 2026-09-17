@@ -1,4 +1,5 @@
 import { withReviewedSyntax } from "./reviewed-syntax";
+import { passage2010P1BlockTranslations } from "./2010-passage-1-guide";
 import { passage2010P1Reading } from "./2010-passage-1-reading";
 import type { BeginnerSyntaxComponent, Question, SentenceAnalysis, SyntaxVisualRole } from "./data";
 
@@ -98,8 +99,8 @@ const passage2010P1Drafts: Omit<SentenceAnalysis, "chunks">[] = [
           "text": "on September 15th 2008"
         }
       ], clauses: [] },
-    literal: "艺术市场百年历史中持续时间最长的一轮牛市，以达米恩·赫斯特的56件作品于2008年9月15日在伦敦苏富比拍卖行的一场拍卖，戏剧性地落幕了。",
-    natural: "2008年9月15日，达米恩·赫斯特的56件作品在伦敦苏富比专场拍卖；艺术市场百年来最长的一轮牛市由此戏剧性收官。",
+    literal: "艺术市场百年历史中持续最久的一轮牛市，以一场拍卖戏剧性地收场：这场名为《Beautiful Inside My Head Forever》的拍卖出售达米恩·赫斯特的56件作品，地点是伦敦苏富比，时间是2008年9月15日。",
+    natural: "2008年9月15日，达米恩·赫斯特的56件作品在伦敦苏富比举办的《Beautiful Inside My Head Forever》专场拍卖会上亮相；艺术市场百年来最长的一轮牛市就这样戏剧性地落幕。",
     logic: "以牛市终结的标志性事件开篇，同时埋下‘盛况即转折点’的伏笔。",
     phrases: ["the longest bull run", "in a century of art-market history", "ended on a dramatic note", "a sale of 56 works", "at Sotheby's in London"],
   },
@@ -124,7 +125,8 @@ const passage2010P1Drafts: Omit<SentenceAnalysis, "chunks">[] = [
     layers: [{ label: "指代", text: "It 回指前两句的赫斯特拍卖成功。" }, { label: "关键判断", text: "a last victory：衰退到来前的最后一次胜利，而非普通的‘上一次胜利’。" }],
     grammar: ["last 放在名词前可表示‘最后的’，这里由下句雷曼破产解释为何是最后一次。", "短句在长句之间形成强烈转折和悬念，是第21题的直接定位句。"],
     beginnerSyntax: { reading: passage2010P1Reading["2010-p1-s3"], components: [component("It", "人称代词", "主语", "回指前述拍卖", "不要译成无具体内容的‘它’，应还原为‘这场拍卖的成功’。"), component("was", "一般过去时系动词", "谓语", "连接主语与评价", "系动词后不是动作宾语，而是表语。"), component("a last victory", "名词短语", "表语", "说明此次拍卖的历史位置", "last 表‘危机前最后的’，其含义需结合下一句推断。")], clauses: [] },
-    literal: "这是最后一次胜利。", natural: "然而，这也成了市场转衰前最后的一场胜利。",
+    literal: "这是最后的一场胜利。", natural: "（然而）这已是最后的一场胜利。",
+    translationNotes: ["‘然而’是结合下句雷曼破产补出的转折关系，原文没有however。It指前两句成功的拍卖；不能把补译词当作英文词义。"],
     logic: "用极短句把拍卖成功重新定义为繁荣终点，引出金融危机。", phrases: ["a last victory"],
   },
   {
@@ -739,7 +741,7 @@ const passage2010P1Drafts: Omit<SentenceAnalysis, "chunks">[] = [
           "text": "to clients who had placed works for sale with them"
         }
       ], clauses: [{"text":"who had placed works for sale with them","type":"限制性定语从句","marker":"who","role":"修饰 clients","subject":"who（= clients）","predicate":"had placed","translationOrder":"先译成‘客户’，再前置为‘曾把作品交给两家拍卖行出售的客户’。","predicateDetails":[{"function":"宾语","text":"works：委托拍卖的作品"},{"function":"状态说明","text":"for sale：作品用于出售"},{"function":"受托方补足语","text":"with them：交由两家拍卖行处理"}]}] },
-    literal: "几周内，世界最大的两家拍卖行苏富比和佳士得不得不向把作品交给它们出售的客户支付近2亿美元保证金。",
+    literal: "几周内，全球最大的两家拍卖行苏富比和佳士得，不得不支付近2亿美元的担保赔付款，给那些把作品委托给它们出售的客户。",
     natural: "短短数周，苏富比和佳士得两大拍卖行就被迫向委托售画的客户支付近2亿美元担保款。",
     logic: "从成交下降推进到拍卖行实际损失，显示危机迅速传导。", phrases: ["Within weeks", "auction houses", "pay out", "in guarantees", "placed works for sale with"],
   },
@@ -907,7 +909,7 @@ const passage2010P1Drafts: Omit<SentenceAnalysis, "chunks">[] = [
         }
       ], clauses: [{"text":"that prices are about 40% down on their peak on average","type":"宾语从句","marker":"that","role":"作 reckon 的内容宾语","subject":"prices","predicate":"are","translationOrder":"先译‘专家估计’，再译完整判断‘价格平均比峰值低约40%’。","predicateDetails":[{"function":"表语","text":"about 40% down：价格比峰值低约40%"},{"function":"比较基准","text":"on their peak"},{"function":"统计范围状语","text":"on average：按平均值来说"}]},{"text":"though some have been far more fluctuant","type":"让步状语从句","marker":"though","role":"补充不受平均值完全概括的个别情况","subject":"some（prices）","predicate":"have been","translationOrder":"主句后补‘尽管有些价格的波动要大得多’。","predicateDetails":[{"function":"表语","text":"far more fluctuant：波动大得多；far 修饰 more"}]}] },
     literal: "这一次，专家估计价格平均比其峰值低约40%，尽管有些一直波动得更厉害。",
-    natural: "专家估计，本轮市场价格平均已较峰值下跌约40%，但不同作品的波动幅度差别很大。",
+    natural: "专家估计，本轮市场价格平均较峰值下跌约40%，不过部分价格的波动要大得多。",
     logic: "给出总体降幅，同时提醒平均值掩盖了个体差异。", phrases: ["This time", "reckon that", "are about 40% down on their peak", "on average", "far more fluctuant"],
   },
   {
@@ -1355,7 +1357,15 @@ const reviewedVisualRoles: Record<string, SyntaxVisualRole[]> = {
   ]
 };
 
-export const passage2010P1Sentences: SentenceAnalysis[] = passage2010P1Drafts.map(sentence => withReviewedSyntax(sentence, reviewedVisualRoles[sentence.id]));
+export const passage2010P1Sentences: SentenceAnalysis[] = passage2010P1Drafts.map((sentence, index) => {
+  const reviewed = withReviewedSyntax(sentence, reviewedVisualRoles[sentence.id]);
+  const translations = passage2010P1BlockTranslations[index];
+  if (translations.length !== reviewed.chunks.length) throw new Error(`${sentence.id}: 词块翻译未对齐`);
+  return { ...reviewed,
+    translationAlignment: reviewed.chunks.map((chunk, i) => ({ english: chunk.text, chinese: translations[i] })),
+    translationNotes: sentence.translationNotes ?? (index === 3 ? ["通顺译文中的‘伦敦’接回第1句的地点；‘仍’‘却’用中文呈现两件同时发生的事的反差，原句没有对应的still或however。"] : undefined),
+  };
+});
 
 const q = (number: number, sentenceId: string, prompt: string, options: [string, string, string, string], answer: "A" | "B" | "C" | "D", locating: string, explanations: Question["explanations"]): Question => ({
   id: 201000 + number, number, sentenceId, prompt,

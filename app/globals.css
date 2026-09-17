@@ -580,6 +580,22 @@ button {
 .syntax-glossary dt { font-weight: 600; margin-top: 12px; }
 .syntax-glossary dd { margin: 4px 0; }
 .plain-option-text { width: 100%; min-height: 44px; text-align: left; }
+.article-guide { border: 1px solid #bcd1c9; border-radius: 12px; margin-bottom: 18px; padding: 0 16px; background: #f6faf7; }
+.article-guide summary { min-height: 44px; padding: 12px 0; cursor: pointer; font-weight: 600; }
+.article-guide p, .article-guide dd { font-size: .9rem; line-height: 1.8; margin: 8px 0; }
+.article-route { padding-left: 24px; }
+.article-route li { padding: 4px; }
+.paragraph-map { list-style: none; padding: 0; }
+.paragraph-map > li, .article-voice { padding: 16px 0; border-top: 1px solid #d4e0d9; }
+.paragraph-map h3, .article-guide h4 { font-size: .95rem; font-weight: 650; }
+.guide-source-link { min-height: 44px; min-width: 44px; padding: 8px; text-decoration: underline; color: #286961; font-size: .8rem; }
+.reference-chain > div { padding: 10px 0; border-top: 1px solid #d4e0d9; }
+.passage-evidence { overflow-wrap: anywhere; font-family: Georgia, serif; }
+.passage-evidence small { display: block; color: #536e66; font-family: var(--font-sans), sans-serif; }
+.translation-alignment { margin: 12px; }
+.translation-alignment > div { padding: 9px 0; border-bottom: 1px solid #dfe4de; }
+.translation-alignment dt { font: 1rem/1.6 Georgia, serif; }
+.translation-alignment dd, .translation-note { margin: 5px 0; font-size: .85rem; line-height: 1.7; color: #52645c; }
 @media (max-width: 640px) { .mode-list { width: 100%; } .mode-list button { flex: 1; padding-inline: 8px; font-size: .8rem; } .syntax-relation-tree .syntax-relation-tree { padding-left: .55rem; margin-left: .25rem; } }
 .legend-modifier,
 .syntax-modifier { background: #f3dfd6; border-color: #bf7c63 !important; }
