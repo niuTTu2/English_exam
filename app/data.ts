@@ -285,7 +285,7 @@ export const sectionsByYear = {
   ],
 } as const;
 
-export const availableYears = [2000, 2001, 2010, 2011] as const;
+export const availableYears = [2000, 2001, 2010, 2011, 2012] as const;
 
 export const sentences: SentenceAnalysis[] = [
   {
