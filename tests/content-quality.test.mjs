@@ -716,12 +716,128 @@ test("已就绪文章与目录、题号和稳定 ID 一致", () => {
     assert.ok(article.sentences.length > 0, `${article.id} 缺少正文句子`);
     if (article.kind === "translation") {
       assert.equal(article.questions.length, 0, `${article.id} 不应伪装成选择题`);
-      assert.equal(article.translationTasks?.length, article.sentences.length, `${article.id} 翻译任务数量必须与句子一致`);
+      assert.ok(article.translationTasks?.length, `${article.id} 必须有翻译任务`);
+      const covered = article.translationTasks.flatMap(data.translationTaskSentences);
+      assert.deepEqual(covered.map(sentence => sentence.id), article.sentences.map(sentence => sentence.id), `${article.id} 翻译任务须按顺序精确覆盖全部句子，不能重复或遗漏`);
+      assert.equal(new Set(article.translationTasks.map(task => task.id)).size, article.translationTasks.length);
+      for (const task of article.translationTasks) {
+        for (const field of ["prompt", "source", "answer", "locating"]) requireText(task[field], `${article.id}.${task.id}.${field}`);
+        assert.equal(task.sentenceId, data.translationTaskSentences(task)[0].id);
+        if (task.format === "passage") {
+          assert.ok(Number.isInteger(task.number) && task.number > 0);
+          assert.ok(task.points > 0);
+          assert.ok(task.paragraphs.length > 0 && task.paragraphs.every(paragraph => paragraph.length > 0));
+          assert.equal(task.source, task.paragraphs.map(paragraph => paragraph.map(sentence => sentence.text).join(" ")).join("\n\n"));
+        } else {
+          assert.equal(task.source, task.analysis.text);
+          requireSentenceAnalysis(task.analysis, `${article.id}.${task.id}.analysis`);
+        }
+      }
     } else {
       assert.ok(article.questions.length > 0, `${article.id} 缺少题目`);
     }
     article.sentences.forEach((sentence) => assert.ok(sentence.id.startsWith(`${article.id}-`), `${sentence.id} 未使用文章稳定前缀`));
     article.questions.forEach((question) => assert.ok(article.sentences.some((sentence) => sentence.id === question.sentenceId), `第 ${question.id} 题定位句不属于 ${article.id}`));
+  }
+});
+
+test("2010英译汉保留第46题三段整篇及原卷标点、从句边界", () => {
+  const article = data.articleContents["2010-translation"];
+  assert.equal(article.questions.length, 0);
+  assert.equal(article.translationTasks.length, 1);
+  const [task] = article.translationTasks;
+  assert.equal(task.id, 201046);
+  assert.equal(task.number, 46);
+  assert.equal(task.format, "passage");
+  assert.equal(task.points, 15);
+  assert.deepEqual(task.paragraphs.map(paragraph => paragraph.length), [2, 2, 6]);
+  assert.equal(task.answer.split("\n\n").length, 3);
+  assert.equal(createHash("sha256").update(normalizeText(task.source)).digest("hex"), "2c7abcd9c5095aa4fc33075de6c6b32f7396cb420269fd7c67dad1bc56984ec1");
+  assert.deepEqual(article.sentences.map(sentence => sentence.number), Array.from({ length: 10 }, (_, index) => index + 1));
+  assert.deepEqual(article.sentences.map(sentence => sentence.beginnerSyntax.clauses.length), [0, 1, 0, 0, 0, 2, 0, 1, 0, 0]);
+  assert.match(article.sentences[1].beginnerSyntax.components[0].function, /主语/);
+  assert.match(article.sentences[1].beginnerSyntax.components[0].form, /动名词完成式/);
+  assert.match(article.sentences[3].text, /boom and burst/);
+  assert.match(article.sentences[5].beginnerSyntax.clauses[1].type, /非限制性定语从句/);
+  assert.match(article.sentences[7].grammar.join(" "), /过去反复/);
+  assert.equal(article.sentences[6].text, '"I was miserable.');
+  assert.ok(article.sentences[9].text.endsWith(".'\""));
+  article.sentences.forEach(sentence => requireSentenceAnalysis(sentence, sentence.id));
+  assert.deepEqual(data.translationTaskSentences(task), article.sentences);
+});
+
+test("2010英译汉逐词覆盖、跨句隔离、有效链接及全年索引", async () => {
+  const article = data.articleContents["2010-translation"];
+  const study = await vite.ssrLoadModule("/app/study-app.tsx");
+  const imported = await vite.ssrLoadModule("/app/2010-translation-lexicon.ts");
+  const [properNameNote] = knowledge.getSynonymDetails(imported.translation2010Lexicon.ning.examSynonyms);
+  assert.equal(properNameNote.target, undefined, "专名的中文替换限制不是英文词条，不能生成空链接");
+  assert.match(properNameNote.meaning, /专名/);
+  const allTokens = article.sentences.flatMap(sentence => englishTokens(sentence.text));
+  assert.equal(allTokens.length, 150);
+  assert.equal(new Set(allTokens).size, 113);
+  const words = study.buildYearWordItems(2010);
+  const phrases = study.buildYearPhraseItems(2010);
+  for (const sentence of article.sentences) {
+    for (const token of englishTokens(sentence.text)) {
+      const guide = lexicon.getLexicalGuide(token, { articleId: article.id, sentenceId: sentence.id });
+      requireText(guide.contextualMeaning, `${sentence.id}.${token}.meaning`);
+      requireText(guide.use, `${sentence.id}.${token}.use`);
+      assert.ok(!guide.partOfSpeech.startsWith("word（"));
+      assert.ok(guide.specialForms.length && guide.examSynonyms.length);
+      const entry = study.resolveEntry(token, false, sentence.id);
+      assert.equal(entry.headword, guide.headword);
+      assert.equal(entry.contextualMeaning, guide.contextualMeaning);
+      const contextualKnowledge = knowledge.getWordKnowledge(guide.headword, { articleId: article.id, sentenceId: sentence.id });
+      if (imported.translation2010Lexicon[guide.headword]) {
+        assert.equal(entry.grammarSummary, guide.use, "本篇核心句法不能沿用其他文章的具体用法");
+        contextualKnowledge.structures.forEach(structure => requireStructure(structure, `${sentence.id}.${token}.syntax`));
+      }
+      assert.ok(words.find(word => word.headword === guide.headword)?.contexts.some(context => context.sentenceId === sentence.id));
+    }
+    for (const phrase of sentence.phrases) {
+      const guide = knowledge.getPhraseKnowledge(phrase);
+      assert.equal(guide.sourceExpression, phrase);
+      requireText(guide.canonical, `${phrase}.canonical`);
+      requireText(guide.grammarRole, `${phrase}.grammarRole`);
+      guide.structures.forEach(structure => requireStructure(structure, phrase));
+      assert.ok(phrases.some(item => item.canonical === guide.canonical));
+    }
+  }
+  const guide = (token, number) => lexicon.getLexicalGuide(token, { articleId: article.id, sentenceId: `2010-translation-s${number}` });
+  assert.match(guide("it", 2).contextualMeaning, /形式宾语/);
+  assert.match(guide("It", 5).contextualMeaning, /开展/);
+  assert.match(guide("It", 6).contextualMeaning, /决定/);
+  assert.match(guide("it", 10).contextualMeaning, /发展/);
+  assert.equal(study.resolveEntry("it", false, "2010-translation-s10").structures[0].pattern, "give it some time");
+  assert.match(study.resolveEntry("it", false, "2010-translation-s2").structures[0].pattern, /make it clear/);
+  assert.doesNotMatch(study.resolveEntry("it", false, "2010-translation-s10").grammarSummary, /has infected|病毒/);
+  assert.match(guide("that", 2).contextualMeaning, /宾语/);
+  assert.match(guide("that", 8).contextualMeaning, /结果/);
+  assert.match(guide("translated", 6).contextualMeaning, /转化|表现/);
+  assert.match(guide("Boulder", 4).contextualMeaning, /地名/);
+  assert.equal(guide("selling", 3).headword, "sell");
+  assert.equal(guide("sales", 6).headword, "sale");
+  assert.equal(guide("unsustainability", 2).headword, "unsustainability");
+  assert.notEqual(guide("it", 2).contextualMeaning, lexicon.getLexicalGuide("it", { articleId: "2010-p5", sentenceId: "2010-p5-s28" }).contextualMeaning);
+  assert.equal(knowledge.getPhraseKnowledge("a lack of sales").key, knowledge.getPhraseKnowledge("a lack of demand").key);
+  for (const [number, word, replacement] of [[3, "recall", ["recalls", "remembers"]], [7, "miserable", ["miserable", "very unhappy"]]]) {
+    const substitution = guide(word, number).contextualSubstitutions[0];
+    assert.equal(substitution.rewrittenSentence, article.sentences[number - 1].text.replace(...replacement));
+    const target = lexicon.getLexicalGuide(substitution.target.slice(5), { articleId: article.id });
+    requireText(target.contextualMeaning, `${substitution.target}.meaning`);
+    requireText(target.use, `${substitution.target}.use`);
+    assert.ok(!target.partOfSpeech.startsWith("word（"));
+  }
+  for (const [headword, entry] of Object.entries(imported.translation2010Lexicon)) {
+    for (const collocation of entry.collocations) assert.ok(knowledge.getPhraseKnowledge(collocation), `${headword}.${collocation} 缺少中文搭配`);
+    for (const detail of knowledge.getSynonymDetails(entry.examSynonyms)) {
+      if (!detail.target?.startsWith("word:")) continue;
+      const target = lexicon.getLexicalGuide(detail.target.slice(5), { articleId: article.id });
+      requireText(target.contextualMeaning, `${headword}.${detail.target}.meaning`);
+      requireText(target.use, `${headword}.${detail.target}.use`);
+      assert.ok(!target.partOfSpeech.startsWith("word（"));
+    }
   }
 });
 

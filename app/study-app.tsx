@@ -66,6 +66,7 @@ import {
   questionExplanation,
   type SyntaxRole,
   type TranslationTask,
+  translationTaskSentences,
   type VocabEntry,
 } from "./data";
 import { buildBeginnerSyntaxGuide } from "./syntax-guide";
@@ -339,7 +340,7 @@ function makeFallbackEntry(label: string, isPhrase = false, sentenceId?: string)
   const option = sentenceId ? optionLookup.get(`${sentenceId}:${normalized}`) : undefined;
   const phraseKnowledge = isPhrase ? getPhraseKnowledge(normalized) : undefined;
   const guide = isPhrase ? null : getLexicalGuide(normalized, lexicalContextFor(sentenceId));
-  const wordKnowledge = guide ? getWordKnowledge(guide.headword) : undefined;
+  const wordKnowledge = guide ? getWordKnowledge(guide.headword, lexicalContextFor(sentenceId)) : undefined;
   const counts = currentCounts(label, isPhrase, sentenceId);
   if (phraseKnowledge) {
     return {
@@ -415,7 +416,7 @@ export function resolveEntry(label: string, isPhrase = false, sentenceId?: strin
   const normalized = label.toLowerCase();
   const phraseKnowledge = isPhrase ? getPhraseKnowledge(normalized) : undefined;
   const guide = isPhrase ? null : getLexicalGuide(normalized, lexicalContextFor(sentenceId));
-  const wordKnowledge = guide ? getWordKnowledge(guide.headword) : undefined;
+  const wordKnowledge = guide ? getWordKnowledge(guide.headword, lexicalContextFor(sentenceId)) : undefined;
   const key = phraseKnowledge
     ? `pattern:${phraseKnowledge.key}`
     : isPhrase
@@ -752,6 +753,7 @@ export default function StudyApp() {
   const sentences = activeArticle.sentences;
   const questions = activeArticle.questions;
   const translationTasks = activeArticle.translationTasks ?? [];
+  const isPassageTranslation = translationTasks.some((task) => task.format === "passage");
   const submitted = Boolean(submittedSections[activeSection]);
   const selectedTermSource = selectedTerm ? sourceById.get(selectedTerm.sentenceId) : undefined;
   // Building the complete vocabulary resolves every word and occurrence across
@@ -1522,7 +1524,7 @@ export default function StudyApp() {
     if (!selectedTerm || view !== "test") return false;
     if (revealTiming === "instant") return false;
     const submittedTranslationSentence = activeArticle.kind === "translation" && (activeArticle.translationTasks ?? []).some((task) => (
-      task.sentenceId === selectedTerm.sentenceId && submittedTranslationTasks[translationAnswerKey(activeArticle.id, task.id)]
+      translationTaskSentences(task).some((sentence) => sentence.id === selectedTerm.sentenceId) && submittedTranslationTasks[translationAnswerKey(activeArticle.id, task.id)]
     ));
     if (submitted || submittedTranslationSentence) return false;
     if (revealTiming === "sentence" && unlockedTerms.has(selectedTerm.key)) return false;
@@ -1730,14 +1732,16 @@ export default function StudyApp() {
                 <p><strong>模拟考场：</strong>{activeArticle.kind === "cloze"
                   ? `正文只保留真正的${questionNumberLabel(questions, "空")}，不再显示额外句子序号。点选项字母作答；词汇讲解按你的设置解锁。`
                   : activeArticle.kind === "translation"
-                    ? `逐句完成英译汉。提交本句后即可对照参考译文与完整句读，全部 ${translationTasks.length} 句提交后本篇完成。`
+                    ? isPassageTranslation
+                      ? "按原卷整篇完成英译汉，一次提交全文。提交后对照参考译文，并按需展开逐句解析；不作自动评分。"
+                      : `逐句完成英译汉。提交本句后即可对照参考译文与完整句读，全部 ${translationTasks.length} 句提交后本篇完成。`
                     : `先限时默读全文，再完成${questionNumberLabel(questions)}；不提前显示逐句讲解。点选项字母作答；词汇讲解按你的设置解锁。`}</p>
               </div>
 
               {activeArticle.kind === "translation" ? (
                 <section className="translation-test-section">
                   <div className="translation-test-heading">
-                    <div><span>英译汉</span><strong>{submittedTranslationCount}/{translationTasks.length} 句已提交</strong></div>
+                    <div><span>英译汉</span><strong>{submittedTranslationCount}/{translationTasks.length} {isPassageTranslation ? "题" : "句"}已提交</strong></div>
                     {submitted && <Badge className="score-badge">本篇已完成</Badge>}
                   </div>
                   <div className="translation-task-list">
@@ -2506,7 +2510,7 @@ function QuestionAnalysisPanel({
   );
 }
 
-function TranslationTestTask({
+export function TranslationTestTask({
   task,
   answer,
   submitted,
@@ -2523,9 +2527,20 @@ function TranslationTestTask({
 }) {
   return (
     <article className={`translation-task ${submitted ? "is-submitted" : ""}`}>
+      {task.format === "passage" && <p className="translation-task-prompt">{task.prompt}</p>}
       <div className="translation-task-source">
-        <span className="translation-task-number">{task.id}</span>
-        <p>{renderInteractiveText(task.source, task.analysis.phrases, task.sentenceId, onTerm, false)}</p>
+        <span className="translation-task-number">{task.number ?? task.id}</span>
+        <div className="translation-source-paragraphs">
+          {(task.format === "passage" ? task.paragraphs : [[task.analysis]]).map((paragraph) => (
+            <p key={paragraph[0].id}>
+              {paragraph.map((sentence, index) => (
+                <span key={sentence.id} data-sentence-id={sentence.id}>
+                  {index > 0 ? " " : ""}{renderInteractiveText(sentence.text, sentence.phrases, sentence.id, onTerm, false)}
+                </span>
+              ))}
+            </p>
+          ))}
+        </div>
       </div>
       <label className="translation-answer-label" htmlFor={`translation-answer-${task.id}`}>
         <span>我的译文</span>
@@ -2535,7 +2550,7 @@ function TranslationTestTask({
           onChange={(event) => onAnswer(event.target.value)}
           placeholder="输入你的中文译文……"
           disabled={submitted}
-          rows={3}
+          rows={task.format === "passage" ? 8 : 3}
         />
       </label>
       <div className="translation-task-actions">
@@ -2545,7 +2560,7 @@ function TranslationTestTask({
           onClick={onSubmit}
           disabled={!answer.trim() || submitted}
         >
-          <CircleCheck />{submitted ? "本句已提交" : "提交本句"}
+          <CircleCheck />{task.format === "passage" ? submitted ? "全文已提交" : "提交全文" : submitted ? "本句已提交" : "提交本句"}
         </Button>
       </div>
       {submitted && (
@@ -2559,40 +2574,42 @@ function TranslationTestTask({
             <p>{task.answer}</p>
           </div>
           <div className="translation-locating"><Layers3 /><p>{task.locating}</p></div>
-          <details className="translation-analysis" open>
-            <summary>查看完整句读 <ChevronDown /></summary>
+          {translationTaskSentences(task).map((analysis) => (
+          <details key={analysis.id} className="translation-analysis" open={task.format !== "passage"}>
+            <summary>{task.format === "passage" ? `第${analysis.number}句 · 查看句读` : "查看完整句读"} <ChevronDown /></summary>
             <div className="translation-analysis-body">
               <div className="question-colored-sentence">
-                {task.analysis.chunks.map((chunk, index) => (
-                  <span key={`${task.analysis.id}-translation-chunk-${index}`} className={roleClass(chunk.role)}>
-                    {renderInteractiveText(chunk.text, task.analysis.phrases, task.sentenceId, onTerm, true)}
+                {analysis.chunks.map((chunk, index) => (
+                  <span key={`${analysis.id}-translation-chunk-${index}`} className={roleClass(chunk.role)}>
+                    {renderInteractiveText(chunk.text, analysis.phrases, analysis.id, onTerm, true)}
                   </span>
                 ))}
               </div>
-              <BeginnerSyntaxPanel analysis={task.analysis} sentenceId={task.sentenceId} onTerm={onTerm} compact />
+              <BeginnerSyntaxPanel analysis={analysis} sentenceId={analysis.id} onTerm={onTerm} compact />
               <details className="advanced-analysis">
                 <summary>补充：原精审层级与语法规则 <ChevronDown /></summary>
                 <div className="question-analysis-columns">
                   <section>
                     <h4><Layers3 />逐层拆解</h4>
                     <ol className="question-layer-list">
-                      {task.analysis.layers.map((layer, index) => (
-                        <li key={`${task.analysis.id}-translation-layer-${index}`}><span>{index + 1}</span><p><strong>{layer.label}</strong>{renderWords(layer.text, task.sentenceId, onTerm, `${task.analysis.id}-translation-layer-${index}`)}</p></li>
+                      {analysis.layers.map((layer, index) => (
+                        <li key={`${analysis.id}-translation-layer-${index}`}><span>{index + 1}</span><p><strong>{layer.label}</strong>{renderWords(layer.text, analysis.id, onTerm, `${analysis.id}-translation-layer-${index}`)}</p></li>
                       ))}
                     </ol>
                   </section>
                   <section>
                     <h4><Sparkles />语法提醒</h4>
                     <ul className="question-grammar-list">
-                      {task.analysis.grammar.map((item, index) => <li key={`${task.analysis.id}-translation-grammar-${index}`}>{renderWords(item, task.sentenceId, onTerm, `${task.analysis.id}-translation-grammar-${index}`)}</li>)}
+                      {analysis.grammar.map((item, index) => <li key={`${analysis.id}-translation-grammar-${index}`}>{renderWords(item, analysis.id, onTerm, `${analysis.id}-translation-grammar-${index}`)}</li>)}
                     </ul>
                   </section>
                 </div>
               </details>
-              <div className="question-translation-block"><div><span>结构直译</span><p>{task.analysis.literal}</p></div><div><span>通顺译文</span><p>{task.analysis.natural}</p></div></div>
-              <div className="question-logic-note"><Brain /><p><strong>句间逻辑</strong>{renderWords(task.analysis.logic, task.sentenceId, onTerm, `${task.analysis.id}-translation-logic`)}</p></div>
+              <div className="question-translation-block"><div><span>结构直译</span><p>{analysis.literal}</p></div><div><span>通顺译文</span><p>{analysis.natural}</p></div></div>
+              <div className="question-logic-note"><Brain /><p><strong>句间逻辑</strong>{renderWords(analysis.logic, analysis.id, onTerm, `${analysis.id}-translation-logic`)}</p></div>
             </div>
           </details>
+          ))}
         </div>
       )}
     </article>

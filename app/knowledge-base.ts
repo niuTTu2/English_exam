@@ -1,3 +1,4 @@
+import { translation2010PhraseGuides, translation2010PhraseAliases, translation2010CollocationGlosses, getTranslation2010WordKnowledge } from "./2010-translation-knowledge";
 import { passage2010P5PhraseGuides, passage2010P5PhraseAliases, passage2010P5CollocationGlosses } from "./2010-passage-5-knowledge";
 import { passage2010P4PhraseGuides, passage2010P4PhraseAliases, passage2010P4CollocationGlosses } from "./2010-passage-4-knowledge";
 import { passage2010P3PhraseGuides, passage2010P3PhraseAliases, passage2010P3CollocationGlosses } from "./2010-passage-3-knowledge";
@@ -838,6 +839,13 @@ for (const [key, value] of Object.entries(passage2010P5CollocationGlosses)) {
   if (!collocationGlosses[key]) collocationGlosses[key] = value;
 }
 phraseGuides["almost-no-difference"].canonical = "make a/no difference";
+for (const [key, value] of Object.entries(translation2010PhraseGuides)) {
+  if (!phraseGuides[key] || key === "2010-p1-a-lack-of-demand") phraseGuides[key] = value;
+}
+Object.assign(phraseAliases, translation2010PhraseAliases);
+for (const [key, value] of Object.entries(translation2010CollocationGlosses)) {
+  if (!collocationGlosses[key]) collocationGlosses[key] = value;
+}
 phraseGuides["almost-no-difference"].meaning = "产生影响；不产生影响（取决于a/no）";
 phraseGuides["entitled-to-privacy"].meaning = "有权享有某项权利或利益";
 phraseGuides["entitled-to-privacy"].summary = "be entitled to + 权利或利益；既可表示有权享有隐私，也可表示有权接受同侪审判。";
@@ -866,7 +874,11 @@ export function getPhraseKnowledge(source: string): PhraseKnowledge | undefined 
   };
 }
 
-export function getWordKnowledge(headword: string) {
+export function getWordKnowledge(headword: string, context?: { articleId?: string; sentenceId?: string }) {
+  if (context?.articleId === "2010-translation") {
+    const contextualKnowledge = getTranslation2010WordKnowledge(normalized(headword), context.sentenceId);
+    if (contextualKnowledge) return contextualKnowledge;
+  }
   return wordKnowledge[normalized(headword)];
 }
 
@@ -893,6 +905,7 @@ export function getSynonymDetails(items: string[]): ReferenceDetail[] {
   return items
     .filter((item) => !item.startsWith("本词暂无") && !item.startsWith("结构词通常"))
     .map((item) => {
+      if (!/^[A-Za-z]/.test(item.trim())) return { label: "替换说明", meaning: item.trim() };
       const parsed = parseGlossedReference(item);
       const phrase = parsed.label.includes(" ");
       return {

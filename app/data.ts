@@ -1,3 +1,4 @@
+import { translation2010Sentences, translation2010Tasks } from "./2010-translation-data";
 import { passage2010P5Questions, passage2010P5Sentences } from "./2010-passage-5-data";
 import { passage2010P4Questions, passage2010P4Sentences } from "./2010-passage-4-data";
 import { passage2010P3Questions, passage2010P3Sentences } from "./2010-passage-3-data";
@@ -143,13 +144,20 @@ export function questionExplanation(question: AnyQuestion, key: QuestionOptionKe
 
 export type TranslationTask = {
   id: number;
+  number?: number;
   sentenceId: string;
   prompt: string;
   source: string;
   answer: string;
   locating: string;
-  analysis: SentenceAnalysis;
-};
+} & (
+  | { format?: "sentence"; analysis: SentenceAnalysis }
+  | { format: "passage"; points: number; paragraphs: SentenceAnalysis[][] }
+);
+
+export function translationTaskSentences(task: TranslationTask): SentenceAnalysis[] {
+  return task.format === "passage" ? task.paragraphs.flat() : [task.analysis];
+}
 
 export type ArticleContent = {
   id: string;
@@ -193,7 +201,7 @@ export const sectionsByYear = {
     { id: "2010-p3", label: "阅读 Text 3", meta: "16句 · 5题", status: "ready" },
     { id: "2010-p4", label: "阅读 Text 4", meta: "14句 · 5题", status: "ready" },
     { id: "2010-p5", label: "阅读 Part B", meta: "28句 · 5道判断题", status: "ready" },
-    { id: "2010-translation", label: "英译汉", meta: "待精审", status: "pending" },
+    { id: "2010-translation", label: "英译汉", meta: "10句 · 1题 · 15分", status: "ready" },
   ],
 } as const;
 
@@ -1238,7 +1246,9 @@ const verifiedPassage2Questions = passage2Questions.map(applyVerifiedQuestion);
 const verifiedPassage3Questions = passage3Questions.map(applyVerifiedQuestion);
 const verifiedPassage4Questions = passage4Questions.map(applyVerifiedQuestion);
 const verifiedPassage5Questions = passage5Questions.map(applyVerifiedQuestion);
-const verifiedTranslationTasks = translationTasks.map((task) => ({ ...task, analysis: applyVerifiedSyntax(task.analysis) }));
+const verifiedTranslationTasks = translationTasks.map((task) => task.format === "passage"
+  ? { ...task, paragraphs: task.paragraphs.map((paragraph) => paragraph.map(applyVerifiedSyntax)) }
+  : { ...task, analysis: applyVerifiedSyntax(task.analysis) });
 
 export const articleContents: Record<string, ArticleContent> = {
   cloze: {
@@ -1416,7 +1426,13 @@ export const articleContents: Record<string, ArticleContent> = {
     description: "模仿鸟类可能节省飞机燃油：从上洗气流、模型节能效果到安全、天气与调度约束，辨别可能性、确定性与未经证实的报道。原卷41—45题为T/F判断题。",
     kind: "reading", sentences: passage2010P5Sentences, questions: passage2010P5Questions,
   },
+  "2010-translation": {
+    id: "2010-translation", year: 2010, sectionId: "translation", label: "英译汉", badge: "2010 · 英译汉",
+    title: "可持续的生活与个人选择",
+    description: "第46题，15分。保留原卷三段整篇作答，提交后对照参考译文，并逐句理解动名词主语、形式宾语、结果从句和习语。参考译文用于学习，不作自动评分。",
+    kind: "translation", sentences: translation2010Sentences, questions: [], translationTasks: translation2010Tasks,
+  },
 };
 
-export const allSentences = [...verifiedClozeSentences, ...verifiedPassage1Sentences, ...verifiedPassage2Sentences, ...verifiedPassage3Sentences, ...verifiedPassage4Sentences, ...verifiedPassage5Sentences, ...verifiedTranslationSentences, ...cloze2001Sentences, ...passage2001P1Sentences, ...passage2001P2Sentences, ...cloze2010Sentences, ...passage2010P1Sentences, ...passage2010P2Sentences, ...passage2010P3Sentences, ...passage2010P4Sentences, ...passage2010P5Sentences];
+export const allSentences = [...verifiedClozeSentences, ...verifiedPassage1Sentences, ...verifiedPassage2Sentences, ...verifiedPassage3Sentences, ...verifiedPassage4Sentences, ...verifiedPassage5Sentences, ...verifiedTranslationSentences, ...cloze2001Sentences, ...passage2001P1Sentences, ...passage2001P2Sentences, ...cloze2010Sentences, ...passage2010P1Sentences, ...passage2010P2Sentences, ...passage2010P3Sentences, ...passage2010P4Sentences, ...passage2010P5Sentences, ...translation2010Sentences];
 export const allQuestions = [...verifiedClozeQuestions, ...verifiedPassage1Questions, ...verifiedPassage2Questions, ...verifiedPassage3Questions, ...verifiedPassage4Questions, ...verifiedPassage5Questions, ...cloze2001Questions, ...passage2001P1Questions, ...passage2001P2Questions, ...cloze2010Questions, ...passage2010P1Questions, ...passage2010P2Questions, ...passage2010P3Questions, ...passage2010P4Questions, ...passage2010P5Questions];

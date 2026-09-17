@@ -76,6 +76,33 @@ test("emits chart themes for the starter's media dark mode", async () => {
   assert.doesNotMatch(html, /\.dark/);
 });
 
+test("整篇翻译只出现一个原题输入框，提交后保留十句折叠解析", async () => {
+  const { TranslationTestTask } = await vite.ssrLoadModule("/app/study-app.tsx");
+  const { articleContents } = await vite.ssrLoadModule("/app/data.ts");
+  const task = articleContents["2010-translation"].translationTasks[0];
+  const props = { task, answer: "第一段译文\n\n第二段译文\n\n第三段译文", onAnswer() {}, onSubmit() {}, onTerm() {} };
+  const pending = renderToStaticMarkup(React.createElement(TranslationTestTask, { ...props, submitted: false }));
+  assert.equal((pending.match(/<textarea/g) ?? []).length, 1);
+  assert.match(pending, /translation-task-number">46</);
+  assert.match(pending, /rows="8"/);
+  assert.match(pending, /15分/);
+  assert.match(pending, /提交全文/);
+  assert.doesNotMatch(pending, /class="translation-result"/);
+  assert.equal((pending.match(/data-sentence-id="2010-translation-s\d+"/g) ?? []).length, 10);
+  assert.equal((pending.match(/<p><span data-sentence-id/g) ?? []).length, 3);
+  const submitted = renderToStaticMarkup(React.createElement(TranslationTestTask, { ...props, submitted: true }));
+  assert.match(submitted, /全文已提交/);
+  assert.match(submitted, /参考译文/);
+  assert.equal((submitted.match(/<details class="translation-analysis"/g) ?? []).length, 10);
+  assert.doesNotMatch(submitted, /<details class="translation-analysis" open/);
+  assert.match(submitted, /第10句 · 查看句读/);
+  const sentenceTask = articleContents.translation.translationTasks[0];
+  const legacy = renderToStaticMarkup(React.createElement(TranslationTestTask, { ...props, task: sentenceTask, submitted: true }));
+  assert.match(legacy, /本句已提交/);
+  assert.match(legacy, /rows="3"/);
+  assert.equal((legacy.match(/<details class="translation-analysis" open/g) ?? []).length, 1);
+});
+
 test("renders sidebar skeletons deterministically", async () => {
   const { SidebarMenuSkeleton } = await vite.ssrLoadModule(
     "/components/ui/sidebar.tsx",
