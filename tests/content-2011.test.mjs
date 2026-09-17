@@ -15,6 +15,29 @@ const study = await vite.ssrLoadModule("/app/study-app.tsx");
 const normalize = value => value.replace(/\s+/g, " ").replace(/\s+([,.;?!])/g, "$1").trim();
 const cloze = data.articleContents["2011-cloze"];
 
+test("2011Text3七段17句及31—35原题完整，比较与否定准确", () => {
+  checkReadingSource("2011-p3", 31, 17, answers.verifiedAnswerKey2011Passage3);
+  const article = data.articleContents["2011-p3"];
+  assert.equal(article.sentences[8].beginnerSyntax.clauses.length, 2);
+  assert.match(article.sentences[8].beginnerSyntax.clauses[0].objectOrComplement, /材料|that/);
+  assert.match(article.sentences[8].beginnerSyntax.clauses[1].subject, /that/);
+  assert.match(article.sentences[10].natural, /公寓更小/);
+  assert.match(article.sentences[12].text, /not entirely foreign/);
+  assert.match(article.sentences[16].natural, /并未普及/);
+  assert.match(article.sentences[16].natural, /多数/);
+  assert.equal(lexicon.canonicalLemma("means", { articleId: "2011-p3" }), "mean");
+  assert.equal(lexicon.canonicalLemma("buildings", { articleId: "2011-p3" }), "building");
+  assert.equal(lexicon.canonicalLemma("building", { articleId: "2011-p3", sentenceId: "2011-p3-s14" }), "build");
+  assert.equal(lexicon.canonicalLemma("founded", { articleId: "2011-p3" }), "found");
+  assert.match(study.resolveEntry("I", false, "2011-p3-s1").contextualMeaning, /缩写/);
+  assert.match(study.resolveEntry("commissioned", false, "2011-p3-s15").contextualMeaning, /委托/);
+  assert.match(study.resolveEntry("Commission", false, "2011-p2-s5").contextualMeaning, /委员会/);
+  assert.equal(knowledge.getPhraseKnowledge("both desirable and inevitable").key, "both-a-and-b");
+  const replacement = study.resolveEntry("derive", false, "2011-p3-s8").contextualSubstitutions[0];
+  assert.equal(replacement.target, "word:stem");
+  assert.ok(study.resolveEntry("stem", false).contextualMeaning);
+});
+
 test("2011全部正文、题干与选项在真实来源语境下没有空白词卡", () => {
   for (const article of Object.values(data.articleContents).filter(article => article.year === 2011)) {
     const sources = [

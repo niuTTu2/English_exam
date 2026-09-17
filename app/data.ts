@@ -1,3 +1,4 @@
+import { passage2011P3Sentences, passage2011P3Questions } from "./2011-passage-3-data";
 import { passage2011P2Sentences, passage2011P2Questions } from "./2011-passage-2-data";
 import { passage2011P1Sentences, passage2011P1Questions } from "./2011-passage-1-data";
 import { cloze2011Sentences, cloze2011Questions } from "./2011-cloze-data";
@@ -210,6 +211,7 @@ export const sectionsByYear = {
     { id: "2011-cloze", label: "完形填空", meta: "16句 · 20题", status: "ready" },
     { id: "2011-p1", label: "阅读 Text 1", meta: "19句 · 5题", status: "ready" },
     { id: "2011-p2", label: "阅读 Text 2", meta: "30句 · 5题", status: "ready" },
+    { id: "2011-p3", label: "阅读 Text 3", meta: "17句 · 5题", status: "ready" },
   ],
   2010: [
     { id: "2010-cloze", label: "完形填空", meta: "13句 · 20题", status: "ready" },
@@ -1464,7 +1466,11 @@ export const articleContents: Record<string, ArticleContent> = {
     id: "2011-p2", year: 2011, sectionId: "p2", label: "阅读 Text 2", badge: "2011 · 英语二 · Text 2", title: "报业的艰难求生与独特价值",
     description: "第26—30题，五段30句。保留反问、残句和倒装，理解报业复苏的成本、收入结构比较与差异化经营。", kind: "reading", sentences: passage2011P2Sentences, questions: passage2011P2Questions,
   },
+  "2011-p3": {
+    id: "2011-p3", year: 2011, sectionId: "p3", label: "阅读 Text 3", badge: "2011 · 英语二 · Text 3", title: "少即是多：战后住宅的节制与优雅",
+    description: "第31—35题，七段17句。理解住宅设计理念、比较省略、部分否定、材料与抽象艺术的关系。", kind: "reading", sentences: passage2011P3Sentences, questions: passage2011P3Questions,
+  },
 };
 
-export const allSentences = [...verifiedClozeSentences, ...verifiedPassage1Sentences, ...verifiedPassage2Sentences, ...verifiedPassage3Sentences, ...verifiedPassage4Sentences, ...verifiedPassage5Sentences, ...verifiedTranslationSentences, ...cloze2001Sentences, ...passage2001P1Sentences, ...passage2001P2Sentences, ...cloze2010Sentences, ...passage2010P1Sentences, ...passage2010P2Sentences, ...passage2010P3Sentences, ...passage2010P4Sentences, ...passage2010P5Sentences, ...translation2010Sentences, ...cloze2011Sentences, ...passage2011P1Sentences, ...passage2011P2Sentences];
-export const allQuestions = [...verifiedClozeQuestions, ...verifiedPassage1Questions, ...verifiedPassage2Questions, ...verifiedPassage3Questions, ...verifiedPassage4Questions, ...verifiedPassage5Questions, ...cloze2001Questions, ...passage2001P1Questions, ...passage2001P2Questions, ...cloze2010Questions, ...passage2010P1Questions, ...passage2010P2Questions, ...passage2010P3Questions, ...passage2010P4Questions, ...passage2010P5Questions, ...cloze2011Questions, ...passage2011P1Questions, ...passage2011P2Questions];
+export const allSentences = [...verifiedClozeSentences, ...verifiedPassage1Sentences, ...verifiedPassage2Sentences, ...verifiedPassage3Sentences, ...verifiedPassage4Sentences, ...verifiedPassage5Sentences, ...verifiedTranslationSentences, ...cloze2001Sentences, ...passage2001P1Sentences, ...passage2001P2Sentences, ...cloze2010Sentences, ...passage2010P1Sentences, ...passage2010P2Sentences, ...passage2010P3Sentences, ...passage2010P4Sentences, ...passage2010P5Sentences, ...translation2010Sentences, ...cloze2011Sentences, ...passage2011P1Sentences, ...passage2011P2Sentences, ...passage2011P3Sentences];
+export const allQuestions = [...verifiedClozeQuestions, ...verifiedPassage1Questions, ...verifiedPassage2Questions, ...verifiedPassage3Questions, ...verifiedPassage4Questions, ...verifiedPassage5Questions, ...cloze2001Questions, ...passage2001P1Questions, ...passage2001P2Questions, ...cloze2010Questions, ...passage2010P1Questions, ...passage2010P2Questions, ...passage2010P3Questions, ...passage2010P4Questions, ...passage2010P5Questions, ...cloze2011Questions, ...passage2011P1Questions, ...passage2011P2Questions, ...passage2011P3Questions];

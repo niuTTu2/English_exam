@@ -1,3 +1,8 @@
+export const verifiedAnswerKey2011Passage3: Record<number, "A" | "B" | "C" | "D"> = { 31: "C", 32: "D", 33: "C", 34: "D", 35: "B" };
+export const verifiedAnswerSources2011Passage3 = [
+  { range: "31—35：C D C D B；依据原卷逐项定位", label: "中国教育在线 / 2011英语二试题阅卷标准答案（2011-02-15）", url: "https://kaoyan.eol.cn/fu_xi/yingyu/201102/t20110215_577179.shtml" },
+];
+
 export const verifiedAnswerKey2011Passage2: Record<number, "A" | "B" | "C" | "D"> = { 26: "D", 27: "B", 28: "C", 29: "A", 30: "A" };
 export const verifiedAnswerSources2011Passage2 = [
   { range: "26—30：D B C A A；原卷定位与每个选项命题逐项核对", label: "中国教育在线 / 2011英语二试题阅卷标准答案（2011-02-15）", url: "https://kaoyan.eol.cn/fu_xi/yingyu/201102/t20110215_577179.shtml" },
