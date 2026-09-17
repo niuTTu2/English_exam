@@ -4,6 +4,7 @@ import { translation2012Sentences, translation2012Tasks } from "./2012-translati
 import { passage2012P5Sentences, passage2012P5Questions } from "./2012-passage-5-data";
 import { passage2012P4Sentences, passage2012P4Questions } from "./2012-passage-4-data";
 import { passage2012P3Sentences, passage2012P3Questions } from "./2012-passage-3-data";
+import { passage2012P2Sentences, passage2012P2Questions } from "./2012-passage-2-data";
 import { passage2012P1Sentences, passage2012P1Questions } from "./2012-passage-1-data";
 import { cloze2012Sentences, cloze2012Questions } from "./2012-cloze-data";
 import { writing2011BSentences, writing2011BTasks } from "./2011-writing-b-data";
@@ -256,6 +257,7 @@ export const sectionsByYear = {
   2012: [
     { id: "2012-cloze", label: "完形填空", meta: "16句 · 20题", status: "ready" },
     { id: "2012-p1", label: "阅读 Text 1", meta: "18句 · 5题", status: "ready" },
+    { id: "2012-p2", label: "阅读 Text 2", meta: "18句 · 5题", status: "ready" },
     { id: "2012-p3", label: "阅读 Text 3", meta: "24句 · 5题", status: "ready" },
     { id: "2012-p4", label: "阅读 Text 4", meta: "18句 · 5题", status: "ready" },
     { id: "2012-p5", label: "阅读 Part B", meta: "28句 · 5题", status: "ready" },
@@ -1561,6 +1563,11 @@ export const articleContents: Record<string, ArticleContent> = {
     title: "家庭作业：一刀切计分政策的缺陷", description: "18句、21—25题。区分作业数量、计分权重与教育价值；保留四项解析、双层翻译、句法和熟词多义。",
     kind: "reading", sentences: passage2012P1Sentences, questions: passage2012P1Questions,
   },
+  "2012-p2": {
+    id: "2012-p2", year: 2012, sectionId: "p2", label: "阅读 Text 2", badge: "2012 · 英语二 · 阅读 Text 2",
+    title: "粉色文化：被营销塑造的女孩身份", description: "18句、26—30题。核对粉色的历史性别含义、儿童营销与市场细分；保留原卷异常并列形式、四项解析、双层翻译、句法和多义词语境。",
+    kind: "reading", sentences: passage2012P2Sentences, questions: passage2012P2Questions,
+  },
   "2012-p3": {
     id: "2012-p3", year: 2012, sectionId: "p3", label: "阅读 Text 3", badge: "2012 · 英语二 · 阅读 Text 3",
     title: "基因专利：自然产物、创新与法律争议", description: "24句、31—35题。按文章历史时点理解判决与未决问题，区分作者、企业与批评者；保留自然产物类比、倒装比较和多义词卡。",
@@ -1593,5 +1600,5 @@ export const articleContents: Record<string, ArticleContent> = {
   },
 };
 
-export const allSentences = [...verifiedClozeSentences, ...verifiedPassage1Sentences, ...verifiedPassage2Sentences, ...verifiedPassage3Sentences, ...verifiedPassage4Sentences, ...verifiedPassage5Sentences, ...verifiedTranslationSentences, ...cloze2001Sentences, ...passage2001P1Sentences, ...passage2001P2Sentences, ...cloze2010Sentences, ...passage2010P1Sentences, ...passage2010P2Sentences, ...passage2010P3Sentences, ...passage2010P4Sentences, ...passage2010P5Sentences, ...translation2010Sentences, ...cloze2011Sentences, ...passage2011P1Sentences, ...passage2011P2Sentences, ...passage2011P3Sentences, ...passage2011P4Sentences, ...passage2011P5Sentences, ...translation2011Sentences, ...writing2011ASentences, ...writing2011BSentences, ...cloze2012Sentences, ...passage2012P1Sentences, ...passage2012P3Sentences, ...passage2012P4Sentences, ...passage2012P5Sentences, ...translation2012Sentences, ...writing2012ASentences, ...writing2012BSentences];
-export const allQuestions = [...verifiedClozeQuestions, ...verifiedPassage1Questions, ...verifiedPassage2Questions, ...verifiedPassage3Questions, ...verifiedPassage4Questions, ...verifiedPassage5Questions, ...cloze2001Questions, ...passage2001P1Questions, ...passage2001P2Questions, ...cloze2010Questions, ...passage2010P1Questions, ...passage2010P2Questions, ...passage2010P3Questions, ...passage2010P4Questions, ...passage2010P5Questions, ...cloze2011Questions, ...passage2011P1Questions, ...passage2011P2Questions, ...passage2011P3Questions, ...passage2011P4Questions, ...passage2011P5Questions, ...cloze2012Questions, ...passage2012P1Questions, ...passage2012P3Questions, ...passage2012P4Questions, ...passage2012P5Questions];
+export const allSentences = [...verifiedClozeSentences, ...verifiedPassage1Sentences, ...verifiedPassage2Sentences, ...verifiedPassage3Sentences, ...verifiedPassage4Sentences, ...verifiedPassage5Sentences, ...verifiedTranslationSentences, ...cloze2001Sentences, ...passage2001P1Sentences, ...passage2001P2Sentences, ...cloze2010Sentences, ...passage2010P1Sentences, ...passage2010P2Sentences, ...passage2010P3Sentences, ...passage2010P4Sentences, ...passage2010P5Sentences, ...translation2010Sentences, ...cloze2011Sentences, ...passage2011P1Sentences, ...passage2011P2Sentences, ...passage2011P3Sentences, ...passage2011P4Sentences, ...passage2011P5Sentences, ...translation2011Sentences, ...writing2011ASentences, ...writing2011BSentences, ...cloze2012Sentences, ...passage2012P1Sentences, ...passage2012P2Sentences, ...passage2012P3Sentences, ...passage2012P4Sentences, ...passage2012P5Sentences, ...translation2012Sentences, ...writing2012ASentences, ...writing2012BSentences];
+export const allQuestions = [...verifiedClozeQuestions, ...verifiedPassage1Questions, ...verifiedPassage2Questions, ...verifiedPassage3Questions, ...verifiedPassage4Questions, ...verifiedPassage5Questions, ...cloze2001Questions, ...passage2001P1Questions, ...passage2001P2Questions, ...cloze2010Questions, ...passage2010P1Questions, ...passage2010P2Questions, ...passage2010P3Questions, ...passage2010P4Questions, ...passage2010P5Questions, ...cloze2011Questions, ...passage2011P1Questions, ...passage2011P2Questions, ...passage2011P3Questions, ...passage2011P4Questions, ...passage2011P5Questions, ...cloze2012Questions, ...passage2012P1Questions, ...passage2012P2Questions, ...passage2012P3Questions, ...passage2012P4Questions, ...passage2012P5Questions];

@@ -40,4 +40,8 @@
 | 部署目标门禁 | `node --test tests/deploy-guard.test.mjs`与`node scripts/deploy-cloudflare.mjs --check` | 3/3通过；目标为`english-exam / zhenti-judu-prod`，检查未连接数据库或发布 |
 | 差异与范围 | `git diff --check`（入口修复提交前） | 通过 |
 
-下一步：若要让`english.onehjt.dpdns.org`同步主站版本，需要拥有Cloudflare账户路由或发布令牌的维护者将该域名路由到当前`english-exam` Worker，或在具备`CLOUDFLARE_API_TOKEN`的受控发布环境执行既有发布流程；不要通过改写试题内容、迁移数据库或绕过发布门禁来解决。Text 2只有拿到含完整并列对象的用户原卷后才能继续精审。
+下一步：若要让`english.onehjt.dpdns.org`同步主站版本，需要拥有Cloudflare账户路由或发布令牌的维护者将该域名路由到当前`english-exam` Worker，或在具备`CLOUDFLARE_API_TOKEN`的受控发布环境执行既有发布流程；不要通过改写试题内容、迁移数据库或绕过发布门禁来解决。
+
+## Text 2 后续状态（2026-09-17）
+
+本报告第1—42行记录的是`d7ea00e`时八模块主站的历史只读验收，不应被改写为九模块已上线。随后，Text 2（26—30）已依据用户原卷第145—148段与149—173题完成本地精审：第145段的`between girls as not only innocent but as evidence of innocence`与公开真题转录互证后原样保留，并不补写猜测对象；答案按用户原卷选项顺序核验为C/B/B/A/C。该篇在独立提交、推送和实际匿名只读页面复核前，部署状态仍为未核验；详见`docs/change-reports/2012-passage-2.md`。

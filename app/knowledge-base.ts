@@ -4,6 +4,7 @@ import { translation2012PhraseGuides, translation2012PhraseAliases, translation2
 import { passage2012P5PhraseGuides, passage2012P5PhraseAliases, passage2012P5PhraseGlosses, getPassage2012P5WordKnowledge } from "./2012-passage-5-knowledge";
 import { passage2012P4PhraseGuides, passage2012P4PhraseAliases, passage2012P4PhraseGlosses, getPassage2012P4WordKnowledge } from "./2012-passage-4-knowledge";
 import { passage2012P3PhraseGuides, passage2012P3PhraseAliases, passage2012P3PhraseGlosses, getPassage2012P3WordKnowledge } from "./2012-passage-3-knowledge";
+import { passage2012P2PhraseGuides, passage2012P2PhraseAliases, passage2012P2PhraseGlosses, getPassage2012P2WordKnowledge } from "./2012-passage-2-knowledge";
 import { passage2012P1PhraseGuides, passage2012P1PhraseAliases, passage2012P1PhraseGlosses, getPassage2012P1WordKnowledge } from "./2012-passage-1-knowledge";
 import { cloze2012PhraseGuides, cloze2012PhraseAliases, cloze2012PhraseGlosses, getCloze2012WordKnowledge } from "./2012-cloze-knowledge";
 import { writing2011BPhraseGuides, writing2011BPhraseAliases, writing2011BPhraseGlosses, getWriting2011BWordKnowledge } from "./2011-writing-b-knowledge";
@@ -888,6 +889,14 @@ for (const [key, value] of Object.entries(passage2012P1PhraseGlosses)) {
   if (!collocationGlosses[key]) collocationGlosses[key] = value;
 }
 
+for (const [key, value] of Object.entries(passage2012P2PhraseGuides)) {
+  if (!phraseGuides[key]) phraseGuides[key] = value;
+}
+Object.assign(phraseAliases, passage2012P2PhraseAliases);
+for (const [key, value] of Object.entries(passage2012P2PhraseGlosses)) {
+  if (!collocationGlosses[key]) collocationGlosses[key] = value;
+}
+
 for (const [key, value] of Object.entries(passage2012P3PhraseGuides)) {
   if (!phraseGuides[key]) phraseGuides[key] = value;
 }
@@ -1070,6 +1079,10 @@ export function getWordKnowledge(headword: string, context?: { articleId?: strin
   }
   if (context?.articleId === "2012-p1") {
     const contextualKnowledge = getPassage2012P1WordKnowledge(normalized(headword), context.sentenceId);
+    if (contextualKnowledge) return contextualKnowledge;
+  }
+  if (context?.articleId === "2012-p2") {
+    const contextualKnowledge = getPassage2012P2WordKnowledge(normalized(headword), context.sentenceId);
     if (contextualKnowledge) return contextualKnowledge;
   }
   if (context?.articleId === "2012-p3") {

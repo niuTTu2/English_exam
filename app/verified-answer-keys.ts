@@ -1,3 +1,8 @@
+export const verifiedAnswerKey2012Passage2: Record<number, "A" | "B" | "C" | "D"> = { 26: "C", 27: "B", 28: "B", 29: "A", 30: "C" };
+export const verifiedAnswerSources2012Passage2 = [
+  { range: "26—30：C B B A C；答案字母按用户原卷的 A—D 选项顺序核对。部分第三方转载重排选项，不能直接抄用其字母。", label: "哈尔滨工程大学网站所载《2012年英语（二）试题解析》Text 2解析（教学参考，非官方阅卷标准）", url: "https://zyxw.hrbeu.edu.cn/__local/B/D4/EA/811048CF9A6D978F3D55818782D_15D0DB51_FF24B.pdf" },
+];
+
 export const verifiedAnswerKey2012Passage5: Record<number, "A" | "B" | "C" | "D" | "E" | "F" | "G"> = { 41: "A", 42: "F", 43: "G", 44: "C", 45: "E" };
 export const verifiedAnswerSources2012Passage5 = [
   { range: "Part B 41—45：A F G C E；42题F按成功领袖技能与rather than virtue定位，非网页误列D", label: "哈尔滨工程大学网站所载《2012年英语（二）试题解析》新题型解析（教学参考）", url: "https://zyxw.hrbeu.edu.cn/__local/B/D4/EA/811048CF9A6D978F3D55818782D_15D0DB51_FF24B.pdf" },

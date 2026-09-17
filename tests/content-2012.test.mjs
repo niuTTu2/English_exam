@@ -142,15 +142,14 @@ test("2012满意度作文保留九格数据与原图，不套用年份轴", () =
   assert.equal(knowledge.getPhraseKnowledge("at least 150 words").key, "p5-collocation-at-least");
 });
 
-test("2012已核验八模块完整索引且不伪装缺字Text2已完成", () => {
-  assert.deepEqual(articles.map(article => article.id), ["2012-cloze", "2012-p1", "2012-p3", "2012-p4", "2012-p5", "2012-translation", "2012-writing-a", "2012-writing-b"]);
-  assert.equal(articles.reduce((count, article) => count + article.sentences.length, 0), 120);
-  assert.equal(articles.reduce((count, article) => count + article.questions.length, 0), 40);
+test("2012已核验九模块完整索引且Text2按原卷异文保留", () => {
+  assert.deepEqual(articles.map(article => article.id), ["2012-cloze", "2012-p1", "2012-p2", "2012-p3", "2012-p4", "2012-p5", "2012-translation", "2012-writing-a", "2012-writing-b"]);
+  assert.equal(articles.reduce((count, article) => count + article.sentences.length, 0), 138);
+  assert.equal(articles.reduce((count, article) => count + article.questions.length, 0), 45);
   const tasks = articles.flatMap(article => [...article.questions, ...(article.translationTasks ?? []), ...(article.writingTasks ?? [])]);
-  const expected = Array.from({ length: 48 }, (_, index) => index + 1).filter(number => number < 26 || number > 30);
+  const expected = Array.from({ length: 48 }, (_, index) => index + 1);
   assert.deepEqual(tasks.map(task => task.number), expected);
-  assert.equal(new Set(tasks.map(task => task.id)).size, 43);
-  assert.equal(data.articleContents["2012-p2"], undefined);
+  assert.equal(new Set(tasks.map(task => task.id)).size, 48);
 });
 
 function checkReadingSource(id, startNumber, sentenceCount, key) {
@@ -183,6 +182,21 @@ test("2012Text1原卷、政策限定与嵌套从句准确", () => {
   assert.match(study.resolveEntry("questioned", false, "question-201213-option-D").partOfSpeech, /v/);
   assert.match(study.resolveEntry("questions", false, "2012-p1-s13").partOfSpeech, /n/);
   assert.match(study.resolveEntry("articles", false, "2012-cloze-s5").contextualMeaning, /物品/);
+});
+
+test("2012Text2原卷异文、营销论证与答案字母准确", () => {
+  checkReadingSource("2012-p2", 26, 18, answers.verifiedAnswerKey2012Passage2);
+  const article = data.articleContents["2012-p2"];
+  assert.match(article.sentences[2].text, /between girls as not only innocent/);
+  assert.match(article.sentences[2].logic, /原卷搭配异常/);
+  assert.equal(article.sentences[9].beginnerSyntax.clauses.length, 4);
+  assert.match(article.sentences[9].natural, /直到.*才/);
+  assert.match(article.questions[3].explanations.A, /细分/);
+  assert.match(article.questions[4].explanations.C, /逐利/);
+  for (const [token, number, meaning] of [["singular", 4, /异常突出|极其/], ["considered", 8, /被认为/], ["own", 10, /自身应有/], ["dictated", 11, /强力左右/], ["Take", 12, /以.*例/], ["wear", 15, /服装/], ["magnify", 18, /夸大|强化/]]) assert.match(study.resolveEntry(token, false, `2012-p2-s${number}`).contextualMeaning, meaning);
+  assert.equal(lexicon.canonicalLemma("women", { articleId: "2012-p2" }), "woman");
+  assert.equal(lexicon.canonicalLemma("businessmen", { articleId: "2012-p2" }), "businessman");
+  assert.ok(answers.verifiedAnswerSources2012Passage2.some(source => source.url.includes("hrbeu.edu.cn")));
 });
 
 test("2012Text3保留历史时点、三个论点与倒装比较", () => {
