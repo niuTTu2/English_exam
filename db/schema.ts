@@ -1,4 +1,4 @@
-import { integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
+import { integer, primaryKey, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 
 export const users = sqliteTable(
   "users",
@@ -36,6 +36,13 @@ export const studyStates = sqliteTable("study_states", {
   payload: text("payload").notNull().default("{}"),
   updatedAt: integer("updated_at").notNull(),
 });
+
+export const studyStateBackups = sqliteTable("study_state_backups", {
+  userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  updatedAt: integer("updated_at").notNull(),
+  payload: text("payload").notNull(),
+  archivedAt: integer("archived_at").notNull(),
+}, (table) => [primaryKey({ columns: [table.userId, table.updatedAt] })]);
 
 export const userPasswords = sqliteTable("user_passwords", {
   userId: text("user_id").primaryKey().references(() => users.id, { onDelete: "cascade" }),

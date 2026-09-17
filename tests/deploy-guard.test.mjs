@@ -1,9 +1,19 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
+import { readFile } from "node:fs/promises";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
+
+test("the guarded production path installs backup protection before deploying the worker", async () => {
+  const source = await readFile(new URL("../scripts/deploy-cloudflare.mjs", import.meta.url), "utf8");
+  const passwordMigration = source.indexOf('"drizzle/0001_password_login.sql"');
+  const backupMigration = source.indexOf('"drizzle/0002_study_state_backups.sql"');
+  const deploy = source.indexOf('["deploy", "--config", configPath]');
+  assert.ok(passwordMigration > 0 && backupMigration > passwordMigration && deploy > backupMigration);
+  assert.match(source, /if \(result.error \|\| result.status !== 0\)/);
+});
 
 test("automatic migration skips local, unrelated CI and non-production branches before accessing any target", () => {
   for (const variables of [

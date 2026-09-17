@@ -36,9 +36,9 @@ const runtime = new Miniflare({
 });
 after(() => runtime.dispose());
 const database = await runtime.getD1Database("DB");
-for (const filename of ["0000_serious_galactus.sql", "0001_password_login.sql"]) {
+for (const filename of ["0000_serious_galactus.sql", "0001_password_login.sql", "0002_study_state_backups.sql"]) {
   const migration = await readFile(new URL(`../drizzle/${filename}`, import.meta.url), "utf8");
-  for (const statement of migration.replaceAll("--> statement-breakpoint", "").split(";").filter((value) => value.trim())) {
+  for (const statement of migration.split("--> statement-breakpoint").filter((value) => value.trim())) {
     await database.prepare(statement).run();
   }
 }
@@ -67,6 +67,123 @@ function request(path, method = "GET", payload, cookie, origin = "https://study.
 function savePassword(user, password = passphrase, extra = {}) {
   return request("/api/auth/password", "PUT", { password, confirmation: password, ...extra }, user.cookie);
 }
+
+test("legacy unversioned clients cannot overwrite existing cloud records", async () => {
+  const user = await seedUser("blank-overwrite");
+  const original = JSON.stringify({ version: 1, updatedAt: 123, termNotes: { context: "不能丢失" } });
+  await database.prepare("INSERT INTO study_states(user_id,payload,updated_at) VALUES (?,?,?)").bind(user.userId, original, 123).run();
+  const response = await request("/api/study-state", "PUT", { state: { version: 1, updatedAt: 999, termNotes: {} } }, user.cookie);
+  assert.equal(response.status, 428);
+  const saved = await database.prepare("SELECT payload FROM study_states WHERE user_id = ?").bind(user.userId).first();
+  assert.equal(saved.payload, original);
+});
+
+const studySnapshot = (extra = {}) => ({ version: 1, updatedAt: 0, termNotes: {}, answers: {}, ...extra });
+
+async function writeStudy(user, state, expectedUpdatedAt = null, extra = {}) {
+  return request("/api/study-state", "PUT", { state, expectedUpdatedAt, accountEmail: user.email, ...extra }, user.cookie);
+}
+
+test("study reads identify the account and writes use a monotonically increasing server revision", async () => {
+  const user = await seedUser("study-version");
+  const initial = await request("/api/study-state", "GET", undefined, user.cookie);
+  assert.equal(initial.headers.get("Cache-Control"), "no-store");
+  assert.deepEqual(await initial.json(), { state: null, updatedAt: null, accountEmail: user.email });
+  const state = studySnapshot({ termNotes: { original: "云端笔记" }, updatedAt: 9999999999999 });
+  const first = await writeStudy(user, state);
+  assert.equal(first.status, 200);
+  const revision = (await first.json()).updatedAt;
+  assert.ok(revision < state.updatedAt, "客户端时钟不能决定云端版本");
+  const saved = await (await request("/api/study-state", "GET", undefined, user.cookie)).json();
+  assert.deepEqual(saved.state, state);
+  assert.equal(saved.updatedAt, revision);
+  assert.equal(saved.accountEmail, user.email);
+  const next = await writeStudy(user, studySnapshot({ termNotes: { original: "合法改写" } }), revision);
+  assert.equal(next.status, 200);
+  assert.ok((await next.json()).updatedAt > revision);
+  assert.equal((await writeStudy(user, state, revision)).status, 409);
+  assert.equal((await writeStudy(user, state, null)).status, 409);
+});
+
+test("empty, invalid, oversized and wrong-account updates never change existing records", async () => {
+  const user = await seedUser("study-validation");
+  const state = studySnapshot({ termNotes: { word: "重要笔记" } });
+  const revision = (await (await writeStudy(user, state)).json()).updatedAt;
+  assert.equal((await writeStudy(user, studySnapshot(), revision)).status, 409);
+  for (const invalid of [null, [], {}, { ...state, answers: { 21: [] } }, { ...state, updatedAt: -1 }]) assert.equal((await writeStudy(user, invalid, revision)).status, 400);
+  assert.equal((await writeStudy(user, state, revision, { accountEmail: "other@example.test" })).status, 409);
+  assert.equal((await writeStudy(user, studySnapshot({ termNotes: { big: "x".repeat(500_001) } }), revision)).status, 413);
+  assert.equal((await request("/api/study-state", "PUT", "{bad", user.cookie)).status, 400);
+  assert.equal((await request("/api/study-state", "PUT", {}, user.cookie, "https://attacker.test")).status, 403);
+  assert.equal((await request("/api/study-state", "PUT", {})).status, 401);
+  assert.deepEqual((await (await request("/api/study-state", "GET", undefined, user.cookie)).json()).state, state);
+});
+
+test("concurrent devices can neither overwrite a changed version nor both create the initial row", async () => {
+  const user = await seedUser("study-concurrent");
+  const states = [studySnapshot({ answers: { 21: "A" } }), studySnapshot({ answers: { 21: "B" } })];
+  const creates = await Promise.all(states.map((state) => writeStudy(user, state)));
+  assert.deepEqual(creates.map((response) => response.status).sort(), [200, 409]);
+  const initial = await (await request("/api/study-state", "GET", undefined, user.cookie)).json();
+  const updates = await Promise.all(states.map((state) => writeStudy(user, state, initial.updatedAt)));
+  assert.deepEqual(updates.map((response) => response.status).sort(), [200, 409]);
+  const current = await (await request("/api/study-state", "GET", undefined, user.cookie)).json();
+  assert.deepEqual(current.state, states[updates.findIndex((response) => response.status === 200)]);
+});
+
+test("accepted updates preserve the exact previous snapshot atomically and isolate backup owners", async () => {
+  const user = await seedUser("study-backup");
+  const another = await seedUser("study-backup-other");
+  const state = studySnapshot({ termNotes: { old: "保留这一版" } });
+  const revision = (await (await writeStudy(user, state)).json()).updatedAt;
+  assert.equal((await writeStudy(user, studySnapshot({ termNotes: { new: "新一版" } }), revision)).status, 200);
+  const backups = await database.prepare("SELECT payload, updated_at FROM study_state_backups WHERE user_id = ?").bind(user.userId).all();
+  assert.equal(backups.results.length, 1);
+  assert.deepEqual(JSON.parse(backups.results[0].payload), state);
+  assert.equal(backups.results[0].updated_at, revision);
+  assert.equal((await database.prepare("SELECT COUNT(*) AS count FROM study_state_backups WHERE user_id = ?").bind(another.userId).first()).count, 0);
+  const current = await (await request("/api/study-state", "GET", undefined, user.cookie)).json();
+  await database.prepare("CREATE TRIGGER fail_test_backup BEFORE INSERT ON study_state_backups BEGIN SELECT RAISE(ABORT, 'synthetic backup failure'); END").run();
+  try {
+    const failed = await writeStudy(user, state, current.updatedAt);
+    assert.equal(failed.status, 503);
+    assert.doesNotMatch(await failed.text(), /SQL|trigger|synthetic/);
+    assert.deepEqual((await (await request("/api/study-state", "GET", undefined, user.cookie)).json()).state, current.state);
+  } finally {
+    await database.prepare("DROP TRIGGER fail_test_backup").run();
+  }
+});
+
+test("backup retention keeps recent revisions plus the earliest daily checkpoint", async () => {
+  const user = await seedUser("study-retention");
+  let revision = null;
+  for (let index = 0; index < 25; index += 1) {
+    const response = await writeStudy(user, studySnapshot({ termNotes: { sequence: `revision-${index}` } }), revision);
+    assert.equal(response.status, 200);
+    revision = (await response.json()).updatedAt;
+  }
+  const backups = await database.prepare("SELECT payload FROM study_state_backups WHERE user_id = ? ORDER BY updated_at").bind(user.userId).all();
+  assert.equal(backups.results.length, 21);
+  assert.equal(JSON.parse(backups.results[0].payload).termNotes.sequence, "revision-0");
+  assert.equal(JSON.parse(backups.results.at(-1).payload).termNotes.sequence, "revision-23");
+});
+
+test("missing backup protection fails closed and its migration can be reapplied safely", async () => {
+  const user = await seedUser("study-no-backup");
+  const state = studySnapshot({ termNotes: { word: "原版" } });
+  const revision = (await (await writeStudy(user, state)).json()).updatedAt;
+  await database.prepare("DROP TRIGGER preserve_study_state").run();
+  try {
+    assert.equal((await writeStudy(user, studySnapshot({ termNotes: { word: "不能写入" } }), revision)).status, 503);
+    assert.deepEqual((await (await request("/api/study-state", "GET", undefined, user.cookie)).json()).state, state);
+  } finally {
+    const migration = await readFile(new URL("../drizzle/0002_study_state_backups.sql", import.meta.url), "utf8");
+    for (let repeat = 0; repeat < 2; repeat += 1) {
+      for (const statement of migration.split("--> statement-breakpoint").filter((value) => value.trim())) await database.prepare(statement).run();
+    }
+  }
+  assert.equal((await writeStudy(user, studySnapshot({ termNotes: { word: "保护恢复" } }), revision)).status, 200);
+});
 
 test("password login works without email sending and preserves the existing account and records", async () => {
   const user = await seedUser("existing");

@@ -180,10 +180,10 @@ test("legacy and stale records never guess a source when multiple contexts exist
 
 test("optional context metadata survives local persistence and cloud restoration without changing old keys", async () => {
   const context = study.findTermContexts("epidemic").find((entry) => entry.sourceId === "2010-p2-s14");
-  const before = { updatedAt: 123, marks: { epidemic: ["有些陌生"] }, termNotes: { epidemic: "保留笔记" }, listItems: { 本周重点: ["epidemic"] } };
+  const before = { version: 1, updatedAt: 123, marks: { epidemic: ["有些陌生"] }, termNotes: { epidemic: "保留笔记" }, listItems: { 本周重点: ["epidemic"] } };
   const current = { ...before, termContexts: study.rememberTermContext({}, "epidemic", context) };
   const snapshot = prepareLocalSnapshot(current, before, 0, 456);
-  const remote = await readRemoteSnapshot(() => before, async () => Response.json({ state: JSON.parse(JSON.stringify(snapshot)), updatedAt: 456 }));
+  const { state: remote } = await readRemoteSnapshot("synthetic@example.test", async () => Response.json({ state: JSON.parse(JSON.stringify(snapshot)), updatedAt: 456, accountEmail: "synthetic@example.test" }));
   assert.deepEqual(remote.marks, before.marks);
   assert.deepEqual(remote.termNotes, before.termNotes);
   assert.deepEqual(remote.listItems, before.listItems);

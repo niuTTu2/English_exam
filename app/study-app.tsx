@@ -77,7 +77,11 @@ import {
   getWordKnowledge,
 } from "./knowledge-base";
 import { canonicalLemma, familyAliases, getLexicalGuide, type LexicalContext } from "./lexicon";
-import { prepareLocalSnapshot, readRemoteSnapshot } from "./study-sync";
+import {
+  ACTIVE_ACCOUNT_KEY, LEGACY_STORAGE_KEY, hasStudyRecords, isStudySnapshot, prepareLocalSnapshot,
+  preserveLocalStudyState, readLocalStudyState, readRemoteSnapshot, reconcileStudyState,
+  sameStudySnapshot, saveLocalStudyState, studyStorageKey, type RemoteStudyState,
+} from "./study-sync";
 
 type AppView = "study" | "test" | "review" | "vocabulary";
 type ArticleId = keyof typeof articleContents;
@@ -150,7 +154,21 @@ type PersistedStudyState = {
   reviewFilter: ReviewFilter;
 };
 
-const STORAGE_KEY = "zhenti-judu-study-state-v1";
+function emptyStudyState(): PersistedStudyState {
+  return {
+    version: 1, updatedAt: 0, expanded: ["cloze-s1"], marks: {}, termRatings: {}, reviewSchedule: {}, termContexts: {},
+    termNotes: {}, sentenceNotes: {}, sentenceMarks: [], answers: {}, translationAnswers: {}, submittedTranslationTasks: {},
+    submitted: false, activeSection: "cloze", selectedYear: 2000, submittedSections: {}, revealTiming: "article", timerMode: "up",
+    lists: ["本周重点"], listItems: { "本周重点": [] }, reviewFilter: "all",
+  };
+}
+
+function normalizeStudyState(snapshot: Partial<PersistedStudyState>): PersistedStudyState {
+  const section = snapshot.activeSection && snapshot.activeSection in articleContents ? snapshot.activeSection : "cloze";
+  const sections = snapshot.submittedSections ?? (snapshot.submitted ? { cloze: true } : {});
+  return { ...emptyStudyState(), ...snapshot, activeSection: section, selectedYear: articleContents[section].year,
+    termContexts: snapshot.termContexts ?? {}, submittedSections: sections, submitted: Boolean(sections.cloze) };
+}
 
 const markTags: MarkTag[] = ["完全不会", "有些陌生", "不会搭配", "容易混淆"];
 const ratings: Rating[] = ["正确", "模糊", "错误"];
@@ -721,6 +739,11 @@ export default function StudyApp() {
   const [remoteReady, setRemoteReady] = useState(false);
   const snapshotRef = useRef<PersistedStudyState | null>(null);
   const initialUpdatedAt = useRef(0);
+  const snapshotOwner = useRef<string | null>(null);
+  const remoteBase = useRef<RemoteStudyState<PersistedStudyState> | null>(null);
+  const readyToUpload = useRef(false);
+  const [conflictingRemote, setConflictingRemote] = useState<RemoteStudyState<PersistedStudyState> | null>(null);
+  const [hasLegacyBackup, setHasLegacyBackup] = useState(false);
   const syncGeneration = useRef(0);
   const restoringAccount = useRef(false);
   const uploadController = useRef<AbortController | null>(null);
@@ -745,6 +768,9 @@ export default function StudyApp() {
   const visibleYearPhraseCount = view === "vocabulary" ? yearPhraseItems.length : yearPhraseCount;
 
   const applySnapshot = useCallback((snapshot: Partial<PersistedStudyState>) => {
+    snapshot = normalizeStudyState(snapshot);
+    snapshotRef.current = snapshot as PersistedStudyState;
+    initialUpdatedAt.current = snapshot.updatedAt ?? 0;
     if (Array.isArray(snapshot.expanded)) setExpanded(new Set(snapshot.expanded));
     if (snapshot.marks) setMarks(snapshot.marks);
     if (snapshot.termRatings) setTermRatings(snapshot.termRatings);
@@ -776,21 +802,47 @@ export default function StudyApp() {
     restoringAccount.current = true;
     const generation = ++syncGeneration.current;
     uploadController.current?.abort();
+    uploadController.current = null;
+    readyToUpload.current = false;
     setUserEmail(email);
     setAccountEmail(email);
     setRemoteReady(false);
     setSyncError("");
     setSyncState("saving");
     try {
-      const remote = await readRemoteSnapshot(() => snapshotRef.current);
-      if (generation !== syncGeneration.current) return false;
-      if (remote) {
-        snapshotRef.current = null;
-        initialUpdatedAt.current = remote.updatedAt;
-        applySnapshot(remote);
-        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(remote));
+      if (snapshotRef.current) saveLocalStudyState(window.localStorage, snapshotOwner.current, { state: snapshotRef.current, base: remoteBase.current });
+      if (snapshotOwner.current !== email) {
+        const saved = readLocalStudyState<PersistedStudyState>(window.localStorage, email);
+        snapshotOwner.current = email;
+        remoteBase.current = saved?.base ?? null;
+        applySnapshot(saved?.state ?? emptyStudyState());
+        setSelectedTerm(null);
+        setTermHistory([]);
+        setContextPicker(null);
+        setTimerRunning(false);
       }
+      window.localStorage.setItem(ACTIVE_ACCOUNT_KEY, email);
+      const received = await readRemoteSnapshot<PersistedStudyState>(email);
+      if (generation !== syncGeneration.current) return false;
+      const remote = { ...received, state: received.state ? normalizeStudyState(received.state) : null };
+      const local = { state: snapshotRef.current ?? emptyStudyState(), base: remoteBase.current };
+      const base = local.base ? { ...local.base, state: local.base.state ? normalizeStudyState(local.base.state) : null } : { state: emptyStudyState(), updatedAt: null };
+      const reconciled = reconcileStudyState({ ...local, base }, remote);
+      if (reconciled.conflicts.length) {
+        preserveLocalStudyState(window.localStorage, email, local);
+        setConflictingRemote(remote);
+        setSyncError(`有 ${reconciled.conflicts.length} 处记录在两台设备分别修改，已暂停上传并保留双方记录。可先导出本机备份，再使用云端记录；或保留本机继续离线学习。`);
+        setSyncState("local");
+        return false;
+      }
+      if (hasStudyRecords(local.state) && !sameStudySnapshot(local.state, base.state) && !sameStudySnapshot(local.state, reconciled.state)) preserveLocalStudyState(window.localStorage, email, local);
+      remoteBase.current = remote;
+      applySnapshot(reconciled.state);
+      saveLocalStudyState(window.localStorage, email, { state: snapshotRef.current!, base: remote });
+      setConflictingRemote(null);
+      readyToUpload.current = true;
       setRemoteReady(true);
+      setSyncState(sameStudySnapshot(snapshotRef.current, remote.state) || (!remote.state && !hasStudyRecords(snapshotRef.current)) ? "synced" : "local");
       return true;
     } catch (error) {
       if (generation === syncGeneration.current) {
@@ -809,18 +861,19 @@ export default function StudyApp() {
     window.addEventListener("online", handleOnline);
     window.addEventListener("offline", handleOffline);
 
-    let savedSnapshot: PersistedStudyState | null = null;
-    try {
-      const saved = window.localStorage.getItem(STORAGE_KEY);
-      if (saved) savedSnapshot = JSON.parse(saved) as PersistedStudyState;
-    } catch {
-      // A damaged local snapshot should not prevent the paper from opening.
-    }
     queueMicrotask(() => {
       setOnline(navigator.onLine);
-      initialUpdatedAt.current = savedSnapshot?.updatedAt ?? 0;
-      if (savedSnapshot) applySnapshot(savedSnapshot);
-      setHydrated(true);
+      try {
+        setHasLegacyBackup(Boolean(window.localStorage.getItem(LEGACY_STORAGE_KEY)));
+        const owner = window.localStorage.getItem(ACTIVE_ACCOUNT_KEY);
+        const saved = readLocalStudyState<PersistedStudyState>(window.localStorage, owner);
+        snapshotOwner.current = owner;
+        remoteBase.current = saved?.base ?? null;
+        applySnapshot(saved?.state ?? emptyStudyState());
+        setHydrated(true);
+      } catch {
+        setSyncError("本机记录暂时无法读取，已停止自动保存。请先导出备份，不要清理浏览器数据。");
+      }
     });
 
     if ("serviceWorker" in navigator) {
@@ -838,7 +891,16 @@ export default function StudyApp() {
         setEmailConfigured(Boolean(session.configured));
         setPasswordConfigured(Boolean(session.passwordConfigured));
         if (!session.passwordConfigured) setAuthMode("code");
-        if (!session.user) return;
+        if (!session.user) {
+          if (snapshotOwner.current) {
+            const guest = readLocalStudyState<PersistedStudyState>(window.localStorage, null);
+            snapshotOwner.current = null;
+            remoteBase.current = guest?.base ?? null;
+            applySnapshot(guest?.state ?? emptyStudyState());
+            window.localStorage.removeItem(ACTIVE_ACCOUNT_KEY);
+          }
+          return;
+        }
         setHasPassword(Boolean(session.user.hasPassword));
         await restoreAccount(session.user.email);
       })
@@ -865,7 +927,7 @@ export default function StudyApp() {
     marks,
     termRatings,
     reviewSchedule,
-    ...(Object.keys(termContexts).length ? { termContexts } : {}),
+    termContexts,
     termNotes,
     sentenceNotes,
     sentenceMarks: Array.from(sentenceMarks),
@@ -904,31 +966,62 @@ export default function StudyApp() {
     const snapshot = prepareLocalSnapshot(persistedState, snapshotRef.current, initialUpdatedAt.current);
     snapshotRef.current = snapshot;
     const generation = syncGeneration.current;
+    try {
+      saveLocalStudyState(window.localStorage, snapshotOwner.current, { state: snapshot, base: remoteBase.current });
+    } catch {
+      readyToUpload.current = false;
+      queueMicrotask(() => {
+        setRemoteReady(false);
+        setSyncState("local");
+        setSyncError("本机备份空间不足或不可写，已暂停上传。请先导出备份，不要清理浏览器数据。");
+      });
+      return;
+    }
     const id = window.setTimeout(() => {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
-      if (!userEmail || !remoteReady || restoringAccount.current || generation !== syncGeneration.current || !navigator.onLine) {
+      if (!userEmail || snapshotOwner.current !== userEmail || !remoteReady || !readyToUpload.current || restoringAccount.current || generation !== syncGeneration.current || !navigator.onLine) {
         setSyncState(navigator.onLine ? "local" : "offline");
         return;
       }
-      setSyncState("saving");
-      uploadController.current?.abort();
+      if (uploadController.current) return;
       const controller = new AbortController();
       uploadController.current = controller;
-      void fetch("/api/study-state", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ state: snapshot }),
-        signal: controller.signal,
-      }).then((response) => {
-        if (generation !== syncGeneration.current) return;
-        setSyncState(response.ok ? "synced" : "local");
-        if (!response.ok) setSyncError("上传未成功，本机记录已保留。请重试同步。");
-      }).catch(() => {
-        if (!controller.signal.aborted && generation === syncGeneration.current) {
-          setSyncState("offline");
-          setSyncError("网络暂不可用，本机记录已保留。恢复网络后可重试同步。");
+      void (async () => {
+        try {
+          while (readyToUpload.current && generation === syncGeneration.current && navigator.onLine) {
+            const latest = snapshotRef.current;
+            const base = remoteBase.current;
+            if (!latest || !base) return;
+            if (sameStudySnapshot(latest, base.state) || (!base.state && !hasStudyRecords(latest))) {
+              setSyncState("synced");
+              setSyncError("");
+              return;
+            }
+            setSyncState("saving");
+            const response = await fetch("/api/study-state", {
+              method: "PUT", headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ state: latest, expectedUpdatedAt: base.updatedAt, accountEmail: userEmail }),
+              signal: controller.signal,
+            });
+            const result = await response.json() as { updatedAt?: number; error?: string };
+            if (generation !== syncGeneration.current) return;
+            if (!response.ok || !Number.isSafeInteger(result.updatedAt) || Number(result.updatedAt) <= Number(base.updatedAt ?? 0)) {
+              if (response.status === 401) setUserEmail(null);
+              throw new Error(result.error || "同步回执异常，已停止上传；本机记录已保留，请重试同步。");
+            }
+            remoteBase.current = { state: latest, updatedAt: result.updatedAt! };
+            saveLocalStudyState(window.localStorage, userEmail, { state: snapshotRef.current ?? latest, base: remoteBase.current });
+          }
+        } catch (error) {
+          if (!controller.signal.aborted && generation === syncGeneration.current) {
+            readyToUpload.current = false;
+            setRemoteReady(false);
+            setSyncState(navigator.onLine ? "local" : "offline");
+            setSyncError(error instanceof Error ? error.message : "网络暂不可用，本机记录已保留。请重试同步。");
+          }
+        } finally {
+          if (uploadController.current === controller) uploadController.current = null;
         }
-      });
+      })();
     }, 450);
     return () => window.clearTimeout(id);
   }, [hydrated, persistedState, remoteReady, userEmail]);
@@ -1331,10 +1424,23 @@ export default function StudyApp() {
     syncGeneration.current += 1;
     restoringAccount.current = false;
     uploadController.current?.abort();
+    uploadController.current = null;
+    readyToUpload.current = false;
     setRemoteReady(false);
     try {
+      if (snapshotRef.current) saveLocalStudyState(window.localStorage, snapshotOwner.current, { state: snapshotRef.current, base: remoteBase.current });
+      const guest = readLocalStudyState<PersistedStudyState>(window.localStorage, null);
       const response = await fetch("/api/auth/session", { method: "DELETE" });
       if (!response.ok) throw new Error("退出未成功，请重试。");
+      snapshotOwner.current = null;
+      remoteBase.current = guest?.base ?? null;
+      window.localStorage.removeItem(ACTIVE_ACCOUNT_KEY);
+      applySnapshot(guest?.state ?? emptyStudyState());
+      setSelectedTerm(null);
+      setTermHistory([]);
+      setContextPicker(null);
+      setTimerRunning(false);
+      setConflictingRemote(null);
       setUserEmail(null);
       setHasPassword(false);
       setNewPassword("");
@@ -1349,6 +1455,66 @@ export default function StudyApp() {
       setAuthError("退出未成功，请联网后重试。");
     } finally {
       setAuthBusy(false);
+    }
+  }
+
+  function exportLocalBackup() {
+    try {
+      const records: Record<string, string> = {};
+      const accountKey = studyStorageKey(snapshotOwner.current);
+      for (let index = 0; index < window.localStorage.length; index += 1) {
+        const key = window.localStorage.key(index);
+        if (key && (key === LEGACY_STORAGE_KEY || key === studyStorageKey(null) || key === accountKey || key.startsWith(`${accountKey}:backup:`))) {
+          records[key] = window.localStorage.getItem(key)!;
+        }
+      }
+      const backup = { format: "zhenti-judu-recovery-v1", exportedAt: new Date().toISOString(), records,
+        current: { state: snapshotRef.current, base: remoteBase.current } };
+      const url = URL.createObjectURL(new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" }));
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `真题句读-学习记录备份-${Date.now()}.json`;
+      link.click();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+      setAuthMessage("备份文件已生成，请妥善保存；其中可能含有私人笔记，请勿公开上传。");
+    } catch {
+      setSyncError("备份导出失败，请保留当前页面和浏览器数据，不要清理缓存。");
+    }
+  }
+
+  function useCloudRecords() {
+    if (!userEmail || !conflictingRemote?.state || snapshotOwner.current !== userEmail) return;
+    try {
+      preserveLocalStudyState(window.localStorage, userEmail, { state: snapshotRef.current!, base: remoteBase.current });
+      saveLocalStudyState(window.localStorage, userEmail, { state: conflictingRemote.state, base: conflictingRemote });
+      remoteBase.current = conflictingRemote;
+      applySnapshot(conflictingRemote.state);
+      setConflictingRemote(null);
+      setSyncError("");
+      readyToUpload.current = true;
+      setRemoteReady(true);
+      setSyncState("synced");
+    } catch {
+      setSyncError("本机备份未成功，未切换记录。请先导出备份。");
+    }
+  }
+
+  function restoreLegacyRecords() {
+    if (!userEmail || !remoteReady || !readyToUpload.current || uploadController.current || restoringAccount.current || snapshotOwner.current !== userEmail) return;
+    try {
+      const legacy: unknown = JSON.parse(window.localStorage.getItem(LEGACY_STORAGE_KEY) ?? "null");
+      if (!isStudySnapshot(legacy)) throw new Error("旧版本机记录格式异常，未导入；请先导出备份。");
+      if (!hasStudyRecords(legacy)) throw new Error("本浏览器的旧副本没有可恢复的学习记录，请到原来使用的设备导出备份。");
+      const current = snapshotRef.current!;
+      const merged = reconcileStudyState({ state: normalizeStudyState(legacy as PersistedStudyState), base: { state: emptyStudyState(), updatedAt: null } }, { state: current, updatedAt: remoteBase.current?.updatedAt ?? null });
+      if (merged.conflicts.length) throw new Error("旧副本与当前记录有冲突，本次未导入也未覆盖；请先导出备份核对。");
+      preserveLocalStudyState(window.localStorage, userEmail, { state: current, base: remoteBase.current });
+      saveLocalStudyState(window.localStorage, userEmail, { state: merged.state, base: remoteBase.current });
+      applySnapshot(merged.state);
+      setSyncError("");
+      setAuthMessage("旧记录已合并到本机，联网后会按版本校验上传；原始旧副本仍保留。请查看同步状态确认云端保存结果。");
+    } catch (error) {
+      setSyncError(error instanceof Error ? error.message : "旧记录未导入，请先导出备份。");
     }
   }
 
@@ -2028,6 +2194,13 @@ export default function StudyApp() {
             <SheetDescription>邮箱密码快捷登录，验证码用于首次登录或重设密码。本机记录仍可离线使用。</SheetDescription>
           </SheetHeader>
 
+          <div className="account-status-list">
+            <Button type="button" variant="outline" onClick={exportLocalBackup}>导出本机备份</Button>
+            {hasLegacyBackup && <p>旧版本机记录已单独保留，可导出备份；不会自动覆盖登录账号。</p>}
+            {!userEmail && syncError && <p className="auth-error" role="alert">{syncError}</p>}
+            {!userEmail && authMessage && <p className="auth-success" role="status">{authMessage}</p>}
+          </div>
+
           {userEmail ? (
             <div className="account-content">
               <div className="signed-in-card">
@@ -2040,6 +2213,8 @@ export default function StudyApp() {
               </div>
               {syncError && <p className="auth-error" role="alert">{syncError}</p>}
               {(syncError || !remoteReady) && <Button type="button" variant="outline" disabled={authBusy || syncState === "saving"} onClick={() => void restoreAccount(userEmail)}>重试同步</Button>}
+              {conflictingRemote?.state && <Button type="button" variant="outline" disabled={authBusy || syncState === "saving"} onClick={useCloudRecords}>使用云端记录（本机另存备份）</Button>}
+              {hasLegacyBackup && <Button type="button" variant="outline" disabled={authBusy || !remoteReady || syncState === "saving"} onClick={restoreLegacyRecords}>恢复本机旧记录到当前账号</Button>}
               {passwordConfigured ? (
                 <form className="account-form" onSubmit={(event) => { event.preventDefault(); void saveAccountPassword(); }}>
                   <h3>{hasPassword ? "更新密码" : "设置密码"}</h3>

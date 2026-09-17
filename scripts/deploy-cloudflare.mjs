@@ -22,6 +22,7 @@ if (process.argv.includes("--check")) {
   const wrangler = fileURLToPath(import.meta.resolve("wrangler/bin/wrangler.js"));
   const commands = [
     ["d1", "execute", database.database_name, "--remote", "--config", configPath, "--file", "drizzle/0001_password_login.sql", "--yes"],
+    ["d1", "execute", database.database_name, "--remote", "--config", configPath, "--file", "drizzle/0002_study_state_backups.sql", "--yes"],
     ...(ciMigration ? [] : [["deploy", "--config", configPath]]),
   ];
   for (const args of commands) {
