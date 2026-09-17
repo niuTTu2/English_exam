@@ -8,6 +8,7 @@ import type {
 } from "./data";
 import { getLexicalGuide } from "./lexicon";
 import { verifiedClausesFor2000 } from "./verified-syntax-2000";
+import { componentFromReviewedChunk } from "./reviewed-syntax";
 
 export type BeginnerLayerGuide = {
   label: string;
@@ -247,6 +248,9 @@ function componentModifies(chunk: SentenceChunk, syntaxFunction: string, index: 
 }
 
 function componentFromChunk(chunk: SentenceChunk, index: number, chunks: SentenceChunk[]): BeginnerSyntaxComponent {
+  const reviewed = componentFromReviewedChunk(chunk);
+  if (reviewed) return reviewed;
+  if (!chunk.role) throw new Error("缺少精审成分或旧版配色");
   const syntaxFunction = componentFunction(chunk, index, chunks);
   const form = inferForm(chunk.text, syntaxFunction, chunk.role);
   const modifies = componentModifies(chunk, syntaxFunction, index, chunks);

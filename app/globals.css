@@ -551,6 +551,9 @@ button {
 .syntax-predicate { background: #e5e2f2; border-color: #8177ac !important; }
 .legend-object,
 .syntax-object { background: #e2eed9; border-color: #78a65c !important; }
+.syntax-complement { background: #eee5d5; border-color: #ac863f !important; }
+.legend-complement { background: #ac863f; }
+.syntax-role-caption { display: inline-block; margin-inline-start: .4em; font-family: var(--font-sans), sans-serif; font-size: .7rem; font-weight: 600; color: #31433f; vertical-align: middle; }
 .legend-modifier,
 .syntax-modifier { background: #f3dfd6; border-color: #bf7c63 !important; }
 .legend-connector,

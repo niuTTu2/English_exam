@@ -1,5 +1,7 @@
 "use client";
 
+import { chunkVisualRole, chunkDescription, visualRoleLabels } from "./reviewed-syntax";
+
 import {
   ArrowLeft,
   BookOpenCheck,
@@ -65,7 +67,7 @@ import {
   type QuestionOptionKey,
   questionExplanation,
   questionOptionSourceId,
-  type SyntaxRole,
+  type SentenceChunk,
   type TranslationTask,
   type WritingTask,
   translationTaskSentences,
@@ -179,14 +181,6 @@ function normalizeStudyState(snapshot: Partial<PersistedStudyState>): PersistedS
 const markTags: MarkTag[] = ["完全不会", "有些陌生", "不会搭配", "容易混淆"];
 const ratings: Rating[] = ["正确", "模糊", "错误"];
 
-const roleLabels: Record<SyntaxRole, string> = {
-  condition: "条件/目的",
-  subject: "主语",
-  predicate: "谓语",
-  object: "宾语/表语",
-  modifier: "修饰成分",
-  connector: "逻辑连接",
-};
 
 const phraseGlosses: Record<string, string> = {
   "other than": "除……之外；不同于",
@@ -761,8 +755,8 @@ function formatSeconds(value: number) {
   return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 }
 
-function roleClass(role: SyntaxRole) {
-  return `syntax-chunk syntax-${role}`;
+function roleClass(chunk: SentenceChunk) {
+  return `syntax-chunk syntax-${chunkVisualRole(chunk)}`;
 }
 
 function translationAnswerKey(articleId: ArticleId, taskId: number) {
@@ -1753,9 +1747,11 @@ export default function StudyApp() {
             <TabsContent value="study" className="mode-content">
               {writingTasks.map(task => <section key={task.id}><WritingPromptChart task={task} /><WritingStudyGuide task={task} /></section>)}
               <div className="legend-row" aria-label="句子颜色图例">
-                {(Object.keys(roleLabels) as SyntaxRole[]).map((role) => (
-                  <span key={role}><i className={`legend-dot legend-${role}`} />{roleLabels[role]}</span>
-                ))}
+                {sentences.every(sentence => sentence.chunks.every(chunk => chunk.visualRole))
+                  ? Object.entries(visualRoleLabels).map(([role, label]) => (
+                    <span key={role}><i className={`legend-dot legend-${role}`} />{label}</span>
+                  ))
+                  : <span>本篇配色区分词块，具体语法作用请看成分讲解。</span>}
               </div>
               <div className="sentence-stack">
                 {sentences.map((sentence) => (
@@ -2757,8 +2753,9 @@ export function TranslationTestTask({
             <div className="translation-analysis-body">
               <div className="question-colored-sentence">
                 {analysis.chunks.map((chunk, index) => (
-                  <span key={`${analysis.id}-translation-chunk-${index}`} className={roleClass(chunk.role)}>
+                  <span key={`${analysis.id}-translation-chunk-${index}`} className={roleClass(chunk)} title={chunkDescription(chunk)} data-grammar-function={chunk.grammarFunction}>
                     {renderInteractiveText(chunk.text, analysis.phrases, analysis.id, onTerm, true)}
+                    {chunk.visualRole && <small className="syntax-role-caption">{chunk.grammarFunction}</small>}
                   </span>
                 ))}
               </div>
@@ -2821,8 +2818,9 @@ function QuestionAnalysisBlock({
         </p>
         <div className="question-colored-sentence">
           {analysis.chunks.map((chunk, index) => (
-            <span key={`${analysis.id}-chunk-${index}`} className={roleClass(chunk.role)}>
+            <span key={`${analysis.id}-chunk-${index}`} className={roleClass(chunk)} title={chunkDescription(chunk)} data-grammar-function={chunk.grammarFunction}>
               {renderInteractiveText(chunk.text, phrases, sentenceId, onTerm, true)}
+              {chunk.visualRole && <small className="syntax-role-caption">{chunk.grammarFunction}</small>}
             </span>
           ))}
         </div>
@@ -2912,8 +2910,9 @@ function StudySentence({
         <div className="sentence-analysis">
           <div className="colored-sentence">
             {sentence.chunks.map((chunk, index) => (
-              <span key={`${sentence.id}-${index}`} className={roleClass(chunk.role)}>
+              <span key={`${sentence.id}-${index}`} className={roleClass(chunk)} title={chunkDescription(chunk)} data-grammar-function={chunk.grammarFunction}>
                 {renderInteractiveText(chunk.text, sentence.phrases, sentence.id, onTerm, true)}
+                {chunk.visualRole && <small className="syntax-role-caption">{chunk.grammarFunction}</small>}
               </span>
             ))}
           </div>

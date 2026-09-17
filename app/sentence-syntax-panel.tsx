@@ -120,7 +120,9 @@ export function SentenceSyntaxPanel({ analysis, renderText, compact = false }: {
                     <div className="beginner-clause-skeleton">
                       <p><span>从句主语</span>{renderText(clause.subject, `${analysis.id}-clause-subject-${index}`)}</p>
                       <p><span>从句谓语</span>{renderText(clause.predicate, `${analysis.id}-clause-predicate-${index}`)}</p>
-                      {clause.objectOrComplement && <p><span>宾语 / 补语</span>{renderText(clause.objectOrComplement, `${analysis.id}-clause-complement-${index}`)}</p>}
+                      {clause.predicateDetails
+                        ? clause.predicateDetails.map((detail, detailIndex) => <p key={`${index}-${detailIndex}`}><span>{detail.function}</span>{renderText(detail.text, `${analysis.id}-clause-detail-${index}-${detailIndex}`)}</p>)
+                        : clause.objectOrComplement && <p><span>谓语后的成分</span>{renderText(clause.objectOrComplement, `${analysis.id}-clause-complement-${index}`)}</p>}
                     </div>
                     <p><b>理解顺序：</b>{renderText(clause.translationOrder, `${analysis.id}-clause-order-${index}`)}</p>
                   </div>

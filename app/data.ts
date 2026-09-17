@@ -44,10 +44,28 @@ export type SyntaxRole =
   | "modifier"
   | "connector";
 
-export type SentenceChunk = {
+/** 仅用于未迁移内容的旧配色。不能作为精确语法名称。 */
+export type LegacySentenceChunk = {
   text: string;
   role: SyntaxRole;
+  visualRole?: never;
+  grammarFunction?: never;
 };
+
+export type SyntaxVisualRole = "subject" | "predicate" | "object" | "complement" | "modifier" | "connector";
+
+export type ReviewedSentenceChunk = {
+  text: string;
+  role?: never;
+  visualRole: SyntaxVisualRole;
+  grammarFunction: string;
+  form: string;
+  relation: string;
+  explanation: string;
+  componentText: string;
+};
+
+export type SentenceChunk = LegacySentenceChunk | ReviewedSentenceChunk;
 
 export type BeginnerSyntaxComponent = {
   text: string;
@@ -72,6 +90,7 @@ export type BeginnerClauseDetail = {
   subject: string;
   predicate: string;
   objectOrComplement?: string;
+  predicateDetails?: Array<{ function: string; text: string }>;
   translationOrder: string;
 };
 

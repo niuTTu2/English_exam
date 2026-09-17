@@ -24,6 +24,7 @@ const contextualVocabulary = await vite.ssrLoadModule("/app/contextual-vocabular
 const answerKeys = await vite.ssrLoadModule("/app/verified-answer-keys.ts");
 const syntaxGuide = await vite.ssrLoadModule("/app/syntax-guide.ts");
 const verifiedSyntax = await vite.ssrLoadModule("/app/verified-syntax-2000.ts");
+const reviewedSyntax = await vite.ssrLoadModule("/app/reviewed-syntax.ts");
 const allSentences = data.allSentences ?? data.sentences;
 const allQuestions = data.allQuestions ?? data.questions;
 
@@ -72,6 +73,16 @@ function requireText(value, label) {
   assert.doesNotMatch(value, forbiddenPlaceholder, `${label} 含占位内容`);
 }
 
+function requireChunkRole(chunk, label) {
+  if (chunk.visualRole) {
+    assert.ok(Object.hasOwn(reviewedSyntax.visualRoleLabels, chunk.visualRole), `${label} 视觉类别无效`);
+    assert.equal(chunk.role, undefined, `${label} 新版不得再混入旧语法配色字段`);
+    for (const field of ["grammarFunction", "form", "relation", "componentText"]) requireText(chunk[field], `${label}.${field}`);
+  } else {
+    assert.ok(["condition", "subject", "predicate", "object", "modifier", "connector"].includes(chunk.role), `${label} 旧配色无效`);
+  }
+}
+
 function requireStructure(structure, label) {
   requireText(structure.pattern, `${label}.pattern`);
   requireText(structure.meaning, `${label}.meaning`);
@@ -97,7 +108,7 @@ function requireSentenceAnalysis(analysis, label) {
   );
   for (const [index, chunk] of analysis.chunks.entries()) {
     requireText(chunk.text, `${label}.chunks[${index}].text`);
-    assert.ok(["condition", "subject", "predicate", "object", "modifier", "connector"].includes(chunk.role), `${label} 存在无效结构角色`);
+    requireChunkRole(chunk, label);
   }
   assert.ok(analysis.layers.length > 0, `${label} 缺少逐层拆解`);
   analysis.layers.forEach((layer, index) => {
@@ -171,6 +182,11 @@ function requireBeginnerSyntax(analysis, label) {
     requireText(clause.role, `${label}.beginner.clauses[${index}].role`);
     requireText(clause.subject, `${label}.beginner.clauses[${index}].subject`);
     requireText(clause.predicate, `${label}.beginner.clauses[${index}].predicate`);
+    for (const detail of clause.predicateDetails ?? []) {
+      requireText(detail.function, `${label}.clause.predicateDetails.function`);
+      requireText(detail.text, `${label}.clause.predicateDetails.text`);
+      assert.doesNotMatch(detail.function, /宾语.*表语|宾语.*补语/, "精审后的从句必须区分实际成分名称");
+    }
     requireText(clause.translationOrder, `${label}.beginner.clauses[${index}].translationOrder`);
     assert.ok(source.includes(clause.text.toLowerCase()), `${label}.beginner.clauses[${index}] 不是原句中的准确从句边界`);
     assert.doesNotMatch(JSON.stringify(clause), forbiddenSyntaxPlaceholder, `${label}.beginner.clauses[${index}] 仍是自动占位提示`);
@@ -205,7 +221,7 @@ test("句子分析完整并可还原原文", () => {
     );
     for (const [index, chunk] of sentence.chunks.entries()) {
       requireText(chunk.text, `${sentence.id}.chunks[${index}].text`);
-      assert.ok(["condition", "subject", "predicate", "object", "modifier", "connector"].includes(chunk.role), `${sentence.id} 存在无效结构角色`);
+      requireChunkRole(chunk, sentence.id);
     }
     assert.ok(sentence.layers.length > 0, `${sentence.id} 缺少逐层拆解`);
     sentence.layers.forEach((layer, index) => {
@@ -238,6 +254,29 @@ test("零基础句法能识别词组作用、时间地点状语和从句内部�
   assert.equal(complexGuide.clauses[0].subject, "which（= fine hypocritical spectacles）");
   assert.equal(complexGuide.clauses[1].objectOrComplement, "his meals（宾语）；in three-star restaurants（地点状语）");
   assert.equal(complexGuide.clauses[2].subject, "whose own children（= the journalist's own children）");
+});
+
+test("2010 Text 1 配色与精确语法分离，第一层与人工成分使用同一份数据", () => {
+  const sentences = data.articleContents["2010-p1"].sentences;
+  for (const sentence of sentences) {
+    assert.equal(sentence.chunks.map(chunk => chunk.text).join(""), sentence.text);
+    sentence.chunks.forEach((chunk, i) => {
+      const component = sentence.beginnerSyntax.components[i];
+      assert.equal(chunk.grammarFunction, component.function);
+      assert.equal(chunk.componentText, component.text);
+      assert.equal(chunk.relation, component.modifies);
+      assert.equal(chunk.role, undefined);
+    });
+    for (const clause of sentence.beginnerSyntax.clauses) assert.ok(clause.predicateDetails?.length);
+  }
+  const s3 = sentences[2];
+  assert.equal(s3.chunks[2].grammarFunction, "表语");
+  assert.equal(s3.chunks[2].visualRole, "complement");
+  assert.equal(sentences[3].chunks[0].grammarFunction, "时间状语从句");
+  assert.equal(sentences[3].chunks[0].visualRole, "modifier");
+  assert.throws(() => reviewedSyntax.withReviewedSyntax(s3, ["subject", "predicate", "object"]), /表语不能/);
+  assert.throws(() => reviewedSyntax.withReviewedSyntax(s3, ["subject"]), /一一对应/);
+  assert.throws(() => reviewedSyntax.withReviewedSyntax({ ...s3, text: "It was missing a last victory." }, ["subject", "predicate", "complement"]), /连续覆盖/);
 });
 
 test("2010 Text 1 阅读讲解保留真实层级、时态关系与否定对比", () => {
