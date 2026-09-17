@@ -1,3 +1,8 @@
+export const verifiedAnswerKey2012Passage4: Record<number, "A" | "B" | "C" | "D"> = { 36: "D", 37: "D", 38: "B", 39: "D", 40: "C" };
+export const verifiedAnswerSources2012Passage4 = [
+  { range: "36—40：D D B D C，尤核39题反事实追赶对象和40题certainly", label: "哈尔滨工程大学网站所载《2012年英语（二）试题解析》Text 4解析（教学参考）", url: "https://zyxw.hrbeu.edu.cn/__local/B/D4/EA/811048CF9A6D978F3D55818782D_15D0DB51_FF24B.pdf" },
+];
+
 export const verifiedAnswerKey2012Passage3: Record<number, "A" | "B" | "C" | "D"> = { 31: "A", 32: "B", 33: "A", 34: "C", 35: "D" };
 export const verifiedAnswerSources2012Passage3 = [
   { range: "31—35：A B A C D；原文对象、说话者和自然产物类比核对", label: "哈尔滨工程大学网站所载《2012年英语（二）试题解析》10—11页（教学参考）", url: "https://zyxw.hrbeu.edu.cn/__local/B/D4/EA/811048CF9A6D978F3D55818782D_15D0DB51_FF24B.pdf" },

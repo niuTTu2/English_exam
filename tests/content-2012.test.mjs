@@ -64,6 +64,20 @@ test("2012Text3保留历史时点、三个论点与倒装比较", () => {
   assert.match(study.resolveEntry("means", false, "question-201220-option-B").partOfSpeech, /n/);
 });
 
+test("2012Text4部分否定、虚拟参照和程度比较保留", () => {
+  checkReadingSource("2012-p4", 36, 18, answers.verifiedAnswerKey2012Passage4);
+  const article = data.articleContents["2012-p4"];
+  assert.equal(article.sentences[12].beginnerSyntax.clauses.length, 4);
+  assert.match(article.sentences[12].natural, /并不.*所有人/);
+  assert.match(article.sentences[12].beginnerSyntax.clauses[2].type, /虚拟/);
+  assert.match(article.sentences[17].natural, /越久.*越深/);
+  assert.match(article.questions[3].explanations.B, /反事实/);
+  assert.match(article.questions[4].explanations.D, /确定存在/);
+  for (const [token, number, meaning] of [["respects", 6, /方面/], ["rights", 9, /权利/], ["does", 10, /代替/], ["divides", 12, /分野|鸿沟/], ["fairly", 13, /相当|较为/], ["lean", 15, /艰难|拮据/], ["fabric", 17, /结构/]]) assert.match(study.resolveEntry(token, false, '2012-p4-s' + number).contextualMeaning, meaning);
+  assert.match(study.resolveEntry("right", false, "2012-p1-s18").partOfSpeech, /adv/);
+  assert.equal(lexicon.canonicalLemma("spending", { articleId: "2012-p4" }), "spending");
+});
+
 test("2012每篇真实来源词卡、从句边界与年度出处有效", () => {
   assert.ok(articles.length > 0);
   for (const article of articles) {
