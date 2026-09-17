@@ -1,3 +1,4 @@
+import { translation2012SentenceContexts } from "./2012-translation-lexicon";
 import { passage2012P5SentenceContexts } from "./2012-passage-5-lexicon";
 import { passage2012P4SentenceContexts } from "./2012-passage-4-lexicon";
 import { passage2012P3SentenceContexts } from "./2012-passage-3-lexicon";
@@ -18,7 +19,7 @@ import { passage2010P4SentenceContexts } from "./2010-passage-4-lexicon";
 import { passage2010P3SentenceContexts } from "./2010-passage-3-lexicon";
 import { passage2010P2SentenceContexts } from "./2010-passage-2-lexicon";
 
-export type ArticleLexiconId = "cloze" | "p1" | "p2" | "p3" | "p4" | "p5" | "translation" | "2001-cloze" | "2001-p1" | "2001-p2" | "2010-cloze" | "2010-p1" | "2010-p2" | "2010-p3" | "2010-p4" | "2010-p5" | "2010-translation" | "2011-cloze" | "2011-p1" | "2011-p2" | "2011-p3" | "2011-p4" | "2011-p5" | "2011-translation" | "2011-writing-a" | "2011-writing-b" | "2012-cloze" | "2012-p1" | "2012-p3" | "2012-p4" | "2012-p5";
+export type ArticleLexiconId = "cloze" | "p1" | "p2" | "p3" | "p4" | "p5" | "translation" | "2001-cloze" | "2001-p1" | "2001-p2" | "2010-cloze" | "2010-p1" | "2010-p2" | "2010-p3" | "2010-p4" | "2010-p5" | "2010-translation" | "2011-cloze" | "2011-p1" | "2011-p2" | "2011-p3" | "2011-p4" | "2011-p5" | "2011-translation" | "2011-writing-a" | "2011-writing-b" | "2012-cloze" | "2012-p1" | "2012-p3" | "2012-p4" | "2012-p5" | "2012-translation";
 
 export type ContextualSubstitution = {
   label: string;
@@ -56,6 +57,7 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
   ...passage2012P3SentenceContexts,
   ...passage2012P4SentenceContexts,
   ...passage2012P5SentenceContexts,
+  ...translation2012SentenceContexts,
   ...cloze2011SentenceContexts,
   ...translation2010SentenceContexts,
   ...passage2010P2SentenceContexts,

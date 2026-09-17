@@ -47,6 +47,30 @@ test("2012PartB原卷共享七选项与人物观点准确", () => {
   assert.equal(lexicon.canonicalLemma("writing", { articleId: "2012-p5" }), "writing");
 });
 
+test("2012翻译两段六句完整保留、分母与原文瑕疵明确", () => {
+  const article = data.articleContents["2012-translation"];
+  const fixture = JSON.parse(readFileSync(new URL("./fixtures/2012-translation.json", import.meta.url), "utf8"));
+  assert.equal(fixture.sha256, sourceHash);
+  assert.equal(article.sentences.length, 6);
+  assert.equal(article.questions.length, 0);
+  assert.equal(article.translationTasks.length, 1);
+  const task = article.translationTasks[0];
+  assert.equal(task.id, 201246);
+  assert.equal(task.number, 46);
+  assert.equal(task.format, "passage");
+  assert.equal(task.points, 15);
+  assert.deepEqual(task.paragraphs.map(paragraph => paragraph.length), [2, 4]);
+  assert.deepEqual(task.source.split("\n\n").map(normalize), fixture.paragraphs.map(row => normalize(row.text)));
+  assert.match(task.source, /their best and brightest departure/);
+  assert.match(task.locating, /非标准连接/);
+  assert.match(article.sentences[3].natural, /近40%.*约占3.3%/);
+  assert.match(article.sentences[5].natural, /原本可以/);
+  assert.equal(article.sentences[1].beginnerSyntax.clauses.length, 2);
+  assert.equal(article.sentences[5].beginnerSyntax.clauses.length, 2);
+  for (const [token, number, meaning] of [["privilege", 2, /优待/], ["emigrants", 4, /移居国外/], ["around", 4, /大约/], ["long", 5, /长期/], ["depriving", 6, /失去/], ["could", 6, /本来/]]) assert.match(study.resolveEntry(token, false, "2012-translation-s" + number).contextualMeaning, meaning);
+  assert.match(study.resolveEntry("privilege", false, "2012-translation-s2").partOfSpeech, /v/);
+});
+
 function checkReadingSource(id, startNumber, sentenceCount, key) {
   const article = data.articleContents[id];
   const fixture = JSON.parse(readFileSync(new URL('./fixtures/' + id + '.json', import.meta.url), "utf8"));

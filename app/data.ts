@@ -1,3 +1,4 @@
+import { translation2012Sentences, translation2012Tasks } from "./2012-translation-data";
 import { passage2012P5Sentences, passage2012P5Questions } from "./2012-passage-5-data";
 import { passage2012P4Sentences, passage2012P4Questions } from "./2012-passage-4-data";
 import { passage2012P3Sentences, passage2012P3Questions } from "./2012-passage-3-data";
@@ -253,6 +254,7 @@ export const sectionsByYear = {
     { id: "2012-p3", label: "阅读 Text 3", meta: "24句 · 5题", status: "ready" },
     { id: "2012-p4", label: "阅读 Text 4", meta: "18句 · 5题", status: "ready" },
     { id: "2012-p5", label: "阅读 Part B", meta: "28句 · 5题", status: "ready" },
+    { id: "2012-translation", label: "英译汉", meta: "6句 · 15分", status: "ready" },
   ],
   2011: [
     { id: "2011-cloze", label: "完形填空", meta: "16句 · 20题", status: "ready" },
@@ -1567,7 +1569,12 @@ export const articleContents: Record<string, ArticleContent> = {
     title: "从伟人传记到民众史", description: "28句，41—45人物匹配，保留共享A—G七选项和两项多余；逐句区分人物观点及历史传统。",
     kind: "reading", sentences: passage2012P5Sentences, questions: passage2012P5Questions,
   },
+  "2012-translation": {
+    id: "2012-translation", year: 2012, sectionId: "translation", label: "英译汉", badge: "2012 · 英语二 · 英译汉",
+    title: "人才外流：迁移选择与发展代价", description: "两段六句，第46题整篇一次作答，15分；核对迁入迁出、数据分母与未实现贡献，原卷非标准连接明确提示。",
+    kind: "translation", sentences: translation2012Sentences, questions: [], translationTasks: translation2012Tasks,
+  },
 };
 
-export const allSentences = [...verifiedClozeSentences, ...verifiedPassage1Sentences, ...verifiedPassage2Sentences, ...verifiedPassage3Sentences, ...verifiedPassage4Sentences, ...verifiedPassage5Sentences, ...verifiedTranslationSentences, ...cloze2001Sentences, ...passage2001P1Sentences, ...passage2001P2Sentences, ...cloze2010Sentences, ...passage2010P1Sentences, ...passage2010P2Sentences, ...passage2010P3Sentences, ...passage2010P4Sentences, ...passage2010P5Sentences, ...translation2010Sentences, ...cloze2011Sentences, ...passage2011P1Sentences, ...passage2011P2Sentences, ...passage2011P3Sentences, ...passage2011P4Sentences, ...passage2011P5Sentences, ...translation2011Sentences, ...writing2011ASentences, ...writing2011BSentences, ...cloze2012Sentences, ...passage2012P1Sentences, ...passage2012P3Sentences, ...passage2012P4Sentences, ...passage2012P5Sentences];
+export const allSentences = [...verifiedClozeSentences, ...verifiedPassage1Sentences, ...verifiedPassage2Sentences, ...verifiedPassage3Sentences, ...verifiedPassage4Sentences, ...verifiedPassage5Sentences, ...verifiedTranslationSentences, ...cloze2001Sentences, ...passage2001P1Sentences, ...passage2001P2Sentences, ...cloze2010Sentences, ...passage2010P1Sentences, ...passage2010P2Sentences, ...passage2010P3Sentences, ...passage2010P4Sentences, ...passage2010P5Sentences, ...translation2010Sentences, ...cloze2011Sentences, ...passage2011P1Sentences, ...passage2011P2Sentences, ...passage2011P3Sentences, ...passage2011P4Sentences, ...passage2011P5Sentences, ...translation2011Sentences, ...writing2011ASentences, ...writing2011BSentences, ...cloze2012Sentences, ...passage2012P1Sentences, ...passage2012P3Sentences, ...passage2012P4Sentences, ...passage2012P5Sentences, ...translation2012Sentences];
 export const allQuestions = [...verifiedClozeQuestions, ...verifiedPassage1Questions, ...verifiedPassage2Questions, ...verifiedPassage3Questions, ...verifiedPassage4Questions, ...verifiedPassage5Questions, ...cloze2001Questions, ...passage2001P1Questions, ...passage2001P2Questions, ...cloze2010Questions, ...passage2010P1Questions, ...passage2010P2Questions, ...passage2010P3Questions, ...passage2010P4Questions, ...passage2010P5Questions, ...cloze2011Questions, ...passage2011P1Questions, ...passage2011P2Questions, ...passage2011P3Questions, ...passage2011P4Questions, ...passage2011P5Questions, ...cloze2012Questions, ...passage2012P1Questions, ...passage2012P3Questions, ...passage2012P4Questions, ...passage2012P5Questions];
