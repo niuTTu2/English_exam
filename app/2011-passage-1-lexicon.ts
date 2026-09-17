@@ -2,6 +2,8 @@ import type { SentenceWordContext } from "./contextual-vocabulary";
 import { reviewedLexicon, type LexiconRow } from "./2011-content-helpers";
 
 const rows: LexiconRow[] = [
+  ["proposal", "proposals", "n.", "提案；建议", "the chief executive's proposals指首席执行官提出的经营建议，董事应能持异议。", "disagree with proposals（对提案持异议）", "不同于正式决议，proposal仍是提出供讨论的方案。"],
+  ["compromise", "compromises compromised compromising", "n.", "妥协；折中", "make compromises为21题干扰项，原文没有西蒙斯拒绝妥协的事实。", "make compromises（作出妥协）", "compromise作动词还可表示损害；本题复数为名词。"],
   ["retain", "retains retained retaining", "v.", "留住；保留", "可替换第18句keep，指通过条件使外部董事继续任职。", "retain outside directors（留住外部董事）", "比keep正式，均可直接接人作宾语；本句不是保持物品所有权。"],
   ["ruth", "", "proper n.", "鲁思（人名）", "Ruth Simmons的名字部分，与姓氏共同识别本文人物。", "Ruth Simmons（鲁思·西蒙斯）", "专名用于定位人物，不按普通词找近义替换。"],
   ["simmons", "", "proper n.", "西蒙斯（姓氏）", "Ms. Simmons与Ruth Simmons指同一位董事兼大学校长。", "Ms. Simmons（西蒙斯女士）", "姓氏结尾s不是名词复数，不能删去。"],
@@ -116,7 +118,7 @@ const rows: LexiconRow[] = [
 
 const reviewed = reviewedLexicon(rows);
 export const passage2011P1Lexicon = reviewed.entries;
-export const passage2011P1LemmaAliases = { ...reviewed.aliases, being: "be" };
+export const passage2011P1LemmaAliases: Record<string, string> = { ...reviewed.aliases, being: "be" };
 export const passage2011P1CollocationGlosses = reviewed.glosses;
 export const passage2011P1FormPartOfSpeech: Record<string, string> = {
   outside: "adj.", offers: "n.（复数）", worse: "adv.（badly的比较级）", times: "n.（时期的复数）", for: "prep.", before: "conj.", that: "relative pron. / conj.", enough: "det.", having: "aux.（完成式动名词/分词）", being: "aux.（被动动名词）", unremarked: "adj.", supposed: "v.-ed（职责结构）", biased: "adj.", made: "v.-ed（过去分词）", weathered: "v.-ed（过去分词）", found: "v.（过去式）", named: "v.-ed（被动分词）", sinking: "v.-ing（分词定语）", departing: "gerund", leaving: "v.-ing / gerund", once: "adv.", very: "adv.", well: "adv.", failing: "gerund", work: "n.", profits: "n.（复数）",

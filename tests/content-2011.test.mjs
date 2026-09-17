@@ -15,6 +15,21 @@ const study = await vite.ssrLoadModule("/app/study-app.tsx");
 const normalize = value => value.replace(/\s+/g, " ").replace(/\s+([,.;?!])/g, "$1").trim();
 const cloze = data.articleContents["2011-cloze"];
 
+test("2011全部正文、题干与选项在真实来源语境下没有空白词卡", () => {
+  for (const article of Object.values(data.articleContents).filter(article => article.year === 2011)) {
+    const sources = [
+      ...article.sentences.map(sentence => [sentence.id, sentence.text]),
+      ...article.questions.flatMap(question => [[`question-${question.id}-prompt`, question.prompt], ...question.options.map(option => [`question-${question.id}-option-${option.key}`, option.text])]),
+    ];
+    for (const [sourceId, text] of sources) for (const token of new Set(text.toLowerCase().match(/[a-z]+(?:\d+[a-z]*)+\b|\d+(?:st|nd|rd|th)\b|\d{4}s\b|(?:[a-z]\.){2,}|(?<![a-z0-9])[a-z]+(?:-[a-z]+)?(?:['’][a-z]+)?/g) ?? [])) {
+      const entry = study.resolveEntry(token, false, sourceId);
+      assert.match(entry.contextualMeaning, /[\u4e00-\u9fff]/, `${sourceId}:${token}中文义`);
+      assert.ok(entry.use?.trim(), `${sourceId}:${token}用法`);
+      assert.doesNotMatch(`${entry.contextualMeaning} ${entry.use} ${entry.partOfSpeech}`, /该词未出现在|随对应真题精审|word（|结合本句成分理解/, `${sourceId}:${token}`);
+    }
+  }
+});
+
 function checkReadingSource(articleId, firstQuestion, sentenceCount, answerKey) {
   const article = data.articleContents[articleId];
   const fixture = JSON.parse(readFileSync(new URL(`./fixtures/${articleId}.json`, import.meta.url), "utf8"));
@@ -39,6 +54,35 @@ test("2011Text1四段19句与原卷、独立答案一致并保留25题分歧说�
   assert.match(article.sentences[11].natural, /概率|可能性/);
   assert.doesNotMatch(article.sentences[11].natural, /百分点/);
   for (const source of answers.verifiedAnswerSources2011Passage1) assert.ok(source.url.startsWith("https://"));
+});
+
+test("2011Text2五段30句保留反问、残句、倒装与原题26—30", () => {
+  checkReadingSource("2011-p2", 26, 30, answers.verifiedAnswerKey2011Passage2);
+  const article = data.articleContents["2011-p2"];
+  assert.match(article.sentences[0].beginnerSyntax.components[0].form, /疑问/);
+  assert.match(article.sentences[12].text, /^Not the 20%/);
+  assert.equal(article.sentences[26].text, "So have science and general business reporters.");
+  assert.match(article.sentences[26].beginnerSyntax.clauses[0].predicate, /省略gone/);
+  assert.match(article.sentences[21].text, /87%/);
+  assert.match(article.sentences[22].text, /35%/);
+  assert.match(article.questions[0].prompt, /Lines3-4/);
+});
+
+test("2011Text2按来源解析多义并保持旧篇词形键和词组键", () => {
+  const cases = [["Whatever", 1, /究竟/], ["trade", 5, /贸易/], ["It", 8, /委员会/], ["little", 10, /几乎没有/], ["routine", 13, /常见|惯常/], ["papers", 15, /报纸/], ["had", 18, /竟敢|胆量/], ["they", 19, /措施/], ["Fully", 22, /高达|足足/], ["So", 27, /也一样/], ["virtue", 30, /优点|长处/]];
+  for (const [token, number, meaning] of cases) assert.match(study.resolveEntry(token, false, `2011-p2-s${number}`).contextualMeaning, meaning);
+  assert.equal(lexicon.canonicalLemma("meeting", { articleId: "2011-p2" }), "meeting");
+  assert.equal(lexicon.canonicalLemma("highly", { articleId: "2011-p2" }), "highly");
+  assert.equal(lexicon.canonicalLemma("less", { articleId: "2010-p2" }), "less");
+  assert.equal(lexicon.canonicalLemma("less"), "less");
+  assert.equal(lexicon.canonicalLemma("Lines3", { articleId: "2011-p2" }), "line");
+  assert.match(study.resolveEntry("trade", false, "2011-p1-s16").contextualMeaning, /升级/);
+  assert.equal(knowledge.getPhraseKnowledge("all the same").key, "all-the-same");
+  assert.equal(knowledge.getPhraseKnowledge("as a result").key, "as-result-2001p2");
+  const replacement = lexicon.getLexicalGuide("shrugged", { articleId: "2011-p2", sentenceId: "2011-p2-s11" }).contextualSubstitutions[0];
+  assert.equal(replacement.fit, "with-adjustment");
+  assert.match(replacement.rewrittenSentence, /have weathered the recession/);
+  assert.ok(study.resolveEntry("weather", false).contextualMeaning);
 });
 
 test("2011Text1词卡纠正董事、股票、副词比较级与过去式，不污染其他篇", () => {
