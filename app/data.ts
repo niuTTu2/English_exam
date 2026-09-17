@@ -1,3 +1,4 @@
+import { passage2011P1Sentences, passage2011P1Questions } from "./2011-passage-1-data";
 import { cloze2011Sentences, cloze2011Questions } from "./2011-cloze-data";
 import { translation2010Sentences, translation2010Tasks } from "./2010-translation-data";
 import { passage2010P5Questions, passage2010P5Sentences } from "./2010-passage-5-data";
@@ -206,6 +207,7 @@ export const sectionsByYear = {
   ],
   2011: [
     { id: "2011-cloze", label: "完形填空", meta: "16句 · 20题", status: "ready" },
+    { id: "2011-p1", label: "阅读 Text 1", meta: "19句 · 5题", status: "ready" },
   ],
   2010: [
     { id: "2010-cloze", label: "完形填空", meta: "13句 · 20题", status: "ready" },
@@ -1451,7 +1453,12 @@ export const articleContents: Record<string, ArticleContent> = {
     description: "16句、20题。先完成自测，再逐句理解自愿身份认证方案、隐私争议与强制许可的类比；词卡保留本句义与其他常考义。",
     kind: "cloze", sentences: cloze2011Sentences, questions: cloze2011Questions,
   },
+  "2011-p1": {
+    id: "2011-p1", year: 2011, sectionId: "p1", label: "阅读 Text 1", badge: "2011 · 英语二 · Text 1",
+    title: "外部董事的职责与声誉", description: "第21—25题，19句精读。区分应有职责与实际履职、财报重述与盈利增长，以及相关性和动机推断；第25题旧转载答案分歧在解析中如实说明。",
+    kind: "reading", sentences: passage2011P1Sentences, questions: passage2011P1Questions,
+  },
 };
 
-export const allSentences = [...verifiedClozeSentences, ...verifiedPassage1Sentences, ...verifiedPassage2Sentences, ...verifiedPassage3Sentences, ...verifiedPassage4Sentences, ...verifiedPassage5Sentences, ...verifiedTranslationSentences, ...cloze2001Sentences, ...passage2001P1Sentences, ...passage2001P2Sentences, ...cloze2010Sentences, ...passage2010P1Sentences, ...passage2010P2Sentences, ...passage2010P3Sentences, ...passage2010P4Sentences, ...passage2010P5Sentences, ...translation2010Sentences, ...cloze2011Sentences];
-export const allQuestions = [...verifiedClozeQuestions, ...verifiedPassage1Questions, ...verifiedPassage2Questions, ...verifiedPassage3Questions, ...verifiedPassage4Questions, ...verifiedPassage5Questions, ...cloze2001Questions, ...passage2001P1Questions, ...passage2001P2Questions, ...cloze2010Questions, ...passage2010P1Questions, ...passage2010P2Questions, ...passage2010P3Questions, ...passage2010P4Questions, ...passage2010P5Questions, ...cloze2011Questions];
+export const allSentences = [...verifiedClozeSentences, ...verifiedPassage1Sentences, ...verifiedPassage2Sentences, ...verifiedPassage3Sentences, ...verifiedPassage4Sentences, ...verifiedPassage5Sentences, ...verifiedTranslationSentences, ...cloze2001Sentences, ...passage2001P1Sentences, ...passage2001P2Sentences, ...cloze2010Sentences, ...passage2010P1Sentences, ...passage2010P2Sentences, ...passage2010P3Sentences, ...passage2010P4Sentences, ...passage2010P5Sentences, ...translation2010Sentences, ...cloze2011Sentences, ...passage2011P1Sentences];
+export const allQuestions = [...verifiedClozeQuestions, ...verifiedPassage1Questions, ...verifiedPassage2Questions, ...verifiedPassage3Questions, ...verifiedPassage4Questions, ...verifiedPassage5Questions, ...cloze2001Questions, ...passage2001P1Questions, ...passage2001P2Questions, ...cloze2010Questions, ...passage2010P1Questions, ...passage2010P2Questions, ...passage2010P3Questions, ...passage2010P4Questions, ...passage2010P5Questions, ...cloze2011Questions, ...passage2011P1Questions];

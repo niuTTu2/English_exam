@@ -1,3 +1,9 @@
+export const verifiedAnswerKey2011Passage1: Record<number, "A" | "B" | "C" | "D"> = { 21: "B", 22: "D", 23: "C", 24: "A", 25: "D" };
+export const verifiedAnswerSources2011Passage1 = [
+  { range: "21—25：B D C A D；第25题明确列为critical", label: "中国教育在线 / 2011英语二试题阅卷标准答案（2011-02-15）", url: "https://kaoyan.eol.cn/fu_xi/yingyu/201102/t20110215_577179.shtml" },
+  { range: "分歧记录：第25题列为B，未采用；应有职责的正面说明不等于全文对实际履职的肯定", label: "懒笔记 / 2011英语二Text 1解析（仅记录答案分歧）", url: "https://english-exam.lazynote.cn/kaoyan/sections/2011-english-two/section2-part-a-1/" },
+] as const;
+
 export const verifiedAnswerKey2011Cloze: Record<number, "A" | "B" | "C" | "D"> = {
   1: "A", 2: "C", 3: "B", 4: "D", 5: "D", 6: "B", 7: "A", 8: "C", 9: "C", 10: "B",
   11: "D", 12: "B", 13: "A", 14: "C", 15: "A", 16: "A", 17: "D", 18: "A", 19: "C", 20: "D",

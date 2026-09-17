@@ -15,6 +15,46 @@ const study = await vite.ssrLoadModule("/app/study-app.tsx");
 const normalize = value => value.replace(/\s+/g, " ").replace(/\s+([,.;?!])/g, "$1").trim();
 const cloze = data.articleContents["2011-cloze"];
 
+function checkReadingSource(articleId, firstQuestion, sentenceCount, answerKey) {
+  const article = data.articleContents[articleId];
+  const fixture = JSON.parse(readFileSync(new URL(`./fixtures/${articleId}.json`, import.meta.url), "utf8"));
+  assert.equal(article.sentences.length, sentenceCount);
+  assert.equal(article.questions.length, 5);
+  assert.equal(normalize(article.sentences.map(sentence => sentence.text).join(" ")), normalize(fixture.paragraphs.map(paragraph => paragraph.text).join(" ")));
+  article.questions.forEach((question, index) => {
+    assert.equal(question.number, firstQuestion + index);
+    assert.equal(question.id, 201100 + question.number);
+    assert.equal(question.prompt, fixture.questions[index * 5].text.replace(/^\d+\.\s*/, ""));
+    assert.deepEqual(question.options.map(option => option.text), fixture.questions.slice(index * 5 + 1, index * 5 + 5).map(option => option.text.replace(/^\[\s*[A-D]\s*\]\s*/, "")));
+    assert.equal(question.answer, answerKey[question.number]);
+  });
+}
+
+test("2011Text1四段19句与原卷、独立答案一致并保留25题分歧说明", () => {
+  checkReadingSource("2011-p1", 21, 19, answers.verifiedAnswerKey2011Passage1);
+  const article = data.articleContents["2011-p1"];
+  assert.equal(article.sentences[16].beginnerSyntax.clauses.length, 6);
+  assert.equal(article.questions[4].answer, "D");
+  assert.match(article.questions[4].locating, /分歧/);
+  assert.match(article.sentences[11].natural, /概率|可能性/);
+  assert.doesNotMatch(article.sentences[11].natural, /百分点/);
+  for (const source of answers.verifiedAnswerSources2011Passage1) assert.ok(source.url.startsWith("https://"));
+});
+
+test("2011Text1词卡纠正董事、股票、副词比较级与过去式，不污染其他篇", () => {
+  const cases = [["director", 1, /董事/], ["rest", 2, /余下/], ["compensation", 3, /薪酬/], ["left", 4, /离开|辞去/], ["weathered", 8, /渡过|经受/], ["earnings", 12, /盈利|收益/], ["stock", 13, /股票/], ["worse", 13, /差|不佳/], ["they", 10, /研究人员/], ["them", 15, /董事/], ["times", 18, /时期/], ["once", 19, /再一次/]];
+  for (const [token, number, meaning] of cases) assert.match(study.resolveEntry(token, false, `2011-p1-s${number}`).contextualMeaning, meaning);
+  assert.equal(lexicon.canonicalLemma("worse", { articleId: "2011-p1" }), "badly");
+  assert.match(lexicon.getLexicalGuide("worse", { articleId: "2011-p1" }).partOfSpeech, /adv/);
+  assert.match(lexicon.getLexicalGuide("offers", { articleId: "2011-p1" }).partOfSpeech, /n\./);
+  assert.match(study.resolveEntry("once", false, "2011-cloze-s9").contextualMeaning, /一次/);
+  assert.match(study.resolveEntry("very", false, "2011-cloze-s2").partOfSpeech, /adj/);
+  assert.match(study.resolveEntry("very", false, "2011-p1-s19").partOfSpeech, /adv/);
+  const replacement = lexicon.getLexicalGuide("keep", { articleId: "2011-p1", sentenceId: "2011-p1-s18" }).contextualSubstitutions[0];
+  assert.equal(replacement.target, "word:retain");
+  assert.ok(study.resolveEntry("retain", false).contextualMeaning);
+});
+
 test("2011完形逐字保留附件九段、20题80项及独立答案", () => {
   const fixture = JSON.parse(readFileSync(new URL("./fixtures/2011-cloze.json", import.meta.url), "utf8"));
   assert.equal(fixture.sha256, "c6c645b0aae768130cf35d6ace0bc86f3be31d946f4e7396a95168eb68988c82");
