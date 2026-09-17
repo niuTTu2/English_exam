@@ -1,3 +1,9 @@
+export const verifiedAnswerKey2012Cloze: Record<number, "A" | "B" | "C" | "D"> = { 1: "A", 2: "B", 3: "D", 4: "A", 5: "C", 6: "D", 7: "C", 8: "A", 9: "C", 10: "B", 11: "D", 12: "C", 13: "C", 14: "A", 15: "D", 16: "A", 17: "B", 18: "C", 19: "B", 20: "D" };
+export const verifiedAnswerSources2012Cloze = [
+  { range: "1—20；第7题明确列C symbolizing，B meaning语法上亦可成立，不能虚构排除规则", label: "哈尔滨工程大学网站所载《2012年英语（二）试题解析》1—3页（教学参考，非官方阅卷标准）", url: "https://zyxw.hrbeu.edu.cn/__local/B/D4/EA/811048CF9A6D978F3D55818782D_15D0DB51_FF24B.pdf" },
+  { range: "1—20：A B D A C D C A C B D C C A D A B C B D；与原卷选项文本核对", label: "中国教育在线2012英语二解析，2013-12-19转载（参考解析）", url: "https://kaoyan.eol.cn/fu_xi/yingyu/201312/t20131219_1054450_6.shtml" },
+];
+
 export const verifiedAnswerKey2011Passage5: Record<number, "A" | "B" | "C" | "D" | "E" | "F" | "G"> = { 41: "E", 42: "D", 43: "C", 44: "B", 45: "G" };
 export const verifiedAnswerSources2011Passage5 = [
   { range: "41—45：E D C B G；原卷人物发言与两项多余选项逐项核对", label: "中国教育在线 / 2011英语二试题阅卷标准答案（2011-02-15）", url: "https://kaoyan.eol.cn/fu_xi/yingyu/201102/t20110215_577179.shtml" },

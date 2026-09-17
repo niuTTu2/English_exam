@@ -1,0 +1,103 @@
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import test, { after } from "node:test";
+import { fileURLToPath } from "node:url";
+import { createServer } from "vite";
+const root = fileURLToPath(new URL("..", import.meta.url));
+const vite = await createServer({ appType: "custom", configFile: false, root, resolve: { alias: { "@": root } }, server: { middlewareMode: true, hmr: false } });
+after(() => vite.close());
+const data = await vite.ssrLoadModule("/app/data.ts");
+const lexicon = await vite.ssrLoadModule("/app/lexicon.ts");
+const knowledge = await vite.ssrLoadModule("/app/knowledge-base.ts");
+const contexts = await vite.ssrLoadModule("/app/contextual-vocabulary.ts");
+const answers = await vite.ssrLoadModule("/app/verified-answer-keys.ts");
+const study = await vite.ssrLoadModule("/app/study-app.tsx");
+const normalize = text => text.replace(/\s+/g, " ").replace(/\s+([,.;?!])/g, "$1").trim();
+const tokens = text => text.match(/[a-z]+(?:\d+[a-z]*)+\b|\d+(?:st|nd|rd|th)\b|\d{4}s\b|(?:[a-z]\.){2,}|(?<![a-z0-9])[a-z]+(?:-[a-z]+)*(?:['’][a-z]+)?/gi) ?? [];
+const articles = Object.values(data.articleContents).filter(article => article.year === 2012);
+const sourceHash = "b91cfe8e6a3eb63b02fc6573514e34a67937bf8160a5712ce640315e2da306f9";
+
+test("2012每篇真实来源词卡、从句边界与年度出处有效", () => {
+  assert.ok(articles.length > 0);
+  for (const article of articles) {
+    const sources = [...article.sentences.map(sentence => [sentence.id, sentence.text]), ...article.questions.flatMap(question => [[`question-${question.id}-prompt`, question.prompt], ...question.options.map(option => [data.questionOptionSourceId(question, option.key), option.text])])];
+    for (const [sourceId, text] of sources) for (const token of tokens(text)) {
+      const entry = study.resolveEntry(token, false, sourceId);
+      for (const field of ["contextualMeaning", "partOfSpeech", "use"]) {
+        assert.ok(entry[field]?.trim(), `${sourceId}/${token}/${field}`);
+        assert.doesNotMatch(entry[field], /待精审|暂无|该词未出现在|需结合来源|后续补充/, `${sourceId}/${token}/${field}`);
+      }
+    }
+    for (const sentence of article.sentences) {
+      assert.equal(sentence.chunks.map(chunk => chunk.text).join(""), sentence.text);
+      assert.ok(sentence.beginnerSyntax?.components.length);
+      let cursor = 0;
+      const trunk = tokens(sentence.trunk).map(token => token.toLowerCase());
+      for (const token of tokens(sentence.text)) if (token.toLowerCase() === trunk[cursor]) cursor += 1;
+      assert.equal(cursor, trunk.length, `${sentence.id}主干只能按原文顺序删减`);
+      for (const component of sentence.beginnerSyntax.components) {
+        assert.ok(sentence.text.includes(component.text), `${sentence.id}/${component.text}`);
+        for (const field of ["form", "function", "modifies", "explanation"]) assert.ok(component[field]?.trim());
+      }
+      for (const clause of sentence.beginnerSyntax.clauses) {
+        assert.ok(sentence.text.includes(clause.text), `${sentence.id}/${clause.text}`);
+        for (const field of ["type", "marker", "role", "subject", "predicate", "translationOrder"]) assert.ok(clause[field]?.trim());
+      }
+      for (const phrase of sentence.phrases) {
+        assert.ok(sentence.text.includes(phrase), `${sentence.id}/${phrase}`);
+        const guide = knowledge.getPhraseKnowledge(phrase);
+        assert.ok(guide?.structures.length, `${sentence.id}/${phrase}`);
+        assert.ok(guide.meaning?.trim());
+      }
+      for (const token of tokens(sentence.text)) {
+        const lemma = lexicon.canonicalLemma(token, { articleId: article.id, sentenceId: sentence.id });
+        const context = contexts.getSentenceWordContext(sentence.id, lemma);
+        for (const replacement of context?.contextualSubstitutions ?? []) {
+          assert.ok(replacement.rewrittenSentence && replacement.nuance && replacement.chinese);
+          const [kind, ...target] = replacement.target.split(":");
+          const entry = study.resolveEntry(target.join(":"), kind === "phrase");
+          assert.doesNotMatch(entry.contextualMeaning, /该词未出现在|暂无|待精审/);
+        }
+      }
+    }
+  }
+  for (const word of study.buildYearWordItems(2012)) for (const context of word.contexts) {
+    assert.ok(context.meaning?.trim());
+    assert.equal(context.meaning, study.resolveEntry(context.sourceForm, false, context.sentenceId).contextualMeaning);
+  }
+});
+
+test("2012完形逐字保留三段、16句、20题80选项及答案依据", () => {
+  const article = data.articleContents["2012-cloze"];
+  const fixture = JSON.parse(readFileSync(new URL("./fixtures/2012-cloze.json", import.meta.url), "utf8"));
+  assert.equal(fixture.sha256, sourceHash);
+  assert.equal(fixture.paragraphs.length, 3);
+  assert.equal(article.sentences.length, 16);
+  assert.equal(article.questions.length, 20);
+  const key = answers.verifiedAnswerKey2012Cloze;
+  const restored = fixture.paragraphs.map(row => row.text.replace(/__(\d+)__/g, (_, number) => fixture.options[(Number(number) - 1) * 5 + 1 + "ABCD".indexOf(key[number])].text.replace(/^\[\s*[A-D]\s*\]\s*/, ""))).join(" ");
+  assert.equal(normalize(article.sentences.map(sentence => sentence.text).join(" ")), normalize(restored));
+  assert.equal(normalize(article.sentences.map(sentence => sentence.testText ?? sentence.text).join(" ")).replace(/___\((\d+)\)/g, "__$1__"), normalize(fixture.paragraphs.map(row => row.text).join(" ")));
+  for (const question of article.questions) {
+    assert.equal(question.id, 201200 + question.number);
+    assert.equal(question.answer, key[question.number]);
+    assert.deepEqual(question.options.map(option => option.text), fixture.options.slice((question.number - 1) * 5 + 1, question.number * 5).map(row => row.text.replace(/^\[\s*[A-D]\s*\]\s*/, "")));
+  }
+  assert.equal(key[7], "C");
+  assert.match(article.questions[6].explanations.B, /可以成立|可成立/);
+  assert.match(article.sentences[8].logic, /历史/);
+  assert.equal(article.sentences[1].beginnerSyntax.clauses.length, 6);
+  assert.equal(article.sentences[12].beginnerSyntax.clauses.length, 2);
+  assert.equal(article.sentences[5].trunk, "And Joe?");
+  assert.ok(answers.verifiedAnswerSources2012Cloze.some(source => source.url.includes("hrbeu.edu.cn")));
+});
+
+test("2012完形熟词义、分词与专名按实际出处隔离", () => {
+  for (const [token, number, meaning] of [["articles", 5, /物品/], ["Issue", 5, /配发/], ["bore", 2, /承担|承受/], ["well", 3, /好|充分/], ["president", 9, /总统/], ["covering", 13, /报道/], ["writing", 13, /写作|报道/], ["Bill", 14, /比尔/], ["point", 16, /时刻/]]) assert.match(study.resolveEntry(token, false, `2012-cloze-s${number}`).contextualMeaning, meaning);
+  assert.equal(lexicon.canonicalLemma("meaning", { articleId: "2012-cloze", sourceId: "question-201207-option-B" }), "mean");
+  assert.equal(lexicon.canonicalLemma("exhaustion", { articleId: "2012-cloze" }), "exhaustion");
+  assert.equal(lexicon.canonicalLemma("distinguished", { articleId: "2012-cloze" }), "distinguished");
+assert.equal(lexicon.canonicalLemma("writing", { articleId: "2011-writing-a" }), "write");
+  assert.equal(lexicon.canonicalLemma("best"), "best");
+  assert.ok(study.resolveEntry("articles", false, "2012-cloze-s5").otherMeanings.some(meaning => /文章/.test(meaning)));
+});

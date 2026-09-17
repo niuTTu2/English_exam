@@ -1,3 +1,4 @@
+import { cloze2012PhraseGuides, cloze2012PhraseAliases, cloze2012PhraseGlosses, getCloze2012WordKnowledge } from "./2012-cloze-knowledge";
 import { writing2011BPhraseGuides, writing2011BPhraseAliases, writing2011BPhraseGlosses, getWriting2011BWordKnowledge } from "./2011-writing-b-knowledge";
 import { writing2011APhraseGuides, writing2011APhraseAliases, writing2011APhraseGlosses, getWriting2011AWordKnowledge } from "./2011-writing-a-knowledge";
 import { translation2011PhraseGuides, translation2011PhraseAliases, translation2011PhraseGlosses, getTranslation2011WordKnowledge } from "./2011-translation-knowledge";
@@ -863,6 +864,14 @@ phraseGuides["entitled-to-privacy"].meaning = "有权享有某项权利或利益
 phraseGuides["entitled-to-privacy"].summary = "be entitled to + 权利或利益；既可表示有权享有隐私，也可表示有权接受同侪审判。";
 phraseGuides["entitled-to-privacy"].structures = phraseGuides["entitled-to-privacy"].structures.map(structure => ({ ...structure, meaning: "有权享有某项权利或利益" }));
 
+for (const [key, value] of Object.entries(cloze2012PhraseGuides)) {
+  if (!phraseGuides[key]) phraseGuides[key] = value;
+}
+Object.assign(phraseAliases, cloze2012PhraseAliases);
+for (const [key, value] of Object.entries(cloze2012PhraseGlosses)) {
+  if (!collocationGlosses[key]) collocationGlosses[key] = value;
+}
+
 for (const [key, value] of Object.entries(cloze2011PhraseGuides)) {
   if (!phraseGuides[key]) phraseGuides[key] = value;
 }
@@ -989,6 +998,10 @@ export function getWordKnowledge(headword: string, context?: { articleId?: strin
   }
   if (context?.articleId === "2011-p1") {
     const contextualKnowledge = getPassage2011P1WordKnowledge(normalized(headword), context.sentenceId);
+    if (contextualKnowledge) return contextualKnowledge;
+  }
+  if (context?.articleId === "2012-cloze") {
+    const contextualKnowledge = getCloze2012WordKnowledge(normalized(headword), context.sentenceId);
     if (contextualKnowledge) return contextualKnowledge;
   }
   if (context?.articleId === "2011-cloze") {
