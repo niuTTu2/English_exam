@@ -15,6 +15,25 @@ const study = await vite.ssrLoadModule("/app/study-app.tsx");
 const normalize = value => value.replace(/\s+/g, " ").replace(/\s+([,.;?!])/g, "$1").trim();
 const cloze = data.articleContents["2011-cloze"];
 
+test("2011Text4保留六段17句、历史数量、原卷拼写及德法政策方向", () => {
+  checkReadingSource("2011-p4", 36, 17, answers.verifiedAnswerKey2011Passage4);
+  const article = data.articleContents["2011-p4"];
+  assert.match(article.sentences[3].text, /16 countries/);
+  assert.match(article.sentences[9].text, /all 27 members/);
+  assert.match(article.sentences[14].text, /trading block/);
+  assert.equal(article.sentences[4].beginnerSyntax.clauses.length, 2);
+  assert.equal(article.sentences[9].beginnerSyntax.clauses.length, 3);
+  for (const [token, number, meaning] of [["make", 1, /挺过|成功/], ["It", 7, /讨论/], ["It", 10, /德国/], ["powers", 7, /大国/], ["figures", 13, /人士/], ["write", 14, /无望/], ["too", 14, /过于|太/], ["make", 17, /使/]]) {
+    assert.match(study.resolveEntry(token, false, `2011-p4-s${number}`).contextualMeaning, meaning);
+  }
+  assert.equal(lexicon.canonicalLemma("means", { articleId: "2011-p4" }), "mean");
+  assert.match(article.sentences[11].natural, /富国转向穷国/);
+  assert.match(article.questions[2].explanations.C, /all 27/);
+  const replacement = study.resolveEntry("save", false, "2011-p4-s6").contextualSubstitutions[0];
+  assert.equal(replacement.target, "word:rescue");
+  assert.doesNotMatch(study.resolveEntry("rescue", false).contextualMeaning, /该词未/);
+});
+
 test("2011Text3七段17句及31—35原题完整，比较与否定准确", () => {
   checkReadingSource("2011-p3", 31, 17, answers.verifiedAnswerKey2011Passage3);
   const article = data.articleContents["2011-p3"];
@@ -23,6 +42,7 @@ test("2011Text3七段17句及31—35原题完整，比较与否定准确", () =>
   assert.match(article.sentences[8].beginnerSyntax.clauses[1].subject, /that/);
   assert.match(article.sentences[10].natural, /公寓更小/);
   assert.match(article.sentences[12].text, /not entirely foreign/);
+  assert.match(article.sentences[12].natural, /也有美国本土的根源/);
   assert.match(article.sentences[16].natural, /并未普及/);
   assert.match(article.sentences[16].natural, /多数/);
   assert.equal(lexicon.canonicalLemma("means", { articleId: "2011-p3" }), "mean");

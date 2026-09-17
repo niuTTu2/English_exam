@@ -1,3 +1,8 @@
+export const verifiedAnswerKey2011Passage4: Record<number, "A" | "B" | "C" | "D"> = { 36: "B", 37: "C", 38: "B", 39: "A", 40: "D" };
+export const verifiedAnswerSources2011Passage4 = [
+  { range: "36—40：B C B A D；原卷德法方案与态度定位", label: "中国教育在线 / 2011英语二试题阅卷标准答案（2011-02-15）", url: "https://kaoyan.eol.cn/fu_xi/yingyu/201102/t20110215_577179.shtml" },
+];
+
 export const verifiedAnswerKey2011Passage3: Record<number, "A" | "B" | "C" | "D"> = { 31: "C", 32: "D", 33: "C", 34: "D", 35: "B" };
 export const verifiedAnswerSources2011Passage3 = [
   { range: "31—35：C D C D B；依据原卷逐项定位", label: "中国教育在线 / 2011英语二试题阅卷标准答案（2011-02-15）", url: "https://kaoyan.eol.cn/fu_xi/yingyu/201102/t20110215_577179.shtml" },
