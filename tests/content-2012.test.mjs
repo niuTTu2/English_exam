@@ -71,6 +71,36 @@ test("2012翻译两段六句完整保留、分母与原文瑕疵明确", () => {
   assert.match(study.resolveEntry("privilege", false, "2012-translation-s2").partOfSpeech, /v/);
 });
 
+test("2012投诉邮件保留原指令与两任务，不将范文计入真题", () => {
+  const article = data.articleContents["2012-writing-a"];
+  const fixture = JSON.parse(readFileSync(new URL("./fixtures/2012-writing-a.json", import.meta.url), "utf8"));
+  assert.equal(fixture.sha256, sourceHash);
+  assert.equal(article.kind, "writing");
+  assert.equal(article.sentences.length, 6);
+  assert.equal(normalize(article.sentences.map(sentence => sentence.text).join(" ")), normalize(fixture.paragraphs.map(row => row.text).join(" ")));
+  assert.equal(article.questions.length, 0);
+  assert.equal(article.writingTasks.length, 1);
+  const task = article.writingTasks[0];
+  assert.equal(task.id, 201247);
+  assert.equal(task.number, 47);
+  assert.equal(task.points, 10);
+  assert.deepEqual(task.wordLimit, { mode: "about", count: 100 });
+  assert.equal(task.genre, "letter");
+  assert.equal(task.chart, undefined);
+  assert.deepEqual(task.instructions, article.sentences);
+  assert.match(task.sample.english.at(-1), /Zhang Wei$/);
+  assert.equal(task.sample.english.length, task.sample.chinese.length);
+  assert.equal(task.sample.english.length, task.sample.notes.length);
+  assert.match(task.sample.english.join(" "), /electronic dictionary.*online store/);
+  assert.match(task.sample.english.join(" "), /replace.*refund/);
+  assert.ok(task.sample.notes.some(note => /自行补充/.test(note)));
+  assert.ok(task.requirements.some(rule => /不写.*地址/.test(rule)));
+  assert.ok(!data.allSentences.some(sentence => sentence.text.includes(task.sample.english[1])));
+  for (const [token, number, meaning] of [["prompt", 2, /及时/], ["complaint", 2, /投诉/], ["address", 6, /地址/], ["points", 6, /分/]]) assert.match(study.resolveEntry(token, false, "2012-writing-a-s" + number).contextualMeaning, meaning);
+  assert.match(study.resolveEntry("prompt", false, "2012-writing-a-s2").partOfSpeech, /adj/);
+  assert.equal(knowledge.getPhraseKnowledge("at the end of the letter").key, "2010-p1-at-the-end-of");
+});
+
 function checkReadingSource(id, startNumber, sentenceCount, key) {
   const article = data.articleContents[id];
   const fixture = JSON.parse(readFileSync(new URL('./fixtures/' + id + '.json', import.meta.url), "utf8"));
