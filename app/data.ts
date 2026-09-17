@@ -15,6 +15,7 @@ import { cloze2010Questions, cloze2010Sentences } from "./2010-cloze-data";
 import { passage2010P1Questions, passage2010P1Sentences } from "./2010-passage-1-data";
 import { passage2010P2Questions, passage2010P2Sentences } from "./2010-passage-2-data";
 import type { ContextualSubstitution } from "./contextual-vocabulary";
+import type { VocabularySenseGuide } from "./vocabulary-senses";
 import { verifiedTrunks2000 } from "./verified-syntax-2000";
 
 export type SyntaxRole =
@@ -71,6 +72,13 @@ export type SentenceAnalysis = {
   answerWords?: string[];
 };
 
+export type OccurrenceContext = {
+  expression: string;
+  partOfSpeech: string;
+  meaning: string;
+  use: string;
+};
+
 export type VocabEntry = {
   key: string;
   headword: string;
@@ -100,10 +108,11 @@ export type VocabEntry = {
   examSynonyms?: string[];
   collocations: string[];
   otherMeanings: string[];
+  senseGuide?: VocabularySenseGuide;
   wordFamily: string[];
   confusions: string[];
   counts: { form: number; lemma: number; family: number };
-  occurrences: Array<{ sourceId?: string; year: number; section: string; excerpt: string }>;
+  occurrences: Array<{ sourceId?: string; year: number; section: string; excerpt: string; contexts?: OccurrenceContext[] }>;
 };
 
 export type Question = {

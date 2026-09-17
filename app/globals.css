@@ -3036,6 +3036,78 @@ button.reference-row.is-linked:focus-visible {
   font-size: 20px;
 }
 
+.term-senses {
+  margin-top: 14px;
+}
+
+.term-senses h3 {
+  margin: 0 0 7px;
+  color: #315e58;
+  font-size: 13px;
+}
+
+.sense-section + .sense-section,
+.term-senses section + .sense-section {
+  margin-top: 16px;
+}
+
+.sense-scope {
+  color: #64716b;
+  line-height: 1.7;
+}
+
+.sense-list,
+.sense-source-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+  min-width: 0;
+}
+
+.term-senses .sense-card > summary {
+  min-height: 44px;
+  padding: 10px;
+  background: #fffefa;
+  overflow-wrap: anywhere;
+}
+
+.term-senses summary:focus-visible,
+.sense-source-link:focus-visible {
+  outline: 2px solid #568a79;
+  outline-offset: 2px;
+}
+
+.sense-source-list > div + div {
+  padding-top: 8px;
+  border-top: 1px dashed #dfe1dc;
+}
+
+.sense-source-link {
+  min-height: 44px;
+  color: #315e58;
+  text-align: left;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+
+.occurrence-copy {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.occurrence-meaning {
+  color: #315e58;
+  line-height: 1.7;
+}
+
+.occurrence-excerpt {
+  color: #626e69;
+  line-height: 1.6;
+}
+
 .occurrence {
   display: grid;
   grid-template-columns: 88px minmax(0, 1fr);
@@ -3061,6 +3133,13 @@ button.reference-row.is-linked:focus-visible {
   background: #faf9f4;
   outline: 2px solid #568a79;
   outline-offset: 2px;
+}
+
+@media (max-width: 420px) {
+  .occurrence {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 5px;
+  }
 }
 
 [data-source-location] {

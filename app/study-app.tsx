@@ -68,6 +68,7 @@ import {
   type TranslationTask,
   translationTaskSentences,
   type VocabEntry,
+  type OccurrenceContext,
 } from "./data";
 import { buildBeginnerSyntaxGuide } from "./syntax-guide";
 import {
@@ -78,6 +79,8 @@ import {
   getWordKnowledge,
 } from "./knowledge-base";
 import { canonicalLemma, familyAliases, getLexicalGuide, type LexicalContext } from "./lexicon";
+import { getVocabularySenseGuide } from "./vocabulary-senses";
+import { getSentencePhraseContext } from "./contextual-vocabulary";
 import {
   ACTIVE_ACCOUNT_KEY, LEGACY_STORAGE_KEY, hasStudyRecords, isStudySnapshot, prepareLocalSnapshot,
   preserveLocalStudyState, readLocalStudyState, readRemoteSnapshot, reconcileStudyState,
@@ -324,15 +327,76 @@ export function currentCounts(label: string, isPhrase: boolean, sourceId?: strin
   };
 }
 
-export function currentOccurrences(label: string, isPhrase: boolean, sourceId?: string) {
-  const normalized = label.toLowerCase();
-  const lemma = lemmaOf(normalized, sourceId);
-  if (!isPhrase) {
-    const matchingIds = new Set(corpusTokens.filter((token) => token.lemma === lemma).map((token) => token.sourceId));
-    return corpusSources.filter((source) => matchingIds.has(source.id)).map((source) => ({ sourceId: source.id, year: source.article.year, section: source.section, excerpt: source.text }));
+type ContextualOccurrence = VocabEntry["occurrences"][number] & { sourceId: string; contexts: OccurrenceContext[] };
+const contextualOccurrenceCache = new Map<string, ContextualOccurrence[]>();
+
+function phraseOccurrenceContext(expression: string, sourceId?: string): OccurrenceContext {
+  const contextual = getSentencePhraseContext(sourceId, expression);
+  const knowledgeExpression = contextual?.knowledgeExpression ?? expression;
+  const knowledge = getPhraseKnowledge(knowledgeExpression);
+  const detail = getCollocationDetails([knowledgeExpression])[0];
+  return {
+    expression,
+    partOfSpeech: contextual?.partOfSpeech ?? knowledge?.type ?? "固定搭配",
+    meaning: contextual?.contextualMeaning ?? phraseGlosses[knowledgeExpression.toLowerCase()] ?? (detail?.target ? detail.meaning : knowledge?.meaning) ?? "",
+    use: contextual?.use ?? detail?.note ?? knowledge?.summary ?? "",
+  };
+}
+
+export function currentOccurrences(label: string, isPhrase: boolean, sourceId?: string): ContextualOccurrence[] {
+  const lemma = isPhrase ? undefined : lemmaOf(label.toLowerCase(), sourceId);
+  const cacheKey = isPhrase ? JSON.stringify(["phrase", normalizePhrase(label), getPhraseKnowledge(label)?.key]) : `word:${lemma}`;
+  const cached = contextualOccurrenceCache.get(cacheKey);
+  if (cached) return cached;
+  const grouped = new Map<string, ContextualOccurrence>();
+  function addContext(source: (typeof corpusSources)[number], context: OccurrenceContext) {
+    let occurrence = grouped.get(source.id);
+    if (!occurrence) {
+      occurrence = { sourceId: source.id, year: source.article.year, section: source.section, excerpt: source.text, contexts: [] };
+      grouped.set(source.id, occurrence);
+    }
+    if (!occurrence.contexts.some((existing) => normalizePhrase(existing.expression) === normalizePhrase(context.expression))) {
+      occurrence.contexts.push(context);
+    }
   }
-  const sources = new Map(findPhraseOccurrences(label, true).map(({ source }) => [source.id, source]));
-  return Array.from(sources.values(), (source) => ({ sourceId: source.id, year: source.article.year, section: source.section, excerpt: source.text }));
+  if (isPhrase) {
+    for (const { source, label: expression } of findPhraseOccurrences(label, true)) {
+      addContext(source, phraseOccurrenceContext(expression, source.id));
+    }
+  } else {
+    for (const token of corpusTokens) {
+      if (token.lemma !== lemma) continue;
+      const source = sourceById.get(token.sourceId)!;
+      const guide = getLexicalGuide(token.form, lexicalContextFor(source.id));
+      const seed = vocab[aliasToVocab[token.form] ?? guide.headword];
+      addContext(source, {
+        expression: token.form,
+        partOfSpeech: guide.partOfSpeech,
+        meaning: guide.contextualMeaning ?? seed?.contextualMeaning ?? basicMeanings[token.form] ?? "",
+        use: guide.use ?? seed?.use ?? "",
+      });
+    }
+  }
+  const occurrences = Array.from(grouped.values());
+  contextualOccurrenceCache.set(cacheKey, occurrences);
+  return occurrences;
+}
+
+export function groupOccurrenceSenses(occurrences: VocabEntry["occurrences"]) {
+  const grouped = new Map<string, { partOfSpeech: string; meaning: string; examples: Array<{ sourceId: string; expression: string; use: string }> }>();
+  for (const occurrence of occurrences) {
+    if (!occurrence.sourceId) continue;
+    for (const context of occurrence.contexts ?? []) {
+      const key = JSON.stringify([context.partOfSpeech, context.meaning]);
+      let group = grouped.get(key);
+      if (!group) {
+        group = { partOfSpeech: context.partOfSpeech, meaning: context.meaning, examples: [] };
+        grouped.set(key, group);
+      }
+      group.examples.push({ sourceId: occurrence.sourceId, expression: context.expression, use: context.use });
+    }
+  }
+  return Array.from(grouped.values());
 }
 
 function makeFallbackEntry(label: string, isPhrase = false, sentenceId?: string): VocabEntry {
@@ -423,7 +487,26 @@ export function resolveEntry(label: string, isPhrase = false, sentenceId?: strin
       ? normalized
       : aliasToVocab[normalized] ?? guide?.headword ?? normalized;
   const entry = vocab[key] ?? makeFallbackEntry(label, isPhrase, sentenceId);
-  if (phraseKnowledge) return { ...entry, display: label, counts: currentCounts(label, true, sentenceId), occurrences: currentOccurrences(label, true, sentenceId) };
+  if (phraseKnowledge) {
+    const context = phraseOccurrenceContext(label, sentenceId);
+    const knowledgeExpression = getSentencePhraseContext(sentenceId, label)?.knowledgeExpression;
+    const contextualKnowledge = knowledgeExpression ? getPhraseKnowledge(knowledgeExpression) : undefined;
+    return {
+      ...entry,
+      display: label,
+      partOfSpeech: context.partOfSpeech,
+      contextualMeaning: context.meaning,
+      use: context.use,
+      canonicalForm: contextualKnowledge?.canonical ?? entry.canonicalForm,
+      grammarRole: contextualKnowledge?.grammarRole ?? entry.grammarRole,
+      grammarSummary: contextualKnowledge?.summary ?? entry.grammarSummary,
+      structures: contextualKnowledge?.structures ?? entry.structures,
+      pitfalls: contextualKnowledge?.pitfalls ?? entry.pitfalls,
+      senseGuide: getVocabularySenseGuide(entry.headword, phraseKnowledge.key),
+      counts: currentCounts(label, true, sentenceId),
+      occurrences: currentOccurrences(label, true, sentenceId),
+    };
+  }
   const mergedCollocations = Array.from(new Set([...(entry.collocations ?? []), ...(guide?.collocations ?? [])]));
   const mergedSynonyms = guide?.examSynonyms ?? entry.examSynonyms ?? [];
   const mergedFamily = Array.from(new Set([...(entry.wordFamily ?? []), ...(guide?.wordFamily ?? [])]));
@@ -447,6 +530,7 @@ export function resolveEntry(label: string, isPhrase = false, sentenceId?: strin
     synonymDetails: getSynonymDetails(mergedSynonyms),
     familyDetails: getFamilyDetails(mergedFamily),
     otherMeanings: Array.from(new Set([...(entry.otherMeanings ?? []), ...(guide?.otherMeanings ?? [])])),
+    senseGuide: isPhrase ? undefined : getVocabularySenseGuide(guide?.headword ?? entry.headword),
     wordFamily: mergedFamily,
     confusions: Array.from(new Set([...(entry.confusions ?? []), ...(guide?.confusions ?? [])])),
     counts: currentCounts(label, isPhrase, sentenceId),
@@ -2033,7 +2117,7 @@ export default function StudyApp() {
                     ? "先标记问题；讲解会按你的自测设置解锁。"
                     : selectedTerm.entry.kind === "phrase"
                       ? "先看原文实例和规范结构，再按层展开语法。"
-                      : "先看本句义和核心句法，再按需展开搭配、变形与关联词。"}
+                      : "先看本句义，再展开其他义项、用法和各年份的语境中文义。"}
                 </SheetDescription>
               </SheetHeader>
 
@@ -2078,6 +2162,8 @@ export default function StudyApp() {
                       <strong>{selectedTerm.entry.contextualMeaning}</strong>
                       <p>{selectedTerm.entry.use}</p>
                     </section>
+
+                    <TermSenses entry={selectedTerm.entry} onSource={goToSource} />
 
                     {(selectedTerm.entry.contextualSubstitutions?.length ?? 0) > 0 && (
                       <ContextualSubstitutions
@@ -2946,7 +3032,71 @@ function ContextualSubstitutions({
   );
 }
 
-function TermDetails({
+export function TermSenses({ entry, onSource }: { entry: VocabEntry; onSource: (sourceId: string) => void }) {
+  const guide = entry.senseGuide;
+  const corpusSenses = groupOccurrenceSenses(entry.occurrences);
+  if (!guide && !corpusSenses.length && !entry.otherMeanings.length) return null;
+  return (
+    <div className="term-details term-senses">
+      <details>
+        <summary>其他义项与用法 <span>{guide ? `${guide.senses.length} 个常见义项` : "跨语境汇总"}</span></summary>
+        <div className="detail-body">
+          {guide && (
+            <section aria-label="已核验常见义项">
+              <h3>{guide.label} · 常见义项</h3>
+              <p className="sense-scope">按词典核对的常见义项，不限于本句；点击义项查看搭配与双语例句。教学例句不计入真题年份和频次，不代表每项都已考过或已穷尽考义。</p>
+              <div className="sense-list">
+                {guide.senses.map((sense) => (
+                  <details key={sense.id} className="sense-card">
+                    <summary><b>{sense.partOfSpeech}</b> · {sense.meaning}</summary>
+                    <div className="detail-body">
+                      <p>{sense.use}</p>
+                      <div className="structure-example">
+                        <small>教学例句（非真题）</small>
+                        <b>{sense.example.english}</b>
+                        <span>{sense.example.chinese}</span>
+                      </div>
+                    </div>
+                  </details>
+                ))}
+              </div>
+            </section>
+          )}
+          {entry.otherMeanings.length > 0 && (
+            <section className="sense-section" aria-label="原有多义补充">
+              <h3>熟词僻义与一词多义补充</h3>
+              <ul>{entry.otherMeanings.map((meaning) => <li key={meaning}>{meaning}</li>)}</ul>
+            </section>
+          )}
+          {corpusSenses.length > 0 && (
+            <section className="sense-section" aria-label="已导入真题用法">
+              <h3>已导入真题用法</h3>
+              <p className="sense-scope">保留各出处的具体中文义和用法；相同释义合并展示，不把相近中文表述当作新的词典义项。</p>
+              <div className="sense-list">
+                {corpusSenses.map((sense) => (
+                  <details key={`${sense.partOfSpeech}:${sense.meaning}`} className="sense-card">
+                    <summary><b>{sense.partOfSpeech}</b> · {sense.meaning}</summary>
+                    <div className="detail-body sense-source-list">
+                      {sense.examples.map((example) => (
+                        <div key={`${example.sourceId}:${example.expression}`}>
+                          <strong>{example.expression}</strong>
+                          <p>{example.use}</p>
+                          <button type="button" className="sense-source-link" onClick={() => onSource(example.sourceId)} aria-label={`回到出处：${sourceCaption(example.sourceId)}`}>{sourceCaption(example.sourceId)} →</button>
+                        </div>
+                      ))}
+                    </div>
+                  </details>
+                ))}
+              </div>
+            </section>
+          )}
+        </div>
+      </details>
+    </div>
+  );
+}
+
+export function TermDetails({
   entry,
   sentenceId,
   onReference,
@@ -3030,13 +3180,6 @@ function TermDetails({
         </details>
       )}
 
-      {entry.otherMeanings.length > 0 && (
-        <details>
-          <summary>熟词僻义与一词多义 <span>{entry.otherMeanings.length}</span></summary>
-          <div className="detail-body"><ul>{entry.otherMeanings.map((item) => <li key={item}>{item}</li>)}</ul></div>
-        </details>
-      )}
-
       {(family.length > 0 || entry.confusions.length > 0) && (
         <details>
           <summary>同源词与易混辨析 <span>{family.length + entry.confusions.length}</span></summary>
@@ -3074,7 +3217,13 @@ function TermDetails({
           </div>
           {entry.occurrences.map((item) => item.sourceId ? (
             <button type="button" key={item.sourceId} className="occurrence occurrence-link" onClick={() => onSource(item.sourceId!)} aria-label={`回到出处：${sourceCaption(item.sourceId)}`}>
-              <strong>{sourceCaption(item.sourceId)}</strong><span>{item.excerpt}</span>
+              <strong>{sourceCaption(item.sourceId)}</strong>
+              <span className="occurrence-copy">
+                {item.contexts?.map((context) => (
+                  <span key={context.expression} className="occurrence-meaning"><b>{context.expression}</b> · {context.partOfSpeech} · 本处义：{context.meaning}</span>
+                ))}
+                <span className="occurrence-excerpt">{item.excerpt}</span>
+              </span>
             </button>
           ) : (
             <p key={`${item.year}-${item.section}-${item.excerpt}`} className="occurrence"><strong>{item.year} · {item.section}</strong>{item.excerpt}</p>

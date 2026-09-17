@@ -17,6 +17,7 @@ export type ContextualSubstitution = {
 };
 
 export type SentenceWordContext = {
+  partOfSpeech?: string;
   contextualMeaning?: string;
   use?: string;
   contextualSubstitutions?: ContextualSubstitution[];
@@ -33,6 +34,8 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
   ...passage2010P3SentenceContexts,
   ...passage2010P4SentenceContexts,
   ...passage2010P5SentenceContexts,
+  "p3-s10": { note: { partOfSpeech: "n.", contextualMeaning: "注释；说明性注释", use: "in the explanatory notes 中 notes 是 note 的复数，指解释译文的说明性注释；不是音符，也不是动词‘注意’。" } },
+  "p5-s5": { note: { partOfSpeech: "n.", contextualMeaning: "意味；色彩，这里指浓重的虚伪意味", use: "a heavy note of hypocrisy 中 note 表态度或表达的意味，heavy 强调程度，of hypocrisy 说明这种意味是虚伪；不是笔记或注释。" } },
   "p2-s5": { mean: { contextualMeaning: "意味着将出现某种结果", use: "This means that... 中 means 为第三人称单数，that从句解释男女数量差异会导致择偶年龄段的男性过剩。" } },
   "p2-s19": { mean: { contextualMeaning: "意味着；表明这一结果", use: "主语 The grand mediocrity of today 对应单数谓语 means，that从句说明自然选择作用减弱；不是名词‘手段’。" } },
   "p2-s20": { mean: { contextualMeaning: "意味着", use: "this means that... 引出作者对进化状态的结论，that内容从句充当宾语，不是mean doing结构。" } },
@@ -991,7 +994,7 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
   "2010-cloze-s2": { designate: { contextualMeaning: "由权威机构正式认定、定级", use: "designated by WHO 是过去分词短语，后置修饰 epidemic。", contextualSubstitutions: [{ label: "classify", chinese: "归类；划定等级", fit: "with-adjustment", rewrittenSentence: "It is the first worldwide epidemic classified as such by WHO in 41 years.", nuance: "classify 强调按类别归档，需补 as such；designate 更突出机构正式赋予名称或地位。", adjustment: "classify 后补 as such，保留‘认定为全球性疫情’的类别信息。", target: "word:classify" }] } },
   "2010-cloze-s3": { rise: { contextualMeaning: "病例数量急剧上升", use: "a sharp rise in cases 中 rise 是可数名词，in 引出上升对象。", contextualSubstitutions: [{ label: "increase", chinese: "增加；上升", fit: "direct", rewrittenSentence: "The heightened alert followed an emergency meeting with flu experts in Geneva that assembled after a sharp increase in cases in Australia, and rising numbers in Britain, Japan, Chile and elsewhere.", nuance: "increase 是中性数量增加；rise 更自然地描写统计数值向上变化。", target: "word:increase" }] } },
   "2010-cloze-s4": { overwhelming: { contextualMeaning: "占压倒性比例的；绝大多数的", use: "the overwhelming majority of 表比例大到几乎没有相反部分。", contextualSubstitutions: [{ label: "vast", chinese: "绝大部分的", fit: "direct", rewrittenSentence: "But the epidemic is \"moderate\" in severity, according to Margaret Chan, the organization's director general, with the vast majority of patients experiencing only mild symptoms and a full recovery, often in the absence of any medical treatment.", nuance: "vast majority 是常见中性表达；overwhelming majority 更强调比例具有压倒性。", target: "word:vast" }] } },
-  "2010-cloze-s5": { note: { contextualMeaning: "注意到并记录异常情况", use: "authorities noted 后接异常住院及死亡数量作宾语。", contextualSubstitutions: [{ label: "observe", chinese: "观察到", fit: "direct", rewrittenSentence: "The outbreak came to global notice in late April 2009, when Mexican authorities observed an unusually large number of hospitalizations and deaths among healthy adults.", nuance: "observe 更突出通过观察发现；note 还暗含认为这一现象值得记录和关注。", target: "word:observe" }] } },
+  "2010-cloze-s5": { note: { partOfSpeech: "v.", contextualMeaning: "注意到并记录异常情况", use: "authorities noted 后接异常住院及死亡数量作宾语。", contextualSubstitutions: [{ label: "observe", chinese: "观察到", fit: "direct", rewrittenSentence: "The outbreak came to global notice in late April 2009, when Mexican authorities observed an unusually large number of hospitalizations and deaths among healthy adults.", nuance: "observe 更突出通过观察发现；note 还暗含认为这一现象值得记录和关注。", target: "word:observe" }] } },
   "2010-cloze-s6": { crop: { contextualMeaning: "（病例）意外、陆续出现", use: "crop up 是不及物短语，cases 作主语，地点由 in... 引出。", contextualSubstitutions: [{ label: "emerge", chinese: "出现；显现", fit: "direct", rewrittenSentence: "As much of Mexico City shut down at the height of a panic, cases began to emerge in New York City, the southwestern United States and around the world.", nuance: "emerge 较正式、中性；crop up 常暗示未预料到地在多处冒出。", target: "word:emerge" }] } },
   "2010-cloze-s7": { fade: { contextualMeaning: "病例增长势头似乎逐渐减弱", use: "seem to fade 表依据当时迹象作出的不确定判断。", contextualSubstitutions: [{ label: "subside", chinese: "逐渐平息；减弱", fit: "direct", rewrittenSentence: "In the United States, new cases seemed to subside as warmer weather arrived.", nuance: "subside 常用于疫情、风暴、疼痛等强度减弱；fade 更形象地强调渐渐淡去。", target: "word:subside" }] } },
   "2010-cloze-s8": { significant: { contextualMeaning: "显著且值得关注的", use: "significant flu activity 作 there be 句的实际主语。", contextualSubstitutions: [{ label: "substantial", chinese: "大量的；显著的", fit: "direct", rewrittenSentence: "But in late September 2009, officials reported that there was substantial flu activity in almost every state and that virtually all the samples tested are the new swine flu, also known as (A) H1N1, not seasonal flu.", nuance: "substantial 更强调活动量相当大；significant 同时强调统计上或公共卫生上的重要程度。", target: "word:substantial" }] } },
@@ -1000,7 +1003,10 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
   "2010-cloze-s11": { available: { contextualMeaning: "已经可以获得、可供使用", use: "is available 是形容词表语；ahead of expectations 说明供应早于预期。", contextualSubstitutions: [{ label: "obtainable", chinese: "可获得的", fit: "direct", rewrittenSentence: "The new vaccine, which is different from the annual flu vaccine, is obtainable ahead of expectations.", nuance: "obtainable 只强调能够取得；available 更自然地表示产品已进入供应状态。", target: "word:obtainable" }] } },
   "2010-cloze-s12": { initial: { contextualMeaning: "时间顺序上的首批、最初的", use: "initial 修饰 doses，与 in early October 的首批供应相呼应。", contextualSubstitutions: [{ label: "first", chinese: "第一批的", fit: "direct", rewrittenSentence: "More than three million doses were to be made available in early October 2009, though most of those first doses were of the FluMist nasal spray type, which is not recommended for pregnant women, people over 50 or those with breathing difficulties, heart disease or several other problems.", nuance: "first 更直白地按顺序说明首批；initial 更正式，强调供应开始阶段。", target: "word:first" }] } },
   "2010-cloze-s13": { care: { contextualMeaning: "实际照料、照顾婴儿", use: "caring for infants 是现在分词短语，后置修饰 people。", contextualSubstitutions: [{ label: "look after", chinese: "照料；照顾", fit: "direct", rewrittenSentence: "But it was still possible to vaccinate people in other high-risk groups: health care workers, people looking after infants and healthy young people.", nuance: "look after 更口语；care for 更正式，并常见于医疗和照护语境。", target: "phrase:look after" }] } },
-  "2010-p1-s1": { dramatic: { contextualMeaning: "以轰动且带有转折意味的方式结束", use: "dramatic 修饰 note，描述牛市收尾的效果。", contextualSubstitutions: [{ label: "striking", chinese: "引人注目的", fit: "direct", rewrittenSentence: "The longest bull run in a century of art-market history ended on a striking note with a sale of 56 works by Damien Hirst, Beautiful Inside My Head Forever, at Sotheby's in London on September 15th 2008.", nuance: "striking 强调引人注目；dramatic 还暗含变化突然、结局富有戏剧性。", target: "word:striking" }] } },
+  "2010-p1-s1": {
+    note: { partOfSpeech: "n.", contextualMeaning: "基调；结局的情绪色彩", use: "ended on a dramatic note 中 note 是事件收尾的基调；dramatic 指这场高价拍卖使牛市以轰动、富有戏剧性的方式结束，不是奏出音符。" },
+    dramatic: { contextualMeaning: "以轰动且带有转折意味的方式结束", use: "dramatic 修饰 note，描述牛市收尾的效果。", contextualSubstitutions: [{ label: "striking", chinese: "引人注目的", fit: "direct", rewrittenSentence: "The longest bull run in a century of art-market history ended on a striking note with a sale of 56 works by Damien Hirst, Beautiful Inside My Head Forever, at Sotheby's in London on September 15th 2008.", nuance: "striking 强调引人注目；dramatic 还暗含变化突然、结局富有戏剧性。", target: "word:striking" }] },
+  },
   "2010-p1-s2": { fetch: { contextualMeaning: "拍卖品售得某个金额", use: "fetching... 是现在分词结果状语，逻辑主语为作品。", contextualSubstitutions: [{ label: "bring in", chinese: "带来（收入）", fit: "direct", rewrittenSentence: "All but two pieces sold, bringing in more than £70m, a record for a sale by a single artist.", nuance: "bring in 更直接强调收入；fetch 是拍卖和商品成交报道中的凝练用词。", target: "phrase:bring in" }] } },
   "2010-p1-s3": { last: { contextualMeaning: "危机前最后的一次", use: "last 修饰 victory，其依据在下一句雷曼破产。", contextualSubstitutions: [{ label: "final", chinese: "最后的", fit: "direct", rewrittenSentence: "It was a final victory.", nuance: "final 直接强调序列终点；last 在叙事中更自然地连接此前牛市与随后危机。", target: "word:final" }] } },
   "2010-p1-s4": { file: { contextualMeaning: "正式申请破产保护", use: "file for bankruptcy 是法律和商业固定搭配。", contextualSubstitutions: [{ label: "apply for", chinese: "申请", fit: "direct", rewrittenSentence: "As the auctioneer called out bids, in New York one of the oldest banks on Wall Street, Lehman Brothers, applied for bankruptcy.", nuance: "apply for 是一般申请；file for 强调依法正式提交文件。", target: "phrase:apply for" }] } },
@@ -1024,4 +1030,19 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
 export function getSentenceWordContext(sentenceId: string | undefined, headword: string) {
   if (!sentenceId) return undefined;
   return sentenceWordContexts[sentenceId]?.[headword];
+}
+
+type SentencePhraseContext = Pick<SentenceWordContext, "contextualMeaning" | "use" | "partOfSpeech"> & { knowledgeExpression?: string };
+
+const sentencePhraseContexts: Record<string, Record<string, SentencePhraseContext>> = {
+  "p2-s4": {
+    "as well as": { knowledgeExpression: "almost as well as", contextualMeaning: "和……一样好（almost 表示几乎）" },
+  },
+  "2010-translation-s6": {
+    "a lack of sales": { contextualMeaning: "销售不足" },
+  },
+};
+
+export function getSentencePhraseContext(sourceId: string | undefined, expression: string) {
+  return sourceId ? sentencePhraseContexts[sourceId]?.[expression.trim().toLowerCase()] : undefined;
 }
