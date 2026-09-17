@@ -7,7 +7,7 @@ export function TrainingReview({ articles, attempts, reflections, questionWork, 
   onSentence: (id: string) => void; onQuestion: (id: number) => void; now: number;
 }) {
   const tasks = articles.flatMap(article => article.sentences.flatMap(sentence => (sentence.practice ?? []).map(task => ({ article, sentence, task, result: latestTaskAttempt(attempts, task, sentence.id) }))));
-  const due = tasks.filter(item => item.result && practiceDueAt(item.result) <= now);
+  const due = tasks.filter(item => item.result && (!item.result.correct || practiceDueAt(item.result) <= now));
   const concepts = Object.entries(grammarConcepts).map(([id, label]) => {
     const relevant = tasks.filter(item => item.task.conceptId === id && item.result);
     return { id, label, total: relevant.length, independent: relevant.filter(item => { const first = taskAttempts(attempts, item.task, item.sentence.id)[0]; return first?.correct && !first.assisted; }).length, wrong: relevant.filter(item => !item.result?.correct).length };

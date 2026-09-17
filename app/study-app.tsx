@@ -1160,6 +1160,8 @@ export default function StudyApp() {
   function recordPractice(sentence: SentenceAnalysis, task: PracticeTask, answer: string, id: string, at: number) {
     setPracticeAttempts(current => ({ ...current, [id]: { id, at, articleId: activeArticle.id, sentenceId: sentence.id, taskId: task.id, revision: task.revision,
       answer, correct: answer === task.answer, assisted: Object.hasOwn(practiceReveals, sentence.id) || Boolean(latestTaskAttempt(current, task, sentence.id)), conceptId: task.conceptId, errorType: task.errorType } }));
+    // 本题作答后立即展示反馈；后续小题可能已从反馈获得主干/关系提示。
+    setPracticeReveals(current => ({ ...current, [sentence.id]: at }));
   }
   function openPracticeSentence(id: string) {
     const article = sentenceArticle.get(id);
@@ -2008,7 +2010,7 @@ export default function StudyApp() {
             </TabsContent>
 
             <TabsContent value="review" className="mode-content">
-              <TrainingReview articles={Object.values(articleContents)} attempts={practiceAttempts} reflections={learningReflections} questionWork={questionWork} submitted={submittedSections} now={reviewNow} onSentence={openPracticeSentence} onQuestion={id => { const article = questionArticle.get(id); if (article) { setActiveSection(article.id); setSelectedYear(article.year); setView("test"); } }} />
+              <TrainingReview articles={Object.values(articleContents)} attempts={practiceAttempts} reflections={learningReflections} questionWork={questionWork} submitted={submittedSections} now={reviewNow} onSentence={openPracticeSentence} onQuestion={id => { const article = questionArticle.get(id); if (article) { setActiveSection(article.id); setSelectedYear(article.year); setView("test"); window.setTimeout(() => document.getElementById(`source-question-${id}-prompt`)?.scrollIntoView({ behavior: "smooth", block: "start" }), 0); } }} />
               <section className="review-board">
                 <div className="review-board-heading">
                   <div>

@@ -4,6 +4,8 @@
 
 执行检查以 `RELEASE_CHECKLIST.md` 为准，不在本模板再维护另一套重复审计。以下示意 ID 不可直接复制用于正式数据。
 
+新版阅读完整字段以 `TRAINING_TEMPLATE.md` 和2010 Text 1实际文件为准。以下对象展示人工录入字段；不要继续仿照旧文章的六类 `role`。先录入 `Omit<SentenceAnalysis, "chunks">`，再调用 `withReviewedSyntax(draft, colors)`，由人工成分统一产生颜色层与精确名称。
+
 ## 现有接入位置
 
 - 单篇数据：沿用 `app/<year>-passage-<n>-data.ts`、`-lexicon.ts`、`-knowledge.ts`，字段类型见 `app/data.ts`；旧文件仅作结构参考，不视为语义免审样板。
@@ -34,10 +36,7 @@
   number: 1,
   text: "完整原句",
   testText: "需要自测挖空时填写，否则省略",
-  chunks: [
-    { text: "原句中的连续片段", role: "subject" },
-    { text: "后续连续片段", role: "predicate" },
-  ],
+  // chunks 不在草稿中重复填写；末尾由 withReviewedSyntax 生成。
   trunk: "主干",
   layers: [
     { label: "层级名称", text: "英文片段：中文结构说明" },
@@ -74,7 +73,8 @@
         role: "从句在主句中充当什么或修饰什么",
         subject: "从句内部主语",
         predicate: "从句内部谓语",
-        objectOrComplement: "从句内部宾语 / 表语 / 补语；没有时省略",
+        predicateDetails: [{ function: "宾语 / 表语 / 宾语补足语中真实的一项", text: "对应原文片段" }],
+        // 没有宾语或补足成分时为空数组；有多个就分别列出，不把分类合写为标签。
         translationOrder: "中文先理解哪一层、再回到哪一层",
       },
     ],
@@ -87,7 +87,9 @@
 }
 ```
 
-`chunks` 必须按原文顺序连续覆盖全文，拼接结果应还原 `text`。`trunk` 只能使用原句中的词进行删减，禁止用释义改写主干。新导入句子必须人工填写
+`beginnerSyntax.components` 顶层按原句连续覆盖所有实词，`children`再说明内层关系。配色数组与顶层一一对应，例如 `It / was / a last victory` 使用 `["subject", "predicate", "complement"]`，最后一项 `function: "表语"`；时间状语从句用 `modifier`配色及准确名称。不得用“宾语/表语”混合标签。
+
+生成的`chunks`必须按原文顺序连续覆盖全文，拼接结果应还原 `text`。`trunk` 只能使用原句中的词进行删减，禁止用释义改写主干。新导入句子必须人工填写
 `beginnerSyntax`。自动整理只允许在编辑阶段帮助发现候选，不得进入正式展示；提交前必须逐句确认从句边界和内部主谓宾。
 `trunk` 检查必须验证“按原文词序删减”，不能只验证每个单词是否曾在原文中出现。
 
@@ -104,8 +106,8 @@
   partOfSpeech: "明确词性",
   contextualMeaning: "本句义",
   use: "本句中的具体句法和搭配说明",
-  specialForms: ["特殊变形；规则形式也应明确"],
-  examSynonyms: ["近义词（中文义和关键区别）"],
+  specialForms: ["存在的特殊变形；无特殊变化则用空数组，由界面提示规则变化"],
+  examSynonyms: ["有辨析价值的近义词（中文义和关键区别）；没有则空数组"],
   collocations: ["搭配"],
   otherMeanings: ["考研常见其他义"],
   wordFamily: ["同源词 + 词性 + 中文义"],
@@ -179,7 +181,7 @@
 {
   id: 201026, // 示例：跨卷稳定键；确认全库唯一后使用
   number: 26, // 原卷题号，与稳定键分开
-  sentenceId: "对应定位句 ID",
+  sentenceId: "兼容入口的主要定位句 ID；多句证据另存reasoning",
   prompt: "题干或挖空片段",
   options: [
     { key: "A", text: "选项" },
@@ -198,3 +200,15 @@
   },
 }
 ```
+
+新阅读题还须挂接 `QuestionReasoning`（`app/article-teaching.ts`）：每项证据有稳定ID、句ID、连续原文、作用和强度；`options`使用原卷真实键，`paraphrases`链接证据和真实选项文本。参考 `app/2010-passage-1-evidence.ts`。较难题干/选项的 `analysis` 使用同一精确语法模型，参考 `app/2010-passage-1-question-analysis.ts`。不要把题目硬绑定一个句子，或把标题名词短语编成完整句。
+
+## 阅读训练的必要接入
+
+- `paragraphs`：从原卷核对段落，按顺序列句ID，不能依据句意猜原卷分段。
+- `guide`：段落主旨/关系、全文路线、句子作用、指代、时间和观点边界。引用回到真实句子。
+- `translationAlignment` / `translationNotes`：词块与中文对应；标明根据上下文补出的中文逻辑词。
+- `practice`：每句1—3个任务，使用 `learning-model.ts`概念ID、稳定任务ID与revision，证据为连续原文；反馈解释判断方法。
+- `teachingStatus`：完成一层才置true，不把旧兼容数据标成完成；四项状态不能代替交付报告中的实际页面验收。
+
+只复制字段组织方式，不复制上一篇的本句义、主语、时间参照或题目证据。完整接手路线见 `TRAINING_TEMPLATE.md`。
