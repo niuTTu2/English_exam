@@ -27,6 +27,31 @@ const verifiedSyntax = await vite.ssrLoadModule("/app/verified-syntax-2000.ts");
 const allSentences = data.allSentences ?? data.sentences;
 const allQuestions = data.allQuestions ?? data.questions;
 
+test("单词本句义与词组、句意分开，保留词形与语境差异", async () => {
+  const word = (articleId, sentenceId, token) => lexicon.getLexicalGuide(token, { articleId, sourceId: sentenceId, sentenceId });
+  assert.equal(word("2010-p1", "2010-p1-s1", "dramatic").contextualMeaning, "戏剧性的；引人注目的");
+  assert.equal(word("2010-p1", "2010-p1-s4", "filed").contextualMeaning, "提出；提交（申请）");
+  assert.equal(word("2010-p1", "2010-p1-s5", "momentum").contextualMeaning, "动力；势头");
+  assert.equal(word("2010-p1", "2010-p1-s15", "confident").contextualMeaning, "确信的；有信心的");
+  assert.equal(word("2010-p2", "2010-p2-s1", "room").contextualMeaning, "房间；室");
+  assert.equal(word("2010-p2", "2010-p2-s6", "room").contextualMeaning, "满屋的人");
+  assert.match(word("2010-p2", "2010-p2-s1", "room").use, /living room|客厅/);
+  assert.equal(word("2001-cloze", "2001-cloze-s3", "offer").contextualMeaning, "提供；给予");
+  assert.match(word("2001-cloze", "2001-cloze-s3", "offer").use, /sufficient control/);
+  assert.equal(word("cloze", "cloze-s1", "wishes").contextualMeaning, "希望；想要");
+  assert.match(knowledge.getPhraseKnowledge("between his consumption and his production").meaning, /之间/);
+  // 单词没有携带原文的主语、宾语和否定；这些信息仍留在本句用法中。
+  assert.equal(word("2010-translation", "2010-translation-s8", "in").contextualMeaning, "在（某一时段）");
+  assert.match(word("2010-translation", "2010-translation-s8", "in").use, /wake up/);
+  const study = await vite.ssrLoadModule("/app/study-app.tsx");
+  const wordCard = study.resolveEntry("dramatic", false, "2010-p1-s1");
+  const phraseCard = study.resolveEntry("on a dramatic note", true, "2010-p1-s1");
+  assert.equal(wordCard.kind, "word");
+  assert.equal(phraseCard.kind, "phrase");
+  assert.notEqual(wordCard.contextualMeaning, phraseCard.contextualMeaning);
+  assert.equal(wordCard.contextualMeaning, "戏剧性的；引人注目的");
+});
+
 const forbiddenPlaceholder = /(待精审|后续补充|持续补充|结合本句成分理解|暂无资料|将在所属真题精审|该词未出现在)/;
 const forbiddenSyntaxPlaceholder = /(从引导词后找动作发出者|找带时态、情态或语态变化的动词|再看谓语后是否需要宾语|结合相邻主干判断)/;
 const normalizeText = (value) => value.replace(/\s+/g, " ").trim();
@@ -1161,7 +1186,8 @@ test("2010 Text 2 词义按句隔离且屈折词形与派生词族分开", () =>
       assert.equal(guide.use, context.use);
     }
   }
-  assert.match(guideFor("room", 1).contextualMeaning, /客厅/);
+  assert.equal(guideFor("room", 1).contextualMeaning, "房间；室");
+  assert.match(guideFor("room", 1).use, /living room/);
   assert.match(guideFor("room", 6).contextualMeaning, /人|听众/);
   assert.notEqual(guideFor("share", 15).contextualMeaning, guideFor("share", 18).contextualMeaning);
   assert.match(guideFor("share", 15).use, /名词/);
@@ -1184,7 +1210,8 @@ test("2010 Text 2 词义按句隔离且屈折词形与派生词族分开", () =>
   assert.match(oldIdeas.use, /customs/);
   assert.doesNotMatch(oldIdeas.use, /offering|主旨/);
   assert.doesNotMatch(lexicon.getLexicalGuide("work", { articleId: "2010-p1" }).contextualMeaning, /日常生活事务/);
-  assert.match(guideFor("work", 15).contextualMeaning, /日常生活/);
+  assert.equal(guideFor("work", 15).contextualMeaning, "工作；事务");
+  assert.match(guideFor("work", 15).use, /生活|家务/);
   const questionContext = { articleId: "2010-p2" };
   assert.match(lexicon.getLexicalGuide("line", questionContext).use, /第2段第3行/);
   assert.match(lexicon.getLexicalGuide("para", questionContext).use, /第2段/);

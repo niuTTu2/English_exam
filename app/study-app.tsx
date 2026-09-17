@@ -444,9 +444,7 @@ function makeFallbackEntry(label: string, isPhrase = false, sentenceId?: string)
     kind: isPhrase ? "phrase" : "word",
     partOfSpeech: isPhrase ? "固定搭配" : guide?.partOfSpeech ?? "词性待精审",
     contextualMeaning:
-      phraseGlosses[normalized] ??
-      basicMeanings[normalized] ??
-      guide?.contextualMeaning ??
+      (isPhrase ? phraseGlosses[normalized] : guide?.contextualMeaning ?? basicMeanings[normalized]) ??
       "该词未出现在当前精审语料中；释义会在它所属的真题文章精审时补全。",
     use: option
       ? `本题辨析：${option.explanation}`
@@ -488,7 +486,10 @@ export function resolveEntry(label: string, isPhrase = false, sentenceId?: strin
     : isPhrase
       ? normalized
       : aliasToVocab[normalized] ?? guide?.headword ?? normalized;
-  const entry = vocab[key] ?? makeFallbackEntry(label, isPhrase, sentenceId);
+  const seed = vocab[key];
+  const entry = seed?.kind === (isPhrase ? "phrase" : "word")
+    ? seed
+    : makeFallbackEntry(label, isPhrase, sentenceId);
   if (phraseKnowledge) {
     const context = phraseOccurrenceContext(label, sentenceId);
     const knowledgeExpression = getSentencePhraseContext(sentenceId, label)?.knowledgeExpression;
@@ -515,6 +516,7 @@ export function resolveEntry(label: string, isPhrase = false, sentenceId?: strin
   return {
     ...entry,
     key,
+    kind: isPhrase ? "phrase" : "word",
     display: label,
     headword: guide?.headword ?? entry.headword,
     partOfSpeech: guide?.partOfSpeech ?? entry.partOfSpeech,

@@ -443,8 +443,8 @@ const specialForms: Record<string, string[]> = {
 };
 
 const contextualMeaning: Record<string, string> = {
-  between: "在……之间；原句构成 between his consumption and his production",
-  before: "在……之前；原选项 long before 表“早在……之前”",
+  between: "在……之间",
+  before: "在……之前",
   characteristic: "典型的；具有某种特征的",
   consider: "认为；考虑；把……看作",
   decrease: "减少；降低；下降",
@@ -452,13 +452,13 @@ const contextualMeaning: Record<string, string> = {
   difference: "差别；差异",
   disadvantage: "不利条件；劣势",
   disparity: "明显差距；不平等",
-  ever: "曾经；在任何时候；原选项 ever since 表“自从……以来”",
+  ever: "曾经；在任何时候",
   excess: "过量；过剩；超出所需的部分",
   expect: "预料；期待某事很可能发生",
   hope: "希望某件可能实现的事发生",
-  long: "很久；长的；原选项 long before 中作副词",
-  more: "更多；原选项 more than 表“超过；不仅仅”",
-  much: "很多；原选项 much as 表“尽管”",
+  long: "很久；长的",
+  more: "更多",
+  much: "很多；大量",
   prosper: "兴旺；繁荣；成功发展",
   serious: "严重的；认真的",
   since: "自从；因为；从……以后",
@@ -467,9 +467,9 @@ const contextualMeaning: Record<string, string> = {
   successfully: "成功地；顺利地",
   than: "比；用于比较结构",
   want: "想要；需要（最普通、直接）",
-  well: "好地；原选项 as well as 表“也；以及”",
+  well: "好地；顺利地",
   wise: "明智的；有判断力的",
-  wish: "希望；原句 wishes to succeed 表较正式地“想要成功”",
+  wish: "希望；想要",
 };
 
 const usage: Record<string, string> = {
@@ -856,7 +856,7 @@ export function getLexicalGuide(token: string, context?: LexicalContext): Lexica
     examSynonyms: writing2012BExtra ? writing2012BExtra.examSynonyms : writing2012AExtra ? writing2012AExtra.examSynonyms : translation2012Extra ? translation2012Extra.examSynonyms : passage2012P5Extra ? passage2012P5Extra.examSynonyms : passage2012P4Extra ? passage2012P4Extra.examSynonyms : passage2012P3Extra ? passage2012P3Extra.examSynonyms : passage2012P2Extra ? passage2012P2Extra.examSynonyms : passage2012P1Extra ? passage2012P1Extra.examSynonyms : cloze2012Extra ? cloze2012Extra.examSynonyms : [],
   } : undefined;
   const passageEntry = chronologicalEntry ?? (context?.articleId ? articleEntry ?? globalPassageEntry : globalPassageEntry);
-  const sentenceContext = getSentenceWordContext(context?.sentenceId, headword);
+  const sentenceContext = getSentenceWordContext(context?.sourceId ?? context?.sentenceId, headword);
   const pos = chronologicalEntry?.partOfSpeech ?? (context?.articleId === "2012-writing-b" ? writing2012BFormPartOfSpeech[normalized] ?? writing2012BEntry?.partOfSpeech : undefined) ?? (context?.articleId === "2012-writing-a" ? writing2012AFormPartOfSpeech[normalized] ?? writing2012AEntry?.partOfSpeech : undefined) ?? (context?.articleId === "2012-translation" ? translation2012FormPartOfSpeech[normalized] ?? translation2012Entry?.partOfSpeech : undefined) ?? (context?.articleId === "2012-p5" ? passage2012P5FormPartOfSpeech[normalized] ?? passage2012P5Entry?.partOfSpeech : undefined) ?? (context?.articleId === "2012-p4" ? passage2012P4FormPartOfSpeech[normalized] ?? passage2012P4Entry?.partOfSpeech : undefined) ?? (context?.articleId === "2012-p3" ? passage2012P3FormPartOfSpeech[normalized] ?? passage2012P3Entry?.partOfSpeech : undefined) ?? (context?.articleId === "2012-p2" ? passage2012P2FormPartOfSpeech[normalized] ?? passage2012P2Entry?.partOfSpeech : undefined) ?? (context?.articleId === "2012-p1" ? passage2012P1FormPartOfSpeech[normalized] ?? passage2012P1Entry?.partOfSpeech : undefined) ?? (context?.articleId === "2012-cloze" ? cloze2012FormPartOfSpeech[normalized] ?? cloze2012Entry?.partOfSpeech : undefined) ?? (context?.articleId === "2011-writing-b" ? writing2011BFormPartOfSpeech[normalized] ?? writing2011BEntry?.partOfSpeech : undefined) ?? (context?.articleId === "2011-writing-a" ? writing2011AFormPartOfSpeech[normalized] ?? writing2011AEntry?.partOfSpeech : undefined) ?? (context?.articleId === "2011-translation" ? translation2011FormPartOfSpeech[normalized] ?? translation2011Entry?.partOfSpeech : undefined) ?? (context?.articleId === "2011-p5" ? passage2011P5FormPartOfSpeech[normalized] ?? passage2011P5Entry?.partOfSpeech : undefined) ?? (context?.articleId === "2011-p4" ? passage2011P4FormPartOfSpeech[normalized] ?? passage2011P4Entry?.partOfSpeech : undefined) ?? (context?.articleId === "2011-p3" ? passage2011P3FormPartOfSpeech[normalized] ?? passage2011P3Entry?.partOfSpeech : undefined) ?? (context?.articleId === "2011-p2" ? passage2011P2FormPartOfSpeech[normalized] ?? passage2011P2Entry?.partOfSpeech : undefined) ?? (context?.articleId === "2011-p1" ? passage2011P1FormPartOfSpeech[normalized] ?? passage2011P1Entry?.partOfSpeech : undefined) ?? (context?.articleId === "2011-cloze" ? cloze2011FormPartOfSpeech[normalized] ?? cloze2011Entry?.partOfSpeech : undefined) ?? (context?.articleId === "2010-translation" ? translation2010FormPartOfSpeech[normalized] ?? translation2010Entry?.partOfSpeech : undefined) ?? (context?.articleId === "2010-p5" ? passage2010P5FormPartOfSpeech[normalized] ?? passage2010P5Entry?.partOfSpeech : undefined) ?? (context?.articleId === "2010-p4" ? passage2010P4FormPartOfSpeech[normalized] ?? passage2010P4Entry?.partOfSpeech : undefined) ?? (context?.articleId === "2010-p3" ? passage2010P3FormPartOfSpeech[normalized] ?? passage2010P3Entry?.partOfSpeech : undefined) ?? (context?.articleId === "2010-p2" ? passage2010P2FormPartOfSpeech[normalized] ?? passage2010P2Entry?.partOfSpeech : undefined) ?? passage2010P1FormPartOfSpeech[normalized] ?? cloze2010FormPartOfSpeech[normalized] ?? formPartOfSpeech[normalized] ?? passageEntry?.partOfSpeech ?? partOfSpeech[headword] ?? inferPartOfSpeech(headword);
   const contextualPos = sentenceContext?.partOfSpeech ?? pos;
   const isStructureWord = /art\.|prep\.|conj\.|pron\.|det\.|modal/.test(contextualPos);
@@ -869,8 +869,10 @@ export function getLexicalGuide(token: string, context?: LexicalContext): Lexica
   return {
     headword,
     partOfSpeech: contextualPos,
-    contextualMeaning: sentenceContext?.contextualMeaning ?? passageEntry?.contextualMeaning ?? contextualMeaning[headword],
-    use: sentenceContext?.use ?? passageEntry?.use ?? usage[headword],
+    // 词义只解释当前单词；语境整义保存在 use 或词组卡。没有本篇覆盖时，
+    // 先用共用词义，再借用其他篇的已审词条，避免早期文章的句意抢占通用释义。
+    contextualMeaning: sentenceContext?.contextualMeaning ?? chronologicalEntry?.contextualMeaning ?? articleEntry?.contextualMeaning ?? contextualMeaning[headword] ?? passageEntry?.contextualMeaning,
+    use: sentenceContext?.use ?? chronologicalEntry?.use ?? articleEntry?.use ?? usage[headword] ?? passageEntry?.use,
     specialForms: writing2012BExtra ? writing2012BExtra.specialForms : writing2012AExtra ? writing2012AExtra.specialForms : translation2012Extra ? translation2012Extra.specialForms : passage2012P5Extra ? passage2012P5Extra.specialForms : passage2012P4Extra ? passage2012P4Extra.specialForms : passage2012P3Extra ? passage2012P3Extra.specialForms : passage2012P2Extra ? passage2012P2Extra.specialForms : passage2012P1Extra ? passage2012P1Extra.specialForms : cloze2012Extra ? cloze2012Extra.specialForms : writing2011BExtra ? writing2011BExtra.specialForms : writing2011AExtra ? writing2011AExtra.specialForms : translation2011Extra ? translation2011Extra.specialForms : passage2011P5Extra ? passage2011P5Extra.specialForms : passage2011P4Extra ? passage2011P4Extra.specialForms : passage2011P3Extra ? passage2011P3Extra.specialForms : passage2011P2Extra ? passage2011P2Extra.specialForms : passage2011P1Extra ? passage2011P1Extra.specialForms : cloze2011Extra ? cloze2011Extra.specialForms : context?.articleId === "2010-translation" && translation2010Extra ? translation2010Extra.specialForms : Array.from(new Set([...(translation2010Extra?.specialForms ?? []), ...(passage2010P5Extra?.specialForms ?? []), ...(passage2010P4Extra?.specialForms ?? []), ...(passage2010P3Extra?.specialForms ?? []), ...(passage2010P2Extra?.specialForms ?? []), ...(cloze2010Entry?.specialForms ?? []), ...(passage2010P1Entry?.specialForms ?? []), ...(mergedSpecialForms.length > 0 ? mergedSpecialForms : [isStructureWord ? "结构词：无普通词形变化，重点看句法位置" : "无需要单独记忆的不规则变形"])])),
     examSynonyms: writing2012BExtra ? writing2012BExtra.examSynonyms : writing2012AExtra ? writing2012AExtra.examSynonyms : translation2012Extra ? translation2012Extra.examSynonyms : passage2012P5Extra ? passage2012P5Extra.examSynonyms : passage2012P4Extra ? passage2012P4Extra.examSynonyms : passage2012P3Extra ? passage2012P3Extra.examSynonyms : passage2012P2Extra ? passage2012P2Extra.examSynonyms : passage2012P1Extra ? passage2012P1Extra.examSynonyms : cloze2012Extra ? cloze2012Extra.examSynonyms : writing2011BExtra ? writing2011BExtra.examSynonyms : writing2011AExtra ? writing2011AExtra.examSynonyms : translation2011Extra ? translation2011Extra.examSynonyms : passage2011P5Extra ? passage2011P5Extra.examSynonyms : passage2011P4Extra ? passage2011P4Extra.examSynonyms : passage2011P3Extra ? passage2011P3Extra.examSynonyms : passage2011P2Extra ? passage2011P2Extra.examSynonyms : passage2011P1Extra ? passage2011P1Extra.examSynonyms : cloze2011Extra ? cloze2011Extra.examSynonyms : context?.articleId === "2010-translation" && translation2010Extra ? translation2010Extra.examSynonyms : context?.articleId === "2010-p5" && passage2010P5Extra ? passage2010P5Extra.examSynonyms : context?.articleId === "2010-p4" && passage2010P4Extra ? passage2010P4Extra.examSynonyms : context?.articleId === "2010-p3" && passage2010P3Extra ? passage2010P3Extra.examSynonyms : Array.from(new Set([...(translation2010Extra?.examSynonyms ?? []), ...(passage2010P5Extra?.examSynonyms ?? []), ...(passage2010P4Extra?.examSynonyms ?? []), ...(passage2010P3Extra?.examSynonyms ?? []), ...(passage2010P2Extra?.examSynonyms ?? []), ...(cloze2010Entry?.examSynonyms ?? []), ...(passage2010P1Entry?.examSynonyms ?? []), ...(mergedExamSynonyms.length > 0 ? mergedExamSynonyms : [isStructureWord ? "结构词通常不能脱离句型直接替换" : "本词暂无需要成组强记的考研近义词"])])),
     collocations: Array.from(new Set([...(writing2012BExtra?.collocations ?? []), ...(writing2012AExtra?.collocations ?? []), ...(translation2012Extra?.collocations ?? []), ...(passage2012P5Extra?.collocations ?? []), ...(passage2012P4Extra?.collocations ?? []), ...(passage2012P3Extra?.collocations ?? []), ...(passage2012P2Extra?.collocations ?? []), ...(passage2012P1Extra?.collocations ?? []), ...(cloze2012Extra?.collocations ?? []), ...(writing2011BExtra?.collocations ?? []), ...(writing2011AExtra?.collocations ?? []), ...(translation2011Extra?.collocations ?? []), ...(passage2011P5Extra?.collocations ?? []), ...(passage2011P4Extra?.collocations ?? []), ...(passage2011P3Extra?.collocations ?? []), ...(passage2011P2Extra?.collocations ?? []), ...(passage2011P1Extra?.collocations ?? []), ...(cloze2011Extra?.collocations ?? []), ...(translation2010Extra?.collocations ?? []), ...(passage2010P5Extra?.collocations ?? []), ...(passage2010P2Extra?.collocations ?? []), ...(cloze2010Entry?.collocations ?? []), ...(passage2010P1Entry?.collocations ?? []), ...mergedCollocations])),

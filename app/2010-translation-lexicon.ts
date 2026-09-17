@@ -145,7 +145,7 @@ export const translation2010FormPartOfSpeech: Record<string, string> = {
 export const translation2010SentenceContexts: Record<string, Record<string, SentenceWordContext>> = {
   "2010-translation-s1": {
     have: { contextualMeaning: "has作完成时助动词；have表具有", use: "has become的has承载现在完成时；will always have中的have为实义动词，宾语是personal meaning，二者不能都译为拥有。" },
-    to: { contextualMeaning: "对宁而言", use: "to Ted Ning是观点状语，限定第二分句的个人视角。" },
+    to: { contextualMeaning: "对……而言", use: "to Ted Ning是观点状语，限定第二分句的个人视角。" },
     the: { contextualMeaning: "这个（已提及的概念）", use: "the concept回指句首sustainability，不引入新概念。" },
   },
   "2010-translation-s2": {
@@ -154,8 +154,8 @@ export const translation2010SentenceContexts: Record<string, Record<string, Sent
     that: { contextualMeaning: "引出真正宾语内容", use: "that sustainability-oriented values must be expressed...说明变得清楚的内容，与前面的形式宾语it对应，不是结果从句。" },
     be: { contextualMeaning: "构成被动式", use: "must be expressed中be接过去分词expressed，values是被体现的内容。" },
     through: { contextualMeaning: "通过（实践途径）", use: "through everyday action and choice表示体现价值观的方式，action与choice是并列介词宾语。" },
-    in: { contextualMeaning: "在他自己的生活中", use: "in his own life限定这段难以为继的经历发生的生活范围，不是空间位置。" },
-    to: { contextualMeaning: "对他而言", use: "to him指出这段经历使谁明白，him指宁。" },
+    in: { contextualMeaning: "在……中", use: "in his own life限定这段难以为继的经历发生的生活范围，不是空间位置。" },
+    to: { contextualMeaning: "对……而言", use: "to him指出这段经历使谁明白，him指宁。" },
     of: { contextualMeaning: "处于……状态的", use: "of unsustainability后置限定period，说明时期的性质。" },
   },
   "2010-translation-s3": {
@@ -167,8 +167,8 @@ export const translation2010SentenceContexts: Record<string, Record<string, Sent
     be: { contextualMeaning: "处于经历过某事的状态", use: "He'd been through中been是be的过去分词，与had构成过去完成时；through后接所经历的兴衰。" },
     through: { contextualMeaning: "经历过（兴衰）", use: "be through the dot-com boom and burst整体表示经历过互联网行业的繁荣与破裂，不是通过某项行动来做事。" },
     and: { contextualMeaning: "连接兴衰；再连接经历与入职", use: "第一个and连接boom和burst两个名词；第二个and连接共有主语He的两个谓语部分，中间插入desperate for a job。" },
-    the: { contextualMeaning: "特指互联网行业那一轮兴衰", use: "the限定dot-com boom and burst的整体并列名词组。" },
-    job: { contextualMeaning: "一份谋生的工作", use: "a job泛指他急需的就业机会，随后交代实际签约的保险代理机构。" },
+    the: { contextualMeaning: "定冠词：表示特指", use: "the限定dot-com boom and burst的整体并列名词组。" },
+    job: { contextualMeaning: "工作；职位", use: "a job泛指他急需的就业机会，随后交代实际签约的保险代理机构。" },
   },
   "2010-translation-s5": {
     it: { contextualMeaning: "这份工作的开展情况", use: "It为有实义指代的主语，回指卖保险的工作情况；不同于第2句的形式宾语。" },
@@ -176,7 +176,7 @@ export const translation2010SentenceContexts: Record<string, Record<string, Sent
   "2010-translation-s6": {
     it: { contextualMeaning: "签约卖保险这个决定", use: "It was a really bad move评价此前的入职选择，It不是形式主语。" },
     be: { contextualMeaning: "是（过去的判断）", use: "was连接It与表语a really bad move，属于主系表结构。" },
-    job: { contextualMeaning: "卖保险的这份工作", use: "about the job限定dilemma，说明两难与他已经从事的这份工作有关。" },
+    job: { contextualMeaning: "工作；职位", use: "about the job限定dilemma，说明两难与他已经从事的这份工作有关。" },
     the: { contextualMeaning: "这份（先前提及的工作）", use: "the job回指卖保险，承接前文a job所获得的具体职位。" },
     of: { contextualMeaning: "引出所缺少的对象", use: "a lack of sales中of引销售，lack是名词，不能据此断言销量为零。" },
   },
@@ -188,14 +188,14 @@ export const translation2010SentenceContexts: Record<string, Record<string, Sent
     have: { contextualMeaning: "有；感受到（焦虑）", use: "had是实义动词过去式，宾语so much anxiety；不是过去完成时助动词。" },
     that: { contextualMeaning: "以至于（引出结果）", use: "与so much呼应，引出严重焦虑导致的反复半夜醒来和凝视行为，不是第2句那样的宾语从句。" },
     and: { contextualMeaning: "并且（连接两个反复动作）", use: "wake up和stare并列，共用I与would；stare仍为原形。" },
-    in: { contextualMeaning: "在半夜", use: "in the middle of the night作时间状语修饰wake up，不是形容夜色。" },
-    of: { contextualMeaning: "……的中间", use: "of the night限定middle，整体构成半夜的时间表达。" },
-    the: { contextualMeaning: "限定夜间中段和室内天花板", use: "the middle为夜晚中间的时段，the night指夜间，the ceiling为当时房间里可辨认的天花板。" },
+    in: { contextualMeaning: "在（某一时段）", use: "in the middle of the night作时间状语修饰wake up，不是形容夜色。" },
+    of: { contextualMeaning: "……的", use: "of the night限定middle，整体构成半夜的时间表达。" },
+    the: { contextualMeaning: "定冠词：表示特指", use: "the middle为夜晚中间的时段，the night指夜间，the ceiling为当时房间里可辨认的天花板。" },
   },
   "2010-translation-s9": {
     have: { contextualMeaning: "有（钱）", use: "had为实义动词过去式，no money否定持有的钱；与needed并列共用I。" },
     and: { contextualMeaning: "又；而且", use: "连接had no money与needed the job两个谓语，共同交代经济压力，不引导从句。" },
-    job: { contextualMeaning: "谋生所需的这份保险工作", use: "needed the job说明即便工作不合兴趣，宁在经济上仍需要它。" },
+    job: { contextualMeaning: "工作；职位", use: "needed the job说明即便工作不合兴趣，宁在经济上仍需要它。" },
     the: { contextualMeaning: "这份已提到的工作", use: "the job为needed的宾语，承接保险代理工作，不是泛指所有工作。" },
   },
   "2010-translation-s10": {

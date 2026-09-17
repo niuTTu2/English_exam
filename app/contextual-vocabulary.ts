@@ -36,6 +36,8 @@ export type ContextualSubstitution = {
 
 export type SentenceWordContext = {
   partOfSpeech?: string;
+  // 当前词形在此处的词义/语法作用，不能把修饰语、宾语或整句译文当成词义。
+  // 代词可简要注明指代；习语中不能独立释义的小品词应注明作用，整体义留给 use。
   contextualMeaning?: string;
   use?: string;
   contextualSubstitutions?: ContextualSubstitution[];
@@ -71,9 +73,9 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
   ...passage2010P4SentenceContexts,
   ...passage2010P5SentenceContexts,
   "p3-s10": { note: { partOfSpeech: "n.", contextualMeaning: "注释；说明性注释", use: "in the explanatory notes 中 notes 是 note 的复数，指解释译文的说明性注释；不是音符，也不是动词‘注意’。" } },
-  "p5-s5": { note: { partOfSpeech: "n.", contextualMeaning: "意味；色彩，这里指浓重的虚伪意味", use: "a heavy note of hypocrisy 中 note 表态度或表达的意味，heavy 强调程度，of hypocrisy 说明这种意味是虚伪；不是笔记或注释。" } },
-  "p2-s5": { mean: { contextualMeaning: "意味着将出现某种结果", use: "This means that... 中 means 为第三人称单数，that从句解释男女数量差异会导致择偶年龄段的男性过剩。" } },
-  "p2-s19": { mean: { contextualMeaning: "意味着；表明这一结果", use: "主语 The grand mediocrity of today 对应单数谓语 means，that从句说明自然选择作用减弱；不是名词‘手段’。" } },
+  "p5-s5": { note: { partOfSpeech: "n.", contextualMeaning: "意味；色彩", use: "a heavy note of hypocrisy 中 note 表态度或表达的意味，heavy 强调程度，of hypocrisy 说明这种意味是虚伪；不是笔记或注释。" } },
+  "p2-s5": { mean: { contextualMeaning: "意味着", use: "This means that... 中 means 为第三人称单数，that从句解释男女数量差异会导致择偶年龄段的男性过剩。" } },
+  "p2-s19": { mean: { contextualMeaning: "意味着；表明", use: "主语 The grand mediocrity of today 对应单数谓语 means，that从句说明自然选择作用减弱；不是名词‘手段’。" } },
   "p2-s20": { mean: { contextualMeaning: "意味着", use: "this means that... 引出作者对进化状态的结论，that内容从句充当宾语，不是mean doing结构。" } },
   "translation-s35": { means: { contextualMeaning: "手段；工具", use: "by modern means of transport 中 means 为名词，of transport说明运输用途；means单复数同形，不计入动词mean。" } },
   "cloze-s1": {
@@ -229,7 +231,7 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
   },
   "p5-s1": {
     regard: {
-      contextualMeaning: "认可；正面看待",
+      contextualMeaning: "看待；评价",
       use: "be well regarded 在本句讨论 ambition 能否获得社会认可，重点是评价正面，不是“认为……是某物”的 regard A as B。",
       contextualSubstitutions: [
         {
@@ -262,7 +264,7 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
   },
   "translation-s31": {
     require: {
-      contextualMeaning: "需要（措施与专业帮助）",
+      contextualMeaning: "需要",
       use: "requires 后并列两个宾语：varying measures of centralized control 与 the help of specialized scientists。",
       contextualSubstitutions: [
         {
@@ -278,7 +280,7 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
   },
   "2001-cloze-s1": {
     ban: {
-      contextualMeaning: "以政府措施正式禁止",
+      contextualMeaning: "禁止",
       use: "is to ban payments 中 ban 直接接名词宾语 payments，表示政府将通过规则禁止这种付款。",
       contextualSubstitutions: [{
         label: "prohibit",
@@ -290,7 +292,7 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
       }],
     },
     prominent: {
-      contextualMeaning: "引人注目、社会关注度高的",
+      contextualMeaning: "引人注目的；显著的",
       use: "prominent cases 修饰受到媒体和公众高度关注的重大案件，不是‘位置突出的案件’。",
       contextualSubstitutions: [{
         label: "high-profile",
@@ -304,7 +306,7 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
   },
   "2001-cloze-s2": {
     significant: {
-      contextualMeaning: "幅度和政策意义都明显的",
+      contextualMeaning: "显著的；重要的",
       use: "significant 修饰 tightening，既表示收紧幅度可观，也表示这一变化具有制度重要性。",
       contextualSubstitutions: [{
         label: "substantial",
@@ -316,7 +318,7 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
       }],
     },
     control: {
-      contextualMeaning: "严格限制公开报道的总量",
+      contextualMeaning: "控制；限制",
       use: "will strictly control 后直接接 the amount of publicity，表示用规则限制庭前曝光。",
       contextualSubstitutions: [{
         label: "limit",
@@ -330,7 +332,7 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
   },
   "2001-cloze-s3": {
     offer: {
-      contextualMeaning: "由制度提供、产生足够监管效果",
+      contextualMeaning: "提供；给予",
       use: "self regulation did not offer sufficient control 中 offer 的主语是制度，宾语是制度能提供的监管作用。",
       contextualSubstitutions: [{
         label: "provide",
@@ -344,7 +346,7 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
   },
   "2001-cloze-s4": {
     publication: {
-      contextualMeaning: "信件内容被正式公开发表这一事件",
+      contextualMeaning: "公开发表；公布",
       use: "Publication of the letter 是主句主语，重点不是印刷，而是公众能够看到信件内容。",
       contextualSubstitutions: [{
         label: "release",
@@ -356,7 +358,7 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
       }],
     },
     interpretation: {
-      contextualMeaning: "对法律规定含义和适用方式的解释",
+      contextualMeaning: "解释；诠释",
       use: "interpretation of privacy controls 是长宾语从句的主语，指法官对法律条文进行释义。",
       contextualSubstitutions: [{
         label: "construction",
@@ -370,7 +372,7 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
   },
   "2001-cloze-s5": {
     binding: {
-      contextualMeaning: "在法律上必须遵守、具有约束力的",
+      contextualMeaning: "有约束力的",
       use: "make A legally binding 中 binding 是形容词宾补，说明《欧洲人权公约》在英国获得法律效力。",
       contextualSubstitutions: [{
         label: "enforceable",
@@ -384,7 +386,7 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
   },
   "2001-cloze-s7": {
     issue: {
-      contextualMeaning: "需要公共讨论和处理的争议问题",
+      contextualMeaning: "问题；争议事项",
       use: "became an issue 是系表结构，说明证人收款从一种做法演变成司法与媒体争议。",
       contextualSubstitutions: [{
         label: "controversy",
@@ -399,7 +401,7 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
   },
   "2001-cloze-s9": {
     concern: {
-      contextualMeaning: "对证词可能受金钱影响的担忧",
+      contextualMeaning: "担忧；顾虑",
       use: "Concerns were raised 是被动报道表达，that 同位语从句给出担忧的完整内容。",
       contextualSubstitutions: [{
         label: "fear",
@@ -414,7 +416,7 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
   },
   "2001-p1-s1": {
     accumulation: {
-      contextualMeaning: "科学知识不断增加并聚集形成的总量",
+      contextualMeaning: "积累；累积",
       use: "accumulation of scientific knowledge 是 problem 的内容，increasing 表示这种积累持续扩大。",
       contextualSubstitutions: [{
         label: "expansion",
@@ -429,7 +431,7 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
   },
   "2001-p1-s2": {
     split: {
-      contextualMeaning: "把学科内容细分成较小单元",
+      contextualMeaning: "分割；拆分",
       use: "split up A into B 中 A 是 subject matter，B 是 smaller units；By doing 整体作方式状语。",
       contextualSubstitutions: [{
         label: "separate",
@@ -443,7 +445,7 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
   },
   "2001-p1-s3": {
     development: {
-      contextualMeaning: "科学交流方式中相互关联的制度变化",
+      contextualMeaning: "发展；新变化",
       use: "developments 是复数，专业化只是其中之一；affecting... 后置修饰这些变化。",
       contextualSubstitutions: [{
         label: "changes",
@@ -457,7 +459,7 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
   },
   "2001-p1-s4": {
     grow: {
-      contextualMeaning: "职业化程度不断增强的",
+      contextualMeaning: "日益增长的",
       use: "growing 作前置定语修饰 professionalisation，不是句子的谓语。",
       contextualSubstitutions: [{
         label: "increasing",
@@ -471,7 +473,7 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
   },
   "2001-p1-s5": {
     distinction: {
-      contextualMeaning: "专业人士与业余者之间可明确划定的界线",
+      contextualMeaning: "区别；区分",
       use: "draw a distinction between A and B 是固定搭配，本句使用被动 can be drawn。",
       contextualSubstitutions: [{
         label: "separation",
@@ -486,7 +488,7 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
   },
   "2001-p1-s6": {
     connotation: {
-      contextualMeaning: "amateur 一词附带的、超出字面定义的联想义",
+      contextualMeaning: "隐含义；联想色彩",
       use: "that 同位语从句解释 connotation 的全部内容；does carry 用来强调这种含义确实存在。",
       contextualSubstitutions: [{
         label: "implication",
@@ -500,7 +502,7 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
   },
   "2001-p1-s7": {
     imply: {
-      contextualMeaning: "客观上意味着并带来更大的参与困难",
+      contextualMeaning: "意味着；暗含",
       use: "implied 的主语是专业化增长，宾语是 greater problems，不是某个人含蓄表达观点。",
       contextualSubstitutions: [{
         label: "meant",
@@ -514,7 +516,7 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
   },
   "2001-p1-s8": {
     obvious: {
-      contextualMeaning: "最容易被观察到、表现最突出的",
+      contextualMeaning: "明显的；显而易见的",
       use: "most obvious 是形容词最高级表语；in those areas 引出表现范围。",
       contextualSubstitutions: [{
         label: "clearest",
@@ -529,7 +531,7 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
   },
   "2001-p1-s9": {
     reveal: {
-      contextualMeaning: "通过跨时期比较揭示出两项变化",
+      contextualMeaning: "揭示；显示",
       use: "reveals 的主语中心词 comparison 是单数，后接 not simply A but also B 两个宾语。",
       contextualSubstitutions: [{
         label: "shows",
@@ -543,7 +545,7 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
   },
   "2001-p1-s10": {
     acceptable: {
-      contextualMeaning: "达到专业人士认可和专业期刊准入标准的",
+      contextualMeaning: "可接受的",
       use: "become acceptable to professionals 后接 only if 必要条件，说明认可不是无条件的。",
       contextualSubstitutions: [{
         label: "accepted",
@@ -558,7 +560,7 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
   },
   "2001-p1-s11": {
     pursue: {
-      contextualMeaning: "持续从事、开展地方性研究",
+      contextualMeaning: "从事；开展",
       use: "pursue 直接接 local studies；与 in the old way 共同说明业余者仍沿用旧研究模式。",
       contextualSubstitutions: [{
         label: "study",
@@ -573,7 +575,7 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
   },
   "2001-p1-s12": {
     reinforce: {
-      contextualMeaning: "使业余者发表更难这一结果进一步加强",
+      contextualMeaning: "加强；强化",
       use: "has been reinforced 是现在完成时被动，by 引出同行评审制度这一强化因素。",
       contextualSubstitutions: [{
         label: "strengthened",
@@ -587,7 +589,7 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
   },
   "2001-p1-s13": {
     appear: {
-      contextualMeaning: "专业与业余读者各自的期刊已经形成并出现",
+      contextualMeaning: "出现",
       use: "have appeared 是不及物现在完成时，不使用被动；aimed... 后置修饰 journals。",
       contextualSubstitutions: [{
         label: "emerged",
@@ -601,7 +603,7 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
   },
   "2001-p1-s14": {
     differentiation: {
-      contextualMeaning: "专业群体与业余群体在组织形式上逐渐分流",
+      contextualMeaning: "分化；差异化",
       use: "process of differentiation 是长主语，has led to 引出专业地质学家联合的结果。",
       contextualSubstitutions: [{
         label: "separation",
@@ -615,7 +617,7 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
   },
   "2001-p1-s15": {
     consequence: {
-      contextualMeaning: "专业化与职业化造成的全部结构性影响",
+      contextualMeaning: "后果；影响",
       use: "its full consequences 是主句主语，its 回指前面的 process；were delayed 表后果较晚完全显现。",
       contextualSubstitutions: [{
         label: "effects",
@@ -629,7 +631,7 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
   },
   "2001-p1-s16": {
     crucial: {
-      contextualMeaning: "对科学结构转变起决定作用的",
+      contextualMeaning: "至关重要的",
       use: "the crucial period 是 reckon...as 后的主语补足语，评价十九世纪的历史地位。",
       contextualSubstitutions: [{
         label: "decisive",
@@ -643,7 +645,7 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
   },
   "2001-p2-s1": {
     attention: {
-      contextualMeaning: "社会对数字鸿沟问题投入的关注",
+      contextualMeaning: "关注；注意",
       use: "A great deal of attention 是进行时被动 is being paid 的主语；pay attention to 的对象是 digital divide。",
       contextualSubstitutions: [{
         label: "focus",
@@ -658,7 +660,7 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
   },
   "2001-p2-s2": {
     exist: {
-      contextualMeaning: "数字鸿沟作为现实问题确实存在",
+      contextualMeaning: "存在",
       use: "does exist 是肯定句的强调谓语，does 后使用 exist 原形。",
       contextualSubstitutions: [{
         label: "remain",
@@ -672,7 +674,7 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
   },
   "2001-p2-s3": {
     lecture: {
-      contextualMeaning: "就数字鸿沟这一危险发表演讲",
+      contextualMeaning: "演讲；讲授",
       use: "lectured about 后接演讲主题，twenty years ago 要求一般过去时。",
       contextualSubstitutions: [{
         label: "spoke",
@@ -687,7 +689,7 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
   },
   "2001-p2-s4": {
     visible: {
-      contextualMeaning: "在当时容易被观察、认识到的",
+      contextualMeaning: "可见的；明显的",
       use: "less visible 是 What 主语从句中的表语，then 是时间状语。",
       contextualSubstitutions: [{
         label: "apparent",
@@ -701,7 +703,7 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
   },
   "2001-p2-s5": {
     optimistic: {
-      contextualMeaning: "对数字鸿沟未来缩小持乐观判断",
+      contextualMeaning: "乐观的",
       use: "to be optimistic 后置修饰 reasons，表示‘保持乐观的理由’。",
       contextualSubstitutions: [{
         label: "hopeful",
@@ -715,7 +717,7 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
   },
   "2001-p2-s6": {
     narrow: {
-      contextualMeaning: "数字鸿沟的差距逐渐缩小",
+      contextualMeaning: "缩小；变窄",
       use: "will narrow 是不及物用法，主语 the digital divide 自身发生变化。",
       contextualSubstitutions: [{
         label: "shrink",
@@ -729,7 +731,7 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
   },
   "2001-p2-s7": {
     interest: {
-      contextualMeaning: "企业和商业界能够获得的经济利益",
+      contextualMeaning: "利益",
       use: "in the interest of business 是介词表语，表示普及网络接入符合商业利益；不是‘兴趣’或‘利息’。",
       contextualSubstitutions: [{
         label: "benefit",
@@ -744,7 +746,7 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
   },
   "2001-p2-s8": {
     spread: {
-      contextualMeaning: "把互联网接入推广到更多地区和人群",
+      contextualMeaning: "传播；推广",
       use: "spread 作及物动词，Internet access 是宾语；want to spread 表政府希望扩大覆盖。",
       contextualSubstitutions: [{
         label: "expand",
@@ -758,7 +760,7 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
   },
   "2001-p2-s9": {
     net: {
-      contextualMeaning: "通过互联网把全球人口连接起来",
+      contextualMeaning: "联网连接",
       use: "will be netted together 是将来时被动语态；原卷 he 为排印错误，正确助动词为 be。",
       contextualSubstitutions: [{
         label: "connected",
@@ -772,7 +774,7 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
   },
   "2001-p2-s10": {
     narrow: {
-      contextualMeaning: "数字鸿沟在未来变小而非扩大",
+      contextualMeaning: "缩小；变窄",
       use: "narrow 与 widen 由 rather than 并列，共用 will。",
       contextualSubstitutions: [{
         label: "shrink",
@@ -786,7 +788,7 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
   },
   "2001-p2-s11": {
     powerful: {
-      contextualMeaning: "在抗击全球贫困方面作用非常强大",
+      contextualMeaning: "强有力的",
       use: "the most powerful 是最高级，修饰 tool；for combating... 说明工具用途。",
       contextualSubstitutions: [{
         label: "effective",
@@ -800,7 +802,7 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
   },
   "2001-p2-s12": {
     defeat: {
-      contextualMeaning: "战胜并减少贫困问题",
+      contextualMeaning: "战胜；克服",
       use: "to defeat poverty 后置修饰 way，说明这种办法的目标。",
       contextualSubstitutions: [{
         label: "combat",
@@ -814,7 +816,7 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
   },
   "2001-p2-s13": {
     tool: {
-      contextualMeaning: "解决贫困问题的一种手段",
+      contextualMeaning: "工具；手段",
       use: "the only tool we have 中 we have 是省略关系代词的定语从句。",
       contextualSubstitutions: [{
         label: "means",
@@ -828,7 +830,7 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
   },
   "2001-p2-s14": {
     enormous: {
-      contextualMeaning: "程度极大的",
+      contextualMeaning: "巨大的",
       use: "enormous 修饰不可数名词 potential，强调互联网尚待释放的巨大潜力。",
       contextualSubstitutions: [{
         label: "tremendous",
@@ -842,7 +844,7 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
   },
   "2001-p2-s15": {
     impoverished: {
-      contextualMeaning: "经济贫困、缺乏建设资本的",
+      contextualMeaning: "贫困的；贫穷的",
       use: "作形容词前置修饰 countries，比普通 poor 更正式，并带有陷入贫困状态的意味。",
       contextualSubstitutions: [{
         label: "poor",
@@ -856,7 +858,7 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
   },
   "2001-p2-s16": {
     study: {
-      contextualMeaning: "考察并分析美国基础设施建设史",
+      contextualMeaning: "研究；考察",
       use: "might well study 是委婉建议；study 直接接 the history of infrastructure 作宾语。",
       contextualSubstitutions: [{
         label: "examine",
@@ -870,7 +872,7 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
   },
   "2001-p2-s17": {
     capital: {
-      contextualMeaning: "建设工业基础设施所需的资金资本",
+      contextualMeaning: "资本；资金",
       use: "the capital to do so 中不定式说明资本用途；do so 回指 build its industrial infrastructure。",
       contextualSubstitutions: [{
         label: "funds",
@@ -885,7 +887,7 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
   },
   "2001-p2-s18": {
     include: {
-      contextualMeaning: "列举第二次浪潮基础设施的实例",
+      contextualMeaning: "包括",
       use: "including 引出道路、港湾、高速公路和港口等非穷尽列举，插入成分两侧用破折号隔开。",
       contextualSubstitutions: [{
         label: "comprising",
@@ -899,7 +901,7 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
   },
   "2001-p2-s19": {
     invest: {
-      contextualMeaning: "把资本投入英国的前殖民地美国",
+      contextualMeaning: "投资",
       use: "were investing in 是过去进行时；invest 后必须用 in 引出地区或项目。",
       contextualSubstitutions: [{
         label: "financing",
@@ -914,7 +916,7 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
   },
   "2001-p2-s20": {
     finance: {
-      contextualMeaning: "为美国道路、港口等基础设施提供资金",
+      contextualMeaning: "资助；为……提供资金",
       use: "finance 作及物动词，They 指欧洲投资者，them 指基础设施。",
       contextualSubstitutions: [{
         label: "funded",
@@ -928,7 +930,7 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
   },
   "2001-p2-s21": {
     build: {
-      contextualMeaning: "实际建造这些基础设施",
+      contextualMeaning: "建造；修建",
       use: "built 是 build 的不规则过去式，them 回指道路、港口等设施。",
       contextualSubstitutions: [{
         label: "constructed",
@@ -942,7 +944,7 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
   },
   "2001-p2-s22": {
     own: {
-      contextualMeaning: "拥有这些基础设施的所有权",
+      contextualMeaning: "拥有",
       use: "who owns them now 中 who 作从句主语，them 回指基础设施。",
       contextualSubstitutions: [{
         label: "possesses",
@@ -956,7 +958,7 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
   },
   "2001-p2-s23": {
     american: {
-      contextualMeaning: "最终拥有这些基础设施的美国人",
+      contextualMeaning: "美国人",
       use: "The Americans 是省略回答，完整意思为 The Americans own them now。",
       contextualSubstitutions: [{
         label: "U.S. citizens",
@@ -971,7 +973,7 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
   },
   "2001-p2-s24": {
     true: {
-      contextualMeaning: "同样规律在其他国家也成立、适用",
+      contextualMeaning: "成立的；符合事实的",
       use: "would be true 是 believe 宾语从句的谓语和表语；would 表基于美国案例的类比推断。",
       contextualSubstitutions: [{
         label: "apply",
@@ -986,7 +988,7 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
   },
   "2001-p2-s25": {
     good: {
-      contextualMeaning: "经济和生活境况更好、更富裕",
+      contextualMeaning: "更好的（better 为比较级）",
       use: "better off 是固定比较级表语，在 the more..., the better... 结构中被提前；不是普通的‘更好地离开’。",
       contextualSubstitutions: [{
         label: "prosperous",
@@ -1000,7 +1002,7 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
   },
   "2001-p2-s26": {
     mean: {
-      contextualMeaning: "意味着接受外资会带来某种行为或后果",
+      contextualMeaning: "意味着",
       use: "doesn't mean 后接 lying、becoming、letting 三个动名词内容；否定的是对接受外资的错误理解。",
       contextualSubstitutions: [{
         label: "imply",
@@ -1014,7 +1016,7 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
   },
   "2001-p2-s27": {
     important: {
-      contextualMeaning: "外国公司在建设能源和电信基础设施方面作用重大",
+      contextualMeaning: "重要的",
       use: "how important they can be 是 recognize 的宾语从句；how 把 important 程度提前。",
       contextualSubstitutions: [{
         label: "crucial",
@@ -1026,41 +1028,41 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
       }],
     },
   },
-  "2010-cloze-s1": { detect: { contextualMeaning: "经监测首次发现病毒", use: "was first detected 是一般过去时被动；in Mexico 为发现地点。", contextualSubstitutions: [{ label: "discover", chinese: "发现", fit: "direct", rewrittenSentence: "The outbreak of swine flu that was first discovered in Mexico was declared a global epidemic on June 11, 2009.", nuance: "discover 是一般性的首次发现；detect 更突出通过监测、检验识别出原本不易察觉的事物。", target: "word:discover" }] } },
-  "2010-cloze-s2": { designate: { contextualMeaning: "由权威机构正式认定、定级", use: "designated by WHO 是过去分词短语，后置修饰 epidemic。", contextualSubstitutions: [{ label: "classify", chinese: "归类；划定等级", fit: "with-adjustment", rewrittenSentence: "It is the first worldwide epidemic classified as such by WHO in 41 years.", nuance: "classify 强调按类别归档，需补 as such；designate 更突出机构正式赋予名称或地位。", adjustment: "classify 后补 as such，保留‘认定为全球性疫情’的类别信息。", target: "word:classify" }] } },
-  "2010-cloze-s3": { rise: { contextualMeaning: "病例数量急剧上升", use: "a sharp rise in cases 中 rise 是可数名词，in 引出上升对象。", contextualSubstitutions: [{ label: "increase", chinese: "增加；上升", fit: "direct", rewrittenSentence: "The heightened alert followed an emergency meeting with flu experts in Geneva that assembled after a sharp increase in cases in Australia, and rising numbers in Britain, Japan, Chile and elsewhere.", nuance: "increase 是中性数量增加；rise 更自然地描写统计数值向上变化。", target: "word:increase" }] } },
+  "2010-cloze-s1": { detect: { contextualMeaning: "发现；检测到", use: "was first detected 是一般过去时被动；in Mexico 为发现地点。", contextualSubstitutions: [{ label: "discover", chinese: "发现", fit: "direct", rewrittenSentence: "The outbreak of swine flu that was first discovered in Mexico was declared a global epidemic on June 11, 2009.", nuance: "discover 是一般性的首次发现；detect 更突出通过监测、检验识别出原本不易察觉的事物。", target: "word:discover" }] } },
+  "2010-cloze-s2": { designate: { contextualMeaning: "指定；认定", use: "designated by WHO 是过去分词短语，后置修饰 epidemic。", contextualSubstitutions: [{ label: "classify", chinese: "归类；划定等级", fit: "with-adjustment", rewrittenSentence: "It is the first worldwide epidemic classified as such by WHO in 41 years.", nuance: "classify 强调按类别归档，需补 as such；designate 更突出机构正式赋予名称或地位。", adjustment: "classify 后补 as such，保留‘认定为全球性疫情’的类别信息。", target: "word:classify" }] } },
+  "2010-cloze-s3": { rise: { contextualMeaning: "增加；上升", use: "a sharp rise in cases 中 rise 是可数名词，in 引出上升对象。", contextualSubstitutions: [{ label: "increase", chinese: "增加；上升", fit: "direct", rewrittenSentence: "The heightened alert followed an emergency meeting with flu experts in Geneva that assembled after a sharp increase in cases in Australia, and rising numbers in Britain, Japan, Chile and elsewhere.", nuance: "increase 是中性数量增加；rise 更自然地描写统计数值向上变化。", target: "word:increase" }] } },
   "2010-cloze-s4": { overwhelming: { contextualMeaning: "占压倒性比例的；绝大多数的", use: "the overwhelming majority of 表比例大到几乎没有相反部分。", contextualSubstitutions: [{ label: "vast", chinese: "绝大部分的", fit: "direct", rewrittenSentence: "But the epidemic is \"moderate\" in severity, according to Margaret Chan, the organization's director general, with the vast majority of patients experiencing only mild symptoms and a full recovery, often in the absence of any medical treatment.", nuance: "vast majority 是常见中性表达；overwhelming majority 更强调比例具有压倒性。", target: "word:vast" }] } },
-  "2010-cloze-s5": { note: { partOfSpeech: "v.", contextualMeaning: "注意到并记录异常情况", use: "authorities noted 后接异常住院及死亡数量作宾语。", contextualSubstitutions: [{ label: "observe", chinese: "观察到", fit: "direct", rewrittenSentence: "The outbreak came to global notice in late April 2009, when Mexican authorities observed an unusually large number of hospitalizations and deaths among healthy adults.", nuance: "observe 更突出通过观察发现；note 还暗含认为这一现象值得记录和关注。", target: "word:observe" }] } },
-  "2010-cloze-s6": { crop: { contextualMeaning: "（病例）意外、陆续出现", use: "crop up 是不及物短语，cases 作主语，地点由 in... 引出。", contextualSubstitutions: [{ label: "emerge", chinese: "出现；显现", fit: "direct", rewrittenSentence: "As much of Mexico City shut down at the height of a panic, cases began to emerge in New York City, the southwestern United States and around the world.", nuance: "emerge 较正式、中性；crop up 常暗示未预料到地在多处冒出。", target: "word:emerge" }] } },
-  "2010-cloze-s7": { fade: { contextualMeaning: "病例增长势头似乎逐渐减弱", use: "seem to fade 表依据当时迹象作出的不确定判断。", contextualSubstitutions: [{ label: "subside", chinese: "逐渐平息；减弱", fit: "direct", rewrittenSentence: "In the United States, new cases seemed to subside as warmer weather arrived.", nuance: "subside 常用于疫情、风暴、疼痛等强度减弱；fade 更形象地强调渐渐淡去。", target: "word:subside" }] } },
-  "2010-cloze-s8": { significant: { contextualMeaning: "显著且值得关注的", use: "significant flu activity 作 there be 句的实际主语。", contextualSubstitutions: [{ label: "substantial", chinese: "大量的；显著的", fit: "direct", rewrittenSentence: "But in late September 2009, officials reported that there was substantial flu activity in almost every state and that virtually all the samples tested are the new swine flu, also known as (A) H1N1, not seasonal flu.", nuance: "substantial 更强调活动量相当大；significant 同时强调统计上或公共卫生上的重要程度。", target: "word:substantial" }] } },
-  "2010-cloze-s9": { cause: { contextualMeaning: "造成死亡和住院这一结果", use: "has caused 与 has infected 并列，共用主语 it。", contextualSubstitutions: [{ label: "lead to", chinese: "导致", fit: "with-adjustment", rewrittenSentence: "In the U.S., it has infected more than one million people and led to more than 600 deaths and more than 6,000 hospitalizations.", nuance: "lead to 侧重因果结果，后接名词；cause 可直接以结果作宾语，结构更紧凑。", adjustment: "把及物结构 caused + 结果改为不及物短语 led to + 结果。", target: "phrase:lead to" }] } },
-  "2010-cloze-s10": { release: { contextualMeaning: "从国家储备中调拨、投放药物", use: "released Tamiflu from the national stockpile 构成‘从储备投放’。", contextualSubstitutions: [{ label: "distribute", chinese: "分发；调配", fit: "with-adjustment", rewrittenSentence: "Federal health officials distributed Tamiflu for children from the national stockpile and began taking orders from the states for the new swine flu vaccine.", nuance: "distribute 强调把物资分配给多方；release 强调解除储存状态并投入使用。", adjustment: "改写保留 from the national stockpile 表明物资来源；实际分发对象由语境理解。", target: "word:distribute" }] } },
-  "2010-cloze-s11": { available: { contextualMeaning: "已经可以获得、可供使用", use: "is available 是形容词表语；ahead of expectations 说明供应早于预期。", contextualSubstitutions: [{ label: "obtainable", chinese: "可获得的", fit: "direct", rewrittenSentence: "The new vaccine, which is different from the annual flu vaccine, is obtainable ahead of expectations.", nuance: "obtainable 只强调能够取得；available 更自然地表示产品已进入供应状态。", target: "word:obtainable" }] } },
-  "2010-cloze-s12": { initial: { contextualMeaning: "时间顺序上的首批、最初的", use: "initial 修饰 doses，与 in early October 的首批供应相呼应。", contextualSubstitutions: [{ label: "first", chinese: "第一批的", fit: "direct", rewrittenSentence: "More than three million doses were to be made available in early October 2009, though most of those first doses were of the FluMist nasal spray type, which is not recommended for pregnant women, people over 50 or those with breathing difficulties, heart disease or several other problems.", nuance: "first 更直白地按顺序说明首批；initial 更正式，强调供应开始阶段。", target: "word:first" }] } },
-  "2010-cloze-s13": { care: { contextualMeaning: "实际照料、照顾婴儿", use: "caring for infants 是现在分词短语，后置修饰 people。", contextualSubstitutions: [{ label: "look after", chinese: "照料；照顾", fit: "direct", rewrittenSentence: "But it was still possible to vaccinate people in other high-risk groups: health care workers, people looking after infants and healthy young people.", nuance: "look after 更口语；care for 更正式，并常见于医疗和照护语境。", target: "phrase:look after" }] } },
+  "2010-cloze-s5": { note: { partOfSpeech: "v.", contextualMeaning: "注意到；记录", use: "authorities noted 后接异常住院及死亡数量作宾语。", contextualSubstitutions: [{ label: "observe", chinese: "观察到", fit: "direct", rewrittenSentence: "The outbreak came to global notice in late April 2009, when Mexican authorities observed an unusually large number of hospitalizations and deaths among healthy adults.", nuance: "observe 更突出通过观察发现；note 还暗含认为这一现象值得记录和关注。", target: "word:observe" }] } },
+  "2010-cloze-s6": { crop: { contextualMeaning: "突然出现（crop up 中的动词）", use: "crop up 是不及物短语，cases 作主语，地点由 in... 引出。", contextualSubstitutions: [{ label: "emerge", chinese: "出现；显现", fit: "direct", rewrittenSentence: "As much of Mexico City shut down at the height of a panic, cases began to emerge in New York City, the southwestern United States and around the world.", nuance: "emerge 较正式、中性；crop up 常暗示未预料到地在多处冒出。", target: "word:emerge" }] } },
+  "2010-cloze-s7": { fade: { contextualMeaning: "逐渐减弱", use: "seem to fade 表依据当时迹象作出的不确定判断。", contextualSubstitutions: [{ label: "subside", chinese: "逐渐平息；减弱", fit: "direct", rewrittenSentence: "In the United States, new cases seemed to subside as warmer weather arrived.", nuance: "subside 常用于疫情、风暴、疼痛等强度减弱；fade 更形象地强调渐渐淡去。", target: "word:subside" }] } },
+  "2010-cloze-s8": { significant: { contextualMeaning: "显著的", use: "significant flu activity 作 there be 句的实际主语。", contextualSubstitutions: [{ label: "substantial", chinese: "大量的；显著的", fit: "direct", rewrittenSentence: "But in late September 2009, officials reported that there was substantial flu activity in almost every state and that virtually all the samples tested are the new swine flu, also known as (A) H1N1, not seasonal flu.", nuance: "substantial 更强调活动量相当大；significant 同时强调统计上或公共卫生上的重要程度。", target: "word:substantial" }] } },
+  "2010-cloze-s9": { cause: { contextualMeaning: "造成；引起", use: "has caused 与 has infected 并列，共用主语 it。", contextualSubstitutions: [{ label: "lead to", chinese: "导致", fit: "with-adjustment", rewrittenSentence: "In the U.S., it has infected more than one million people and led to more than 600 deaths and more than 6,000 hospitalizations.", nuance: "lead to 侧重因果结果，后接名词；cause 可直接以结果作宾语，结构更紧凑。", adjustment: "把及物结构 caused + 结果改为不及物短语 led to + 结果。", target: "phrase:lead to" }] } },
+  "2010-cloze-s10": { release: { contextualMeaning: "释放；投放", use: "released Tamiflu from the national stockpile 构成‘从储备投放’。", contextualSubstitutions: [{ label: "distribute", chinese: "分发；调配", fit: "with-adjustment", rewrittenSentence: "Federal health officials distributed Tamiflu for children from the national stockpile and began taking orders from the states for the new swine flu vaccine.", nuance: "distribute 强调把物资分配给多方；release 强调解除储存状态并投入使用。", adjustment: "改写保留 from the national stockpile 表明物资来源；实际分发对象由语境理解。", target: "word:distribute" }] } },
+  "2010-cloze-s11": { available: { contextualMeaning: "可获得的；可使用的", use: "is available 是形容词表语；ahead of expectations 说明供应早于预期。", contextualSubstitutions: [{ label: "obtainable", chinese: "可获得的", fit: "direct", rewrittenSentence: "The new vaccine, which is different from the annual flu vaccine, is obtainable ahead of expectations.", nuance: "obtainable 只强调能够取得；available 更自然地表示产品已进入供应状态。", target: "word:obtainable" }] } },
+  "2010-cloze-s12": { initial: { contextualMeaning: "最初的", use: "initial 修饰 doses，与 in early October 的首批供应相呼应。", contextualSubstitutions: [{ label: "first", chinese: "第一批的", fit: "direct", rewrittenSentence: "More than three million doses were to be made available in early October 2009, though most of those first doses were of the FluMist nasal spray type, which is not recommended for pregnant women, people over 50 or those with breathing difficulties, heart disease or several other problems.", nuance: "first 更直白地按顺序说明首批；initial 更正式，强调供应开始阶段。", target: "word:first" }] } },
+  "2010-cloze-s13": { care: { contextualMeaning: "照料；照顾", use: "caring for infants 是现在分词短语，后置修饰 people。", contextualSubstitutions: [{ label: "look after", chinese: "照料；照顾", fit: "direct", rewrittenSentence: "But it was still possible to vaccinate people in other high-risk groups: health care workers, people looking after infants and healthy young people.", nuance: "look after 更口语；care for 更正式，并常见于医疗和照护语境。", target: "phrase:look after" }] } },
   "2010-p1-s1": {
-    note: { partOfSpeech: "n.", contextualMeaning: "基调；结局的情绪色彩", use: "ended on a dramatic note 中 note 是事件收尾的基调；dramatic 指这场高价拍卖使牛市以轰动、富有戏剧性的方式结束，不是奏出音符。" },
-    dramatic: { contextualMeaning: "以轰动且带有转折意味的方式结束", use: "dramatic 修饰 note，描述牛市收尾的效果。", contextualSubstitutions: [{ label: "striking", chinese: "引人注目的", fit: "direct", rewrittenSentence: "The longest bull run in a century of art-market history ended on a striking note with a sale of 56 works by Damien Hirst, Beautiful Inside My Head Forever, at Sotheby's in London on September 15th 2008.", nuance: "striking 强调引人注目；dramatic 还暗含变化突然、结局富有戏剧性。", target: "word:striking" }] },
+    note: { partOfSpeech: "n.", contextualMeaning: "基调；意味", use: "ended on a dramatic note 中 note 是事件收尾的基调；dramatic 指这场高价拍卖使牛市以轰动、富有戏剧性的方式结束，不是奏出音符。" },
+    dramatic: { contextualMeaning: "戏剧性的；引人注目的", use: "dramatic 修饰 note，描述牛市收尾的效果。", contextualSubstitutions: [{ label: "striking", chinese: "引人注目的", fit: "direct", rewrittenSentence: "The longest bull run in a century of art-market history ended on a striking note with a sale of 56 works by Damien Hirst, Beautiful Inside My Head Forever, at Sotheby's in London on September 15th 2008.", nuance: "striking 强调引人注目；dramatic 还暗含变化突然、结局富有戏剧性。", target: "word:striking" }] },
   },
-  "2010-p1-s2": { fetch: { contextualMeaning: "拍卖品售得某个金额", use: "fetching... 是现在分词结果状语，逻辑主语为作品。", contextualSubstitutions: [{ label: "bring in", chinese: "带来（收入）", fit: "direct", rewrittenSentence: "All but two pieces sold, bringing in more than £70m, a record for a sale by a single artist.", nuance: "bring in 更直接强调收入；fetch 是拍卖和商品成交报道中的凝练用词。", target: "phrase:bring in" }] } },
-  "2010-p1-s3": { last: { contextualMeaning: "危机前最后的一次", use: "last 修饰 victory，其依据在下一句雷曼破产。", contextualSubstitutions: [{ label: "final", chinese: "最后的", fit: "direct", rewrittenSentence: "It was a final victory.", nuance: "final 直接强调序列终点；last 在叙事中更自然地连接此前牛市与随后危机。", target: "word:final" }] } },
-  "2010-p1-s4": { file: { contextualMeaning: "正式申请破产保护", use: "file for bankruptcy 是法律和商业固定搭配。", contextualSubstitutions: [{ label: "apply for", chinese: "申请", fit: "direct", rewrittenSentence: "As the auctioneer called out bids, in New York one of the oldest banks on Wall Street, Lehman Brothers, applied for bankruptcy.", nuance: "apply for 是一般申请；file for 强调依法正式提交文件。", target: "phrase:apply for" }] } },
-  "2010-p1-s5": { momentum: { contextualMeaning: "市场继续上涨的动力和势头", use: "lose momentum 是过去完成进行时中的动宾搭配。", contextualSubstitutions: [{ label: "impetus", chinese: "推动力；发展动力", fit: "with-adjustment", rewrittenSentence: "The world art market had already been losing its impetus for a while after rising bewilderingly since 2003.", nuance: "impetus 更强调推动变化的力量，通常带物主限定；momentum 还强调已形成并持续的运动势头。", adjustment: "在 impetus 前补 its，使名词短语自然。", target: "word:impetus" }] } },
-  "2010-p1-s6": { reckon: { contextualMeaning: "根据研究数据估算", use: "reckons Clare McAndrew 是插入式倒装报道语。", contextualSubstitutions: [{ label: "estimate", chinese: "估算", fit: "with-adjustment", rewrittenSentence: "At its peak in 2007 it was worth some $65 billion, according to Clare McAndrew's estimate, founder of Arts Economics, a research firm – double the figure five years earlier.", nuance: "estimate 更明确强调数值估算，但改为名词结构后需调整报道语；reckon 保留新闻叙述的简洁口吻。", adjustment: "将倒装谓语 reckons Clare 改为 according to...estimate。", target: "word:estimate" }] } },
-  "2010-p1-s7": { down: { contextualMeaning: "市场规模下降到500亿美元", use: "come down to 中 to 引出下降终点。", contextualSubstitutions: [{ label: "fall", chinese: "下降", fit: "direct", rewrittenSentence: "Since then it may have fallen to $50 billion.", nuance: "fall to 是直接的数量下降；come down to 语气稍口语并突出从高位回落。", target: "word:fall" }] } },
-  "2010-p1-s8": { generate: { contextualMeaning: "引发远超市场体量的关注", use: "generate interest 是主句谓语和宾语。", contextualSubstitutions: [{ label: "attract", chinese: "吸引", fit: "direct", rewrittenSentence: "But the market attracts interest far beyond its size because it brings together great wealth, enormous egos, greed, passion and controversy in a way matched by few other industries.", nuance: "attract 强调把既有注意力吸引过来；generate 强调这种市场特性产生了关注。", target: "word:attract" }] } },
-  "2010-p1-s9": { unfashionable: { contextualMeaning: "在危机中变得不得人心", use: "became deeply unfashionable 为系表结构。", contextualSubstitutions: [{ label: "unpopular", chinese: "不受欢迎的", fit: "direct", rewrittenSentence: "In the weeks and months that followed Mr. Hirst's sale, spending of any sort became deeply unpopular.", nuance: "unpopular 是一般的不受欢迎；unfashionable 更贴合消费风气突然逆转。", target: "word:unpopular" }] } },
-  "2010-p1-s10": { mean: { contextualMeaning: "意味着", use: "meant 是mean的过去式；前面的that是指示代词主语，宾语内容为collectors stayed away from galleries and salerooms，连接词that省略。不是动名词宾语或否定对照。" }, away: { contextualMeaning: "不再进入或参与艺术品交易场所", use: "stay away from galleries and salerooms 是整体谓语搭配。", contextualSubstitutions: [{ label: "avoid", chinese: "避开", fit: "with-adjustment", rewrittenSentence: "In the art world that meant collectors avoided galleries and salerooms.", nuance: "avoid 可直接接地点作宾语；stay away from 更强调持续不露面、不参与。", adjustment: "删除 stay 和介词 from，改为及物动词 avoided。", target: "word:avoid" }] } },
-  "2010-p1-s11": { fall: { contextualMeaning: "销售额大幅下降", use: "fell by two-thirds 中 by 引出降幅。", contextualSubstitutions: [{ label: "decline", chinese: "下降", fit: "with-adjustment", rewrittenSentence: "Sales of contemporary art declined by two-thirds, and in the most overheated sector, they were down by nearly 90% in the year to November 2008.", nuance: "decline 更正式、中性；fall 更直观地呈现快速下落。", adjustment: "将 fell 改为一般过去时 declined。", target: "word:decline" }] } },
-  "2010-p1-s12": { pay: { contextualMeaning: "因担保承诺而大额赔付", use: "pay out nearly $200m 是 had to 后的动词短语。", contextualSubstitutions: [{ label: "disburse", chinese: "支付；拨付", fit: "with-adjustment", rewrittenSentence: "Within weeks the world's two biggest auction houses, Sotheby's and Christie's, had to disburse nearly $200m in guarantees to clients who had placed works for sale with them.", nuance: "disburse 是正式财务用语；pay out 更自然地暗示因责任、索赔或担保而付出大笔款项。", adjustment: "disburse 为及物动词，不保留 out。", target: "word:disburse" }] } },
-  "2010-p1-s13": { downturn: { contextualMeaning: "艺术市场当前这轮低迷", use: "downturn in the art market 是主语中心。", contextualSubstitutions: [{ label: "decline", chinese: "衰退；下降", fit: "direct", rewrittenSentence: "The current decline in the art market is the worst since the Japanese stopped buying Impressionists at the end of 1989.", nuance: "decline 泛指下降过程；downturn 更像经济周期中的下行阶段。", target: "word:decline" }] } },
-  "2010-p1-s14": { fluctuant: { contextualMeaning: "价格起伏比平均值大得多", use: "far 修饰 more fluctuant，加强比较级。", contextualSubstitutions: [{ label: "volatile", chinese: "波动剧烈的", fit: "direct", rewrittenSentence: "This time experts reckon that prices are about 40% down on their peak on average, though some have been far more volatile.", nuance: "volatile 是现代财经英语中更常见的‘价格易剧烈波动’；fluctuant 为原卷保留用词。", target: "word:volatile" }] } },
-  "2010-p1-s15": { confident: { contextualMeaning: "确信市场已触底", use: "confident 后接省略 that 的内容从句。", contextualSubstitutions: [{ label: "certain", chinese: "确信的", fit: "direct", rewrittenSentence: "But Edward Dolman, Christie's chief executive, says: \"I'm pretty certain we're at the bottom.\"", nuance: "certain 更强调判断确定；confident 还包含基于经验形成的信心。", target: "word:certain" }] } },
-  "2010-p1-s16": { different: { contextualMeaning: "本轮低迷与上次存在关键差异", use: "make A different from B 为宾语补足结构。", contextualSubstitutions: [{ label: "distinguish", chinese: "使区别于", fit: "with-adjustment", rewrittenSentence: "What distinguishes this slump from the last, he says, is that there are still buyers in the market.", nuance: "distinguish A from B 用一个动词概括差异；make A different 更便于展示宾补结构。", adjustment: "把 make + 宾语 + different from 改为 distinguish + 宾语 + from。", target: "word:distinguish" }] } },
-  "2010-p1-s17": { lack: { contextualMeaning: "市场所缺少的需求或优质作品", use: "not a lack of A but a lack of B 为平行表语。", contextualSubstitutions: [{ label: "shortage", chinese: "短缺", fit: "with-adjustment", rewrittenSentence: "Almost everyone who was interviewed for this special report said that the biggest problem at the moment is not weak demand but a shortage of good work to sell.", nuance: "shortage 更适合可供市场使用的资源不足；lack 可同时与 demand 和 work 平行搭配。", adjustment: "为保持自然搭配，把 a lack of demand 改写为 weak demand。", target: "word:shortage" }] } },
-  "2010-p1-s18": { deliver: { contextualMeaning: "促使艺术品进入市场流通", use: "deliver A to B 为拟人化动宾方向结构。", contextualSubstitutions: [{ label: "bring", chinese: "带来；使进入", fit: "direct", rewrittenSentence: "The three Ds – death, debt and divorce – still bring works of art to the market.", nuance: "bring 是中性带来；deliver 更形象地把三种变故写成向市场输送作品的力量。", target: "word:bring" }] } },
-  "2010-p1-s19": { away: { contextualMeaning: "卖家暂时离开市场、继续观望", use: "is keeping away 是现在进行时，省略了 from the market。", contextualSubstitutions: [{ label: "hold back", chinese: "暂不行动；观望", fit: "direct", rewrittenSentence: "But anyone who does not have to sell is holding back, waiting for confidence to return.", nuance: "hold back 直接突出暂缓出售；keep away 强调从市场离场。", target: "phrase:hold back" }] } },
+  "2010-p1-s2": { fetch: { contextualMeaning: "售得；卖得", use: "fetching... 是现在分词结果状语，逻辑主语为作品。", contextualSubstitutions: [{ label: "bring in", chinese: "带来（收入）", fit: "direct", rewrittenSentence: "All but two pieces sold, bringing in more than £70m, a record for a sale by a single artist.", nuance: "bring in 更直接强调收入；fetch 是拍卖和商品成交报道中的凝练用词。", target: "phrase:bring in" }] } },
+  "2010-p1-s3": { last: { contextualMeaning: "最后的", use: "last 修饰 victory，其依据在下一句雷曼破产。", contextualSubstitutions: [{ label: "final", chinese: "最后的", fit: "direct", rewrittenSentence: "It was a final victory.", nuance: "final 直接强调序列终点；last 在叙事中更自然地连接此前牛市与随后危机。", target: "word:final" }] } },
+  "2010-p1-s4": { file: { contextualMeaning: "提出；提交（申请）", use: "file for bankruptcy 是法律和商业固定搭配。", contextualSubstitutions: [{ label: "apply for", chinese: "申请", fit: "direct", rewrittenSentence: "As the auctioneer called out bids, in New York one of the oldest banks on Wall Street, Lehman Brothers, applied for bankruptcy.", nuance: "apply for 是一般申请；file for 强调依法正式提交文件。", target: "phrase:apply for" }] } },
+  "2010-p1-s5": { momentum: { contextualMeaning: "动力；势头", use: "lose momentum 是过去完成进行时中的动宾搭配。", contextualSubstitutions: [{ label: "impetus", chinese: "推动力；发展动力", fit: "with-adjustment", rewrittenSentence: "The world art market had already been losing its impetus for a while after rising bewilderingly since 2003.", nuance: "impetus 更强调推动变化的力量，通常带物主限定；momentum 还强调已形成并持续的运动势头。", adjustment: "在 impetus 前补 its，使名词短语自然。", target: "word:impetus" }] } },
+  "2010-p1-s6": { reckon: { contextualMeaning: "估计；估算", use: "reckons Clare McAndrew 是插入式倒装报道语。", contextualSubstitutions: [{ label: "estimate", chinese: "估算", fit: "with-adjustment", rewrittenSentence: "At its peak in 2007 it was worth some $65 billion, according to Clare McAndrew's estimate, founder of Arts Economics, a research firm – double the figure five years earlier.", nuance: "estimate 更明确强调数值估算，但改为名词结构后需调整报道语；reckon 保留新闻叙述的简洁口吻。", adjustment: "将倒装谓语 reckons Clare 改为 according to...estimate。", target: "word:estimate" }] } },
+  "2010-p1-s7": { down: { contextualMeaning: "向下；降低", use: "come down to 中 to 引出下降终点。", contextualSubstitutions: [{ label: "fall", chinese: "下降", fit: "direct", rewrittenSentence: "Since then it may have fallen to $50 billion.", nuance: "fall to 是直接的数量下降；come down to 语气稍口语并突出从高位回落。", target: "word:fall" }] } },
+  "2010-p1-s8": { generate: { contextualMeaning: "产生；引发", use: "generate interest 是主句谓语和宾语。", contextualSubstitutions: [{ label: "attract", chinese: "吸引", fit: "direct", rewrittenSentence: "But the market attracts interest far beyond its size because it brings together great wealth, enormous egos, greed, passion and controversy in a way matched by few other industries.", nuance: "attract 强调把既有注意力吸引过来；generate 强调这种市场特性产生了关注。", target: "word:attract" }] } },
+  "2010-p1-s9": { unfashionable: { contextualMeaning: "不时兴的；不合潮流的", use: "became deeply unfashionable 为系表结构。", contextualSubstitutions: [{ label: "unpopular", chinese: "不受欢迎的", fit: "direct", rewrittenSentence: "In the weeks and months that followed Mr. Hirst's sale, spending of any sort became deeply unpopular.", nuance: "unpopular 是一般的不受欢迎；unfashionable 更贴合消费风气突然逆转。", target: "word:unpopular" }] } },
+  "2010-p1-s10": { mean: { contextualMeaning: "意味着", use: "meant 是mean的过去式；前面的that是指示代词主语，宾语内容为collectors stayed away from galleries and salerooms，连接词that省略。不是动名词宾语或否定对照。" }, away: { contextualMeaning: "远离；不在场", use: "stay away from galleries and salerooms 是整体谓语搭配。", contextualSubstitutions: [{ label: "avoid", chinese: "避开", fit: "with-adjustment", rewrittenSentence: "In the art world that meant collectors avoided galleries and salerooms.", nuance: "avoid 可直接接地点作宾语；stay away from 更强调持续不露面、不参与。", adjustment: "删除 stay 和介词 from，改为及物动词 avoided。", target: "word:avoid" }] } },
+  "2010-p1-s11": { fall: { contextualMeaning: "下降", use: "fell by two-thirds 中 by 引出降幅。", contextualSubstitutions: [{ label: "decline", chinese: "下降", fit: "with-adjustment", rewrittenSentence: "Sales of contemporary art declined by two-thirds, and in the most overheated sector, they were down by nearly 90% in the year to November 2008.", nuance: "decline 更正式、中性；fall 更直观地呈现快速下落。", adjustment: "将 fell 改为一般过去时 declined。", target: "word:decline" }] } },
+  "2010-p1-s12": { pay: { contextualMeaning: "支付；付出", use: "pay out nearly $200m 是 had to 后的动词短语。", contextualSubstitutions: [{ label: "disburse", chinese: "支付；拨付", fit: "with-adjustment", rewrittenSentence: "Within weeks the world's two biggest auction houses, Sotheby's and Christie's, had to disburse nearly $200m in guarantees to clients who had placed works for sale with them.", nuance: "disburse 是正式财务用语；pay out 更自然地暗示因责任、索赔或担保而付出大笔款项。", adjustment: "disburse 为及物动词，不保留 out。", target: "word:disburse" }] } },
+  "2010-p1-s13": { downturn: { contextualMeaning: "低迷；衰退", use: "downturn in the art market 是主语中心。", contextualSubstitutions: [{ label: "decline", chinese: "衰退；下降", fit: "direct", rewrittenSentence: "The current decline in the art market is the worst since the Japanese stopped buying Impressionists at the end of 1989.", nuance: "decline 泛指下降过程；downturn 更像经济周期中的下行阶段。", target: "word:decline" }] } },
+  "2010-p1-s14": { fluctuant: { contextualMeaning: "波动的；起伏不定的", use: "far 修饰 more fluctuant，加强比较级。", contextualSubstitutions: [{ label: "volatile", chinese: "波动剧烈的", fit: "direct", rewrittenSentence: "This time experts reckon that prices are about 40% down on their peak on average, though some have been far more volatile.", nuance: "volatile 是现代财经英语中更常见的‘价格易剧烈波动’；fluctuant 为原卷保留用词。", target: "word:volatile" }] } },
+  "2010-p1-s15": { confident: { contextualMeaning: "确信的；有信心的", use: "confident 后接省略 that 的内容从句。", contextualSubstitutions: [{ label: "certain", chinese: "确信的", fit: "direct", rewrittenSentence: "But Edward Dolman, Christie's chief executive, says: \"I'm pretty certain we're at the bottom.\"", nuance: "certain 更强调判断确定；confident 还包含基于经验形成的信心。", target: "word:certain" }] } },
+  "2010-p1-s16": { different: { contextualMeaning: "不同的", use: "make A different from B 为宾语补足结构。", contextualSubstitutions: [{ label: "distinguish", chinese: "使区别于", fit: "with-adjustment", rewrittenSentence: "What distinguishes this slump from the last, he says, is that there are still buyers in the market.", nuance: "distinguish A from B 用一个动词概括差异；make A different 更便于展示宾补结构。", adjustment: "把 make + 宾语 + different from 改为 distinguish + 宾语 + from。", target: "word:distinguish" }] } },
+  "2010-p1-s17": { lack: { contextualMeaning: "缺少；不足", use: "not a lack of A but a lack of B 为平行表语。", contextualSubstitutions: [{ label: "shortage", chinese: "短缺", fit: "with-adjustment", rewrittenSentence: "Almost everyone who was interviewed for this special report said that the biggest problem at the moment is not weak demand but a shortage of good work to sell.", nuance: "shortage 更适合可供市场使用的资源不足；lack 可同时与 demand 和 work 平行搭配。", adjustment: "为保持自然搭配，把 a lack of demand 改写为 weak demand。", target: "word:shortage" }] } },
+  "2010-p1-s18": { deliver: { contextualMeaning: "送达；输送", use: "deliver A to B 为拟人化动宾方向结构。", contextualSubstitutions: [{ label: "bring", chinese: "带来；使进入", fit: "direct", rewrittenSentence: "The three Ds – death, debt and divorce – still bring works of art to the market.", nuance: "bring 是中性带来；deliver 更形象地把三种变故写成向市场输送作品的力量。", target: "word:bring" }] } },
+  "2010-p1-s19": { away: { contextualMeaning: "远离；不在场", use: "is keeping away 是现在进行时，省略了 from the market。", contextualSubstitutions: [{ label: "hold back", chinese: "暂不行动；观望", fit: "direct", rewrittenSentence: "But anyone who does not have to sell is holding back, waiting for confidence to return.", nuance: "hold back 直接突出暂缓出售；keep away 强调从市场离场。", target: "phrase:hold back" }] } },
 };
 
 export function getSentenceWordContext(sentenceId: string | undefined, headword: string) {
