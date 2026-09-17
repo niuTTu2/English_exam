@@ -2,6 +2,14 @@
 @import "tw-animate-css";
 @import "../vendor/shadcn-tailwind-4.13.0.css";
 
+.matching-option-bank { margin-block: 1rem; padding: 1rem; border: 1px solid var(--border); border-radius: 1rem; }
+.matching-option-bank > p { margin-block: .6rem 1rem; line-height: 1.7; }
+.matching-option-bank .option-row { grid-template-columns: 2rem minmax(0, 1fr); }
+.matching-option-bank .option-row p { min-width: 0; overflow-wrap: anywhere; }
+.option-list.matching-choices { display: flex; flex-wrap: wrap; gap: .5rem; }
+.matching-choices .option-row { display: flex; padding: .25rem; }
+.matching-choices .option-choice { min-width: 2.75rem; min-height: 2.75rem; }
+.matching-selected { margin-top: .75rem; font-size: .9rem; line-height: 1.7; overflow-wrap: anywhere; }
 :root {
   --background: #f5f2e9;
   --foreground: #23363a;

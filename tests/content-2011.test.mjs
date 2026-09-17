@@ -15,6 +15,32 @@ const study = await vite.ssrLoadModule("/app/study-app.tsx");
 const normalize = value => value.replace(/\s+/g, " ").replace(/\s+([,.;?!])/g, "$1").trim();
 const cloze = data.articleContents["2011-cloze"];
 
+test("2011PartB保留21句、五人物、共享七项且只有A/F多余", () => {
+  const article = data.articleContents["2011-p5"];
+  const fixture = JSON.parse(readFileSync(new URL("./fixtures/2011-p5.json", import.meta.url), "utf8"));
+  assert.equal(article.sentences.length, 21);
+  assert.equal(article.questions.length, 5);
+  assert.equal(normalize(article.sentences.map(sentence => sentence.text).join(" ")), normalize(fixture.paragraphs.map(row => row.text).join(" ")));
+  article.questions.forEach((question, index) => {
+    assert.equal(question.format, "matching");
+    assert.equal(question.number, 41 + index);
+    assert.equal(question.answer, answers.verifiedAnswerKey2011Passage5[question.number]);
+    assert.equal(question.prompt, fixture.questions[index].text.replace(/^\d+\.\s*/, ""));
+    assert.deepEqual(question.options.map(option => option.text), fixture.options.map(row => row.text.replace(/^\[\s*[A-G]\s*\]\s*/, "")));
+    assert.deepEqual(Object.keys(question.explanations).sort(), ["A", "B", "C", "D", "E", "F", "G"]);
+    assert.equal(data.questionOptionSourceId(question, "G"), "question-201141-option-G");
+  });
+  const used = new Set(article.questions.map(question => question.answer));
+  assert.deepEqual(article.questions[0].options.filter(option => !used.has(option.key)).map(option => option.key), ["A", "F"]);
+  assert.match(article.questions[2].locating, /批评者/);
+  assert.equal(article.sentences[15].beginnerSyntax.clauses.length, 3);
+  for (const [token, number, meaning] of [["He", 11, /兰斯利/], ["He", 17, /布格拉/], ["credit", 15, /话费/], ["free", 17, /禁止|无/], ["paper", 20, /白皮书/], ["poor", 1, /不良|不健康/]]) assert.match(study.resolveEntry(token, false, `2011-p5-s${number}`).contextualMeaning, meaning);
+  const campaign = study.buildYearWordItems(2011).find(item => item.key === "change4life" || item.lemma === "change4life" || item.headword === "change4life");
+  assert.ok(campaign);
+  assert.equal(campaign.contexts.filter(context => context.sentenceId.startsWith("question-")).length, 1, "共用E选项不能统计成五次出现");
+  assert.ok(study.resolveEntry("back", false, "2011-p5-s21").contextualSubstitutions[0].rewrittenSentence.includes("doctors support"));
+});
+
 test("2011Text4保留六段17句、历史数量、原卷拼写及德法政策方向", () => {
   checkReadingSource("2011-p4", 36, 17, answers.verifiedAnswerKey2011Passage4);
   const article = data.articleContents["2011-p4"];
@@ -62,7 +88,7 @@ test("2011全部正文、题干与选项在真实来源语境下没有空白词�
   for (const article of Object.values(data.articleContents).filter(article => article.year === 2011)) {
     const sources = [
       ...article.sentences.map(sentence => [sentence.id, sentence.text]),
-      ...article.questions.flatMap(question => [[`question-${question.id}-prompt`, question.prompt], ...question.options.map(option => [`question-${question.id}-option-${option.key}`, option.text])]),
+      ...article.questions.flatMap(question => [[`question-${question.id}-prompt`, question.prompt], ...question.options.map(option => [data.questionOptionSourceId(question, option.key), option.text])]),
     ];
     for (const [sourceId, text] of sources) for (const token of new Set(text.toLowerCase().match(/[a-z]+(?:\d+[a-z]*)+\b|\d+(?:st|nd|rd|th)\b|\d{4}s\b|(?:[a-z]\.){2,}|(?<![a-z0-9])[a-z]+(?:-[a-z]+)?(?:['’][a-z]+)?/g) ?? [])) {
       const entry = study.resolveEntry(token, false, sourceId);

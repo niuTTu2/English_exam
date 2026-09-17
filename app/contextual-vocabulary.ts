@@ -1,3 +1,4 @@
+import { passage2011P5SentenceContexts } from "./2011-passage-5-lexicon";
 import { passage2011P4SentenceContexts } from "./2011-passage-4-lexicon";
 import { passage2011P3SentenceContexts } from "./2011-passage-3-lexicon";
 import { passage2011P2SentenceContexts } from "./2011-passage-2-lexicon";
@@ -9,7 +10,7 @@ import { passage2010P4SentenceContexts } from "./2010-passage-4-lexicon";
 import { passage2010P3SentenceContexts } from "./2010-passage-3-lexicon";
 import { passage2010P2SentenceContexts } from "./2010-passage-2-lexicon";
 
-export type ArticleLexiconId = "cloze" | "p1" | "p2" | "p3" | "p4" | "p5" | "translation" | "2001-cloze" | "2001-p1" | "2001-p2" | "2010-cloze" | "2010-p1" | "2010-p2" | "2010-p3" | "2010-p4" | "2010-p5" | "2010-translation" | "2011-cloze" | "2011-p1" | "2011-p2" | "2011-p3" | "2011-p4";
+export type ArticleLexiconId = "cloze" | "p1" | "p2" | "p3" | "p4" | "p5" | "translation" | "2001-cloze" | "2001-p1" | "2001-p2" | "2010-cloze" | "2010-p1" | "2010-p2" | "2010-p3" | "2010-p4" | "2010-p5" | "2010-translation" | "2011-cloze" | "2011-p1" | "2011-p2" | "2011-p3" | "2011-p4" | "2011-p5";
 
 export type ContextualSubstitution = {
   label: string;
@@ -34,6 +35,7 @@ export type SentenceWordContext = {
  * a different sense, use and replacement set in every source sentence.
  */
 export const sentenceWordContexts: Record<string, Record<string, SentenceWordContext>> = {
+  ...passage2011P5SentenceContexts,
   ...passage2011P4SentenceContexts,
   ...passage2011P3SentenceContexts,
   ...passage2011P2SentenceContexts,

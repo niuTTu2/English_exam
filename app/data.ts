@@ -1,3 +1,4 @@
+import { passage2011P5Sentences, passage2011P5Questions } from "./2011-passage-5-data";
 import { passage2011P4Sentences, passage2011P4Questions } from "./2011-passage-4-data";
 import { passage2011P3Sentences, passage2011P3Questions } from "./2011-passage-3-data";
 import { passage2011P2Sentences, passage2011P2Questions } from "./2011-passage-2-data";
@@ -148,8 +149,21 @@ export type TrueFalseQuestion = Omit<Question, "format" | "options" | "answer" |
   analysis?: Omit<QuestionAnalysis, "options"> & { options?: Partial<Record<"T" | "F", SentenceAnalysis>> };
 };
 
-export type AnyQuestion = Question | TrueFalseQuestion;
+export type MatchingOptionKey = "A" | "B" | "C" | "D" | "E" | "F" | "G";
+export type MatchingQuestion = Omit<Question, "format" | "options" | "answer" | "explanations" | "analysis"> & {
+  format: "matching";
+  sharedOptionsId: number;
+  options: Array<{ key: MatchingOptionKey; text: string }>;
+  answer: MatchingOptionKey;
+  explanations: Record<MatchingOptionKey, string>;
+  analysis?: Omit<QuestionAnalysis, "options"> & { options?: Partial<Record<MatchingOptionKey, SentenceAnalysis>> };
+};
+
+export type AnyQuestion = Question | TrueFalseQuestion | MatchingQuestion;
 export type QuestionOptionKey = AnyQuestion["answer"];
+export function questionOptionSourceId(question: AnyQuestion, key: QuestionOptionKey): string {
+  return `question-${question.format === "matching" ? question.sharedOptionsId : question.id}-option-${key}`;
+}
 export function questionExplanation(question: AnyQuestion, key: QuestionOptionKey): string {
   const reasons: Partial<Record<QuestionOptionKey, string>> = question.explanations;
   if (!reasons[key]) throw new Error(`Missing explanation: ${question.id}/${key}`);
@@ -214,6 +228,7 @@ export const sectionsByYear = {
     { id: "2011-p2", label: "阅读 Text 2", meta: "30句 · 5题", status: "ready" },
     { id: "2011-p3", label: "阅读 Text 3", meta: "17句 · 5题", status: "ready" },
     { id: "2011-p4", label: "阅读 Text 4", meta: "17句 · 5题", status: "ready" },
+    { id: "2011-p5", label: "阅读 Part B", meta: "21句 · 5题", status: "ready" },
   ],
   2010: [
     { id: "2010-cloze", label: "完形填空", meta: "13句 · 20题", status: "ready" },
@@ -1476,7 +1491,11 @@ export const articleContents: Record<string, ArticleContent> = {
     id: "2011-p4", year: 2011, sectionId: "p4", label: "阅读 Text 4", badge: "2011 · 英语二 · Text 4", title: "欧元危机中的分歧与欧洲前景",
     description: "第36—40题，六段17句。区分欧盟与欧元区、德法政策主张、资金再分配方向和有条件的乐观态度。", kind: "reading", sentences: passage2011P4Sentences, questions: passage2011P4Questions,
   },
+  "2011-p5": {
+    id: "2011-p5", year: 2011, sectionId: "p5", label: "阅读 Part B", badge: "2011 · 英语二 · Part B", title: "公共健康政策：五个人物的不同主张",
+    description: "第41—45题，21句。保留共享A—G七选项与两项多余；区分发言人、批评者和被批评者的观点，不重复统计共用选项。", kind: "reading", sentences: passage2011P5Sentences, questions: passage2011P5Questions,
+  },
 };
 
-export const allSentences = [...verifiedClozeSentences, ...verifiedPassage1Sentences, ...verifiedPassage2Sentences, ...verifiedPassage3Sentences, ...verifiedPassage4Sentences, ...verifiedPassage5Sentences, ...verifiedTranslationSentences, ...cloze2001Sentences, ...passage2001P1Sentences, ...passage2001P2Sentences, ...cloze2010Sentences, ...passage2010P1Sentences, ...passage2010P2Sentences, ...passage2010P3Sentences, ...passage2010P4Sentences, ...passage2010P5Sentences, ...translation2010Sentences, ...cloze2011Sentences, ...passage2011P1Sentences, ...passage2011P2Sentences, ...passage2011P3Sentences, ...passage2011P4Sentences];
-export const allQuestions = [...verifiedClozeQuestions, ...verifiedPassage1Questions, ...verifiedPassage2Questions, ...verifiedPassage3Questions, ...verifiedPassage4Questions, ...verifiedPassage5Questions, ...cloze2001Questions, ...passage2001P1Questions, ...passage2001P2Questions, ...cloze2010Questions, ...passage2010P1Questions, ...passage2010P2Questions, ...passage2010P3Questions, ...passage2010P4Questions, ...passage2010P5Questions, ...cloze2011Questions, ...passage2011P1Questions, ...passage2011P2Questions, ...passage2011P3Questions, ...passage2011P4Questions];
+export const allSentences = [...verifiedClozeSentences, ...verifiedPassage1Sentences, ...verifiedPassage2Sentences, ...verifiedPassage3Sentences, ...verifiedPassage4Sentences, ...verifiedPassage5Sentences, ...verifiedTranslationSentences, ...cloze2001Sentences, ...passage2001P1Sentences, ...passage2001P2Sentences, ...cloze2010Sentences, ...passage2010P1Sentences, ...passage2010P2Sentences, ...passage2010P3Sentences, ...passage2010P4Sentences, ...passage2010P5Sentences, ...translation2010Sentences, ...cloze2011Sentences, ...passage2011P1Sentences, ...passage2011P2Sentences, ...passage2011P3Sentences, ...passage2011P4Sentences, ...passage2011P5Sentences];
+export const allQuestions = [...verifiedClozeQuestions, ...verifiedPassage1Questions, ...verifiedPassage2Questions, ...verifiedPassage3Questions, ...verifiedPassage4Questions, ...verifiedPassage5Questions, ...cloze2001Questions, ...passage2001P1Questions, ...passage2001P2Questions, ...cloze2010Questions, ...passage2010P1Questions, ...passage2010P2Questions, ...passage2010P3Questions, ...passage2010P4Questions, ...passage2010P5Questions, ...cloze2011Questions, ...passage2011P1Questions, ...passage2011P2Questions, ...passage2011P3Questions, ...passage2011P4Questions, ...passage2011P5Questions];

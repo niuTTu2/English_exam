@@ -21,6 +21,18 @@ after(async () => {
   await vite.close();
 });
 
+test("2011 matching renders one seven-option bank with stable source anchors", async () => {
+  const { MatchingOptionBank } = await vite.ssrLoadModule("/app/study-app.tsx");
+  const { articleContents } = await vite.ssrLoadModule("/app/data.ts");
+  const html = renderToStaticMarkup(React.createElement(MatchingOptionBank, { question: articleContents["2011-p5"].questions[0], onTerm() {} }));
+  assert.match(html, /有两项多余/);
+  for (const key of ["A", "B", "C", "D", "E", "F", "G"]) {
+    assert.equal(html.match(new RegExp(`id="source-question-201141-option-${key}"`, "g"))?.length, 1);
+  }
+  assert.match(html, /Change4Life/);
+  assert.doesNotMatch(html, /正确答案/);
+});
+
 async function readCssTree(directory) {
   const entries = await readdir(directory, { withFileTypes: true });
   const contents = await Promise.all(

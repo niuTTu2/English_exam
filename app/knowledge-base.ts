@@ -1,3 +1,4 @@
+import { passage2011P5PhraseGuides, passage2011P5PhraseAliases, passage2011P5PhraseGlosses, getPassage2011P5WordKnowledge } from "./2011-passage-5-knowledge";
 import { passage2011P4PhraseGuides, passage2011P4PhraseAliases, passage2011P4PhraseGlosses, getPassage2011P4WordKnowledge } from "./2011-passage-4-knowledge";
 import { passage2011P3PhraseGuides, passage2011P3PhraseAliases, passage2011P3PhraseGlosses, getPassage2011P3WordKnowledge } from "./2011-passage-3-knowledge";
 import { passage2011P2PhraseGuides, passage2011P2PhraseAliases, passage2011P2PhraseGlosses, getPassage2011P2WordKnowledge } from "./2011-passage-2-knowledge";
@@ -539,6 +540,9 @@ const collocationGlosses: Record<string, { meaning: string; note?: string }> = {
 };
 
 const familyGlosses: Record<string, string> = {
+  strong: "强壮的；强烈的；有实力的",
+  strength: "力量；实力；优点",
+  strengthen: "加强；增强",
   consume: "消耗；消费",
   consumer: "消费者",
   consumerism: "消费主义",
@@ -872,6 +876,14 @@ for (const [key, value] of Object.entries(passage2011P1PhraseGlosses)) {
   if (!collocationGlosses[key]) collocationGlosses[key] = value;
 }
 
+for (const [key, value] of Object.entries(passage2011P5PhraseGuides)) {
+  if (!phraseGuides[key]) phraseGuides[key] = value;
+}
+Object.assign(phraseAliases, passage2011P5PhraseAliases);
+for (const [key, value] of Object.entries(passage2011P5PhraseGlosses)) {
+  if (!collocationGlosses[key]) collocationGlosses[key] = value;
+}
+
 for (const [key, value] of Object.entries(passage2011P4PhraseGuides)) {
   if (!phraseGuides[key]) phraseGuides[key] = value;
 }
@@ -920,6 +932,10 @@ export function getPhraseKnowledge(source: string): PhraseKnowledge | undefined 
 }
 
 export function getWordKnowledge(headword: string, context?: { articleId?: string; sentenceId?: string }) {
+  if (context?.articleId === "2011-p5") {
+    const contextualKnowledge = getPassage2011P5WordKnowledge(normalized(headword), context.sentenceId);
+    if (contextualKnowledge) return contextualKnowledge;
+  }
   if (context?.articleId === "2011-p4") {
     const contextualKnowledge = getPassage2011P4WordKnowledge(normalized(headword), context.sentenceId);
     if (contextualKnowledge) return contextualKnowledge;

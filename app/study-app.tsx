@@ -64,6 +64,7 @@ import {
   type AnyQuestion as Question,
   type QuestionOptionKey,
   questionExplanation,
+  questionOptionSourceId,
   type SyntaxRole,
   type TranslationTask,
   translationTaskSentences,
@@ -224,15 +225,15 @@ const corpusSources = Object.values(articleContents).flatMap((article) => [
   ...article.sentences.map((sentence) => ({ id: sentence.id, sentenceId: sentence.id, article, text: sentence.text, section: `${article.label}正文` })),
   ...article.questions.flatMap((question) => [
     { id: `question-${question.id}-prompt`, sentenceId: undefined, article, text: question.prompt, section: `${article.label}第 ${question.number ?? question.id} 题题干` },
-    ...question.options.map((option) => ({ id: `question-${question.id}-option-${option.key}`, sentenceId: undefined, article, text: option.text, section: `${article.label}第 ${question.number ?? question.id} 题选项${option.key}` })),
+    ...(question.format === "matching" && question.id !== question.sharedOptionsId ? [] : question.options.map((option) => ({ id: questionOptionSourceId(question, option.key), sentenceId: undefined, article, text: option.text, section: question.format === "matching" ? `${article.label}共用选项${option.key}` : `${article.label}第 ${question.number ?? question.id} 题选项${option.key}` }))),
   ]),
 ]);
 const sourceById = new Map(corpusSources.map((source) => [source.id, source]));
 const phraseAnnotations = Object.values(articleContents).flatMap((article) => [
   ...article.sentences.flatMap((sentence) => sentence.phrases.map((label) => ({ label, sourceId: sentence.id }))),
-  ...article.questions.flatMap((question) => question.options
+  ...article.questions.filter(question => question.format !== "matching" || question.id === question.sharedOptionsId).flatMap((question) => question.options
     .filter((option) => option.text.includes(" ") && getPhraseKnowledge(option.text))
-    .map((option) => ({ label: option.text, sourceId: `question-${question.id}-option-${option.key}` }))),
+    .map((option) => ({ label: option.text, sourceId: questionOptionSourceId(question, option.key) }))),
 ]).map((annotation) => ({ ...annotation, patternKey: getPhraseKnowledge(annotation.label)?.key }));
 const phraseOccurrenceCache = new Map<string, Array<{ source: (typeof corpusSources)[number]; start: number; end: number; label: string }>>();
 const termContextCache = new Map<string, SavedTermContext[]>();
@@ -1857,9 +1858,10 @@ export default function StudyApp() {
 
                   <section className="question-section">
                     <div className="question-heading">
-                      <div><span>{activeArticle.kind === "cloze" ? "完形选择" : questions.every(question => question.format === "true-false") ? "阅读判断（T / F）" : "阅读选择"}</span><strong>{selectedAnswers}/{questions.length} 已作答</strong></div>
+                      <div><span>{activeArticle.kind === "cloze" ? "完形选择" : questions.every(question => question.format === "true-false") ? "阅读判断（T / F）" : questions.every(question => question.format === "matching") ? "人物观点匹配（A—G）" : "阅读选择"}</span><strong>{selectedAnswers}/{questions.length} 已作答</strong></div>
                       {submitted && <Badge className="score-badge">{correctAnswers}/{questions.length}</Badge>}
                     </div>
+                    {questions.filter(question => question.format === "matching" && question.id === question.sharedOptionsId).map(question => <MatchingOptionBank key={question.id} question={question} onTerm={openTerm} />)}
                     <div className="question-grid">
                       {questions.map((question) => (
                         <article key={question.id} className="question-card">
@@ -1867,22 +1869,23 @@ export default function StudyApp() {
                             <span>{question.number ?? question.id}</span>
                             <p>{renderWords(question.prompt, `question-${question.id}-prompt`, openTerm, `question-${question.id}`)}</p>
                           </div>
-                          <div className="option-list">
+                          <div className={`option-list ${question.format === "matching" ? "matching-choices" : ""}`}>
                             {question.options.map((option) => {
                               const selected = answers[question.id] === option.key;
                               const correct = submitted && option.key === question.answer;
                               const wrong = submitted && selected && option.key !== question.answer;
                               return (
-                                <div key={option.key} className={`option-row ${selected ? "is-selected" : ""} ${correct ? "is-correct" : ""} ${wrong ? "is-wrong" : ""}`} id={`source-question-${question.id}-option-${option.key}`} tabIndex={-1} data-source-location>
+                                <div key={option.key} className={`option-row ${selected ? "is-selected" : ""} ${correct ? "is-correct" : ""} ${wrong ? "is-wrong" : ""}`} id={question.format === "matching" ? undefined : `source-question-${question.id}-option-${option.key}`} tabIndex={-1} data-source-location={question.format === "matching" ? undefined : true}>
                                   <button
                                     type="button"
                                     className="option-choice"
                                     onClick={() => !submitted && setAnswers((current) => ({ ...current, [question.id]: option.key }))}
                                     aria-label={`选择 ${option.key} ${option.text}`}
+                                    aria-pressed={selected}
                                   >
                                     <span>{option.key}</span>{correct && <Check />}
                                   </button>
-                                  <div className="option-terms">
+                                  {question.format !== "matching" && <div className="option-terms">
                                     {renderWords(option.text, `question-${question.id}-option-${option.key}`, openTerm, `option-${question.id}-${option.key}`)}
                                     {option.text.includes(" ") && getPhraseKnowledge(option.text) && (
                                       <button
@@ -1892,11 +1895,12 @@ export default function StudyApp() {
                                         aria-label={`查看词组 ${option.text}`}
                                       >词组</button>
                                     )}
-                                  </div>
+                                  </div>}
                                 </div>
                               );
                             })}
                           </div>
+                          {question.format === "matching" && answers[question.id] && <p className="matching-selected">已选 {answers[question.id]}：{question.options.find(option => option.key === answers[question.id])?.text}</p>}
                           {submitted && (
                             <div className="answer-analysis">
                               <p className="locating"><Layers3 /><span>{renderWords(question.locating, question.sentenceId, openTerm, `locating-${question.id}`)}</span></p>
@@ -2542,6 +2546,17 @@ function analysisPhrases(analysis: SentenceAnalysis) {
   return Array.from(new Set(candidates.filter((phrase) => lower.includes(phrase.toLowerCase()))));
 }
 
+export function MatchingOptionBank({ question, onTerm }: { question: Question; onTerm: (label: string, sentenceId: string, isPhrase?: boolean) => void }) {
+  if (question.format !== "matching") return null;
+  return <section className="matching-option-bank" aria-label="共用七选项">
+    <h3>共用选项 A—G</h3>
+    <p>将五个人物与观点对应，有两项多余。先阅读共用选项，再在各题选择字母；点击选项中的单词可查词。</p>
+    {question.options.map(option => <div key={option.key} className="option-row" id={`source-${questionOptionSourceId(question, option.key)}`} tabIndex={-1} data-source-location>
+      <strong>{option.key}</strong><p>{renderWords(option.text, questionOptionSourceId(question, option.key), onTerm, `shared-${option.key}`)}</p>
+    </div>)}
+  </section>;
+}
+
 function QuestionAnalysisPanel({
   question,
   onTerm,
@@ -2578,7 +2593,7 @@ function QuestionAnalysisPanel({
           key={`${question.id}-${option.key}`}
           label={`${option.key} 选项`}
           analysis={optionAnalysis}
-          sentenceId={`question-${question.id}-option-${option.key}`}
+          sentenceId={questionOptionSourceId(question, option.key)}
           onTerm={onTerm}
         />
       ))}

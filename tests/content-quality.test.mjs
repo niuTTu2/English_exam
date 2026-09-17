@@ -268,6 +268,12 @@ test("自测空格、题号和答案严格对应", () => {
     if (question.format === "true-false") {
       assert.deepEqual(question.options, [{ key: "T", text: "True" }, { key: "F", text: "False" }], `第 ${question.id} 题必须保留原卷T/F选项`);
       assert.deepEqual(Object.keys(question.explanations).sort(), ["F", "T"], `第 ${question.id} 题必须只有两项真实判断理由`);
+    } else if (question.format === "matching") {
+      assert.deepEqual(question.options.map(option => option.key), ["A", "B", "C", "D", "E", "F", "G"], `第 ${question.id} 题必须保留七个真实匹配选项`);
+      assert.deepEqual(Object.keys(question.explanations).sort(), ["A", "B", "C", "D", "E", "F", "G"], `第 ${question.id} 题必须解释全部七个选项`);
+      const owner = allQuestions.find(candidate => candidate.id === question.sharedOptionsId);
+      assert.equal(owner?.format, "matching", "共享选项的来源题必须存在");
+      assert.deepEqual(question.options, owner.options, "共用选项不得在不同题目中改写");
     } else {
       assert.ok(question.format === undefined || question.format === "multiple-choice");
       assert.deepEqual(question.options.map((option) => option.key), ["A", "B", "C", "D"], `第 ${question.id} 题选项键错误`);
