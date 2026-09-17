@@ -55,6 +55,7 @@ test("单词本句义与词组、句意分开，保留词形与语境差异", as
 const forbiddenPlaceholder = /(待精审|后续补充|持续补充|结合本句成分理解|暂无资料|将在所属真题精审|该词未出现在)/;
 const forbiddenSyntaxPlaceholder = /(从引导词后找动作发出者|找带时态、情态或语态变化的动词|再看谓语后是否需要宾语|结合相邻主干判断)/;
 const normalizeText = (value) => value.replace(/\s+/g, " ").trim();
+const syntaxComponents = (components) => components.flatMap((component) => [component, ...syntaxComponents(component.children ?? [])]);
 const englishTokens = (value) => value.toLowerCase().match(/[a-z]+(?:\d+[a-z]*)+\b|\d+(?:st|nd|rd|th)\b|\d{4}s\b|[a-z]+(?:-[a-z]+)?(?:['’][a-z]+)?/g) ?? [];
 
 function isTokenSubsequence(shorter, longer) {
@@ -1155,15 +1156,29 @@ test("2010 Text 2 保留用户原卷、题号、答案依据及复杂句边界",
   assert.equal(createHash("sha256").update(body).digest("hex"), "108a95e5c4bef2ca4a0552143fe3eb2c4484e9850c1b4c7046fab25b9eb73c10", "正文必须逐字保留用户 DOCX 第148—152段，包括跨句引号");
   assert.equal(createHash("sha256").update(questions).digest("hex"), "47995e0dbc5548b0d908681d5eac99bf02ae9a561c5df3146399168ebc3f29b2", "题干、下划线、标点和选项必须保留用户 DOCX 第153—177段");
   assert.deepEqual(article.sentences.map((sentence) => sentence.beginnerSyntax.clauses.length), [1, 1, 2, 0, 1, 0, 1, 1, 1, 3, 0, 0, 2, 0, 0, 1, 0, 2, 2]);
+  assert.ok(article.sentences.every(sentence => sentence.beginnerSyntax.reading?.questions.length));
+  assert.equal(new Set(article.sentences.map(sentence => sentence.beginnerSyntax.reading.focus)).size, 19);
+  const evening = syntaxComponents(article.sentences[1].beginnerSyntax.components);
+  assert.match(evening.find(component => component.text === "had been").form + evening.find(component => component.text === "had been").function, /系动词/);
+  assert.equal(evening.find(component => component.text === "particularly").modifies, "talkative");
+  assert.equal(evening.find(component => component.text === "frequently").modifies, "offering");
+  assert.equal(evening.find(component => component.text === "silently").modifies, "sat");
   const research = article.sentences[14];
   assert.deepEqual(research.beginnerSyntax.clauses, [], "第15句分词、不定式和份额比较不得伪造成完整从句");
-  assert.ok(research.beginnerSyntax.components.some((component) => component.text.includes("having given up") && /完成/.test(component.explanation + component.form)));
+  const researchParts = syntaxComponents(research.beginnerSyntax.components);
+  assert.ok(researchParts.some((component) => component.text === "having given up" && /完成|having \+ 过去分词/.test(component.explanation + component.form)));
+  const examples = researchParts.find(component => component.text.startsWith("such as "));
+  assert.equal(examples.children.length, 2, "两个大例子不能和清洁、做饭的内部举例平铺");
+  assert.ok(syntaxComponents(examples.children[1].children).some(component => component.text.startsWith("like cleaning") && component.modifies === "work"));
+  assert.match(research.trunk, /not/);
   const finding = article.sentences[17];
   assert.ok(finding.beginnerSyntax.clauses.some((clause) => clause.text === "as Hacker observed years before" && /非限制性定语从句/.test(clause.type)));
   const ending = article.sentences[18];
-  assert.ok(ending.beginnerSyntax.components.some((component) => component.text === "with a newspaper held up in front of his face" && /宾补|宾语补足语/.test(component.explanation)));
+  const endingParts = syntaxComponents(ending.beginnerSyntax.components);
+  const withPhrase = endingParts.find(component => component.text === "with a newspaper held up in front of his face");
+  assert.ok(withPhrase.children.some(component => component.text === "held up" && component.function === "宾语补足语" && component.modifies === "a newspaper"));
   assert.ok(!ending.beginnerSyntax.clauses.some((clause) => clause.text.startsWith("with ")));
-  assert.ok(ending.beginnerSyntax.components.some((component) => component.text === "wanting to talk" && /woman/.test(component.modifies)));
+  assert.ok(endingParts.some((component) => component.text === "wanting to talk" && /woman/.test(component.modifies)));
   assert.match(article.questions[2].explanations.B, /离婚率/);
   assert.match(article.questions[2].explanations.B, /占比/);
   assert.match(article.questions[4].explanations.B, /不表示原卷实际包含/);
