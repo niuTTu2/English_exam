@@ -765,7 +765,21 @@ test("已就绪文章与目录、题号和稳定 ID 一致", () => {
         if (task.genre === "chart-essay") {
           assert.ok(task.chart?.rows.length);
           for (const field of ["src", "alt", "note"]) requireText(task.chart[field], `${article.id}.chart.${field}`);
-          for (const row of task.chart.rows) for (const field of ["brand", "before", "after"]) requireText(row[field], `${article.id}.chart.row.${field}`);
+          if (task.chart.format === "table") {
+            requireText(task.chart.caption, `${article.id}.chart.caption`);
+            assert.ok(task.chart.columns.length >= 2);
+            assert.equal(new Set(task.chart.columns).size, task.chart.columns.length);
+            task.chart.columns.forEach((column, index) => requireText(column, `${article.id}.chart.columns.${index}`));
+            assert.equal(new Set(task.chart.rows.map(row => row.label)).size, task.chart.rows.length);
+            for (const row of task.chart.rows) {
+              requireText(row.label, `${article.id}.chart.row.label`);
+              assert.equal(row.values.length, task.chart.columns.length - 1, "数据格数量必须与表头匹配");
+              row.values.forEach((value, index) => requireText(value, `${article.id}.chart.row.values.${index}`));
+            }
+          } else {
+            assert.ok(task.chart.format === undefined || task.chart.format === "year-comparison");
+            for (const row of task.chart.rows) for (const field of ["brand", "before", "after"]) requireText(row[field], `${article.id}.chart.row.${field}`);
+          }
         }
       }
     } else {

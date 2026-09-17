@@ -1,3 +1,4 @@
+import { writing2012BSentences, writing2012BTasks } from "./2012-writing-b-data";
 import { writing2012ASentences, writing2012ATasks } from "./2012-writing-a-data";
 import { translation2012Sentences, translation2012Tasks } from "./2012-translation-data";
 import { passage2012P5Sentences, passage2012P5Questions } from "./2012-passage-5-data";
@@ -210,7 +211,10 @@ export type WritingTask = {
   languageTips: Array<{ english: string; chinese: string; usage: string }>;
   checklist: string[];
   pitfalls: string[];
-  chart?: { src: string; alt: string; note: string; rows: Array<{ brand: string; before: string; after: string }> };
+  chart?: { src: string; alt: string; note: string; width?: number; height?: number } & (
+    | { format?: "year-comparison"; rows: Array<{ brand: string; before: string; after: string }> }
+    | { format: "table"; caption: string; columns: string[]; rows: Array<{ label: string; values: string[] }> }
+  );
 };
 
 export type ArticleContent = {
@@ -257,6 +261,7 @@ export const sectionsByYear = {
     { id: "2012-p5", label: "阅读 Part B", meta: "28句 · 5题", status: "ready" },
     { id: "2012-translation", label: "英译汉", meta: "6句 · 15分", status: "ready" },
     { id: "2012-writing-a", label: "写作 Part A", meta: "6句 · 10分", status: "ready" },
+    { id: "2012-writing-b", label: "写作 Part B", meta: "4句 · 15分", status: "ready" },
   ],
   2011: [
     { id: "2011-cloze", label: "完形填空", meta: "16句 · 20题", status: "ready" },
@@ -1581,7 +1586,12 @@ export const articleContents: Record<string, ArticleContent> = {
     title: "电子词典投诉：说清问题与补救要求", description: "第47题，约100词，10分。原题六句指令精读，练习正式投诉邮件；写作思路、教学范文和核对清单，不自动评分。",
     kind: "writing", sentences: writing2012ASentences, questions: [], writingTasks: writing2012ATasks,
   },
+  "2012-writing-b": {
+    id: "2012-writing-b", year: 2012, sectionId: "writing-b", label: "写作 Part B", badge: "2012 · 英语二 · 写作 Part B",
+    title: "员工工作满意度：年龄组比较与谨慎评论", description: "第48题，至少150词，15分。保留原卷满意度表及精确百分数，区分年龄组、比例与原因假设；教学范文不计入真题词频。",
+    kind: "writing", sentences: writing2012BSentences, questions: [], writingTasks: writing2012BTasks,
+  },
 };
 
-export const allSentences = [...verifiedClozeSentences, ...verifiedPassage1Sentences, ...verifiedPassage2Sentences, ...verifiedPassage3Sentences, ...verifiedPassage4Sentences, ...verifiedPassage5Sentences, ...verifiedTranslationSentences, ...cloze2001Sentences, ...passage2001P1Sentences, ...passage2001P2Sentences, ...cloze2010Sentences, ...passage2010P1Sentences, ...passage2010P2Sentences, ...passage2010P3Sentences, ...passage2010P4Sentences, ...passage2010P5Sentences, ...translation2010Sentences, ...cloze2011Sentences, ...passage2011P1Sentences, ...passage2011P2Sentences, ...passage2011P3Sentences, ...passage2011P4Sentences, ...passage2011P5Sentences, ...translation2011Sentences, ...writing2011ASentences, ...writing2011BSentences, ...cloze2012Sentences, ...passage2012P1Sentences, ...passage2012P3Sentences, ...passage2012P4Sentences, ...passage2012P5Sentences, ...translation2012Sentences, ...writing2012ASentences];
+export const allSentences = [...verifiedClozeSentences, ...verifiedPassage1Sentences, ...verifiedPassage2Sentences, ...verifiedPassage3Sentences, ...verifiedPassage4Sentences, ...verifiedPassage5Sentences, ...verifiedTranslationSentences, ...cloze2001Sentences, ...passage2001P1Sentences, ...passage2001P2Sentences, ...cloze2010Sentences, ...passage2010P1Sentences, ...passage2010P2Sentences, ...passage2010P3Sentences, ...passage2010P4Sentences, ...passage2010P5Sentences, ...translation2010Sentences, ...cloze2011Sentences, ...passage2011P1Sentences, ...passage2011P2Sentences, ...passage2011P3Sentences, ...passage2011P4Sentences, ...passage2011P5Sentences, ...translation2011Sentences, ...writing2011ASentences, ...writing2011BSentences, ...cloze2012Sentences, ...passage2012P1Sentences, ...passage2012P3Sentences, ...passage2012P4Sentences, ...passage2012P5Sentences, ...translation2012Sentences, ...writing2012ASentences, ...writing2012BSentences];
 export const allQuestions = [...verifiedClozeQuestions, ...verifiedPassage1Questions, ...verifiedPassage2Questions, ...verifiedPassage3Questions, ...verifiedPassage4Questions, ...verifiedPassage5Questions, ...cloze2001Questions, ...passage2001P1Questions, ...passage2001P2Questions, ...cloze2010Questions, ...passage2010P1Questions, ...passage2010P2Questions, ...passage2010P3Questions, ...passage2010P4Questions, ...passage2010P5Questions, ...cloze2011Questions, ...passage2011P1Questions, ...passage2011P2Questions, ...passage2011P3Questions, ...passage2011P4Questions, ...passage2011P5Questions, ...cloze2012Questions, ...passage2012P1Questions, ...passage2012P3Questions, ...passage2012P4Questions, ...passage2012P5Questions];

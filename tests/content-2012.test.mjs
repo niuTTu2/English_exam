@@ -1,5 +1,6 @@
 
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import test, { after } from "node:test";
 import { fileURLToPath } from "node:url";
@@ -99,6 +100,57 @@ test("2012投诉邮件保留原指令与两任务，不将范文计入真题", (
   for (const [token, number, meaning] of [["prompt", 2, /及时/], ["complaint", 2, /投诉/], ["address", 6, /地址/], ["points", 6, /分/]]) assert.match(study.resolveEntry(token, false, "2012-writing-a-s" + number).contextualMeaning, meaning);
   assert.match(study.resolveEntry("prompt", false, "2012-writing-a-s2").partOfSpeech, /adj/);
   assert.equal(knowledge.getPhraseKnowledge("at the end of the letter").key, "2010-p1-at-the-end-of");
+});
+
+test("2012满意度作文保留九格数据与原图，不套用年份轴", () => {
+  const article = data.articleContents["2012-writing-b"];
+  const fixture = JSON.parse(readFileSync(new URL("./fixtures/2012-writing-b.json", import.meta.url), "utf8"));
+  assert.equal(fixture.sha256, sourceHash);
+  assert.equal(article.kind, "writing");
+  assert.equal(article.sentences.length, 4);
+  assert.equal(normalize(article.sentences.map(sentence => sentence.text).join(" ")), normalize(fixture.paragraphs.map(row => row.text).join(" ")));
+  assert.equal(article.questions.length, 0);
+  assert.equal(article.writingTasks.length, 1);
+  const task = article.writingTasks[0];
+  assert.equal(task.id, 201248);
+  assert.equal(task.number, 48);
+  assert.equal(task.points, 15);
+  assert.deepEqual(task.wordLimit, { mode: "at-least", count: 150 });
+  assert.equal(task.genre, "chart-essay");
+  assert.deepEqual(task.instructions, article.sentences);
+  assert.equal(task.chart.format, "table");
+  assert.deepEqual(task.chart.columns, fixture.columns);
+  assert.deepEqual(task.chart.rows, fixture.rows);
+  assert.equal(task.chart.width, fixture.image.width);
+  assert.equal(task.chart.height, fixture.image.height);
+  assert.equal(createHash("sha256").update(readFileSync(new URL("../" + fixture.image.path, import.meta.url))).digest("hex"), fixture.image.sha256);
+  for (const row of task.chart.rows) {
+    assert.equal(row.values.length, task.chart.columns.length - 1);
+    assert.ok(Math.abs(row.values.reduce((total, value) => total + parseFloat(value), 0) - 100) < 0.0001);
+    for (const value of row.values) assert.ok(task.sample.english[0].includes(value.replace("%", "")));
+  }
+  assert.ok(study.writingWordCount(task.sample.english.join(" ")) >= 150);
+  assert.equal(task.sample.english.length, task.sample.chinese.length);
+  assert.equal(task.sample.english.length, task.sample.notes.length);
+  assert.match(task.sample.english[0], /40 or below/);
+  assert.match(task.sample.english[0], /over 50/);
+  assert.match(task.sample.english[1], /might/);
+  assert.ok(!data.allSentences.some(sentence => sentence.text.includes(task.sample.english[0])));
+  assert.match(study.resolveEntry("table", false, "2012-writing-b-s1").contextualMeaning, /统计表|表格/);
+  assert.equal(lexicon.canonicalLemma("writing", { articleId: article.id }), "writing");
+  assert.equal(knowledge.getPhraseKnowledge("based on the following table").key, "based-on");
+  assert.equal(knowledge.getPhraseKnowledge("at least 150 words").key, "p5-collocation-at-least");
+});
+
+test("2012已核验八模块完整索引且不伪装缺字Text2已完成", () => {
+  assert.deepEqual(articles.map(article => article.id), ["2012-cloze", "2012-p1", "2012-p3", "2012-p4", "2012-p5", "2012-translation", "2012-writing-a", "2012-writing-b"]);
+  assert.equal(articles.reduce((count, article) => count + article.sentences.length, 0), 120);
+  assert.equal(articles.reduce((count, article) => count + article.questions.length, 0), 40);
+  const tasks = articles.flatMap(article => [...article.questions, ...(article.translationTasks ?? []), ...(article.writingTasks ?? [])]);
+  const expected = Array.from({ length: 48 }, (_, index) => index + 1).filter(number => number < 26 || number > 30);
+  assert.deepEqual(tasks.map(task => task.number), expected);
+  assert.equal(new Set(tasks.map(task => task.id)).size, 43);
+  assert.equal(data.articleContents["2012-p2"], undefined);
 });
 
 function checkReadingSource(id, startNumber, sentenceCount, key) {

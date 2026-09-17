@@ -21,6 +21,31 @@ after(async () => {
   await vite.close();
 });
 
+test("2012满意度表支持三态度列、精确数据和原图尺寸", async () => {
+  const { WritingPromptChart, WritingTestTask } = await vite.ssrLoadModule("/app/study-app.tsx");
+  const { articleContents } = await vite.ssrLoadModule("/app/data.ts");
+  const task = articleContents["2012-writing-b"].writingTasks[0];
+  const chart = renderToStaticMarkup(React.createElement(WritingPromptChart, { task }));
+  assert.match(chart, /class="writing-chart"/);
+  assert.match(chart, /src="\/exams\/2012-writing-b-original\.jpg"/);
+  assert.match(chart, /width="644" height="329"/);
+  for (const column of ["年龄组", "满意", "不清楚", "不满意"]) assert.ok(chart.includes('scope="col">' + column));
+  assert.equal((chart.match(/scope="row"/g) ?? []).length, 3);
+  assert.equal((chart.match(/<td>/g) ?? []).length, 9);
+  assert.match(chart, /64\.0%/);
+  assert.match(chart, /原图精确百分数/);
+  assert.doesNotMatch(chart, /2008年|2009年|不是精确标签|<details[^>]*open/);
+  const props = { task, answer: "The table reports job satisfaction.", submitted: false, onAnswer() {}, onSubmit() {}, onEdit() {}, onTerm() {} };
+  const pending = renderToStaticMarkup(React.createElement(WritingTestTask, props));
+  assert.equal((pending.match(/<textarea/g) ?? []).length, 1);
+  assert.equal((pending.match(/<img/g) ?? []).length, 1);
+  assert.match(pending, /至少150词/);
+  assert.doesNotMatch(pending, /Career expectations, workload/);
+  const submitted = renderToStaticMarkup(React.createElement(WritingTestTask, { ...props, submitted: true }));
+  assert.match(submitted, /不作自动评分/);
+  assert.match(submitted, /继续修改.*保留草稿/);
+});
+
 test("写作字数辅助计数保留缩写与连字符，不混入汉字", async () => {
   const { writingWordCount } = await vite.ssrLoadModule("/app/study-app.tsx");
   assert.equal(writingWordCount(""), 0);

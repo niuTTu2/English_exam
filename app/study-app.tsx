@@ -2635,11 +2635,15 @@ export function writingWordCount(text: string): number {
 }
 
 export function WritingPromptChart({ task }: { task: WritingTask }) {
-  if (!task.chart) return null;
+  const chart = task.chart;
+  if (!chart) return null;
+  const columns = chart.format === "table" ? chart.columns : ["品牌", "2008年", "2009年"];
+  const caption = chart.format === "table" ? chart.caption : "按用户原图刻度读取的近似值，不是精确标签";
+  const rows = chart.format === "table" ? chart.rows : chart.rows.map(row => ({ label: row.brand, values: [row.before, row.after] }));
   return <figure className="writing-chart">
-    <img src={task.chart.src} alt={task.chart.alt} width={833} height={553} loading="lazy" />
-    <figcaption>{task.chart.note}</figcaption>
-    <details><summary>查看图表文字说明</summary><table><caption>按用户原图刻度读取的近似值，不是精确标签</caption><thead><tr><th scope="col">品牌</th><th scope="col">2008年</th><th scope="col">2009年</th></tr></thead><tbody>{task.chart.rows.map(row => <tr key={row.brand}><th scope="row">{row.brand}</th><td>{row.before}</td><td>{row.after}</td></tr>)}</tbody></table></details>
+    <img src={chart.src} alt={chart.alt} width={chart.width ?? 833} height={chart.height ?? 553} loading="lazy" />
+    <figcaption>{chart.note}</figcaption>
+    <details><summary>查看图表文字说明</summary><table><caption>{caption}</caption><thead><tr>{columns.map(column => <th scope="col" key={column}>{column}</th>)}</tr></thead><tbody>{rows.map(row => <tr key={row.label}><th scope="row">{row.label}</th>{row.values.map((value, index) => <td key={index}>{value}</td>)}</tr>)}</tbody></table></details>
   </figure>;
 }
 

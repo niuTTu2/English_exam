@@ -1,0 +1,63 @@
+{
+  "sha256": "b91cfe8e6a3eb63b02fc6573514e34a67937bf8160a5712ce640315e2da306f9",
+  "paragraphs": [
+    {
+      "index": 277,
+      "text": "Write an essay based on the following table. In your writing, you should"
+    },
+    {
+      "index": 278,
+      "text": "1) describe the table, and"
+    },
+    {
+      "index": 279,
+      "text": "2) give your comments."
+    },
+    {
+      "index": 280,
+      "text": "You should write at least 150 words."
+    },
+    {
+      "index": 281,
+      "text": "Write your essay on ANSWER SHEET 2. (15 points)"
+    }
+  ],
+  "image": {
+    "path": "public/exams/2012-writing-b-original.jpg",
+    "sha256": "5574d92885909a1f1cbc10fbad4f44166aa6d89ae5fee2bfeeec5c80e1e86be5",
+    "width": 644,
+    "height": 329
+  },
+  "columns": [
+    "年龄组",
+    "满意",
+    "不清楚",
+    "不满意"
+  ],
+  "rows": [
+    {
+      "label": "≤40岁",
+      "values": [
+        "16.7%",
+        "50.0%",
+        "33.3%"
+      ]
+    },
+    {
+      "label": "41—50岁",
+      "values": [
+        "0.0%",
+        "36.0%",
+        "64.0%"
+      ]
+    },
+    {
+      "label": ">50岁",
+      "values": [
+        "40.0%",
+        "50.0%",
+        "10.0%"
+      ]
+    }
+  ]
+}
