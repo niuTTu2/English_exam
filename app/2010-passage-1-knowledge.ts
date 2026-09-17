@@ -51,7 +51,7 @@ const seeds: Seed[] = [
   ["The current downturn", "the current downturn", "当前这轮市场低迷", "主语中心", "downturn 是经济活动或市场的下降期。"],
   ["the worst since", "the worst since + clause", "自……以来最严重的一次", "最高级 + 时间范围", "since 从句提供比较起点。"],
   ["stopped buying", "stop doing", "停止购买", "时间从句谓语", "stop doing 是停止原有行为；stop to do 是停下别的事去做。"],
-  ["at the end of", "at the end of + period", "在……末尾", "时间状语", "不要与 in the end‘最终’混淆。"],
+  ["at the end of", "at the end of + period/text", "在……末尾", "时间或篇章位置状语", "接时期表时间末尾，接letter等文本表篇章末尾；不要与in the end‘最终’混淆。"],
   ["This time", "this time", "这一次；本轮", "情境状语", "对比1989年的上一轮低迷。"],
   ["reckon that", "reckon that + clause", "估计；认为……", "主句谓语", "that 从句给出判断内容。"],
   ["are about 40% down on their peak", "be down on + benchmark", "平均比峰值低约40%", "比较表语结构", "on 引出比较基准。"],

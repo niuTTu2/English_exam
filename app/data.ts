@@ -1,3 +1,4 @@
+import { writing2011ASentences, writing2011ATasks } from "./2011-writing-a-data";
 import { translation2011Sentences, translation2011Tasks } from "./2011-translation-data";
 import { passage2011P5Sentences, passage2011P5Questions } from "./2011-passage-5-data";
 import { passage2011P4Sentences, passage2011P4Questions } from "./2011-passage-4-data";
@@ -188,18 +189,35 @@ export function translationTaskSentences(task: TranslationTask): SentenceAnalysi
   return task.format === "passage" ? task.paragraphs.flat() : [task.analysis];
 }
 
+export type WritingTask = {
+  id: number;
+  number: number;
+  genre: "letter" | "chart-essay";
+  points: number;
+  wordLimit: { mode: "about" | "at-least"; count: number };
+  instructions: SentenceAnalysis[];
+  requirements: string[];
+  outline: Array<{ title: string; content: string }>;
+  sample: { english: string[]; chinese: string[]; notes: string[] };
+  languageTips: Array<{ english: string; chinese: string; usage: string }>;
+  checklist: string[];
+  pitfalls: string[];
+  chart?: { src: string; alt: string; note: string; rows: Array<{ brand: string; before: string; after: string }> };
+};
+
 export type ArticleContent = {
   id: string;
   year: number;
-  sectionId: "cloze" | "p1" | "p2" | "p3" | "p4" | "p5" | "translation";
+  sectionId: "cloze" | "p1" | "p2" | "p3" | "p4" | "p5" | "translation" | "writing-a" | "writing-b";
   label: string;
   badge: string;
   title: string;
   description: string;
-  kind: "cloze" | "reading" | "translation";
+  kind: "cloze" | "reading" | "translation" | "writing";
   sentences: SentenceAnalysis[];
   questions: AnyQuestion[];
   translationTasks?: TranslationTask[];
+  writingTasks?: WritingTask[];
 };
 
 export const sections = [
@@ -231,6 +249,7 @@ export const sectionsByYear = {
     { id: "2011-p4", label: "阅读 Text 4", meta: "17句 · 5题", status: "ready" },
     { id: "2011-p5", label: "阅读 Part B", meta: "21句 · 5题", status: "ready" },
     { id: "2011-translation", label: "英译汉", meta: "7句 · 1题 · 15分", status: "ready" },
+    { id: "2011-writing-a", label: "写作 Part A", meta: "书信 · 第47题 · 10分", status: "ready" },
   ],
   2010: [
     { id: "2010-cloze", label: "完形填空", meta: "13句 · 20题", status: "ready" },
@@ -1501,7 +1520,11 @@ export const articleContents: Record<string, ArticleContent> = {
     id: "2011-translation", year: 2011, sectionId: "translation", label: "英译汉", badge: "2011 · 英语二 · 第46题", title: "数字生活的碳排放与减排责任",
     description: "三段七句，整篇一次作答，15分。辨析约数比较、数据单位、制冷耗能因果与不只是企业的责任；参考译文不作自动评分。", kind: "translation", sentences: translation2011Sentences, questions: [], translationTasks: translation2011Tasks,
   },
+  "2011-writing-a": {
+    id: "2011-writing-a", year: 2011, sectionId: "writing-a", label: "写作 Part A", badge: "2011 · 英语二 · 第47题", title: "祝贺大学录取与入学准备建议",
+    description: "约100词书信，10分。原题六句指令逐句精读；独立写作、草稿保存、字数提示、参考范文与逐段说明，不作自动评分。", kind: "writing", sentences: writing2011ASentences, questions: [], writingTasks: writing2011ATasks,
+  },
 };
 
-export const allSentences = [...verifiedClozeSentences, ...verifiedPassage1Sentences, ...verifiedPassage2Sentences, ...verifiedPassage3Sentences, ...verifiedPassage4Sentences, ...verifiedPassage5Sentences, ...verifiedTranslationSentences, ...cloze2001Sentences, ...passage2001P1Sentences, ...passage2001P2Sentences, ...cloze2010Sentences, ...passage2010P1Sentences, ...passage2010P2Sentences, ...passage2010P3Sentences, ...passage2010P4Sentences, ...passage2010P5Sentences, ...translation2010Sentences, ...cloze2011Sentences, ...passage2011P1Sentences, ...passage2011P2Sentences, ...passage2011P3Sentences, ...passage2011P4Sentences, ...passage2011P5Sentences, ...translation2011Sentences];
+export const allSentences = [...verifiedClozeSentences, ...verifiedPassage1Sentences, ...verifiedPassage2Sentences, ...verifiedPassage3Sentences, ...verifiedPassage4Sentences, ...verifiedPassage5Sentences, ...verifiedTranslationSentences, ...cloze2001Sentences, ...passage2001P1Sentences, ...passage2001P2Sentences, ...cloze2010Sentences, ...passage2010P1Sentences, ...passage2010P2Sentences, ...passage2010P3Sentences, ...passage2010P4Sentences, ...passage2010P5Sentences, ...translation2010Sentences, ...cloze2011Sentences, ...passage2011P1Sentences, ...passage2011P2Sentences, ...passage2011P3Sentences, ...passage2011P4Sentences, ...passage2011P5Sentences, ...translation2011Sentences, ...writing2011ASentences];
 export const allQuestions = [...verifiedClozeQuestions, ...verifiedPassage1Questions, ...verifiedPassage2Questions, ...verifiedPassage3Questions, ...verifiedPassage4Questions, ...verifiedPassage5Questions, ...cloze2001Questions, ...passage2001P1Questions, ...passage2001P2Questions, ...cloze2010Questions, ...passage2010P1Questions, ...passage2010P2Questions, ...passage2010P3Questions, ...passage2010P4Questions, ...passage2010P5Questions, ...cloze2011Questions, ...passage2011P1Questions, ...passage2011P2Questions, ...passage2011P3Questions, ...passage2011P4Questions, ...passage2011P5Questions];

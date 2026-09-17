@@ -739,6 +739,35 @@ test("已就绪文章与目录、题号和稳定 ID 一致", () => {
           requireSentenceAnalysis(task.analysis, `${article.id}.${task.id}.analysis`);
         }
       }
+    } else if (article.kind === "writing") {
+      assert.equal(article.questions.length, 0, `${article.id} 写作不得伪装成选择题`);
+      assert.ok(article.writingTasks?.length, `${article.id} 必须有原题写作任务`);
+      assert.deepEqual(article.writingTasks.flatMap(task => task.instructions.map(sentence => sentence.id)), article.sentences.map(sentence => sentence.id), `${article.id} 写作指令须完整、按顺序覆盖`);
+      assert.equal(new Set(article.writingTasks.map(task => task.id)).size, article.writingTasks.length);
+      for (const task of article.writingTasks) {
+        assert.ok(Number.isInteger(task.id) && Number.isInteger(task.number) && task.number > 0);
+        assert.ok(task.points > 0);
+        assert.ok(["letter", "chart-essay"].includes(task.genre));
+        assert.ok(["about", "at-least"].includes(task.wordLimit.mode));
+        assert.ok(task.wordLimit.count > 0);
+        for (const field of ["requirements", "checklist", "pitfalls"]) {
+          assert.ok(task[field].length >= 3, `${article.id}.${field} 应有实质指导`);
+          task[field].forEach((value, index) => requireText(value, `${article.id}.${field}.${index}`));
+        }
+        assert.ok(task.outline.length >= 3);
+        for (const item of task.outline) for (const field of ["title", "content"]) requireText(item[field], `${article.id}.outline.${field}`);
+        assert.ok(task.sample.english.length >= 3);
+        assert.equal(task.sample.english.length, task.sample.chinese.length);
+        assert.equal(task.sample.english.length, task.sample.notes.length);
+        for (const field of ["english", "chinese", "notes"]) task.sample[field].forEach((value, index) => requireText(value, `${article.id}.sample.${field}.${index}`));
+        assert.ok(task.languageTips.length >= 3);
+        for (const tip of task.languageTips) for (const field of ["english", "chinese", "usage"]) requireText(tip[field], `${article.id}.languageTips.${field}`);
+        if (task.genre === "chart-essay") {
+          assert.ok(task.chart?.rows.length);
+          for (const field of ["src", "alt", "note"]) requireText(task.chart[field], `${article.id}.chart.${field}`);
+          for (const row of task.chart.rows) for (const field of ["brand", "before", "after"]) requireText(row[field], `${article.id}.chart.row.${field}`);
+        }
+      }
     } else {
       assert.ok(article.questions.length > 0, `${article.id} 缺少题目`);
     }

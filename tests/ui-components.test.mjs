@@ -21,6 +21,35 @@ after(async () => {
   await vite.close();
 });
 
+test("写作字数辅助计数保留缩写与连字符，不混入汉字", async () => {
+  const { writingWordCount } = await vite.ssrLoadModule("/app/study-app.tsx");
+  assert.equal(writingWordCount(""), 0);
+  assert.equal(writingWordCount("中文说明\n  "), 0);
+  assert.equal(writingWordCount("I'm ready for university-level work in 2011."), 7);
+});
+
+test("2011书信自测只有一个输入框，提交前不泄露范文，提交后折叠并可继续修改", async () => {
+  const { WritingTestTask, WritingStudyGuide } = await vite.ssrLoadModule("/app/study-app.tsx");
+  const { articleContents } = await vite.ssrLoadModule("/app/data.ts");
+  const task = articleContents["2011-writing-a"].writingTasks[0];
+  const props = { task, answer: "Dear Li Ming,", onAnswer() {}, onSubmit() {}, onEdit() {}, onTerm() {} };
+  const pending = renderToStaticMarkup(React.createElement(WritingTestTask, { ...props, submitted: false }));
+  assert.equal((pending.match(/<textarea/g) ?? []).length, 1);
+  assert.match(pending, /id="writing-answer-201147"/);
+  assert.match(pending, /当前3词/);
+  assert.match(pending, /原题要求约100词/);
+  assert.doesNotMatch(pending, /参考范文与逐段说明|Congratulations on your admission|继续修改/);
+  const submitted = renderToStaticMarkup(React.createElement(WritingTestTask, { ...props, submitted: true }));
+  assert.match(submitted, /继续修改（保留草稿）/);
+  assert.match(submitted, /参考范文与逐段说明/);
+  assert.match(submitted, /<textarea[^>]*disabled=""/);
+  assert.doesNotMatch(submitted, /<details[^>]*open/);
+  const guide = renderToStaticMarkup(React.createElement(WritingStudyGuide, { task }));
+  assert.match(guide, /99词/);
+  assert.match(guide, /不作自动评分/);
+  assert.doesNotMatch(guide, /<details[^>]*open/);
+});
+
 test("2011 matching renders one seven-option bank with stable source anchors", async () => {
   const { MatchingOptionBank } = await vite.ssrLoadModule("/app/study-app.tsx");
   const { articleContents } = await vite.ssrLoadModule("/app/data.ts");

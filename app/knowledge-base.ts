@@ -1,3 +1,4 @@
+import { writing2011APhraseGuides, writing2011APhraseAliases, writing2011APhraseGlosses, getWriting2011AWordKnowledge } from "./2011-writing-a-knowledge";
 import { translation2011PhraseGuides, translation2011PhraseAliases, translation2011PhraseGlosses, getTranslation2011WordKnowledge } from "./2011-translation-knowledge";
 import { passage2011P5PhraseGuides, passage2011P5PhraseAliases, passage2011P5PhraseGlosses, getPassage2011P5WordKnowledge } from "./2011-passage-5-knowledge";
 import { passage2011P4PhraseGuides, passage2011P4PhraseAliases, passage2011P4PhraseGlosses, getPassage2011P4WordKnowledge } from "./2011-passage-4-knowledge";
@@ -877,6 +878,14 @@ for (const [key, value] of Object.entries(passage2011P1PhraseGlosses)) {
   if (!collocationGlosses[key]) collocationGlosses[key] = value;
 }
 
+for (const [key, value] of Object.entries(writing2011APhraseGuides)) {
+  if (!phraseGuides[key]) phraseGuides[key] = value;
+}
+Object.assign(phraseAliases, writing2011APhraseAliases);
+for (const [key, value] of Object.entries(writing2011APhraseGlosses)) {
+  if (!collocationGlosses[key]) collocationGlosses[key] = value;
+}
+
 for (const [key, value] of Object.entries(translation2011PhraseGuides)) {
   if (!phraseGuides[key]) phraseGuides[key] = value;
 }
@@ -941,6 +950,10 @@ export function getPhraseKnowledge(source: string): PhraseKnowledge | undefined 
 }
 
 export function getWordKnowledge(headword: string, context?: { articleId?: string; sentenceId?: string }) {
+  if (context?.articleId === "2011-writing-a") {
+    const contextualKnowledge = getWriting2011AWordKnowledge(normalized(headword), context.sentenceId);
+    if (contextualKnowledge) return contextualKnowledge;
+  }
   if (context?.articleId === "2011-translation") {
     const contextualKnowledge = getTranslation2011WordKnowledge(normalized(headword), context.sentenceId);
     if (contextualKnowledge) return contextualKnowledge;

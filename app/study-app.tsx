@@ -67,6 +67,7 @@ import {
   questionOptionSourceId,
   type SyntaxRole,
   type TranslationTask,
+  type WritingTask,
   translationTaskSentences,
   type VocabEntry,
   type OccurrenceContext,
@@ -838,6 +839,8 @@ export default function StudyApp() {
   const sentences = activeArticle.sentences;
   const questions = activeArticle.questions;
   const translationTasks = activeArticle.translationTasks ?? [];
+  const writingTasks = activeArticle.writingTasks ?? [];
+  const writtenTasks = [...translationTasks, ...writingTasks];
   const isPassageTranslation = translationTasks.some((task) => task.format === "passage");
   const submitted = Boolean(submittedSections[activeSection]);
   const selectedTermSource = selectedTerm ? sourceById.get(selectedTerm.sentenceId) : undefined;
@@ -1301,15 +1304,15 @@ export default function StudyApp() {
   }
 
   function resetTest() {
-    if (activeArticle.kind === "translation") {
+    if (activeArticle.kind === "translation" || activeArticle.kind === "writing") {
       setTranslationAnswers((current) => {
         const next = { ...current };
-        translationTasks.forEach((task) => delete next[translationAnswerKey(activeArticle.id, task.id)]);
+        writtenTasks.forEach((task) => delete next[translationAnswerKey(activeArticle.id, task.id)]);
         return next;
       });
       setSubmittedTranslationTasks((current) => {
         const next = { ...current };
-        translationTasks.forEach((task) => delete next[translationAnswerKey(activeArticle.id, task.id)]);
+        writtenTasks.forEach((task) => delete next[translationAnswerKey(activeArticle.id, task.id)]);
         return next;
       });
     } else {
@@ -1325,9 +1328,9 @@ export default function StudyApp() {
     setUnlockedTerms(new Set());
   }
 
-  function submitTranslationTask(task: TranslationTask) {
+  function submitTranslationTask(task: TranslationTask | WritingTask) {
     const taskKey = translationAnswerKey(activeArticle.id, task.id);
-    const completesArticle = translationTasks.every((item) => (
+    const completesArticle = writtenTasks.every((item) => (
       item.id === task.id || submittedTranslationTasks[translationAnswerKey(activeArticle.id, item.id)]
     ));
     setSubmittedTranslationTasks((current) => ({ ...current, [taskKey]: true }));
@@ -1746,6 +1749,7 @@ export default function StudyApp() {
             </div>
 
             <TabsContent value="study" className="mode-content">
+              {writingTasks.map(task => <section key={task.id}><WritingPromptChart task={task} /><WritingStudyGuide task={task} /></section>)}
               <div className="legend-row" aria-label="句子颜色图例">
                 {(Object.keys(roleLabels) as SyntaxRole[]).map((role) => (
                   <span key={role}><i className={`legend-dot legend-${role}`} />{roleLabels[role]}</span>
@@ -1816,6 +1820,8 @@ export default function StudyApp() {
                 <Flag />
                 <p><strong>模拟考场：</strong>{activeArticle.kind === "cloze"
                   ? `正文只保留真正的${questionNumberLabel(questions, "空")}，不再显示额外句子序号。点选项字母作答；词汇讲解按你的设置解锁。`
+                  : activeArticle.kind === "writing"
+                    ? "按原题要求独立写作，草稿沿用现有学习记录保存。提交后可对照教学范文和自查清单；不自动评分。需要修改时选择继续修改，保留原草稿。"
                   : activeArticle.kind === "translation"
                     ? isPassageTranslation
                       ? "按原卷整篇完成英译汉，一次提交全文。提交后对照参考译文，并按需展开逐句解析；不作自动评分。"
@@ -1823,7 +1829,20 @@ export default function StudyApp() {
                     : `先限时默读全文，再完成${questionNumberLabel(questions)}；不提前显示逐句讲解。点选项字母作答；词汇讲解按你的设置解锁。`}</p>
               </div>
 
-              {activeArticle.kind === "translation" ? (
+              {activeArticle.kind === "writing" ? (
+                <section className="writing-test-section">
+                  {writingTasks.map(task => {
+                    const taskKey = translationAnswerKey(activeArticle.id, task.id);
+                    return <WritingTestTask key={taskKey} task={task} answer={translationAnswers[taskKey] ?? ""} submitted={Boolean(submittedTranslationTasks[taskKey])}
+                      onAnswer={value => setTranslationAnswers(current => ({ ...current, [taskKey]: value }))}
+                      onSubmit={() => submitTranslationTask(task)}
+                      onEdit={() => {
+                        setSubmittedTranslationTasks(current => ({ ...current, [taskKey]: false }));
+                        setSubmittedSections(current => ({ ...current, [activeSection]: false }));
+                      }} onTerm={openTerm} />;
+                  })}
+                </section>
+              ) : activeArticle.kind === "translation" ? (
                 <section className="translation-test-section">
                   <div className="translation-test-heading">
                     <div><span>英译汉</span><strong>{submittedTranslationCount}/{translationTasks.length} {isPassageTranslation ? "题" : "句"}已提交</strong></div>
@@ -2609,6 +2628,57 @@ function QuestionAnalysisPanel({
       )}
     </section>
   );
+}
+
+export function writingWordCount(text: string): number {
+  return (text.match(/[A-Za-z0-9]+(?:['’\-][A-Za-z0-9]+)*/g) ?? []).length;
+}
+
+export function WritingPromptChart({ task }: { task: WritingTask }) {
+  if (!task.chart) return null;
+  return <figure className="writing-chart">
+    <img src={task.chart.src} alt={task.chart.alt} width={833} height={553} loading="lazy" />
+    <figcaption>{task.chart.note}</figcaption>
+    <details><summary>查看图表文字说明</summary><table><caption>按用户原图刻度读取的近似值，不是精确标签</caption><thead><tr><th scope="col">品牌</th><th scope="col">2008年</th><th scope="col">2009年</th></tr></thead><tbody>{task.chart.rows.map(row => <tr key={row.brand}><th scope="row">{row.brand}</th><td>{row.before}</td><td>{row.after}</td></tr>)}</tbody></table></details>
+  </figure>;
+}
+
+export function WritingStudyGuide({ task }: { task: WritingTask }) {
+  return <section className="writing-guide" aria-label={`第${task.number}题写作指导`}>
+    <p>教学参考，不是唯一标准答案，不作自动评分；范文与教学表达不计入真题词频。</p>
+    <details><summary>审题与行文结构</summary>
+      <ul>{task.requirements.map(requirement => <li key={requirement}>{requirement}</li>)}</ul>
+      {task.outline.map(item => <p key={item.title}><strong>{item.title}：</strong>{item.content}</p>)}
+    </details>
+    <details><summary>参考范文与逐段说明 · {writingWordCount(task.sample.english.join(" "))}词</summary>
+      {task.sample.english.map((paragraph, index) => <div className="writing-sample-paragraph" key={index}>
+        <p lang="en">{paragraph}</p><p>{task.sample.chinese[index]}</p><p className="writing-note">{task.sample.notes[index]}</p>
+      </div>)}
+    </details>
+    <details><summary>可迁移表达与使用规则</summary>{task.languageTips.map(tip => <div className="writing-sample-paragraph" key={tip.english}><p lang="en">{tip.english}</p><p>{tip.chinese}</p><p className="writing-note">{tip.usage}</p></div>)}</details>
+    <details><summary>自查清单与易错提醒</summary><ul>{task.checklist.map(item => <li key={item}>{item}</li>)}</ul><ul>{task.pitfalls.map(item => <li key={item}>{item}</li>)}</ul></details>
+  </section>;
+}
+
+export function WritingTestTask({ task, answer, submitted, onAnswer, onSubmit, onEdit, onTerm }: {
+  task: WritingTask; answer: string; submitted: boolean;
+  onAnswer: (value: string) => void; onSubmit: () => void; onEdit: () => void;
+  onTerm: (label: string, sentenceId: string, isPhrase?: boolean) => void;
+}) {
+  const count = writingWordCount(answer);
+  const short = task.wordLimit.mode === "at-least" && count < task.wordLimit.count;
+  return <article className="writing-task" aria-label={`第${task.number}题写作`}>
+    <h2>第{task.number}题 · {task.genre === "letter" ? "应用文书信" : "图表作文"} · {task.points}分</h2>
+    <div className="writing-source">{task.instructions.map(sentence => <p key={sentence.id} data-sentence-id={sentence.id}>{renderInteractiveText(sentence.text, sentence.phrases, sentence.id, onTerm, false)}</p>)}</div>
+    <WritingPromptChart task={task} />
+    <label className="translation-answer-label" htmlFor={`writing-answer-${task.id}`}><span>我的英文作文</span>
+      <Textarea id={`writing-answer-${task.id}`} lang="en" value={answer} onChange={event => onAnswer(event.target.value)} disabled={submitted} rows={10} placeholder="在这里独立完成英文写作……" aria-describedby={`writing-count-${task.id}`} />
+    </label>
+    <p id={`writing-count-${task.id}`} className="writing-count" aria-live="polite">当前{count}词 · 原题要求{task.wordLimit.mode === "about" ? "约" : "至少"}{task.wordLimit.count}词{short ? " · 尚未达到原题最低字数，可先提交自查" : ""}</p>
+    <p className="writing-note">按英文单词和数字辅助计数，包含称呼与署名；连字符和缩写按一词计，不作为官方阅卷算法。</p>
+    <div className="translation-task-actions"><Button type="button" size="sm" onClick={onSubmit} disabled={!answer.trim() || submitted}>{submitted ? "作文已提交" : "提交作文并自查"}</Button>{submitted && <Button type="button" variant="outline" size="sm" onClick={onEdit}>继续修改（保留草稿）</Button>}</div>
+    {submitted && <WritingStudyGuide task={task} />}
+  </article>;
 }
 
 export function TranslationTestTask({

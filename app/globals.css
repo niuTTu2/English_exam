@@ -10,6 +10,21 @@
 .matching-choices .option-row { display: flex; padding: .25rem; }
 .matching-choices .option-choice { min-width: 2.75rem; min-height: 2.75rem; }
 .matching-selected { margin-top: .75rem; font-size: .9rem; line-height: 1.7; overflow-wrap: anywhere; }
+.writing-task, .writing-guide { padding: 1.2rem; margin-block: 1rem; border: 1px solid var(--border); border-radius: 1rem; background: var(--card); min-width: 0; }
+.writing-task h2 { font-size: 1.15rem; font-weight: 700; margin-bottom: 1rem; }
+.writing-source p, .writing-guide p { line-height: 1.8; margin-block: .6rem; overflow-wrap: anywhere; }
+.writing-guide details { border-top: 1px solid var(--border); padding-block: .8rem; }
+.writing-guide summary, .writing-chart summary { cursor: pointer; font-weight: 600; min-height: 2rem; }
+.writing-guide ul { padding-left: 1.3rem; list-style: disc; line-height: 1.8; }
+.writing-sample-paragraph { margin-block: 1rem; padding: .8rem; background: var(--muted); border-radius: .6rem; }
+.writing-sample-paragraph p { white-space: pre-wrap; }
+.writing-note { font-size: .85rem; line-height: 1.7; color: var(--muted-foreground); }
+.writing-count { margin-block: .65rem; font-weight: 600; line-height: 1.6; }
+.writing-chart { margin-block: 1rem; }
+.writing-chart img { display: block; max-width: 100%; height: auto; border-radius: .5rem; }
+.writing-chart figcaption { font-size: .85rem; line-height: 1.7; margin-block: .7rem; }
+.writing-chart table { width: 100%; font-size: .85rem; table-layout: fixed; border-collapse: collapse; }
+.writing-chart th, .writing-chart td { border: 1px solid var(--border); padding: .5rem; overflow-wrap: anywhere; }
 :root {
   --background: #f5f2e9;
   --foreground: #23363a;

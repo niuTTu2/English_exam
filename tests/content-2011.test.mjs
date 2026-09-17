@@ -15,6 +15,45 @@ const study = await vite.ssrLoadModule("/app/study-app.tsx");
 const normalize = value => value.replace(/\s+/g, " ").replace(/\s+([,.;?!])/g, "$1").trim();
 const cloze = data.articleContents["2011-cloze"];
 
+test("2011书信47完整保留原题六句、约100词和署名限制，范文不计考频", () => {
+  const article = data.articleContents["2011-writing-a"];
+  const fixture = JSON.parse(readFileSync(new URL("./fixtures/2011-writing-a.json", import.meta.url), "utf8"));
+  assert.equal(fixture.sha256, "c6c645b0aae768130cf35d6ace0bc86f3be31d946f4e7396a95168eb68988c82");
+  assert.equal(article.kind, "writing");
+  assert.equal(article.sentences.length, 6);
+  assert.equal(article.questions.length, 0);
+  assert.equal(normalize(article.sentences.map(sentence => sentence.text).join(" ")), normalize(fixture.paragraphs.map(row => row.text).join(" ")));
+  assert.equal(article.writingTasks.length, 1);
+  const task = article.writingTasks[0];
+  assert.equal(task.id, 201147);
+  assert.equal(task.number, 47);
+  assert.equal(task.points, 10);
+  assert.equal(task.genre, "letter");
+  assert.deepEqual(task.wordLimit, { mode: "about", count: 100 });
+  assert.deepEqual(task.instructions, article.sentences);
+  assert.equal(task.chart, undefined);
+  assert.equal(task.sample.english[0], "Dear Li Ming,");
+  assert.equal(task.sample.english.at(-1), "Yours,\nZhang Wei");
+  assert.equal(study.writingWordCount(task.sample.english.join(" ")), 99);
+  assert.equal(task.sample.english.length, task.sample.chinese.length);
+  assert.equal(task.sample.english.length, task.sample.notes.length);
+  assert.ok(task.requirements.some(rule => /地址/.test(rule)));
+  assert.ok(task.requirements.some(rule => /祝贺/.test(rule)));
+  assert.ok(task.requirements.some(rule => /建议/.test(rule)));
+  for (const [token, number, meaning] of [["admitted", 1, /录取/], ["just", 1, /刚刚/], ["her", 2, /她/], ["on", 2, /关于/], ["on", 3, /在/], ["about", 3, /大约/], ["own", 4, /自己/], ["instead", 5, /改用|代替/], ["address", 6, /地址/], ["points", 6, /分/]]) assert.match(study.resolveEntry(token, false, `2011-writing-a-s${number}`).contextualMeaning, meaning);
+  assert.equal(lexicon.canonicalLemma("admitted", { articleId: article.id }), "admit");
+  assert.equal(lexicon.canonicalLemma("prepared", { articleId: article.id }), "prepare");
+  const replacement = study.resolveEntry("Suppose", false, "2011-writing-a-s1").contextualSubstitutions[0];
+  assert.equal(replacement.rewrittenSentence, "Assume your cousin Li Ming has just been admitted to a university.");
+  assert.equal(replacement.target, "word:assume");
+  assert.match(study.resolveEntry("assume", false, "2011-writing-a-s1").contextualMeaning, /假|设/);
+  assert.match(study.resolveEntry("assume", false).contextualMeaning, /采取|呈现/);
+  assert.equal(knowledge.getPhraseKnowledge("at the end of the letter").key, knowledge.getPhraseKnowledge("at the end of").key);
+  const corpus = data.allSentences.map(sentence => sentence.text).join(" ");
+  assert.ok(!corpus.includes(task.sample.english[1]), "教学范文不得计入真题语料");
+  assert.match(study.resolveEntry("do", false, "2011-translation-s1").contextualMeaning, /代替/);
+});
+
 test("2011英译汉46为三段七句整篇，保留约数、单位和指代", () => {
   const article = data.articleContents["2011-translation"];
   const fixture = JSON.parse(readFileSync(new URL("./fixtures/2011-translation.json", import.meta.url), "utf8"));
