@@ -1,3 +1,4 @@
+import { cloze2011Sentences, cloze2011Questions } from "./2011-cloze-data";
 import { translation2010Sentences, translation2010Tasks } from "./2010-translation-data";
 import { passage2010P5Questions, passage2010P5Sentences } from "./2010-passage-5-data";
 import { passage2010P4Questions, passage2010P4Sentences } from "./2010-passage-4-data";
@@ -203,6 +204,9 @@ export const sectionsByYear = {
     { id: "2001-p5", label: "阅读 Passage 5", meta: "待精审", status: "pending" },
     { id: "2001-translation", label: "英译汉", meta: "待精审", status: "pending" },
   ],
+  2011: [
+    { id: "2011-cloze", label: "完形填空", meta: "16句 · 20题", status: "ready" },
+  ],
   2010: [
     { id: "2010-cloze", label: "完形填空", meta: "13句 · 20题", status: "ready" },
     { id: "2010-p1", label: "阅读 Text 1", meta: "19句 · 5题", status: "ready" },
@@ -214,7 +218,7 @@ export const sectionsByYear = {
   ],
 } as const;
 
-export const availableYears = [2000, 2001, 2010] as const;
+export const availableYears = [2000, 2001, 2010, 2011] as const;
 
 export const sentences: SentenceAnalysis[] = [
   {
@@ -1441,7 +1445,13 @@ export const articleContents: Record<string, ArticleContent> = {
     description: "第46题，15分。保留原卷三段整篇作答，提交后对照参考译文，并逐句理解动名词主语、形式宾语、结果从句和习语。参考译文用于学习，不作自动评分。",
     kind: "translation", sentences: translation2010Sentences, questions: [], translationTasks: translation2010Tasks,
   },
+  "2011-cloze": {
+    id: "2011-cloze", year: 2011, sectionId: "cloze", label: "完形填空", badge: "2011 · 英语二 · 完形填空",
+    title: "网络匿名、身份认证与安全",
+    description: "16句、20题。先完成自测，再逐句理解自愿身份认证方案、隐私争议与强制许可的类比；词卡保留本句义与其他常考义。",
+    kind: "cloze", sentences: cloze2011Sentences, questions: cloze2011Questions,
+  },
 };
 
-export const allSentences = [...verifiedClozeSentences, ...verifiedPassage1Sentences, ...verifiedPassage2Sentences, ...verifiedPassage3Sentences, ...verifiedPassage4Sentences, ...verifiedPassage5Sentences, ...verifiedTranslationSentences, ...cloze2001Sentences, ...passage2001P1Sentences, ...passage2001P2Sentences, ...cloze2010Sentences, ...passage2010P1Sentences, ...passage2010P2Sentences, ...passage2010P3Sentences, ...passage2010P4Sentences, ...passage2010P5Sentences, ...translation2010Sentences];
-export const allQuestions = [...verifiedClozeQuestions, ...verifiedPassage1Questions, ...verifiedPassage2Questions, ...verifiedPassage3Questions, ...verifiedPassage4Questions, ...verifiedPassage5Questions, ...cloze2001Questions, ...passage2001P1Questions, ...passage2001P2Questions, ...cloze2010Questions, ...passage2010P1Questions, ...passage2010P2Questions, ...passage2010P3Questions, ...passage2010P4Questions, ...passage2010P5Questions];
+export const allSentences = [...verifiedClozeSentences, ...verifiedPassage1Sentences, ...verifiedPassage2Sentences, ...verifiedPassage3Sentences, ...verifiedPassage4Sentences, ...verifiedPassage5Sentences, ...verifiedTranslationSentences, ...cloze2001Sentences, ...passage2001P1Sentences, ...passage2001P2Sentences, ...cloze2010Sentences, ...passage2010P1Sentences, ...passage2010P2Sentences, ...passage2010P3Sentences, ...passage2010P4Sentences, ...passage2010P5Sentences, ...translation2010Sentences, ...cloze2011Sentences];
+export const allQuestions = [...verifiedClozeQuestions, ...verifiedPassage1Questions, ...verifiedPassage2Questions, ...verifiedPassage3Questions, ...verifiedPassage4Questions, ...verifiedPassage5Questions, ...cloze2001Questions, ...passage2001P1Questions, ...passage2001P2Questions, ...cloze2010Questions, ...passage2010P1Questions, ...passage2010P2Questions, ...passage2010P3Questions, ...passage2010P4Questions, ...passage2010P5Questions, ...cloze2011Questions];

@@ -1,3 +1,11 @@
+export const verifiedAnswerKey2011Cloze: Record<number, "A" | "B" | "C" | "D"> = {
+  1: "A", 2: "C", 3: "B", 4: "D", 5: "D", 6: "B", 7: "A", 8: "C", 9: "C", 10: "B",
+  11: "D", 12: "B", 13: "A", 14: "C", 15: "A", 16: "A", 17: "D", 18: "A", 19: "C", 20: "D",
+};
+export const verifiedAnswerSources2011Cloze = [
+  { range: "1—20：ACBDD BACCB DBACA ADACD，逐项与原卷及语境核对", label: "中国教育在线 / 2011年考研英语二真题答案（2011-02-15）", url: "https://kaoyan.eol.cn/fu_xi/yingyu/201102/t20110215_577179.shtml" },
+] as const;
+
 export const verifiedAnswerKey2000: Record<number, "A" | "B" | "C" | "D"> = {
   1: "C",
   2: "A",

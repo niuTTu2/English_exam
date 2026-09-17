@@ -17,6 +17,8 @@ Windows 用户先阅读 `START_HERE.md`，最快可直接双击 `START_LOCAL_TES
 
 「出现次数与年份」的每条出处同时显示实际词形/表达、词性和该出处中文义；例如 `note` 的说明性注释、虚伪意味、注意到异常、收尾基调分别保留，`a lack of demand` 与 `a lack of sales` 仍共享规范键但显示需求不足与销售不足。相关专项回归：`node --test tests/vocabulary-senses.test.mjs`。新增常见义项不改笔记、复习或账号同步数据；自测未解锁时不显示义项面板。设计与词典来源见 `docs/change-reports/vocabulary-senses.md`。
 
+2011 年整卷按篇持续导入，目前已接入完形填空：16句、20题、80项理由，支持自测、逐句精读、独立词义与年度词表。其余篇目只有完成精审并通过检查后才进入目录；进度与来源见 `docs/IMPORT_PROGRESS.md`。
+
 下面保留原项目的技术说明。
 
 # vinext-starter

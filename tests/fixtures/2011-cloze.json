@@ -1,0 +1,444 @@
+{
+  "source": "考研英语二2011年真题（整卷）.docx",
+  "sha256": "c6c645b0aae768130cf35d6ace0bc86f3be31d946f4e7396a95168eb68988c82",
+  "paragraphs": [
+    {
+      "index": 5,
+      "text": "The Internet affords anonymity to its users, a blessing to privacy and freedom of speech. But that very anonymity is also behind the explosion of cyber-crime that has  __1__  across the Web."
+    },
+    {
+      "index": 6,
+      "text": "Can privacy be preserved  __2__  bringing safety and security to a world that seems increasingly  __3__  ?"
+    },
+    {
+      "index": 7,
+      "text": "Last month, Howard Schmidt, the nation's cyber-czar, offered the federal government a  __4__  to make the Web a safer place – a \"voluntary trusted identity\" system that would be the high-tech  __5__  of a physical key, a fingerprint and a photo ID card, all rolled  __6__  one. The system might use a smart identity card, or a digital credential  __7__  to a specific computer, and would authenticate users at a range of online services."
+    },
+    {
+      "index": 8,
+      "text": "The idea is to  __8__  a federation of private online identity systems. Users could  __9__  which system to join, and only registered users whose identities have been authenticated could navigate those systems. The approach contrasts with one that would require an Internet driver's license  __10__  by the government."
+    },
+    {
+      "index": 9,
+      "text": "Google and Microsoft are among companies that already have these \"single sign-on\" systems that make it possible for users to  __11__  just once but use many different services."
+    },
+    {
+      "index": 10,
+      "text": "  __12__  , the approach would create a \"walled garden\" in cyberspace, with safe \"neighborhoods\" and bright \"streetlights\" to establish a sense of a  __13__  community."
+    },
+    {
+      "index": 11,
+      "text": "Mr. Schmidt described it as a \"voluntary ecosystem\" in which \"individuals and organizations can complete online transactions with  __14__  , trusting the identities of each other and the identities of the infrastructure  __15__  which the transaction runs.\""
+    },
+    {
+      "index": 12,
+      "text": "Still, the administration's plan has  __16__  privacy rights activists. Some applaud the approach; others are concerned. It seems clear that such a scheme is an initiative push toward what would  __17__  be a compulsory Internet \"driver's license\" mentality."
+    },
+    {
+      "index": 13,
+      "text": "The plan has also been greeted with  __18__  by some computer security experts, who worry that the \"voluntary ecosystem\" envisioned by Mr. Schmidt would still leave much of the Internet  __19__  . They argue that all Internet users should be  __20__  to register and identify themselves, in the same way that drivers must be licensed to drive on public roads."
+    }
+  ],
+  "options": [
+    {
+      "index": 15,
+      "text": "1."
+    },
+    {
+      "index": 16,
+      "text": "[ A ] swept"
+    },
+    {
+      "index": 17,
+      "text": "[ B ] skipped"
+    },
+    {
+      "index": 18,
+      "text": "[ C ] walked"
+    },
+    {
+      "index": 19,
+      "text": "[ D ] ridden"
+    },
+    {
+      "index": 20,
+      "text": "2."
+    },
+    {
+      "index": 21,
+      "text": "[ A ] for"
+    },
+    {
+      "index": 22,
+      "text": "[ B ] within"
+    },
+    {
+      "index": 23,
+      "text": "[ C ] while"
+    },
+    {
+      "index": 24,
+      "text": "[ D ] though"
+    },
+    {
+      "index": 25,
+      "text": "3."
+    },
+    {
+      "index": 26,
+      "text": "[ A ] careless"
+    },
+    {
+      "index": 27,
+      "text": "[ B ] lawless"
+    },
+    {
+      "index": 28,
+      "text": "[ C ] pointless"
+    },
+    {
+      "index": 29,
+      "text": "[ D ] helpless"
+    },
+    {
+      "index": 30,
+      "text": "4."
+    },
+    {
+      "index": 31,
+      "text": "[ A ] reason"
+    },
+    {
+      "index": 32,
+      "text": "[ B ] reminder"
+    },
+    {
+      "index": 33,
+      "text": "[ C ] compromise"
+    },
+    {
+      "index": 34,
+      "text": "[ D ] proposal"
+    },
+    {
+      "index": 35,
+      "text": "5."
+    },
+    {
+      "index": 36,
+      "text": "[ A ] information"
+    },
+    {
+      "index": 37,
+      "text": "[ B ] interference"
+    },
+    {
+      "index": 38,
+      "text": "[ C ] entertainment"
+    },
+    {
+      "index": 39,
+      "text": "[ D ] equivalent"
+    },
+    {
+      "index": 40,
+      "text": "6."
+    },
+    {
+      "index": 41,
+      "text": "[ A ] by"
+    },
+    {
+      "index": 42,
+      "text": "[ B ] into"
+    },
+    {
+      "index": 43,
+      "text": "[ C ] from"
+    },
+    {
+      "index": 44,
+      "text": "[ D ] over"
+    },
+    {
+      "index": 45,
+      "text": "7."
+    },
+    {
+      "index": 46,
+      "text": "[ A ] linked"
+    },
+    {
+      "index": 47,
+      "text": "[ B ] directed"
+    },
+    {
+      "index": 48,
+      "text": "[ C ] chained"
+    },
+    {
+      "index": 49,
+      "text": "[ D ] compared"
+    },
+    {
+      "index": 50,
+      "text": "8."
+    },
+    {
+      "index": 51,
+      "text": "[ A ] dismiss"
+    },
+    {
+      "index": 52,
+      "text": "[ B ] discover"
+    },
+    {
+      "index": 53,
+      "text": "[ C ] create"
+    },
+    {
+      "index": 54,
+      "text": "[ D ] improve"
+    },
+    {
+      "index": 55,
+      "text": "9."
+    },
+    {
+      "index": 56,
+      "text": "[ A ] recall"
+    },
+    {
+      "index": 57,
+      "text": "[ B ] suggest"
+    },
+    {
+      "index": 58,
+      "text": "[ C ] select"
+    },
+    {
+      "index": 59,
+      "text": "[ D ] realize"
+    },
+    {
+      "index": 60,
+      "text": "10."
+    },
+    {
+      "index": 61,
+      "text": "[ A ] released"
+    },
+    {
+      "index": 62,
+      "text": "[ B ] issued"
+    },
+    {
+      "index": 63,
+      "text": "[ C ] distributed"
+    },
+    {
+      "index": 64,
+      "text": "[ D ] delivered"
+    },
+    {
+      "index": 65,
+      "text": "11."
+    },
+    {
+      "index": 66,
+      "text": "[ A ] carry on"
+    },
+    {
+      "index": 67,
+      "text": "[ B ] linger on"
+    },
+    {
+      "index": 68,
+      "text": "[ C ] set in"
+    },
+    {
+      "index": 69,
+      "text": "[ D ] log in"
+    },
+    {
+      "index": 70,
+      "text": "12."
+    },
+    {
+      "index": 71,
+      "text": "[ A ] In vain"
+    },
+    {
+      "index": 72,
+      "text": "[ B ] In effect"
+    },
+    {
+      "index": 73,
+      "text": "[ C ] In return"
+    },
+    {
+      "index": 74,
+      "text": "[ D ] In contrast"
+    },
+    {
+      "index": 75,
+      "text": "13."
+    },
+    {
+      "index": 76,
+      "text": "[ A ] trusted"
+    },
+    {
+      "index": 77,
+      "text": "[ B ] modernized"
+    },
+    {
+      "index": 78,
+      "text": "[ C ] thriving"
+    },
+    {
+      "index": 79,
+      "text": "[ D ] competing"
+    },
+    {
+      "index": 80,
+      "text": "14."
+    },
+    {
+      "index": 81,
+      "text": "[ A ] caution"
+    },
+    {
+      "index": 82,
+      "text": "[ B ] delight"
+    },
+    {
+      "index": 83,
+      "text": "[ C ] confidence"
+    },
+    {
+      "index": 84,
+      "text": "[ D ] patience"
+    },
+    {
+      "index": 85,
+      "text": "15."
+    },
+    {
+      "index": 86,
+      "text": "[ A ] on"
+    },
+    {
+      "index": 87,
+      "text": "[ B ] after"
+    },
+    {
+      "index": 88,
+      "text": "[ C ] beyond"
+    },
+    {
+      "index": 89,
+      "text": "[ D ] across"
+    },
+    {
+      "index": 90,
+      "text": "16."
+    },
+    {
+      "index": 91,
+      "text": "[ A ] divided"
+    },
+    {
+      "index": 92,
+      "text": "[ B ] disappointed"
+    },
+    {
+      "index": 93,
+      "text": "[ C ] protected"
+    },
+    {
+      "index": 94,
+      "text": "[ D ] united"
+    },
+    {
+      "index": 95,
+      "text": "17."
+    },
+    {
+      "index": 96,
+      "text": "[ A ] frequently"
+    },
+    {
+      "index": 97,
+      "text": "[ B ] incidentally"
+    },
+    {
+      "index": 98,
+      "text": "[ C ] occasionally"
+    },
+    {
+      "index": 99,
+      "text": "[ D ] eventually"
+    },
+    {
+      "index": 100,
+      "text": "18."
+    },
+    {
+      "index": 101,
+      "text": "[ A ] skepticism"
+    },
+    {
+      "index": 102,
+      "text": "[ B ] tolerance"
+    },
+    {
+      "index": 103,
+      "text": "[ C ] indifference"
+    },
+    {
+      "index": 104,
+      "text": "[ D ] enthusiasm"
+    },
+    {
+      "index": 105,
+      "text": "19."
+    },
+    {
+      "index": 106,
+      "text": "[ A ] manageable"
+    },
+    {
+      "index": 107,
+      "text": "[ B ] defendable"
+    },
+    {
+      "index": 108,
+      "text": "[ C ] vulnerable"
+    },
+    {
+      "index": 109,
+      "text": "[ D ] invisible"
+    },
+    {
+      "index": 110,
+      "text": "20."
+    },
+    {
+      "index": 111,
+      "text": "[ A ] invited"
+    },
+    {
+      "index": 112,
+      "text": "[ B ] appointed"
+    },
+    {
+      "index": 113,
+      "text": "[ C ] allowed"
+    },
+    {
+      "index": 114,
+      "text": "[ D ] forced"
+    }
+  ]
+}

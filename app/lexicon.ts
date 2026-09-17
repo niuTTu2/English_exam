@@ -1,3 +1,4 @@
+import { cloze2011Lexicon, cloze2011LemmaAliases, cloze2011FormPartOfSpeech } from "./2011-cloze-lexicon";
 import { translation2010Lexicon, translation2010LemmaAliases, translation2010FamilyAliases, translation2010FormPartOfSpeech } from "./2010-translation-lexicon";
 import { passage2010P5Lexicon, passage2010P5LemmaAliases, passage2010P5FamilyAliases, passage2010P5FormPartOfSpeech } from "./2010-passage-5-lexicon";
 import { passage2010P4Lexicon, passage2010P4LemmaAliases, passage2010P4FamilyAliases, passage2010P4FormPartOfSpeech } from "./2010-passage-4-lexicon";
@@ -701,9 +702,10 @@ const sourceLemmaAliases: Record<string, Record<string, string>> = {
 
 export function canonicalLemma(token: string, context?: LexicalContext) {
   const normalized = token.trim().toLowerCase().replace(/[’‘]/g, "'");
+  if (context?.articleId === "2011-cloze" && cloze2011LemmaAliases[normalized]) return cloze2011LemmaAliases[normalized];
   if (context?.articleId === "2010-translation" && translation2010LemmaAliases[normalized]) return translation2010LemmaAliases[normalized];
   const sourceId = context?.sourceId ?? context?.sentenceId;
-  return (context?.articleId === "2010-p5" ? passage2010P5LemmaAliases[normalized] : undefined) ?? (context?.articleId === "2010-p4" ? passage2010P4LemmaAliases[normalized] : undefined) ?? (context?.articleId === "2010-p3" ? passage2010P3LemmaAliases[normalized] : undefined) ?? (sourceId ? sourceLemmaAliases[sourceId]?.[normalized] : undefined) ?? lemmaAliases[normalized] ?? normalized;
+  return (context?.articleId === "2010-p5" ? passage2010P5LemmaAliases[normalized] : undefined) ?? (context?.articleId === "2010-p4" ? passage2010P4LemmaAliases[normalized] : undefined) ?? (context?.articleId === "2010-p3" ? passage2010P3LemmaAliases[normalized] : undefined) ?? (sourceId ? sourceLemmaAliases[sourceId]?.[normalized] : undefined) ?? lemmaAliases[normalized] ?? (!context?.articleId ? cloze2011LemmaAliases[normalized] : undefined) ?? normalized;
 }
 
 export function getLexicalGuide(token: string, context?: LexicalContext): LexicalGuide {
@@ -725,6 +727,8 @@ export function getLexicalGuide(token: string, context?: LexicalContext): Lexica
   const passage2010P4Entry = passage2010P4Lexicon[headword];
   const passage2010P5Entry = passage2010P5Lexicon[headword];
   const translation2010Entry = translation2010Lexicon[headword];
+  const cloze2011Entry = cloze2011Lexicon[headword];
+  const cloze2011Extra = context?.articleId && context.articleId !== "2011-cloze" ? undefined : cloze2011Entry;
   const translation2010Extra = context?.articleId && context.articleId !== "2010-translation" ? undefined : translation2010Entry;
   const passage2010P5Extra = context?.articleId && context.articleId !== "2010-p5" ? undefined : passage2010P5Entry;
   const passage2010P4Extra = context?.articleId && context.articleId !== "2010-p4" ? undefined : passage2010P4Entry;
@@ -748,9 +752,10 @@ export function getLexicalGuide(token: string, context?: LexicalContext): Lexica
     "2010-p4": passage2010P4Entry,
     "2010-p5": passage2010P5Entry,
     "2010-translation": translation2010Entry,
+    "2011-cloze": cloze2011Entry,
   } satisfies Record<ArticleLexiconId, typeof passage1Entry | undefined>;
   const articleEntry = context?.articleId ? articleEntries[context.articleId] : undefined;
-  const globalPassageEntry = passage2001P2Entry ?? passage2001P1Entry ?? cloze2001Entry ?? passage3Entry ?? passage1Entry ?? passage2Entry ?? passage4Entry ?? passage5Entry ?? translationEntry ?? cloze2010Entry ?? passage2010P1Entry ?? passage2010P2Entry ?? passage2010P3Entry ?? passage2010P4Entry ?? passage2010P5Entry ?? translation2010Entry;
+  const globalPassageEntry = passage2001P2Entry ?? passage2001P1Entry ?? cloze2001Entry ?? passage3Entry ?? passage1Entry ?? passage2Entry ?? passage4Entry ?? passage5Entry ?? translationEntry ?? cloze2010Entry ?? passage2010P1Entry ?? passage2010P2Entry ?? passage2010P3Entry ?? passage2010P4Entry ?? passage2010P5Entry ?? translation2010Entry ?? cloze2011Entry;
   const ordinal = normalized.match(/^([0-9]+)(?:st|nd|rd|th)$/);
   const decade = normalized.match(/^([0-9]{4})s$/);
   const chronologicalEntry: typeof passage1Entry | undefined = ordinal || decade ? {
@@ -762,7 +767,7 @@ export function getLexicalGuide(token: string, context?: LexicalContext): Lexica
   } : undefined;
   const passageEntry = chronologicalEntry ?? (context?.articleId ? articleEntry ?? globalPassageEntry : globalPassageEntry);
   const sentenceContext = getSentenceWordContext(context?.sentenceId, headword);
-  const pos = chronologicalEntry?.partOfSpeech ?? (context?.articleId === "2010-translation" ? translation2010FormPartOfSpeech[normalized] ?? translation2010Entry?.partOfSpeech : undefined) ?? (context?.articleId === "2010-p5" ? passage2010P5FormPartOfSpeech[normalized] ?? passage2010P5Entry?.partOfSpeech : undefined) ?? (context?.articleId === "2010-p4" ? passage2010P4FormPartOfSpeech[normalized] ?? passage2010P4Entry?.partOfSpeech : undefined) ?? (context?.articleId === "2010-p3" ? passage2010P3FormPartOfSpeech[normalized] ?? passage2010P3Entry?.partOfSpeech : undefined) ?? (context?.articleId === "2010-p2" ? passage2010P2FormPartOfSpeech[normalized] ?? passage2010P2Entry?.partOfSpeech : undefined) ?? passage2010P1FormPartOfSpeech[normalized] ?? cloze2010FormPartOfSpeech[normalized] ?? formPartOfSpeech[normalized] ?? passageEntry?.partOfSpeech ?? partOfSpeech[headword] ?? inferPartOfSpeech(headword);
+  const pos = chronologicalEntry?.partOfSpeech ?? (context?.articleId === "2011-cloze" ? cloze2011FormPartOfSpeech[normalized] ?? cloze2011Entry?.partOfSpeech : undefined) ?? (context?.articleId === "2010-translation" ? translation2010FormPartOfSpeech[normalized] ?? translation2010Entry?.partOfSpeech : undefined) ?? (context?.articleId === "2010-p5" ? passage2010P5FormPartOfSpeech[normalized] ?? passage2010P5Entry?.partOfSpeech : undefined) ?? (context?.articleId === "2010-p4" ? passage2010P4FormPartOfSpeech[normalized] ?? passage2010P4Entry?.partOfSpeech : undefined) ?? (context?.articleId === "2010-p3" ? passage2010P3FormPartOfSpeech[normalized] ?? passage2010P3Entry?.partOfSpeech : undefined) ?? (context?.articleId === "2010-p2" ? passage2010P2FormPartOfSpeech[normalized] ?? passage2010P2Entry?.partOfSpeech : undefined) ?? passage2010P1FormPartOfSpeech[normalized] ?? cloze2010FormPartOfSpeech[normalized] ?? formPartOfSpeech[normalized] ?? passageEntry?.partOfSpeech ?? partOfSpeech[headword] ?? inferPartOfSpeech(headword);
   const contextualPos = sentenceContext?.partOfSpeech ?? pos;
   const isStructureWord = /art\.|prep\.|conj\.|pron\.|det\.|modal/.test(contextualPos);
   const mergedCollocations = Array.from(new Set([...(collocations[headword] ?? []), ...(passage2001P2Entry?.collocations ?? []), ...(passage2001P1Entry?.collocations ?? []), ...(cloze2001Entry?.collocations ?? []), ...(passage2Entry?.collocations ?? []), ...(passage1Entry?.collocations ?? []), ...(passage3Entry?.collocations ?? []), ...(passage4Entry?.collocations ?? []), ...(passage5Entry?.collocations ?? []), ...(translationEntry?.collocations ?? []), ...(passage2010P1Entry?.collocations ?? [])]));
@@ -776,10 +781,10 @@ export function getLexicalGuide(token: string, context?: LexicalContext): Lexica
     partOfSpeech: contextualPos,
     contextualMeaning: sentenceContext?.contextualMeaning ?? passageEntry?.contextualMeaning ?? contextualMeaning[headword],
     use: sentenceContext?.use ?? passageEntry?.use ?? usage[headword],
-    specialForms: context?.articleId === "2010-translation" && translation2010Extra ? translation2010Extra.specialForms : Array.from(new Set([...(translation2010Extra?.specialForms ?? []), ...(passage2010P5Extra?.specialForms ?? []), ...(passage2010P4Extra?.specialForms ?? []), ...(passage2010P3Extra?.specialForms ?? []), ...(passage2010P2Extra?.specialForms ?? []), ...(cloze2010Entry?.specialForms ?? []), ...(passage2010P1Entry?.specialForms ?? []), ...(mergedSpecialForms.length > 0 ? mergedSpecialForms : [isStructureWord ? "结构词：无普通词形变化，重点看句法位置" : "无需要单独记忆的不规则变形"])])),
-    examSynonyms: context?.articleId === "2010-translation" && translation2010Extra ? translation2010Extra.examSynonyms : context?.articleId === "2010-p5" && passage2010P5Extra ? passage2010P5Extra.examSynonyms : context?.articleId === "2010-p4" && passage2010P4Extra ? passage2010P4Extra.examSynonyms : context?.articleId === "2010-p3" && passage2010P3Extra ? passage2010P3Extra.examSynonyms : Array.from(new Set([...(translation2010Extra?.examSynonyms ?? []), ...(passage2010P5Extra?.examSynonyms ?? []), ...(passage2010P4Extra?.examSynonyms ?? []), ...(passage2010P3Extra?.examSynonyms ?? []), ...(passage2010P2Extra?.examSynonyms ?? []), ...(cloze2010Entry?.examSynonyms ?? []), ...(passage2010P1Entry?.examSynonyms ?? []), ...(mergedExamSynonyms.length > 0 ? mergedExamSynonyms : [isStructureWord ? "结构词通常不能脱离句型直接替换" : "本词暂无需要成组强记的考研近义词"])])),
-    collocations: Array.from(new Set([...(translation2010Extra?.collocations ?? []), ...(passage2010P5Extra?.collocations ?? []), ...(passage2010P2Extra?.collocations ?? []), ...(cloze2010Entry?.collocations ?? []), ...(passage2010P1Entry?.collocations ?? []), ...mergedCollocations])),
-    otherMeanings: Array.from(new Set([...(passage2010P2Extra?.otherMeanings ?? []), ...(cloze2010Entry?.otherMeanings ?? []), ...(passage2010P1Entry?.otherMeanings ?? []), ...mergedMeanings])),
+    specialForms: cloze2011Extra ? cloze2011Extra.specialForms : context?.articleId === "2010-translation" && translation2010Extra ? translation2010Extra.specialForms : Array.from(new Set([...(translation2010Extra?.specialForms ?? []), ...(passage2010P5Extra?.specialForms ?? []), ...(passage2010P4Extra?.specialForms ?? []), ...(passage2010P3Extra?.specialForms ?? []), ...(passage2010P2Extra?.specialForms ?? []), ...(cloze2010Entry?.specialForms ?? []), ...(passage2010P1Entry?.specialForms ?? []), ...(mergedSpecialForms.length > 0 ? mergedSpecialForms : [isStructureWord ? "结构词：无普通词形变化，重点看句法位置" : "无需要单独记忆的不规则变形"])])),
+    examSynonyms: cloze2011Extra ? cloze2011Extra.examSynonyms : context?.articleId === "2010-translation" && translation2010Extra ? translation2010Extra.examSynonyms : context?.articleId === "2010-p5" && passage2010P5Extra ? passage2010P5Extra.examSynonyms : context?.articleId === "2010-p4" && passage2010P4Extra ? passage2010P4Extra.examSynonyms : context?.articleId === "2010-p3" && passage2010P3Extra ? passage2010P3Extra.examSynonyms : Array.from(new Set([...(translation2010Extra?.examSynonyms ?? []), ...(passage2010P5Extra?.examSynonyms ?? []), ...(passage2010P4Extra?.examSynonyms ?? []), ...(passage2010P3Extra?.examSynonyms ?? []), ...(passage2010P2Extra?.examSynonyms ?? []), ...(cloze2010Entry?.examSynonyms ?? []), ...(passage2010P1Entry?.examSynonyms ?? []), ...(mergedExamSynonyms.length > 0 ? mergedExamSynonyms : [isStructureWord ? "结构词通常不能脱离句型直接替换" : "本词暂无需要成组强记的考研近义词"])])),
+    collocations: Array.from(new Set([...(cloze2011Extra?.collocations ?? []), ...(translation2010Extra?.collocations ?? []), ...(passage2010P5Extra?.collocations ?? []), ...(passage2010P2Extra?.collocations ?? []), ...(cloze2010Entry?.collocations ?? []), ...(passage2010P1Entry?.collocations ?? []), ...mergedCollocations])),
+    otherMeanings: Array.from(new Set([...(cloze2011Extra?.otherMeanings ?? []), ...(passage2010P2Extra?.otherMeanings ?? []), ...(cloze2010Entry?.otherMeanings ?? []), ...(passage2010P1Entry?.otherMeanings ?? []), ...mergedMeanings])),
     wordFamily: Array.from(new Set([...(passage2010P2Extra?.wordFamily ?? []), ...(cloze2010Entry?.wordFamily ?? []), ...(passage2010P1Entry?.wordFamily ?? []), ...mergedFamily])),
     confusions: Array.from(new Set([...(passage2010P3Extra?.confusions ?? []), ...(passage2010P2Extra?.confusions ?? []), ...(cloze2010Entry?.confusions ?? []), ...(passage2010P1Entry?.confusions ?? []), ...mergedConfusions])),
     contextualSubstitutions: sentenceContext?.contextualSubstitutions ?? passageEntry?.contextualSubstitutions ?? [],
