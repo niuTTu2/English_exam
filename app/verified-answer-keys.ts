@@ -1,3 +1,8 @@
+export const verifiedAnswerKey2012Passage3: Record<number, "A" | "B" | "C" | "D"> = { 31: "A", 32: "B", 33: "A", 34: "C", 35: "D" };
+export const verifiedAnswerSources2012Passage3 = [
+  { range: "31—35：A B A C D；原文对象、说话者和自然产物类比核对", label: "哈尔滨工程大学网站所载《2012年英语（二）试题解析》10—11页（教学参考）", url: "https://zyxw.hrbeu.edu.cn/__local/B/D4/EA/811048CF9A6D978F3D55818782D_15D0DB51_FF24B.pdf" },
+];
+
 export const verifiedAnswerKey2012Passage1: Record<number, "A" | "B" | "C" | "D"> = { 21: "A", 22: "C", 23: "D", 24: "B", 25: "A" };
 export const verifiedAnswerSources2012Passage1 = [
   { range: "21—25：A C D B A；23题D依据作业计分权重与动力的关系，C泛称教育权力未采用", label: "哈尔滨工程大学网站所载《2012年英语（二）试题解析》4—5页，教学参考非官方标准", url: "https://zyxw.hrbeu.edu.cn/__local/B/D4/EA/811048CF9A6D978F3D55818782D_15D0DB51_FF24B.pdf" },

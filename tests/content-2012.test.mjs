@@ -49,6 +49,21 @@ test("2012Text1原卷、政策限定与嵌套从句准确", () => {
   assert.match(study.resolveEntry("articles", false, "2012-cloze-s5").contextualMeaning, /物品/);
 });
 
+test("2012Text3保留历史时点、三个论点与倒装比较", () => {
+  checkReadingSource("2012-p3", 31, 24, answers.verifiedAnswerKey2012Passage3);
+  const article = data.articleContents["2012-p3"];
+  assert.equal(article.sentences[13].beginnerSyntax.clauses.length, 3);
+  assert.match(article.sentences[13].natural, /一样.*自然产物/);
+  assert.match(article.sentences[15].natural, /会不会/);
+  assert.match(article.questions[1].explanations.B, /不表示所有人工产品/);
+  assert.equal(lexicon.canonicalLemma("ruling", { articleId: "2012-p3", sentenceId: "2012-p3-s7" }), "rule");
+  assert.equal(lexicon.canonicalLemma("ruling", { articleId: "2012-p3", sentenceId: "2012-p3-s8" }), "ruling");
+  assert.equal(lexicon.canonicalLemma("meeting", { articleId: "2012-p3" }), "meeting");
+  for (const [token, number, meaning] of [["brief", 14, /法律|诉讼/], ["suit", 22, /诉讼/], ["term", 22, /审期|开庭/], ["hear", 22, /审理/], ["coach", 23, /培训/], ["landscape", 23, /形势|格局/], ["packed", 24, /挤满/], ["hold", 7, /持有/], ["held", 23, /举办/]]) assert.match(study.resolveEntry(token, false, '2012-p3-s' + number).contextualMeaning, meaning);
+  assert.match(study.resolveEntry("means", false, "question-201234-prompt").partOfSpeech, /v/);
+  assert.match(study.resolveEntry("means", false, "question-201220-option-B").partOfSpeech, /n/);
+});
+
 test("2012每篇真实来源词卡、从句边界与年度出处有效", () => {
   assert.ok(articles.length > 0);
   for (const article of articles) {
