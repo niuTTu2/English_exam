@@ -98,7 +98,8 @@ function requireBeginnerSyntax(analysis, label) {
     `${label}.trunk 必须由原句按原顺序删减得到，不能换词、补词或改写释义`,
   );
 
-  for (const [index, component] of guide.components.entries()) {
+  function checkComponent(component, path, parentText) {
+    const index = path;
     requireText(component.text, `${label}.beginner.components[${index}].text`);
     requireText(component.form, `${label}.beginner.components[${index}].form`);
     requireText(component.function, `${label}.beginner.components[${index}].function`);
@@ -110,15 +111,32 @@ function requireBeginnerSyntax(analysis, label) {
       `${label}.beginner.components[${index}] 仍使用空泛成分标签`,
     );
     assert.ok(source.includes(component.text.toLowerCase()), `${label}.beginner.components[${index}] 不是原句中的准确片段`);
+    assert.ok(parentText.includes(component.text.toLowerCase()), `${label}.components[${path}] 不在父级原文边界内`);
+    for (const [childIndex, child] of (component.children ?? []).entries()) {
+      checkComponent(child, `${path}.children[${childIndex}]`, component.text.toLowerCase());
+    }
   }
+  guide.components.forEach((component, index) => checkComponent(component, index, source));
   for (const [index, layer] of guide.layers.entries()) {
     requireText(layer.label, `${label}.beginner.layers[${index}].label`);
     requireText(layer.english, `${label}.beginner.layers[${index}].english`);
     requireText(layer.explanation, `${label}.beginner.layers[${index}].explanation`);
-    requireText(layer.function, `${label}.beginner.layers[${index}].function`);
-    requireText(layer.form, `${label}.beginner.layers[${index}].form`);
-    requireText(layer.question, `${label}.beginner.layers[${index}].question`);
-    requireText(layer.modifies, `${label}.beginner.layers[${index}].modifies`);
+    assert.equal(layer.label, analysis.layers[index].label, `${label} 不能从关键词猜测或覆盖作者的层级标签`);
+    assert.ok(!Object.hasOwn(layer, "modifies"), `${label} 不得自动生成未核验的修饰对象`);
+  }
+  if (guide.reading) {
+    requireText(guide.reading.focus, `${label}.reading.focus`);
+    assert.ok(guide.reading.questions.length >= 1 && guide.reading.questions.length <= 3, `${label} 阅读难点应控制为1—3项`);
+    for (const point of guide.reading.questions) {
+      requireText(point.question, `${label}.reading.question`);
+      requireText(point.answer, `${label}.reading.answer`);
+      requireText(point.evidence, `${label}.reading.evidence`);
+      assert.ok(source.includes(point.evidence.toLowerCase()), `${label} 阅读解释必须关联本句准确原文`);
+    }
+    for (const event of guide.reading.timeline ?? []) {
+      requireText(event.label, `${label}.reading.timeline.label`);
+      requireText(event.explanation, `${label}.reading.timeline.explanation`);
+    }
   }
   for (const [index, clause] of guide.clauses.entries()) {
     requireText(clause.text, `${label}.beginner.clauses[${index}].text`);
@@ -194,6 +212,35 @@ test("零基础句法能识别词组作用、时间地点状语和从句内部�
   assert.equal(complexGuide.clauses[0].subject, "which（= fine hypocritical spectacles）");
   assert.equal(complexGuide.clauses[1].objectOrComplement, "his meals（宾语）；in three-star restaurants（地点状语）");
   assert.equal(complexGuide.clauses[2].subject, "whose own children（= the journalist's own children）");
+});
+
+test("2010 Text 1 阅读讲解保留真实层级、时态关系与否定对比", () => {
+  const sentences = data.articleContents["2010-p1"].sentences;
+  assert.equal(sentences.length, 19);
+  assert.equal(new Set(sentences.map(sentence => sentence.beginnerSyntax.reading.focus)).size, 19);
+  for (const sentence of sentences) assert.ok(sentence.beginnerSyntax.reading.questions.length > 0);
+  const s5 = sentences.find(sentence => sentence.id === "2010-p1-s5");
+  const guide = syntaxGuide.buildBeginnerSyntaxGuide(s5);
+  assert.equal(guide.clauses.length, 0, "after + -ing 和 since + 年份不能被凭关键词造出有限从句");
+  const predicate = guide.components.find(component => component.function === "谓语");
+  assert.equal(predicate.text, "had already been losing");
+  assert.equal(guide.components.find(component => component.function === "宾语").text, "momentum");
+  const after = guide.components.find(component => component.text.startsWith("after "));
+  const rising = after.children.find(component => component.text.startsWith("rising "));
+  for (const fragment of ["bewilderingly", "since 2003"]) {
+    assert.equal(rising.children.find(component => component.text === fragment).modifies, "修饰 rising");
+  }
+  assert.equal(guide.components.find(component => component.text === "for a while").modifies, "修饰 had been losing");
+  assert.match(guide.reading.questions[0].answer, /2008/);
+  assert.match(guide.reading.questions[0].answer, /不说明.*结束/);
+  assert.equal(guide.reading.timeline.length, 3);
+  const s8 = sentences.find(sentence => sentence.id === "2010-p1-s8");
+  assert.ok(s8.beginnerSyntax.clauses[0].text.endsWith("in a way matched by few other industries"));
+  const s17 = sentences.find(sentence => sentence.id === "2010-p1-s17");
+  assert.match(s17.trunk, /not a lack of demand but a lack of good work/);
+  assert.deepEqual(syntaxGuide.buildBeginnerSyntaxGuide({
+    ...s5, beginnerSyntax: undefined, layers: [{ label: "时间", text: "since 2003：上涨的起点。" }],
+  }).clauses, [], "数据缺失时也不能在正式页面猜出从句");
 });
 
 test("2000 年全部复杂句的从句数量与人工审计基线一致", () => {

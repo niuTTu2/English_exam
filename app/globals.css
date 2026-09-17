@@ -964,6 +964,98 @@ details.beginner-clause-card {
   margin-top: 9px;
 }
 
+.syntax-reading-focus {
+  margin: 12px 0 0;
+  color: #315b56;
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+.syntax-reading-focus > b {
+  display: block;
+  margin-bottom: 3px;
+  font-size: 12px;
+  color: #23756e;
+}
+
+.beginner-item-summary .syntax-attachment {
+  margin: 6px 0 0;
+  color: #476d67;
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.syntax-component-explanation {
+  padding: 0 12px 12px;
+}
+
+.syntax-component-explanation > p,
+.syntax-teaching-points p {
+  margin: 0;
+  color: #4b605c;
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+.syntax-children {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+  padding-left: 10px;
+  border-left: 2px solid #b8d4ca;
+}
+
+.syntax-children-heading {
+  margin: 0;
+  color: #607c73;
+  font-size: 12px;
+}
+
+.syntax-teaching-points > section {
+  padding-top: 16px;
+}
+
+.syntax-teaching-points h4 {
+  margin: 0 0 8px;
+  color: #244e48;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.syntax-teaching-points .syntax-evidence {
+  margin: 0 0 8px;
+  padding: 7px 10px;
+  border-left: 2px solid #d0a94e;
+  background: #fff9e8;
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+.syntax-timeline {
+  display: grid;
+  gap: 12px;
+  margin: 0 0 0 8px;
+  padding: 0 0 0 18px;
+  border-left: 2px solid #b8d4ca;
+}
+
+.syntax-timeline li::marker {
+  color: #29766b;
+}
+
+.syntax-timeline b {
+  font-size: 13px;
+  color: #315b56;
+}
+
+.beginner-syntax-panel :is(strong, p, dd) {
+  overflow-wrap: anywhere;
+}
+
+.beginner-syntax-panel summary:focus-visible {
+  outline: 2px solid #23756e;
+  outline-offset: -2px;
+}
+
 .beginner-layer-details > summary,
 .advanced-analysis > summary {
   display: flex;

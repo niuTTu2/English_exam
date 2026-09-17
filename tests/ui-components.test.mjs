@@ -21,11 +21,39 @@ after(async () => {
   await vite.close();
 });
 
+test("句法首屏突出本句关键，细节折叠且父子关系保留", async () => {
+  const { SentenceSyntaxPanel } = await vite.ssrLoadModule("/app/sentence-syntax-panel.tsx");
+  const { articleContents } = await vite.ssrLoadModule("/app/data.ts");
+  const renderText = text => text;
+  const s5 = articleContents["2010-p1"].sentences[4];
+  const html = renderToStaticMarkup(React.createElement(SentenceSyntaxPanel, { analysis: s5, renderText }));
+  assert.match(html, /本句关键/);
+  assert.ok(html.indexOf("两个时间短语管不同的动作") < html.indexOf("<details"));
+  assert.equal((html.match(/The world art market had been losing momentum\./g) ?? []).length, 1);
+  assert.doesNotMatch(html, /<details[^>]*\sopen(?:=|\s|>)/);
+  assert.doesNotMatch(html, /从句内部|0 个|继续细分时间/);
+  const disclosureNames = [...html.matchAll(/<details[^>]* name="([^"]+)"/g)].map(match => match[1]);
+  assert.equal(disclosureNames.length, 2);
+  assert.equal(new Set(disclosureNames).size, 1, "同句的外层详情采用互斥展开以控制长度");
+  assert.match(html, /aria-label="rising bewilderingly since 2003 的内部结构"/);
+  assert.match(html, /data-syntax-component="since 2003"/);
+  assert.match(html, /先后顺序（结合上下文）/);
+  const s16 = articleContents["2010-p1"].sentences[15];
+  const complex = renderToStaticMarkup(React.createElement(SentenceSyntaxPanel, { analysis: s16, renderText }));
+  assert.match(complex, /从句内部/);
+  assert.match(complex, /主语从句/);
+  assert.match(complex, /表语从句/);
+  assert.match(complex, /宾语补足语/);
+  const old = renderToStaticMarkup(React.createElement(SentenceSyntaxPanel, { analysis: articleContents.cloze.sentences[0], renderText }));
+  assert.match(old, /条件状语从句/);
+  assert.doesNotMatch(old, /本句难在哪里/);
+});
+
 test("2012满意度表支持三态度列、精确数据和原图尺寸", async () => {
   const { WritingPromptChart, WritingTestTask } = await vite.ssrLoadModule("/app/study-app.tsx");
   const { articleContents, availableYears, sectionsByYear } = await vite.ssrLoadModule("/app/data.ts");
   assert.deepEqual(availableYears, [2000, 2001, 2010, 2011, 2012]);
-  assert.deepEqual(sectionsByYear[2012].map(section => section.id), ["2012-cloze", "2012-p1", "2012-p3", "2012-p4", "2012-p5", "2012-translation", "2012-writing-a", "2012-writing-b"]);
+  assert.deepEqual(sectionsByYear[2012].map(section => section.id), ["2012-cloze", "2012-p1", "2012-p2", "2012-p3", "2012-p4", "2012-p5", "2012-translation", "2012-writing-a", "2012-writing-b"]);
   const task = articleContents["2012-writing-b"].writingTasks[0];
   const chart = renderToStaticMarkup(React.createElement(WritingPromptChart, { task }));
   assert.match(chart, /class="writing-chart"/);

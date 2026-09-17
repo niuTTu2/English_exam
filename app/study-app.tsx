@@ -72,7 +72,7 @@ import {
   type VocabEntry,
   type OccurrenceContext,
 } from "./data";
-import { buildBeginnerSyntaxGuide } from "./syntax-guide";
+import { SentenceSyntaxPanel } from "./sentence-syntax-panel";
 import {
   getCollocationDetails,
   getFamilyDetails,
@@ -2870,106 +2870,7 @@ function BeginnerSyntaxPanel({
   onTerm: (label: string, sentenceId: string, isPhrase?: boolean) => void;
   compact?: boolean;
 }) {
-  const guide = buildBeginnerSyntaxGuide(analysis);
-
-  return (
-    <section className={`beginner-syntax-panel ${compact ? "is-compact" : ""}`}>
-      <header className="beginner-syntax-heading">
-        <div>
-          <span>零基础拆句</span>
-          <strong>先看整组词做什么，再看组内单词</strong>
-        </div>
-        <Badge variant="secondary">3 步</Badge>
-      </header>
-
-      <div className="beginner-step">
-        <div className="beginner-step-title"><span>1</span><div><strong>抓住主干</strong><small>先暂时拿掉状语、定语和插入成分</small></div></div>
-        <p className="beginner-trunk">{renderWords(analysis.trunk, sentenceId, onTerm, `beginner-trunk-${analysis.id}`)}</p>
-      </div>
-
-      <details className="beginner-step beginner-step-disclosure">
-        <summary className="beginner-step-summary">
-          <div className="beginner-step-title"><span>2</span><div><strong>成分组合</strong><small>{guide.components.length} 组，按需查看它修饰谁</small></div></div>
-          <Badge variant="outline">{guide.components.length} 组</Badge>
-          <ChevronDown />
-        </summary>
-        <div className="beginner-step-content">
-          <div className="beginner-component-list">
-            {guide.components.map((component, index) => (
-              <details key={`${analysis.id}-component-${index}`} className="beginner-component-card">
-                <summary className="beginner-item-summary">
-                  <div>
-                    <div className="beginner-component-labels">
-                      <Badge variant="outline">{component.function}</Badge>
-                      <span>{component.form}</span>
-                    </div>
-                    <strong>{component.text}</strong>
-                  </div>
-                  <ChevronDown />
-                </summary>
-                <p className="beginner-clickable-source">{renderWords(component.text, sentenceId, onTerm, `${analysis.id}-component-text-${index}`)}</p>
-                <dl>
-                  <div><dt>作用 / 修饰谁</dt><dd>{component.modifies}</dd></div>
-                  <div><dt>怎么理解</dt><dd>{component.explanation}</dd></div>
-                </dl>
-              </details>
-            ))}
-          </div>
-
-          <details className="beginner-layer-details">
-            <summary>继续细分时间、地点、方式等层级 <ChevronDown /></summary>
-            <div className="beginner-layer-list">
-              {guide.layers.map((layer, index) => (
-                <article key={`${analysis.id}-beginner-layer-${index}`}>
-                  <div><Badge variant="outline">{layer.function}</Badge><span>{layer.form}</span></div>
-                  <strong>{layer.english}</strong>
-                  <p>{layer.explanation}</p>
-                  <small>{layer.question} · {layer.modifies}</small>
-                </article>
-              ))}
-            </div>
-          </details>
-        </div>
-      </details>
-
-      <details className="beginner-step beginner-step-disclosure">
-        <summary className="beginner-step-summary">
-          <div className="beginner-step-title"><span>3</span><div><strong>从句结构</strong><small>{guide.clauses.length > 0 ? `${guide.clauses.length} 个，从句内部再找主谓宾` : "本句没有完整从句"}</small></div></div>
-          <Badge variant="outline">{guide.clauses.length} 个</Badge>
-          <ChevronDown />
-        </summary>
-        <div className="beginner-step-content">
-          {guide.clauses.length > 0 ? (
-            <div className="beginner-clause-list">
-              {guide.clauses.map((clause, index) => (
-                <details key={`${analysis.id}-clause-${index}`} className="beginner-clause-card">
-                  <summary className="beginner-item-summary">
-                    <div>
-                      <div className="beginner-clause-heading"><Badge>{clause.type}</Badge><span>引导词：{clause.marker}</span></div>
-                      <strong>{clause.text}</strong>
-                    </div>
-                    <ChevronDown />
-                  </summary>
-                  <div className="beginner-clause-detail">
-                    <p className="beginner-clickable-source">{renderWords(clause.text, sentenceId, onTerm, `${analysis.id}-clause-text-${index}`)}</p>
-                    <div className="beginner-clause-skeleton">
-                      <p><span>从句主语</span>{clause.subject}</p>
-                      <p><span>从句谓语</span>{clause.predicate}</p>
-                      {clause.objectOrComplement && <p><span>宾语 / 补语</span>{clause.objectOrComplement}</p>}
-                    </div>
-                    <p><b>在主句中：</b>{clause.role}</p>
-                    <p><b>翻译顺序：</b>{clause.translationOrder}</p>
-                  </div>
-                </details>
-              ))}
-            </div>
-          ) : (
-            <p className="no-clause-note">本句没有需要单独拆解的完整从句；重点看上面的主干和短语组合。</p>
-          )}
-        </div>
-      </details>
-    </section>
-  );
+  return <SentenceSyntaxPanel analysis={analysis} compact={compact} renderText={(text, key) => renderWords(text, sentenceId, onTerm, key)} />;
 }
 
 function StudySentence({

@@ -55,6 +55,13 @@ export type BeginnerSyntaxComponent = {
   function: string;
   modifies: string;
   explanation: string;
+  children?: BeginnerSyntaxComponent[];
+};
+
+export type SentenceReadingGuide = {
+  focus: string;
+  questions: Array<{ question: string; answer: string; evidence: string }>;
+  timeline?: Array<{ label: string; explanation: string }>;
 };
 
 export type BeginnerClauseDetail = {
@@ -71,6 +78,7 @@ export type BeginnerClauseDetail = {
 export type BeginnerSyntax = {
   components: BeginnerSyntaxComponent[];
   clauses: BeginnerClauseDetail[];
+  reading?: SentenceReadingGuide;
 };
 
 export type SentenceAnalysis = {
