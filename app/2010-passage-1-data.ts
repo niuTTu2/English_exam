@@ -2,6 +2,7 @@ import { withReviewedSyntax } from "./reviewed-syntax";
 import { passage2010P1BlockTranslations } from "./2010-passage-1-guide";
 import { passage2010P1Reasoning } from "./2010-passage-1-evidence";
 import { passage2010P1QuestionAnalysis } from "./2010-passage-1-question-analysis";
+import { passage2010P1Practice } from "./2010-passage-1-practice";
 import { passage2010P1Reading } from "./2010-passage-1-reading";
 import type { BeginnerSyntaxComponent, Question, SentenceAnalysis, SyntaxVisualRole } from "./data";
 
@@ -1364,6 +1365,7 @@ export const passage2010P1Sentences: SentenceAnalysis[] = passage2010P1Drafts.ma
   const translations = passage2010P1BlockTranslations[index];
   if (translations.length !== reviewed.chunks.length) throw new Error(`${sentence.id}: 词块翻译未对齐`);
   return { ...reviewed,
+    practice: passage2010P1Practice[sentence.id],
     translationAlignment: reviewed.chunks.map((chunk, i) => ({ english: chunk.text, chinese: translations[i] })),
     translationNotes: sentence.translationNotes ?? (index === 3 ? ["通顺译文中的‘伦敦’接回第1句的地点；‘仍’‘却’用中文呈现两件同时发生的事的反差，原句没有对应的still或however。"] : undefined),
   };

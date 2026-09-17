@@ -1,10 +1,10 @@
 import type { ArticleContent } from "./data";
 
-export function ArticleGuidePanel({ article, onSentence }: { article: ArticleContent; onSentence: (id: string) => void }) {
+export function ArticleGuidePanel({ article, onSentence, onOpen }: { article: ArticleContent; onSentence: (id: string) => void; onOpen?: () => void }) {
   const guide = article.guide;
   if (!guide) return null;
   const link = (id: string) => <button type="button" className="guide-source-link" onClick={() => onSentence(id)}>第{article.sentences.find(s => s.id === id)?.number}句</button>;
-  return <details className="article-guide"><summary>文章地图 · 把句子放回全文</summary>
+  return <details className="article-guide" onToggle={event => { if (event.target === event.currentTarget && event.currentTarget.open) onOpen?.(); }}><summary>文章地图 · 把句子放回全文</summary>
     <p className="article-main-idea">{guide.mainIdea}</p>
     <ol className="article-route">{guide.route.map(step => <li key={step}>{step}</li>)}</ol>
     <ol className="paragraph-map">{guide.paragraphs.map((part, index) => <li key={part.paragraphId}><h3>第{index + 1}段 · {part.title}</h3><p>{part.summary}</p><p><b>段落作用：</b>{part.relation}</p><div>{article.paragraphs?.find(p => p.id === part.paragraphId)?.sentenceIds.map(id => <span key={id}>{link(id)}</span>)}</div></li>)}</ol>

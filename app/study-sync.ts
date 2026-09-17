@@ -1,3 +1,4 @@
+import { isPracticeAttempt, errorCategories } from "./learning-model";
 type TimedSnapshot = { updatedAt: number };
 export type RemoteStudyState<Snapshot> = { state: Snapshot | null; updatedAt: number | null };
 export type LocalStudyState<Snapshot> = { state: Snapshot; base: RemoteStudyState<Snapshot> | null };
@@ -20,6 +21,10 @@ function stringArray(value: unknown): value is string[] {
 export function isStudySnapshot(value: unknown): value is TimedSnapshot & Record<string, unknown> {
   if (!isRecord(value) || value.version !== 1 || !Number.isSafeInteger(value.updatedAt) || Number(value.updatedAt) < 0) return false;
   const maps: Record<string, (entry: unknown) => boolean> = {
+    practiceAttempts: isPracticeAttempt,
+    practiceReveals: entry => Number.isSafeInteger(entry) && Number(entry) >= 0,
+    learningReflections: entry => isRecord(entry) && typeof entry.translation === "string" && ["", "correct", "unclear", "wrong"].includes(String(entry.translationRating)) && stringArray(entry.errors) && entry.errors.every(key => Object.hasOwn(errorCategories, key)),
+    questionWork: entry => isRecord(entry) && ["", "sentence", "adjacent-sentences", "paragraph", "whole-passage"].includes(String(entry.scope)) && stringArray(entry.sentenceIds),
     termNotes: (entry) => typeof entry === "string",
     sentenceNotes: (entry) => typeof entry === "string",
     answers: (entry) => typeof entry === "string",
@@ -53,7 +58,7 @@ export function hasStudyRecords(snapshot: unknown): boolean {
     if (isRecord(value)) return Object.values(value).some(nonempty);
     return typeof value === "string" ? Boolean(value.trim()) : typeof value === "number" || value === true;
   };
-  return ["marks", "termRatings", "reviewSchedule", "termContexts", "termNotes", "sentenceNotes", "sentenceMarks", "answers", "translationAnswers", "submittedTranslationTasks", "submittedSections", "listItems", "submitted"].some((key) => nonempty(snapshot[key]))
+  return ["practiceAttempts", "learningReflections", "questionWork", "marks", "termRatings", "reviewSchedule", "termContexts", "termNotes", "sentenceNotes", "sentenceMarks", "answers", "translationAnswers", "submittedTranslationTasks", "submittedSections", "listItems", "submitted"].some((key) => nonempty(snapshot[key]))
     || (Array.isArray(snapshot.lists) && snapshot.lists.some((name) => name !== "本周重点"));
 }
 

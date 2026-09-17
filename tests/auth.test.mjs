@@ -119,6 +119,20 @@ test("empty, invalid, oversized and wrong-account updates never change existing 
   assert.deepEqual((await (await request("/api/study-state", "GET", undefined, user.cookie)).json()).state, state);
 });
 
+test("an older client can update notes without deleting training records", async () => {
+  const user = await seedUser("training-compatibility");
+  const attempt = { id: "practice-one", articleId: "2010-p1", sentenceId: "2010-p1-s1", taskId: "main-predicate", revision: 1, answer: "ended", correct: true, assisted: false, at: 10, conceptId: "finite-predicate", errorType: "predicate" };
+  const first = studySnapshot({ practiceAttempts: { "practice-one": attempt }, practiceReveals: { "2010-p1-s1": 20 }, termNotes: { work: "原笔记" } });
+  const revision = (await (await writeStudy(user, first)).json()).updatedAt;
+  const legacy = studySnapshot({ termNotes: { work: "旧页面修改的笔记" } });
+  const write = await writeStudy(user, legacy, revision);
+  assert.equal(write.status, 200);
+  const saved = await (await request("/api/study-state", "GET", undefined, user.cookie)).json();
+  assert.deepEqual(saved.state.practiceAttempts, first.practiceAttempts);
+  assert.deepEqual(saved.state.practiceReveals, first.practiceReveals);
+  assert.equal(saved.state.termNotes.work, "旧页面修改的笔记");
+});
+
 test("concurrent devices can neither overwrite a changed version nor both create the initial row", async () => {
   const user = await seedUser("study-concurrent");
   const states = [studySnapshot({ answers: { 21: "A" } }), studySnapshot({ answers: { 21: "B" } })];

@@ -4,6 +4,7 @@ import { getDb } from "../../../db";
 import { studyStates } from "../../../db/schema";
 import { getSessionUser, isSameOrigin } from "../_lib/auth";
 import { hasStudyRecords, isStudySnapshot } from "../../study-sync";
+import { preserveTrainingRecords } from "../../learning-model";
 
 function reply(body: unknown, status = 200) {
   return Response.json(body, { status, headers: { "Cache-Control": "no-store" } });
@@ -38,16 +39,14 @@ export async function PUT(request: Request) {
   if (!isStudySnapshot(payload.state) || !(payload.expectedUpdatedAt === null || (Number.isSafeInteger(payload.expectedUpdatedAt) && Number(payload.expectedUpdatedAt) >= 0 && Number(payload.expectedUpdatedAt) < Number.MAX_SAFE_INTEGER))) {
     return reply({ error: "学习记录或同步版本不正确，未写入云端。" }, 400);
   }
-  const serialized = JSON.stringify(payload.state);
-  if (serialized.length > 500_000) {
-    return reply({ error: "学习记录过大，请先导出备份后精简笔记。" }, 413);
-  }
-
   const db = getDb();
   const backupReady = await db.get(sql`SELECT name FROM sqlite_master WHERE type = 'trigger' AND name = 'preserve_study_state'`);
   if (!backupReady) return reply({ error: "云端备份保护尚未就绪，已暂停上传，本机记录已保留。" }, 503);
   const [existing] = await db.select().from(studyStates).where(eq(studyStates.userId, user.id)).limit(1);
   if ((existing?.updatedAt ?? null) !== payload.expectedUpdatedAt) return reply({ error: "云端记录已在其他设备更新，已停止覆盖。请重试同步以合并记录。" }, 409);
+  const safeState = preserveTrainingRecords(existing ? JSON.parse(existing.payload) : {}, payload.state);
+  const serialized = JSON.stringify(safeState);
+  if (serialized.length > 500_000) return reply({ error: "学习记录过大，请先导出备份后精简笔记。" }, 413);
   if (existing && hasStudyRecords(JSON.parse(existing.payload)) && !hasStudyRecords(payload.state)) {
     return reply({ error: "已阻止空白记录覆盖已有学习数据，请保留备份并重试同步。" }, 409);
   }

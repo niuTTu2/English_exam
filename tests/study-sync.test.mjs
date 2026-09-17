@@ -10,8 +10,29 @@ const { prepareLocalSnapshot, readRemoteSnapshot, reconcileStudyState, isStudySn
   sameStudySnapshot, studyStorageKey, readLocalStudyState, saveLocalStudyState, preserveLocalStudyState, LEGACY_STORAGE_KEY } = await vite.ssrLoadModule("/app/study-sync.ts");
 
 const email = "synthetic@example.test";
+const learning = await vite.ssrLoadModule("/app/learning-model.ts");
 const empty = { version: 1, updatedAt: 0, termNotes: {}, answers: {}, sentenceMarks: [], lists: ["本周重点"], listItems: { "本周重点": [] } };
 const cloud = (state, updatedAt = 20) => ({ state, updatedAt, accountEmail: email });
+
+test("训练记录按独立事件跨设备合并，旧页面上传不能删掉训练历史", () => {
+  const attempt = { id: "a", articleId: "2010-p1", sentenceId: "2010-p1-s1", taskId: "main-predicate", revision: 1, answer: "ended", correct: true, assisted: false, at: 10, conceptId: "finite-predicate", errorType: "predicate" };
+  const base = { ...empty, practiceAttempts: {} };
+  const local = { ...base, practiceAttempts: { a: attempt } };
+  const remote = cloud({ ...base, practiceAttempts: { b: { ...attempt, id: "b", sentenceId: "2010-p1-s18", at: 20 } } });
+  const merged = reconcileStudyState({ state: local, base: cloud(base, 10) }, remote);
+  assert.deepEqual(Object.keys(merged.state.practiceAttempts).sort(), ["a", "b"]);
+  assert.deepEqual(merged.conflicts, []);
+  assert.equal(hasStudyRecords(local), true);
+  assert.equal(isStudySnapshot(local), true);
+  assert.equal(isStudySnapshot({ ...local, practiceAttempts: { a: { ...attempt, correct: "yes" } } }), false);
+  assert.equal(isStudySnapshot({ ...local, learningReflections: { a: { translation: "我的译文", translationRating: "wrong", errors: ["unknown"] } } }), false);
+  assert.equal(isStudySnapshot({ ...local, learningReflections: { a: { translation: "我的译文", translationRating: "wrong", errors: ["attachment"] } }, questionWork: { 201021: { scope: "adjacent-sentences", sentenceIds: ["2010-p1-s4"] } } }), true);
+  const oldPage = learning.preserveTrainingRecords(merged.state, { ...empty, termNotes: { word: "已有笔记的更新" } });
+  assert.equal(Object.keys(oldPage.practiceAttempts).length, 2);
+  assert.equal(oldPage.termNotes.word, "已有笔记的更新");
+  const newPage = learning.preserveTrainingRecords(merged.state, { ...local, practiceAttempts: { c: { ...attempt, id: "c" } } });
+  assert.deepEqual(Object.keys(newPage.practiceAttempts).sort(), ["a", "b", "c"]);
+});
 
 test("a newer blank device cannot hide the account's existing cloud records", async () => {
   const local = { ...empty, updatedAt: 900, selectedYear: 2010 };

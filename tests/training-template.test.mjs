@@ -85,3 +85,53 @@ test("五题证据、范围、反向判断与拆句均引用真实原文", async
   assert.match(html, /事实成立，非本题所求/);
   assert.match(html, /矛盾对照/);
 });
+
+test("十九句任务有真实证据与稳定概念，不用展开记录充当掌握", async () => {
+  const model = await vite.ssrLoadModule("/app/learning-model.ts");
+  for (const sentence of article.sentences) {
+    assert.ok(sentence.practice.length >= 1 && sentence.practice.length <= 3);
+    assert.equal(new Set(sentence.practice.map(task => task.id)).size, sentence.practice.length);
+    for (const task of sentence.practice) {
+      assert.ok(sentence.text.includes(task.evidence), `${sentence.id}: ${task.evidence}`);
+      assert.ok(Object.hasOwn(model.grammarConcepts, task.conceptId));
+      assert.ok(Object.hasOwn(model.errorCategories, task.errorType));
+      assert.ok(task.kind === "token" ? sentence.text.includes(task.answer) : task.options.includes(task.answer));
+    }
+    assert.equal(model.sentencePracticeStatus(sentence.practice, {}, sentence.id), "new");
+  }
+  const sentence = article.sentences[2], task = sentence.practice[0];
+  const first = { id: "first", articleId: article.id, sentenceId: sentence.id, taskId: task.id, revision: 1, answer: "wrong", correct: false, assisted: false, at: 10, conceptId: task.conceptId, errorType: task.errorType };
+  const second = { ...first, id: "second", at: 20, correct: true, assisted: true, answer: task.answer };
+  assert.equal(model.sentencePracticeStatus(sentence.practice, { first }, sentence.id), "needs-review");
+  assert.equal(model.sentencePracticeStatus(sentence.practice, { first, second }, sentence.id), "assisted");
+  assert.equal(model.practiceDueAt(first), first.at);
+  assert.equal(model.practiceDueAt(second), second.at + 86400000);
+  assert.equal(model.sentencePracticeStatus(sentence.practice, { stale: { ...second, revision: 99 } }, sentence.id), "new");
+  const { SentencePracticePanel } = await vite.ssrLoadModule("/app/sentence-practice-panel.tsx");
+  const props = { sentence, attempts: {}, reflection: model.emptyReflection(), revealed: false, onAttempt() {}, onReveal() {}, onRetry() {}, onReflection() {} };
+  const before = renderToStaticMarkup(React.createElement(SentencePracticePanel, props));
+  assert.doesNotMatch(before, /practice-feedback|参考：/);
+  assert.match(before, /disabled=""[^>]*>先完成至少一项尝试/);
+  const after = renderToStaticMarkup(React.createElement(SentencePracticePanel, { ...props, attempts: { first } }));
+  assert.match(after, /这项需要再练/);
+  assert.match(after, /查看主干与讲解/);
+  const { vocabularyPriority } = await vite.ssrLoadModule("/app/vocabulary-priority.ts");
+  const entry = headword => ({ headword, display: headword, kind: "word" });
+  assert.equal(vocabularyPriority(entry("hirst"), "2010-p1-s1", article.id).defaultReview, false);
+  assert.equal(vocabularyPriority(entry("momentum"), "2010-p1-s5", article.id).id, "core");
+  assert.equal(vocabularyPriority(entry("note"), "2010-p1-s1", article.id).id, "sense");
+  assert.equal(vocabularyPriority(entry("art"), "2010-p1-s6", article.id).id, "name");
+  assert.notEqual(vocabularyPriority(entry("art"), "2010-p1-s1", article.id).id, "name");
+});
+
+test("定位练习在提交前不显示参考，空白未练不计错误", async () => {
+  const { QuestionLocationPractice } = await vite.ssrLoadModule("/app/question-location-practice.tsx");
+  const props = { question: article.questions[0], sentences: article.sentences, work: { scope: "", sentenceIds: [] }, submitted: false, onChange() {} };
+  const before = renderToStaticMarkup(React.createElement(QuestionLocationPractice, props));
+  assert.doesNotMatch(before, /参考范围是|已列入定位复盘|已覆盖参考定位/);
+  const blank = renderToStaticMarkup(React.createElement(QuestionLocationPractice, { ...props, submitted: true }));
+  assert.match(blank, /不计作错误/);
+  const matched = renderToStaticMarkup(React.createElement(QuestionLocationPractice, { ...props, submitted: true, work: { scope: "adjacent-sentences", sentenceIds: ["2010-p1-s3", "2010-p1-s4"] } }));
+  assert.match(matched, /已覆盖参考定位的关键位置/);
+  assert.match(matched, /不等于推理一定正确/);
+});

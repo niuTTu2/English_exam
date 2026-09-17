@@ -5,7 +5,7 @@ export type Passage2010P1LexiconEntry = {
   examSynonyms?: string[]; collocations?: string[]; otherMeanings?: string[]; wordFamily?: string[];
   confusions?: string[]; contextualSubstitutions?: ContextualSubstitution[];
 };
-const e = (partOfSpeech: string, contextualMeaning: string, use: string, extra: Partial<Passage2010P1LexiconEntry> = {}): Passage2010P1LexiconEntry => ({ partOfSpeech, contextualMeaning, use, specialForms: ["按本句词性识别规则词形；特殊变形另行列出"], examSynonyms: ["近义替换必须同时核对本句搭配、语气和句法"], ...extra });
+const e = (partOfSpeech: string, contextualMeaning: string, use: string, extra: Partial<Passage2010P1LexiconEntry> = {}): Passage2010P1LexiconEntry => ({ partOfSpeech, contextualMeaning, use, specialForms: [], examSynonyms: [], ...extra });
 
 export const passage2010P1LemmaAliases: Record<string, string> = {
   works:"work", pieces:"piece", sold:"sell", fetching:"fetch", bids:"bid", banks:"bank", filed:"file",
@@ -19,7 +19,7 @@ export const passage2010P1LemmaAliases: Record<string, string> = {
   representing:"represent", impressionists:"impressionist", fluctuation:"fluctuate", arts:"art", ds:"d",
   longest:"long", oldest:"old", biggest:"big", worst:"bad", egos:"ego", brothers:"brother", "hirst's":"hirst", "sotheby's":"sotheby", "christie's":"christie",
   ended:"end", called:"call", referred:"refer", witnessed:"witness", surpassed:"surpass", got:"get", won:"win", saying:"say", suggests:"suggest", statements:"statement", went:"go", awaiting:"await",
-  chances:"chance", favorites:"favorite", factors:"factor", promoting:"promote", styles:"style",
+  chances:"chance", favorites:"favorite", styles:"style",
 };
 
 const rows: Record<string, [string, string, string]> = {

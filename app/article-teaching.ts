@@ -7,6 +7,8 @@ export type QuestionReasoning = {
   scope: QuestionScope;
   restatement: string;
   keyInstruction: string;
+  /** 每组至少命中一句；用于提示学生是否选中了关键定位，并非自动语义评分。 */
+  locatingGroups?: string[][];
   evidence: Array<PassageEvidence & { id: string; strength: "直接证据" | "上下文推断" | "全文概括" }>;
   paraphrases: Array<{ evidenceIds: string[]; meaning: string; optionText: string; relation: "同义转换" | "矛盾对照"; limit: string }>;
   options: Record<string, { judgment: "选入" | "排除"; errorType?: DistractorType; evidenceIds: string[]; reasoning: string }>;

@@ -4,6 +4,11 @@ import { chunkVisualRole, chunkDescription, visualRoleLabels } from "./reviewed-
 import { OriginalPassage } from "./original-passage";
 import { ArticleGuidePanel } from "./article-guide-panel";
 import { QuestionEvidencePanel } from "./question-evidence-panel";
+import { SentencePracticePanel } from "./sentence-practice-panel";
+import { TrainingReview } from "./training-review";
+import { emptyReflection, latestTaskAttempt, sentencePracticeStatus, type PracticeAttempts, type PracticeTask, type LearningReflection, type QuestionWork } from "./learning-model";
+import { QuestionLocationPractice } from "./question-location-practice";
+import { vocabularyPriority } from "./vocabulary-priority";
 
 import {
   ArrowLeft,
@@ -145,6 +150,10 @@ type PersistedStudyState = {
   version: 1;
   updatedAt: number;
   expanded: string[];
+  practiceAttempts: PracticeAttempts;
+  practiceReveals: Record<string, number>;
+  learningReflections: Record<string, LearningReflection>;
+  questionWork: Record<string, QuestionWork>;
   marks: Record<string, MarkTag[]>;
   termRatings: Record<string, Rating>;
   reviewSchedule: Record<string, ReviewSchedule>;
@@ -169,6 +178,7 @@ type PersistedStudyState = {
 function emptyStudyState(): PersistedStudyState {
   return {
     version: 1, updatedAt: 0, expanded: ["cloze-s1"], marks: {}, termRatings: {}, reviewSchedule: {}, termContexts: {},
+    practiceAttempts: {}, practiceReveals: {}, learningReflections: {}, questionWork: {},
     termNotes: {}, sentenceNotes: {}, sentenceMarks: [], answers: {}, translationAnswers: {}, submittedTranslationTasks: {},
     submitted: false, activeSection: "cloze", selectedYear: 2000, submittedSections: {}, revealTiming: "article", timerMode: "up",
     lists: ["本周重点"], listItems: { "本周重点": [] }, reviewFilter: "all",
@@ -179,6 +189,7 @@ function normalizeStudyState(snapshot: Partial<PersistedStudyState>): PersistedS
   const section = snapshot.activeSection && snapshot.activeSection in articleContents ? snapshot.activeSection : "cloze";
   const sections = snapshot.submittedSections ?? (snapshot.submitted ? { cloze: true } : {});
   return { ...emptyStudyState(), ...snapshot, activeSection: section, selectedYear: articleContents[section].year,
+    practiceReveals: snapshot.practiceReveals ?? Object.fromEntries((snapshot.expanded ?? []).map(id => [id, snapshot.updatedAt ?? 1])),
     termContexts: snapshot.termContexts ?? {}, submittedSections: sections, submitted: Boolean(sections.cloze) };
 }
 
@@ -774,6 +785,10 @@ export default function StudyApp() {
   const [selectedYear, setSelectedYear] = useState<number>(2000);
   const [activeSection, setActiveSection] = useState<ArticleId>("cloze");
   const [expanded, setExpanded] = useState<Set<string>>(new Set(["cloze-s1"]));
+  const [practiceAttempts, setPracticeAttempts] = useState<PracticeAttempts>({});
+  const [practiceReveals, setPracticeReveals] = useState<Record<string, number>>({});
+  const [learningReflections, setLearningReflections] = useState<Record<string, LearningReflection>>({});
+  const [questionWork, setQuestionWork] = useState<Record<string, QuestionWork>>({});
   const [selectedTerm, setSelectedTerm] = useState<SelectedTerm | null>(null);
   const [termHistory, setTermHistory] = useState<SelectedTerm[]>([]);
   const [marks, setMarks] = useState<Record<string, MarkTag[]>>({});
@@ -846,6 +861,7 @@ export default function StudyApp() {
   const isPassageTranslation = translationTasks.some((task) => task.format === "passage");
   const submitted = Boolean(submittedSections[activeSection]);
   const selectedTermSource = selectedTerm ? sourceById.get(selectedTerm.sentenceId) : undefined;
+  const selectedTermPriority = selectedTerm ? vocabularyPriority(selectedTerm.entry, selectedTerm.sentenceId, selectedTermSource?.article.id) : undefined;
   // Building the complete vocabulary resolves every word and occurrence across
   // the imported corpus. Keep the first study render lightweight and only do
   // that work when the vocabulary view is actually opened.
@@ -864,6 +880,10 @@ export default function StudyApp() {
     snapshotRef.current = snapshot as PersistedStudyState;
     initialUpdatedAt.current = snapshot.updatedAt ?? 0;
     if (Array.isArray(snapshot.expanded)) setExpanded(new Set(snapshot.expanded));
+    setPracticeAttempts(snapshot.practiceAttempts ?? {});
+    setPracticeReveals(snapshot.practiceReveals ?? {});
+    setLearningReflections(snapshot.learningReflections ?? {});
+    setQuestionWork(snapshot.questionWork ?? {});
     if (snapshot.marks) setMarks(snapshot.marks);
     if (snapshot.termRatings) setTermRatings(snapshot.termRatings);
     if (snapshot.reviewSchedule) setReviewSchedule(snapshot.reviewSchedule);
@@ -1016,6 +1036,7 @@ export default function StudyApp() {
     version: 1,
     updatedAt: 0,
     expanded: Array.from(expanded),
+    practiceAttempts, practiceReveals, learningReflections, questionWork,
     marks,
     termRatings,
     reviewSchedule,
@@ -1035,7 +1056,7 @@ export default function StudyApp() {
     lists,
     listItems,
     reviewFilter,
-  }), [activeSection, answers, expanded, listItems, lists, marks, revealTiming, reviewFilter, reviewSchedule, selectedYear, sentenceMarks, sentenceNotes, submittedSections, submittedTranslationTasks, termContexts, termNotes, termRatings, timerMode, translationAnswers]);
+  }), [activeSection, answers, expanded, listItems, lists, marks, revealTiming, reviewFilter, reviewSchedule, selectedYear, sentenceMarks, sentenceNotes, submittedSections, submittedTranslationTasks, termContexts, termNotes, termRatings, timerMode, translationAnswers, practiceAttempts, practiceReveals, learningReflections, questionWork]);
 
   useEffect(() => {
     if (contextPicker) firstContextOption.current?.focus();
@@ -1133,7 +1154,19 @@ export default function StudyApp() {
   }, [countdownStart, timerMode, timerRunning]);
 
   const studiedCount = sentences.filter((sentence) => expanded.has(sentence.id)).length;
-  const studiedProgress = Math.round((studiedCount / sentences.length) * 100);
+  const hasPractice = sentences.some(sentence => sentence.practice?.length);
+  const practicePassed = sentences.filter(sentence => sentence.practice?.length && ["independent", "assisted"].includes(sentencePracticeStatus(sentence.practice, practiceAttempts, sentence.id))).length;
+  const studiedProgress = Math.round(((hasPractice ? practicePassed : studiedCount) / sentences.length) * 100);
+  function recordPractice(sentence: SentenceAnalysis, task: PracticeTask, answer: string, id: string, at: number) {
+    setPracticeAttempts(current => ({ ...current, [id]: { id, at, articleId: activeArticle.id, sentenceId: sentence.id, taskId: task.id, revision: task.revision,
+      answer, correct: answer === task.answer, assisted: Object.hasOwn(practiceReveals, sentence.id) || Boolean(latestTaskAttempt(current, task, sentence.id)), conceptId: task.conceptId, errorType: task.errorType } }));
+  }
+  function openPracticeSentence(id: string) {
+    const article = sentenceArticle.get(id);
+    if (!article) return;
+    setActiveSection(article.id); setSelectedYear(article.year); setView("study"); setExpanded(current => new Set(current).add(id));
+    window.setTimeout(() => document.getElementById(`source-${id}`)?.scrollIntoView({ behavior: "smooth", block: "start" }), 0);
+  }
   const selectedAnswers = questions.filter((question) => Boolean(answers[question.id])).length;
   const submittedTranslationCount = translationTasks.filter((task) => (
     submittedTranslationTasks[translationAnswerKey(activeArticle.id, task.id)]
@@ -1727,13 +1760,15 @@ export default function StudyApp() {
                 <div>
                   <div className="heading-meta">
                     <Badge className="paper-badge">{activeArticle.badge}</Badge>
-                    <span>{activeArticle.id === "2010-p1" ? "新版句法已完成 · 训练模板升级中" : activeArticle.id === "2010-p2" ? "新版句法已完成 · 训练层尚未升级" : "既有精审 · 新版句法教学尚未升级"}</span>
+                    <span>{activeArticle.teachingStatus
+                      ? [activeArticle.teachingStatus.syntax ? "句法已复核" : "句法待升级", activeArticle.teachingStatus.vocabulary ? "语境词义已复核" : "词义待复核", activeArticle.teachingStatus.evidence ? "题目证据已完成" : "证据待升级", activeArticle.teachingStatus.practice ? "主动练习已接入" : "练习待接入"].join(" · ")
+                      : sentences.every(sentence => sentence.beginnerSyntax?.reading) ? "逐句阅读关系已补充 · 完整训练模板尚未升级" : "既有精审 · 新版训练模板尚未升级"}</span>
                   </div>
                   <h2>{view === "test" ? `${activeArticle.year} · ${activeArticle.label}` : activeArticle.title}</h2>
                   <p>{view === "test" ? "先独立阅读、作答，再进入精读与复盘。" : activeArticle.description}</p>
                 </div>
                 <div className="paper-progress">
-                  <div><span>已查看（不代表掌握）</span><strong>{studiedCount}/{sentences.length} 句</strong></div>
+                  <div><span>{hasPractice ? "练习通过（含复习）" : "已查看（不代表掌握）"}</span><strong>{hasPractice ? practicePassed : studiedCount}/{sentences.length} 句</strong></div>
                   <Progress value={studiedProgress} />
                 </div>
               </>
@@ -1751,7 +1786,7 @@ export default function StudyApp() {
             </div>
 
             <TabsContent value="study" className="mode-content">
-              <ArticleGuidePanel article={activeArticle} onSentence={id => { setExpanded(current => new Set(current).add(id)); sourceNavigation.current = id; window.setTimeout(() => document.getElementById(`source-${id}`)?.scrollIntoView({ behavior: "smooth", block: "center" }), 0); }} />
+              <ArticleGuidePanel article={activeArticle} onSentence={openPracticeSentence} onOpen={() => { const at = Date.now(); setPracticeReveals(current => ({ ...current, ...Object.fromEntries(sentences.filter(sentence => sentence.practice).map(sentence => [sentence.id, at])) })); }} />
               <div className="sentence-mode-controls" aria-label="原句交互方式">
                 {([["read", "读句"], ["words", "词汇"], ["structure", "结构"]] as const).map(([mode, label]) => <Button key={mode} variant={sentenceMode === mode ? "default" : "outline"} aria-pressed={sentenceMode === mode} onClick={() => setSentenceMode(mode)}>{label}</Button>)}
                 {sentenceMode === "words" && <label><input type="checkbox" checked={showPhrases} onChange={event => setShowPhrases(event.target.checked)} />显示词组入口</label>}
@@ -1773,6 +1808,11 @@ export default function StudyApp() {
                     mode={sentenceMode}
                     showPhrases={showPhrases}
                     passageRole={activeArticle.guide?.sentenceRoles[sentence.id]}
+                    attempts={practiceAttempts}
+                    reflection={learningReflections[sentence.id] ?? emptyReflection()}
+                    onAttempt={(task, answer) => recordPractice(sentence, task, answer, crypto.randomUUID(), Date.now())}
+                    onReveal={() => setPracticeReveals(current => ({ ...current, [sentence.id]: Date.now() }))}
+                    onReflection={value => setLearningReflections(current => ({ ...current, [sentence.id]: value }))}
                     isExpanded={expanded.has(sentence.id)}
                     isMarked={sentenceMarks.has(sentence.id)}
                     note={sentenceNotes[sentence.id] ?? ""}
@@ -1783,7 +1823,7 @@ export default function StudyApp() {
                       else next.add(sentence.id);
                       return next;
                     })}
-                    onTerm={openTerm}
+                    onTerm={(label, id, isPhrase) => { if (sentence.practice) setPracticeReveals(current => ({ ...current, [sentence.id]: Date.now() })); openTerm(label, id, isPhrase); }}
                     onNote={(value) => setSentenceNotes((current) => ({ ...current, [sentence.id]: value }))}
                   />
                 ))}
@@ -1944,6 +1984,7 @@ export default function StudyApp() {
                               ))}
                             </div>
                           ))}
+                          {question.reasoning && <QuestionLocationPractice question={question} sentences={sentences} work={questionWork[question.id] ?? { scope: "", sentenceIds: [] }} submitted={submitted} onChange={work => setQuestionWork(current => ({ ...current, [question.id]: work }))} />}
                           {submitted && question.analysis && (
                             <QuestionAnalysisPanel question={question} onTerm={openTerm} />
                           )}
@@ -1967,6 +2008,7 @@ export default function StudyApp() {
             </TabsContent>
 
             <TabsContent value="review" className="mode-content">
+              <TrainingReview articles={Object.values(articleContents)} attempts={practiceAttempts} reflections={learningReflections} questionWork={questionWork} submitted={submittedSections} now={reviewNow} onSentence={openPracticeSentence} onQuestion={id => { const article = questionArticle.get(id); if (article) { setActiveSection(article.id); setSelectedYear(article.year); setView("test"); } }} />
               <section className="review-board">
                 <div className="review-board-heading">
                   <div>
@@ -2198,18 +2240,20 @@ export default function StudyApp() {
                       <strong>{selectedTerm.entry.contextualMeaning}</strong>
                       <p>{selectedTerm.entry.use}</p>
                     </section>
+                    {selectedTermPriority && <section className="term-priority"><Badge variant="outline">{selectedTermPriority.label}</Badge><p>{selectedTermPriority.reason}</p><small>本篇学习建议，不是官方词频排名。</small></section>}
+                    {selectedTerm.entry.collocationDetails?.[0] && <p className="term-key-collocation"><b>先记一个搭配：</b>{selectedTerm.entry.collocationDetails[0].label} · {selectedTerm.entry.collocationDetails[0].meaning}</p>}
 
                     <TermSenses entry={selectedTerm.entry} onSource={goToSource} />
 
-                    {(selectedTerm.entry.contextualSubstitutions?.length ?? 0) > 0 && (
+                    {(selectedTerm.entry.contextualSubstitutions?.length ?? 0) > 0 && (<details className="term-extra"><summary>本句可替换表达</summary>
                       <ContextualSubstitutions
                         entry={selectedTerm.entry}
                         sentenceId={selectedTerm.sentenceId}
                         onReference={openReference}
                       />
-                    )}
+                    </details>)}
 
-                    {(selectedTerm.entry.grammarSummary || selectedTerm.entry.grammarRole) && (
+                    {(selectedTerm.entry.grammarSummary || selectedTerm.entry.grammarRole) && (<details className="term-extra"><summary>词条语法与结构</summary>
                       <section className="knowledge-overview">
                         <div>
                           <span>{selectedTerm.entry.kind === "phrase" ? "规范结构" : "核心句法"}</span>
@@ -2217,7 +2261,7 @@ export default function StudyApp() {
                         </div>
                         <p>{selectedTerm.entry.grammarSummary ?? selectedTerm.entry.grammarRole}</p>
                       </section>
-                    )}
+                    </details>)}
 
                     <TermDetails
                       entry={selectedTerm.entry}
@@ -2891,6 +2935,11 @@ export function StudySentence({
   mode = "read",
   showPhrases = true,
   passageRole,
+  attempts = {},
+  reflection = emptyReflection(),
+  onAttempt = () => {},
+  onReveal = () => {},
+  onReflection = () => {},
   isExpanded,
   isMarked,
   note,
@@ -2903,6 +2952,11 @@ export function StudySentence({
   mode?: SentenceMode;
   showPhrases?: boolean;
   passageRole?: string;
+  attempts?: PracticeAttempts;
+  reflection?: LearningReflection;
+  onAttempt?: (task: PracticeTask, answer: string) => void;
+  onReveal?: () => void;
+  onReflection?: (value: LearningReflection) => void;
   isExpanded: boolean;
   isMarked: boolean;
   note: string;
@@ -2912,6 +2966,9 @@ export function StudySentence({
   onNote: (value: string) => void;
 }) {
   const [selectedChunk, setSelectedChunk] = useState<number | null>(null);
+  const [showTeaching, setShowTeaching] = useState(false);
+  const hasAttempt = sentence.practice?.some(task => latestTaskAttempt(attempts, task, sentence.id));
+  const teachingVisible = !sentence.practice?.length || (showTeaching && hasAttempt);
   const detailText = (text: string, key: string) => mode === "words" ? renderWords(text, sentence.id, onTerm, key) : text;
   return (
     <article className={`sentence-card ${isExpanded ? "is-open" : ""}`} id={`source-${sentence.id}`} tabIndex={-1} data-source-location>
@@ -2930,6 +2987,8 @@ export function StudySentence({
 
       {isExpanded && (
         <div className="sentence-analysis">
+          {sentence.practice?.length && <SentencePracticePanel sentence={sentence} attempts={attempts} reflection={reflection} revealed={Boolean(teachingVisible)} onAttempt={onAttempt} onReveal={() => { setShowTeaching(true); onReveal(); }} onRetry={() => setShowTeaching(false)} onReflection={onReflection} />}
+          {teachingVisible && <>
           {mode === "structure" && <div className="colored-sentence" aria-label="按词块查看语法作用">
             {sentence.chunks.map((chunk, index) => (
               <button type="button" key={`${sentence.id}-${index}`} className={roleClass(chunk)} title={chunkDescription(chunk)} data-grammar-function={chunk.grammarFunction} aria-pressed={selectedChunk === index} onClick={() => setSelectedChunk(selectedChunk === index ? null : index)}>
@@ -2941,6 +3000,7 @@ export function StudySentence({
           </div>}
 
           <SentenceSyntaxPanel analysis={sentence} renderText={detailText} />
+          <p className="sentence-meaning"><b>这句话的意思：</b>{sentence.natural}</p>
 
           <details className="advanced-analysis">
             <summary>完整语法资料（原精审） <ChevronDown /></summary>
@@ -2977,6 +3037,7 @@ export function StudySentence({
           {sentence.translationNotes?.map(note => <p className="translation-note" key={note}>{note}</p>)}
           <div className="logic-note"><Brain /><p><strong>{passageRole ? "本句在段落中的作用" : "句间逻辑"}</strong>{passageRole ?? sentence.logic}</p></div></details>
 
+          </>}
           <div className="sentence-note">
             <div className="sentence-note-heading">
               <label htmlFor={`note-${sentence.id}`}><NotebookPen />这句话的笔记</label>
@@ -3129,7 +3190,7 @@ export function TermDetails({
   const synonyms = entry.synonymDetails ?? [];
   const family = entry.familyDetails ?? [];
   const specialForms = (entry.specialForms ?? []).filter(
-    (item) => !item.startsWith("无需要") && !item.startsWith("结构词："),
+    (item) => !item.startsWith("无需要") && !item.startsWith("结构词：") && !/特殊变形另行列出|按本句词性识别规则词形/.test(item),
   );
 
   return (
@@ -3145,7 +3206,7 @@ export function TermDetails({
       )}
 
       {structures.length > 0 && (
-        <details open>
+        <details>
           <summary>语法与规范结构 <span>{structures.length}</span></summary>
           <div className="detail-body structure-list">
             {entry.grammarRole && <p className="grammar-role">本句作用：{entry.grammarRole}</p>}
@@ -3173,7 +3234,7 @@ export function TermDetails({
       )}
 
       {collocations.length > 0 && (
-        <details open={structures.length === 0}>
+        <details>
           <summary>常用搭配 <span>{collocations.length}</span></summary>
           <div className="detail-body">
             <ReferenceRows items={collocations} entry={entry} sentenceId={sentenceId} onReference={onReference} />
@@ -3187,6 +3248,7 @@ export function TermDetails({
           <div className="detail-body"><InfoChips items={specialForms} /></div>
         </details>
       )}
+      {entry.kind === "word" && specialForms.length === 0 && <p className="regular-forms">本用法无特殊变形需要单独记忆；按词性使用规则变化。</p>}
 
       {synonyms.length > 0 && (
         <details>

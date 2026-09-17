@@ -3,6 +3,7 @@ const e = (id: string, n: number, quote: string, role: string, strength: "直接
 export const passage2010P1Reasoning: Record<number, QuestionReasoning> = {
   21: {
     questionType: "短语含义与原因推断", scope: "adjacent-sentences",
+    locatingGroups: [["2010-p1-s2", "2010-p1-s3"], ["2010-p1-s4"]],
     restatement: "为什么这场成功拍卖被称为‘最后的胜利’？", keyInstruction: "既要解释victory，也要解释last。只证明成功还不够。",
     evidence: [e("success", 2, "All but two pieces sold, fetching more than £70m", "拍卖确实成功"), e("last", 3, "It was a last victory", "题眼"), e("crisis", 4, "Lehman Brothers, filed for bankruptcy", "紧接着的危机信号", "上下文推断"), e("name", 1, "Beautiful Inside My Head Forever", "拍卖名称")],
     paraphrases: [{ evidenceIds: ["success", "last", "crisis"], meaning: "成功拍卖处在金融危机冲击市场的转折关头，所以成为最后一次胜利。", optionText: "it was successfully made just before the world financial crisis", relation: "同义转换", limit: "原文用As并置同时发生的拍卖和破产；D概括危机全面冲击前的成功，不要据此编出两件事相隔多少天。" }],
@@ -16,6 +17,7 @@ export const passage2010P1Reasoning: Record<number, QuestionReasoning> = {
   },
   22: {
     questionType: "引句含义", scope: "adjacent-sentences",
+    locatingGroups: [["2010-p1-s9"], ["2010-p1-s10"]],
     restatement: "作者说消费变得不合时宜，在艺术市场里具体指什么？", keyInstruction: "先找引用句，再读紧随其后的作者解释。",
     evidence: [e("quoted", 9, "spending of any sort became deeply unfashionable", "引用的现象"), e("means", 10, "that meant collectors stayed away from galleries and salerooms", "作者对现象的解释"), e("buyers", 16, "there are still buyers in the market", "防止扩大为再无需求")],
     paraphrases: [{ evidenceIds: ["means"], meaning: "收藏家远离画廊与拍卖场，即不再积极参与这类交易。", optionText: "collectors were no longer actively involved in art-market auctions", relation: "同义转换", limit: "描述参与交易的行为，不是判断艺术品是否值得买，也不等于所有支出都彻底停止。" }],
@@ -29,6 +31,7 @@ export const passage2010P1Reasoning: Record<number, QuestionReasoning> = {
   },
   23: {
     questionType: "多处事实核对（选不正确项）", scope: "whole-passage",
+    locatingGroups: [["2010-p1-s8"], ["2010-p1-s11"], ["2010-p1-s19"]],
     restatement: "四项中哪一个不符合原文？", keyInstruction: "NOT：找到不成立的一项。其余三项因为事实成立而排除，不能把它们标成原文错误。",
     evidence: [e("sales", 11, "Sales of contemporary art fell by two-thirds", "A与C的销售下跌依据"), e("period", 11, "in the year to November 2008", "2007—2008统计区间"), e("attention", 8, "generates interest far beyond its size", "比较的是关注度"), e("way", 8, "in a way matched by few other industries", "行业比较限定汇聚方式"), e("momentum", 5, "had already been losing momentum", "势头实际减弱"), e("size", 7, "may have come down to $50 billion", "规模回落"), e("prices", 14, "prices are about 40% down on their peak on average", "价格下降"), e("waiting", 19, "waiting for confidence to return", "卖方等待更好环境")],
     paraphrases: [{ evidenceIds: ["attention", "way", "momentum"], meaning: "原文比较关注度与汇聚方式，并未说增长势头超过其他行业；反而写了势头减弱。", optionText: "The art market surpassed many other industries in momentum.", relation: "矛盾对照", limit: "B偷换比较维度，正因为不成立才应选B；不是把interest翻译成momentum。" }],
@@ -42,6 +45,7 @@ export const passage2010P1Reasoning: Record<number, QuestionReasoning> = {
   },
   24: {
     questionType: "语境概括", scope: "sentence",
+    locatingGroups: [["2010-p1-s18"]],
     restatement: "死亡、债务和离婚这三个D，在文中起什么作用？", keyInstruction: "看名词后面的谓语deliver，问这些因素导致了什么。",
     evidence: [e("causes", 18, "The three Ds – death, debt and divorce", "三个因素的所指"), e("deliver", 18, "still deliver works of art to the market", "导致作品进入市场")],
     paraphrases: [{ evidenceIds: ["causes", "deliver"], meaning: "这些变故促使持有人把作品拿到市场出售，也就是促进流通的因素。", optionText: "factors promoting artwork circulation", relation: "同义转换", limit: "是供给进入市场的原因，不是艺术风格、流行趋势或拍卖行的偏好。" }],
@@ -56,6 +60,7 @@ export const passage2010P1Reasoning: Record<number, QuestionReasoning> = {
   },
   25: {
     questionType: "标题题", scope: "whole-passage",
+    locatingGroups: [["2010-p1-s1", "2010-p1-s3"], ["2010-p1-s5", "2010-p1-s7"], ["2010-p1-s11", "2010-p1-s12"], ["2010-p1-s13", "2010-p1-s14"], ["2010-p1-s17", "2010-p1-s19"]],
     restatement: "哪个标题能覆盖全文持续讨论的问题？", keyInstruction: "把五段压缩成同一主线，再排除只覆盖一个局部的标题。",
     evidence: [e("end", 1, "bull run in a century of art-market history ended", "第一段：繁荣结束", "全文概括"), e("turn", 3, "a last victory", "首段转折点", "上下文推断"), e("momentum", 5, "had already been losing momentum", "第二段：先前转弱"), e("sales", 11, "fell by two-thirds", "第三段：销售下降"), e("prices", 14, "prices are about 40% down on their peak on average", "第四段：价格下降"), e("supply", 17, "not a lack of demand but a lack of good work to sell", "第五段：本轮低迷特点"), e("waiting", 19, "is keeping away, waiting for confidence to return", "结尾：卖方观望")],
     paraphrases: [{ evidenceIds: ["end", "momentum", "sales", "prices", "supply", "waiting"], meaning: "由繁荣结束写到多项衰退表现，再讨论衰退中的供需特点，全文中心始终是艺术市场下滑。", optionText: "Art Market in Decline", relation: "同义转换", limit: "decline概括全篇，不表示所有交易归零；买家仍在并不推翻整体低迷。" }],

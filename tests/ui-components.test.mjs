@@ -58,7 +58,11 @@ test("2010初读按原卷五段连续呈现，读句和结构不混入查词按�
   const html = renderToStaticMarkup(React.createElement(OriginalPassage, { article, marked: new Set(), onMark() {} }));
   assert.equal((html.match(/class="original-paragraph"/g) ?? []).length, 5);
   assert.doesNotMatch(html, /word-button|phrase-action|主干|供给惜售/);
-  const props = { sentence: article.sentences[0], isExpanded: true, isMarked: false, note: "", onToggle() {}, onMark() {}, onTerm() {}, onNote() {} };
+  // 交互模式对未配置练习的兼容内容也成立；配置练习时另验证先练后讲门禁。
+  const props = { sentence: { ...article.sentences[0], practice: undefined }, isExpanded: true, isMarked: false, note: "", onToggle() {}, onMark() {}, onTerm() {}, onNote() {} };
+  const gated = renderToStaticMarkup(React.createElement(StudySentence, { ...props, sentence: article.sentences[0], mode: "structure" }));
+  assert.match(gated, /先完成至少一项尝试/);
+  assert.doesNotMatch(gated, /data-syntax-panel|class="colored-sentence"|class="translation-block"/);
   const read = renderToStaticMarkup(React.createElement(StudySentence, props));
   assert.doesNotMatch(read, /class="word-button|phrase-action|colored-sentence/);
   assert.match(read, /完整语法资料/);

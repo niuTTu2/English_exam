@@ -603,6 +603,46 @@ button {
 .question-evidence, .option-reasoning, .paraphrase-chain { padding: 10px 0; border-top: 1px solid #e2e5df; }
 .question-evidence-panel blockquote { font: 1rem/1.7 Georgia, serif; border-left: 2px solid #a4beb3; margin: 8px 0; padding-left: 10px; overflow-wrap: anywhere; }
 .evidence-type, .question-transfer { color: #30675c; }
+.sentence-practice { margin-bottom: 16px; border: 1px solid #c8d8d0; border-radius: 10px; padding: 8px 14px; background: #fbfcf8; }
+.sentence-practice summary, .question-location-practice summary, .training-review summary { cursor: pointer; padding: 10px 0; min-height: 44px; font-weight: 600; }
+.sentence-practice p, .question-location-practice p, .training-review p { font-size: .85rem; line-height: 1.7; margin: 8px 0; }
+.practice-task { border-top: 1px solid #dae3dc; padding: 12px 0; }
+.practice-task h4 { font-size: .95rem; font-weight: 650; margin-bottom: 10px; }
+.practice-choices { display: grid; gap: 8px; }
+.practice-choices button, .show-teaching, .practice-feedback button, .practice-unsure, .translation-self-rating button { min-height: 44px; padding: 9px 12px; text-align: left; border: 1px solid #becbc4; border-radius: 8px; }
+.practice-choices button[aria-pressed="true"], .translation-self-rating button[aria-pressed="true"] { background: #dcece3; border-color: #4c7968; }
+.practice-choices button:disabled { cursor: default; color: #58655d; }
+.practice-unsure { margin-top: 8px; font-size: .8rem; }
+.predicate-picker { font-family: Georgia, serif; }
+.predicate-picker button { min-height: 44px; min-width: 44px; padding: 3px 5px; border-radius: 5px; border: 1px solid #d1ded5; margin: 2px; }
+.practice-step-picker { display: flex; flex-wrap: wrap; gap: 6px; }
+.practice-step-picker button { min-height: 44px; padding: 8px 10px; font-size: .8rem; border: 1px solid #d1ded5; border-radius: 6px; }
+.practice-step-picker button[aria-pressed="true"] { background: #deeee3; }
+.predicate-picker button:focus-visible, .practice-choices button:focus-visible { outline: 2px solid #267469; outline-offset: 2px; }
+.practice-feedback { padding: 12px; margin-top: 8px; border-left: 3px solid #c39547; background: #fff9ed; }
+.practice-feedback.is-correct { border-color: #3c8170; background: #f1f8f1; }
+.translation-trial { display: block; font-size: .85rem; }
+.translation-trial textarea { display: block; width: 100%; min-height: 80px; border: 1px solid #c8d3c9; border-radius: 8px; padding: 10px; margin-top: 8px; }
+.learning-obstacles > div { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
+.learning-obstacles label { display: flex; gap: 6px; align-items: center; min-height: 44px; font-size: .8rem; }
+.translation-self-rating { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.translation-self-rating small { width: 100%; color: #607566; }
+.show-teaching { margin: 10px 0; background: #275f56; color: white; }
+.show-teaching:disabled { background: #e2e5df; color: #6c746c; }
+.sentence-meaning { font-size: .9rem; line-height: 1.8; margin: 12px 0; }
+.question-location-practice { margin-top: 12px; border-top: 1px solid #dae2dc; }
+.question-location-practice select { display: block; min-height: 44px; padding: 8px; border: 1px solid #b8c8bf; border-radius: 6px; width: 100%; }
+.location-choices { max-height: 280px; overflow-y: auto; }
+.location-choices label { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; min-height: 44px; padding: 6px; }
+.location-choices label span { font: .8rem/1.6 Georgia, serif; color: #6c7a6f; }
+.training-review { padding: 18px; border: 1px solid #d0ded4; border-radius: 12px; margin-bottom: 20px; }
+.training-review h3 { font-size: 1.05rem; font-weight: 650; }
+.training-review-list { display: grid; gap: 8px; max-height: 420px; overflow-y: auto; }
+.training-review-list button { display: grid; gap: 4px; text-align: left; padding: 12px; min-height: 44px; border: 1px solid #d0ded4; border-radius: 8px; font-size: .875rem; }
+.reflection-review { min-height: 44px; display: block; text-align: left; padding: 8px; }
+.term-priority p, .term-key-collocation, .regular-forms { font-size: .85rem; line-height: 1.7; }
+.term-priority small { font-size: .7rem; color: #607165; }
+.term-extra summary { cursor: pointer; min-height: 44px; padding: 12px 0; font-size: .9rem; }
 @media (max-width: 640px) { .mode-list { width: 100%; } .mode-list button { flex: 1; padding-inline: 8px; font-size: .8rem; } .syntax-relation-tree .syntax-relation-tree { padding-left: .55rem; margin-left: .25rem; } }
 .legend-modifier,
 .syntax-modifier { background: #f3dfd6; border-color: #bf7c63 !important; }
