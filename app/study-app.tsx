@@ -101,14 +101,19 @@ type SelectedTerm = {
 
 type ReferenceDetail = NonNullable<VocabEntry["collocationDetails"]>[number];
 
-type YearWordItem = {
-  headword: string;
+type YearWordContext = {
   sourceForm: string;
-  forms: string[];
-  count: number;
+  sourceForms: string[];
   meaning: string;
   partOfSpeech: string;
   sentenceId: string;
+};
+
+type YearWordItem = YearWordContext & {
+  headword: string;
+  forms: string[];
+  count: number;
+  contexts: YearWordContext[];
 };
 
 type YearPhraseItem = {
@@ -219,14 +224,14 @@ function tokenizeWords(text: string) {
 }
 
 const optionLookup = new Map(
-  allQuestions.flatMap((question) => question.options.map((option) => [
-    `${question.sentenceId}:${option.text.toLowerCase()}`,
+  allQuestions.flatMap((question) => question.options.flatMap((option) => [question.sentenceId, `question-${question.id}-option-${option.key}`].map((sourceId) => [
+    `${sourceId}:${option.text.toLowerCase()}`,
     {
       explanation: questionExplanation(question, option.key),
       correct: question.options.find((item) => item.key === question.answer)?.text ?? "",
       isCorrect: option.key === question.answer,
     },
-  ] as const)),
+  ] as const))),
 );
 
 const sentenceArticle = new Map(
@@ -305,10 +310,10 @@ export function currentOccurrences(label: string, isPhrase: boolean, sourceId?: 
   const lemma = lemmaOf(normalized, sourceId);
   if (!isPhrase) {
     const matchingIds = new Set(corpusTokens.filter((token) => token.lemma === lemma).map((token) => token.sourceId));
-    return corpusSources.filter((source) => matchingIds.has(source.id)).map((source) => ({ year: source.article.year, section: source.section, excerpt: source.text }));
+    return corpusSources.filter((source) => matchingIds.has(source.id)).map((source) => ({ sourceId: source.id, year: source.article.year, section: source.section, excerpt: source.text }));
   }
   const sources = new Map(findPhraseOccurrences(label, true).map(({ source }) => [source.id, source]));
-  return Array.from(sources.values(), (source) => ({ year: source.article.year, section: source.section, excerpt: source.text }));
+  return Array.from(sources.values(), (source) => ({ sourceId: source.id, year: source.article.year, section: source.section, excerpt: source.text }));
 }
 
 function makeFallbackEntry(label: string, isPhrase = false, sentenceId?: string): VocabEntry {
@@ -435,35 +440,69 @@ function corpusTokensForYear(year: number) {
   return corpusTokens.filter((token) => token.year === year);
 }
 
-function sentenceIdForWord(headword: string, year: number) {
-  return corpusTokens.find((token) => token.year === year && token.lemma === headword)?.sourceId ?? "year-vocabulary";
-}
-
 export function buildYearWordItems(year: number): YearWordItem[] {
-  const grouped = new Map<string, Map<string, number>>();
+  const grouped = new Map<string, typeof corpusTokens>();
   corpusTokensForYear(year).forEach((token) => {
-    const headword = token.lemma;
-    const forms = grouped.get(headword) ?? new Map<string, number>();
-    forms.set(token.form, (forms.get(token.form) ?? 0) + 1);
-    grouped.set(headword, forms);
+    const tokens = grouped.get(token.lemma) ?? [];
+    tokens.push(token);
+    grouped.set(token.lemma, tokens);
   });
 
   return Array.from(grouped.entries())
-    .map(([headword, formCounts]) => {
-      const sentenceId = sentenceIdForWord(headword, year);
-      const entry = resolveEntry(headword, false, sentenceId);
-      const sourceForm = corpusTokens.find((token) => token.sourceId === sentenceId && token.lemma === headword)?.form ?? headword;
+    .map(([headword, tokens]) => {
+      const sources = new Map<string, YearWordContext>();
+      for (const token of tokens) {
+        const existing = sources.get(token.sourceId);
+        if (existing) {
+          if (!existing.sourceForms.includes(token.form)) existing.sourceForms.push(token.form);
+          continue;
+        }
+        const guide = getLexicalGuide(token.form, lexicalContextFor(token.sourceId));
+        const entry = guide?.contextualMeaning && guide.partOfSpeech
+          ? { contextualMeaning: guide.contextualMeaning, partOfSpeech: guide.partOfSpeech }
+          : resolveEntry(token.form, false, token.sourceId);
+        sources.set(token.sourceId, {
+          sourceForm: token.form,
+          sourceForms: [token.form],
+          meaning: entry.contextualMeaning,
+          partOfSpeech: entry.partOfSpeech,
+          sentenceId: token.sourceId,
+        });
+      }
+      const contexts = Array.from(sources.values());
       return {
+        ...contexts[0],
         headword,
-        sourceForm,
-        forms: Array.from(formCounts.keys()).sort((a, b) => a.localeCompare(b, "en")),
-        count: Array.from(formCounts.values()).reduce((sum, value) => sum + value, 0),
-        meaning: entry.contextualMeaning,
-        partOfSpeech: entry.partOfSpeech,
-        sentenceId,
+        forms: Array.from(new Set(tokens.map((token) => token.form))).sort((left, right) => left.localeCompare(right, "en")),
+        count: tokens.length,
+        contexts,
       };
     })
-    .sort((a, b) => a.headword.localeCompare(b.headword, "en"));
+    .sort((left, right) => left.headword.localeCompare(right.headword, "en"));
+}
+
+export function searchYearWordItems(words: YearWordItem[], search: string): YearWordItem[] {
+  const query = search.trim().toLowerCase();
+  if (!query) return words;
+  return words.flatMap((item) => {
+    const context = item.contexts.find((candidate) => candidate.sourceForms.includes(query))
+      ?? item.contexts.find((candidate) => [...candidate.sourceForms, candidate.meaning, candidate.partOfSpeech].join(" ").toLowerCase().includes(query));
+    if (!context && ![item.headword, ...item.forms].join(" ").toLowerCase().includes(query)) return [];
+    const sourceForm = context?.sourceForms.find((form) => form === query) ?? context?.sourceForms.find((form) => form.includes(query));
+    return [{ ...item, ...(context ?? item.contexts[0]), ...(sourceForm ? { sourceForm } : {}) }];
+  });
+}
+
+export function sourceDestination(sourceId: string) {
+  const source = sourceById.get(sourceId);
+  if (!source) return undefined;
+  return {
+    articleId: source.article.id as ArticleId,
+    year: source.article.year,
+    view: source.sentenceId ? "study" as const : "test" as const,
+    sentenceId: source.sentenceId,
+    elementId: `source-${source.id}`,
+  };
 }
 
 export function buildYearPhraseItems(year: number): YearPhraseItem[] {
@@ -634,8 +673,9 @@ export default function StudyApp() {
   const [termRatings, setTermRatings] = useState<Record<string, Rating>>({});
   const [reviewSchedule, setReviewSchedule] = useState<Record<string, ReviewSchedule>>({});
   const [termContexts, setTermContexts] = useState<TermContexts>({});
-  const [contextPicker, setContextPicker] = useState<{ key: string; list?: string; options: SavedTermContext[] } | null>(null);
+  const [contextPicker, setContextPicker] = useState<{ key: string; list?: string; options: SavedTermContext[]; remember?: boolean } | null>(null);
   const firstContextOption = useRef<HTMLButtonElement | null>(null);
+  const sourceNavigation = useRef<string | null>(null);
   const [reviewContextTarget, setReviewContextTarget] = useState<{ key: string; list?: string } | null>(null);
   const [reviewScope, setReviewScope] = useState<ReviewScope>("due");
   const [reviewNow, setReviewNow] = useState(Date.now);
@@ -976,7 +1016,7 @@ export default function StudyApp() {
     const resolution = resolveSavedTermContext(key, termContexts[termContextKey(key, list)]);
     setTermHistory([]);
     if (!resolution.selected && resolution.options.length > 1) {
-      setContextPicker({ key, list, options: resolution.options });
+      setContextPicker({ key, list, options: resolution.options, remember: true });
       return;
     }
     const context = resolution.selected;
@@ -987,10 +1027,31 @@ export default function StudyApp() {
   function chooseTermContext(context: SavedTermContext) {
     if (!contextPicker) return;
     const target = { key: contextPicker.key, list: contextPicker.list };
-    setTermContexts((current) => rememberTermContext(current, target.key, context, target.list));
+    const remember = contextPicker.remember;
+    if (remember) setTermContexts((current) => rememberTermContext(current, target.key, context, target.list));
     setContextPicker(null);
     openTerm(context.label, context.sourceId, context.kind === "phrase");
-    setReviewContextTarget(target);
+    if (remember) setReviewContextTarget(target);
+  }
+
+  function goToSource(sourceId: string) {
+    const target = sourceDestination(sourceId);
+    if (!target) return;
+    sourceNavigation.current = target.elementId;
+    setActiveSection(target.articleId);
+    setSelectedYear(target.year);
+    setView(target.view);
+    const sentenceId = target.sentenceId;
+    if (sentenceId) setExpanded((current) => new Set(current).add(sentenceId));
+    if (target.articleId !== activeSection) {
+      setTimerSeconds(0);
+      setUnlockedTerms(new Set());
+    }
+    setTimerRunning(false);
+    setContextPicker(null);
+    setSelectedTerm(null);
+    setTermHistory([]);
+    setReviewContextTarget(null);
   }
 
   function openReference(detail: ReferenceDetail, source: VocabEntry, sentenceId: string) {
@@ -1548,7 +1609,7 @@ export default function StudyApp() {
                     <div className="question-grid">
                       {questions.map((question) => (
                         <article key={question.id} className="question-card">
-                          <div className="question-prompt">
+                          <div className="question-prompt" id={`source-question-${question.id}-prompt`} tabIndex={-1} data-source-location>
                             <span>{question.number ?? question.id}</span>
                             <p>{renderWords(question.prompt, `question-${question.id}-prompt`, openTerm, `question-${question.id}`)}</p>
                           </div>
@@ -1558,7 +1619,7 @@ export default function StudyApp() {
                               const correct = submitted && option.key === question.answer;
                               const wrong = submitted && selected && option.key !== question.answer;
                               return (
-                                <div key={option.key} className={`option-row ${selected ? "is-selected" : ""} ${correct ? "is-correct" : ""} ${wrong ? "is-wrong" : ""}`}>
+                                <div key={option.key} className={`option-row ${selected ? "is-selected" : ""} ${correct ? "is-correct" : ""} ${wrong ? "is-wrong" : ""}`} id={`source-question-${question.id}-option-${option.key}`} tabIndex={-1} data-source-location>
                                   <button
                                     type="button"
                                     className="option-choice"
@@ -1573,7 +1634,7 @@ export default function StudyApp() {
                                       <button
                                         type="button"
                                         className="phrase-action option-phrase-action"
-                                        onClick={() => openTerm(option.text, question.sentenceId, true)}
+                                        onClick={() => openTerm(option.text, `question-${question.id}-option-${option.key}`, true)}
                                         aria-label={`查看词组 ${option.text}`}
                                       >词组</button>
                                     )}
@@ -1756,12 +1817,21 @@ export default function StudyApp() {
           }
         }}
       >
-        <SheetContent className="term-sheet sm:max-w-lg">
+        <SheetContent className="term-sheet sm:max-w-lg" onCloseAutoFocus={(event) => {
+          if (!sourceNavigation.current) return;
+          event.preventDefault();
+          const target = document.getElementById(sourceNavigation.current);
+          sourceNavigation.current = null;
+          target?.focus({ preventScroll: true });
+          target?.scrollIntoView({ block: "start" });
+        }}>
           {contextPicker ? (
             <>
               <SheetHeader className="term-sheet-header">
-                <SheetTitle>选择复习语境</SheetTitle>
-                <SheetDescription>选择要复习的真实出处；此选择只影响当前复习项或清单，不改动词条和笔记。</SheetDescription>
+                <SheetTitle>{contextPicker.remember ? "选择复习语境" : "选择词条语境"}</SheetTitle>
+                <SheetDescription>{contextPicker.remember
+                  ? "选择要复习的真实出处；此选择只影响当前复习项或清单，不改动词条和笔记。"
+                  : "查看同一词条在不同原句中的含义；浏览切换不会改动已保存的复习语境或笔记。"}</SheetDescription>
               </SheetHeader>
               <div className="term-context-options">
                 {contextPicker.options.map((context, index) => (
@@ -1804,13 +1874,16 @@ export default function StudyApp() {
                       <section className="term-source-context" aria-label="当前词条出处">
                         <strong>{sourceCaption(selectedTermSource.id)}</strong>
                         <p>{selectedTermSource.text}</p>
-                        {reviewContextTarget?.key === selectedTerm.key && findTermContexts(selectedTerm.key).length > 1 && (
+                        <Button size="sm" variant="outline" onClick={() => goToSource(selectedTermSource.id)}>
+                          {selectedTermSource.sentenceId ? "回到原句精读" : "回到题目出处"}
+                        </Button>
+                        {findTermContexts(selectedTerm.key).length > 1 && (
                           <Button size="sm" variant="outline" onClick={() => {
-                            if (!reviewContextTarget || reviewContextTarget.key !== selectedTerm.key) return;
-                            setContextPicker({ ...reviewContextTarget, options: findTermContexts(selectedTerm.key) });
+                            const target = reviewContextTarget?.key === selectedTerm.key ? reviewContextTarget : undefined;
+                            setContextPicker({ key: selectedTerm.key, list: target?.list, options: findTermContexts(selectedTerm.key), remember: Boolean(target) });
                             setSelectedTerm(null);
                             setTermHistory([]);
-                          }}>切换复习语境</Button>
+                          }}>{reviewContextTarget?.key === selectedTerm.key ? "切换复习语境" : "切换词条语境"}</Button>
                         )}
                       </section>
                     )}
@@ -1858,6 +1931,7 @@ export default function StudyApp() {
                       entry={selectedTerm.entry}
                       sentenceId={selectedTerm.sentenceId}
                       onReference={openReference}
+                      onSource={goToSource}
                     />
                   </>
                 )}
@@ -2091,12 +2165,7 @@ function YearVocabularyPanel({
   onTerm: (label: string, sentenceId: string, isPhrase?: boolean) => void;
 }) {
   const query = search.trim().toLowerCase();
-  const visibleWords = words.filter((item) => !query || [
-    item.headword,
-    item.forms.join(" "),
-    item.meaning,
-    item.partOfSpeech,
-  ].join(" ").toLowerCase().includes(query));
+  const visibleWords = searchYearWordItems(words, search);
   const visiblePhrases = phrases.filter((item) => !query || [
     item.source,
     item.canonical,
@@ -2153,6 +2222,7 @@ function YearVocabularyPanel({
                     <span className="vocabulary-entry-meaning">{item.meaning}</span>
                     <span className="vocabulary-entry-meta">
                       <span>{item.forms.length > 1 ? `原文词形：${item.forms.join(" / ")}` : `原文词形：${item.forms[0]}`}</span>
+                      <span>{item.contexts.length} 处语境</span>
                       <b>{item.count} 次</b>
                     </span>
                   </button>
@@ -2233,7 +2303,7 @@ function QuestionAnalysisPanel({
         <QuestionAnalysisBlock
           label="题干"
           analysis={analysis.prompt}
-          sentenceId={question.sentenceId}
+          sentenceId={`question-${question.id}-prompt`}
           onTerm={onTerm}
           defaultOpen
         />
@@ -2243,7 +2313,7 @@ function QuestionAnalysisPanel({
           key={`${question.id}-${option.key}`}
           label={`${option.key} 选项`}
           analysis={optionAnalysis}
-          sentenceId={question.sentenceId}
+          sentenceId={`question-${question.id}-option-${option.key}`}
           onTerm={onTerm}
         />
       ))}
@@ -2555,7 +2625,7 @@ function StudySentence({
   onNote: (value: string) => void;
 }) {
   return (
-    <article className={`sentence-card ${isExpanded ? "is-open" : ""}`}>
+    <article className={`sentence-card ${isExpanded ? "is-open" : ""}`} id={`source-${sentence.id}`} tabIndex={-1} data-source-location>
       <div className="sentence-toggle" onClick={onToggle}>
         <span className="sentence-number">{sentence.number}</span>
         <p>{renderInteractiveText(sentence.text, sentence.phrases, sentence.id, onTerm, false)}</p>
@@ -2688,10 +2758,12 @@ function TermDetails({
   entry,
   sentenceId,
   onReference,
+  onSource,
 }: {
   entry: VocabEntry;
   sentenceId: string;
   onReference: (detail: ReferenceDetail, source: VocabEntry, sentenceId: string) => void;
+  onSource: (sourceId: string) => void;
 }) {
   const structures = entry.structures ?? [];
   const collocations = (entry.collocationDetails ?? []).filter((item) => !item.meaning.includes("将在所属真题"));
@@ -2808,8 +2880,12 @@ function TermDetails({
               </>
             )}
           </div>
-          {entry.occurrences.map((item) => (
-            <p key={`${item.year}-${item.excerpt}`} className="occurrence"><strong>{item.year} · {item.section}</strong>{item.excerpt}</p>
+          {entry.occurrences.map((item) => item.sourceId ? (
+            <button type="button" key={item.sourceId} className="occurrence occurrence-link" onClick={() => onSource(item.sourceId!)} aria-label={`回到出处：${sourceCaption(item.sourceId)}`}>
+              <strong>{sourceCaption(item.sourceId)}</strong><span>{item.excerpt}</span>
+            </button>
+          ) : (
+            <p key={`${item.year}-${item.section}-${item.excerpt}`} className="occurrence"><strong>{item.year} · {item.section}</strong>{item.excerpt}</p>
           ))}
           {entry.occurrences.length === 0 && <p className="no-occurrence">当前已精审语料中尚未出现；它来自近义词或同源词关联。</p>}
           <small>每加入一篇通过质量门禁的真题，词形、原形和词族统计都会随语料更新。</small>

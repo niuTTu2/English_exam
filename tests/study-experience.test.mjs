@@ -11,6 +11,69 @@ const study = await vite.ssrLoadModule("/app/study-app.tsx");
 const { articleContents } = await vite.ssrLoadModule("/app/data.ts");
 const { prepareLocalSnapshot, readRemoteSnapshot } = await vite.ssrLoadModule("/app/study-sync.ts");
 
+test("annual vocabulary preserves every source sense without duplicating lemmas or counts", () => {
+  const words = study.buildYearWordItems(2010);
+  const company = words.find(word => word.headword === "company");
+  assert.equal(words.filter(word => word.headword === "company").length, 1);
+  assert.equal(company.count, 6);
+  assert.deepEqual(company.forms, ["companies", "company"]);
+  assert.ok(company.contexts.some(context => context.sentenceId === "2010-p3-s1" && /公司/.test(context.meaning)));
+  assert.ok(company.contexts.some(context => context.sentenceId === "2010-p5-s15" && /结伴/.test(context.meaning)));
+  for (const word of words) {
+    assert.equal(new Set(word.contexts.map(context => context.sentenceId)).size, word.contexts.length);
+    for (const context of word.contexts) {
+      const entry = study.resolveEntry(context.sourceForm, false, context.sentenceId);
+      assert.equal(context.meaning, entry.contextualMeaning);
+      assert.equal(context.partOfSpeech, entry.partOfSpeech);
+      assert.equal(entry.headword, word.headword);
+      assert.equal(study.sourceDestination(context.sentenceId).year, 2010);
+    }
+  }
+});
+
+test("annual search opens the matching sense and form rather than the first occurrence", () => {
+  const words = study.buildYearWordItems(2010);
+  const company = study.searchYearWordItems(words, "  结伴  ").find(word => word.headword === "company");
+  assert.ok(company);
+  assert.equal(company.sentenceId, "2010-p5-s15");
+  assert.equal(company.sourceForm, "company");
+  assert.equal(company.count, 6);
+  assert.match(company.meaning, /结伴/);
+  for (const word of words.filter(item => item.contexts.some(context => context.sourceForms.length > 1))) {
+    for (const form of word.forms) {
+      const found = study.searchYearWordItems([word], form)[0];
+      assert.equal(found.sourceForm, form);
+      assert.ok(word.contexts.find(context => context.sentenceId === found.sentenceId).sourceForms.includes(form));
+    }
+  }
+  const peer = study.searchYearWordItems(words, "PEERING").find(word => word.headword === "peer");
+  assert.equal(peer.sourceForm, "peering");
+  assert.match(peer.meaning, /张望/);
+  assert.equal(study.searchYearWordItems(words, "  ").length, words.length);
+  assert.deepEqual(study.searchYearWordItems(words, "不存在的检索词"), []);
+  assert.ok(!study.searchYearWordItems(study.buildYearWordItems(2000), "结伴").some(word => word.headword === "company"));
+});
+
+test("word and phrase occurrences navigate to real sentence, prompt and option sources", () => {
+  assert.deepEqual(study.sourceDestination("2010-p5-s15"), {
+    articleId: "2010-p5", year: 2010, view: "study", sentenceId: "2010-p5-s15", elementId: "source-2010-p5-s15",
+  });
+  for (const sourceId of ["question-201042-prompt", "question-201042-option-T", "question-201030-option-C"]) {
+    const target = study.sourceDestination(sourceId);
+    assert.equal(target.view, "test");
+    assert.equal(target.sentenceId, undefined);
+    assert.equal(target.elementId, `source-${sourceId}`);
+  }
+  assert.equal(study.sourceDestination("question-201042-option-A"), undefined);
+  assert.equal(study.sourceDestination("missing-source"), undefined);
+  for (const [label, isPhrase] of [["company", false], ["In the U.S.", true]]) {
+    const occurrences = study.currentOccurrences(label, isPhrase);
+    assert.ok(occurrences.length > 1);
+    for (const occurrence of occurrences) assert.ok(study.sourceDestination(occurrence.sourceId));
+    assert.equal(new Set(occurrences.map(occurrence => occurrence.sourceId)).size, occurrences.length);
+  }
+});
+
 test("2010 Part B uses real T/F sources and annual indexes", () => {
   const article = articleContents["2010-p5"];
   assert.equal(study.questionNumberLabel(article.questions), "第 41–45 题");

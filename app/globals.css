@@ -2375,6 +2375,10 @@ details.beginner-clause-card {
   font-size: 9px;
 }
 
+.vocabulary-entry-meta > :nth-child(2) {
+  flex-shrink: 0;
+}
+
 .canonical-pattern {
   padding: 6px 7px;
   border-radius: 6px;
@@ -3028,6 +3032,30 @@ button.reference-row.is-linked:focus-visible {
 
 .occurrence strong {
   color: #416563;
+}
+
+.occurrence-link {
+  width: 100%;
+  min-height: 44px;
+  text-align: left;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+
+.occurrence-link:hover,
+.occurrence-link:focus-visible {
+  background: #faf9f4;
+  outline: 2px solid #568a79;
+  outline-offset: 2px;
+}
+
+[data-source-location] {
+  scroll-margin-top: 140px;
+}
+
+[data-source-location]:focus {
+  outline: 2px solid #568a79;
+  outline-offset: 3px;
 }
 
 .detail-body small {

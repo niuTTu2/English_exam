@@ -102,7 +102,7 @@ export type VocabEntry = {
   wordFamily: string[];
   confusions: string[];
   counts: { form: number; lemma: number; family: number };
-  occurrences: Array<{ year: number; section: string; excerpt: string }>;
+  occurrences: Array<{ sourceId?: string; year: number; section: string; excerpt: string }>;
 };
 
 export type Question = {
