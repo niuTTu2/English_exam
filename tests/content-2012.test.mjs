@@ -1,3 +1,4 @@
+
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test, { after } from "node:test";
@@ -16,6 +17,35 @@ const normalize = text => text.replace(/\s+/g, " ").replace(/\s+([,.;?!])/g, "$1
 const tokens = text => text.match(/[a-z]+(?:\d+[a-z]*)+\b|\d+(?:st|nd|rd|th)\b|\d{4}s\b|(?:[a-z]\.){2,}|(?<![a-z0-9])[a-z]+(?:-[a-z]+)*(?:['’][a-z]+)?/gi) ?? [];
 const articles = Object.values(data.articleContents).filter(article => article.year === 2012);
 const sourceHash = "b91cfe8e6a3eb63b02fc6573514e34a67937bf8160a5712ce640315e2da306f9";
+
+test("2012PartB原卷共享七选项与人物观点准确", () => {
+  const article = data.articleContents["2012-p5"];
+  const fixture = JSON.parse(readFileSync(new URL("./fixtures/2012-p5.json", import.meta.url), "utf8"));
+  assert.equal(fixture.sha256, sourceHash);
+  assert.equal(article.sentences.length, 28);
+  assert.equal(normalize(article.sentences.map(sentence => sentence.text).join(" ")), normalize(fixture.paragraphs.map(row => row.text).join(" ")));
+  assert.equal(article.questions.length, 5);
+  article.questions.forEach((question, index) => {
+    assert.equal(question.id, 201241 + index);
+    assert.equal(question.number, 41 + index);
+    assert.equal(question.format, "matching");
+    assert.equal(question.sharedOptionsId, 201241);
+    assert.equal(question.prompt, fixture.questions[index].text.replace(/^\d+\.\s*/, ""));
+    assert.equal(question.answer, answers.verifiedAnswerKey2012Passage5[41 + index]);
+    assert.deepEqual(question.options.map(option => option.text), fixture.options.map(row => row.text.replace(/^\[\s*[A-G]\s*\]\s*/, "")));
+    assert.deepEqual(Object.keys(question.explanations), [..."ABCDEFG"]);
+    assert.equal(data.questionOptionSourceId(question, "F"), "question-201241-option-F");
+  });
+  assert.equal(article.sentences[13].beginnerSyntax.clauses.length, 2);
+  assert.equal(article.sentences[19].beginnerSyntax.clauses[0].marker, "who");
+  assert.match(article.sentences[17].natural, /并不是所有/);
+  assert.match(article.sentences[25].natural, /并存/);
+  assert.match(article.questions[1].explanations.F, /必要/);
+  assert.match(article.questions[1].explanations.D, /错配/);
+  for (const [token, number, meaning] of [["fortune", 8, /命运/], ["patient", 14, /耐心/], ["power", 22, /权力/], ["held", 15, /榜样/], ["downstairs", 28, /下层/], ["appreciation", 24, /理解/], ["Smiles", 13, /斯迈尔斯/]]) assert.match(study.resolveEntry(token, false, "2012-p5-s" + number).contextualMeaning, meaning);
+  assert.equal(lexicon.canonicalLemma("lives", { articleId: "2012-p5" }), "life");
+  assert.equal(lexicon.canonicalLemma("writing", { articleId: "2012-p5" }), "writing");
+});
 
 function checkReadingSource(id, startNumber, sentenceCount, key) {
   const article = data.articleContents[id];

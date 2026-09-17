@@ -1,3 +1,4 @@
+import { passage2012P5Sentences, passage2012P5Questions } from "./2012-passage-5-data";
 import { passage2012P4Sentences, passage2012P4Questions } from "./2012-passage-4-data";
 import { passage2012P3Sentences, passage2012P3Questions } from "./2012-passage-3-data";
 import { passage2012P1Sentences, passage2012P1Questions } from "./2012-passage-1-data";
@@ -251,6 +252,7 @@ export const sectionsByYear = {
     { id: "2012-p1", label: "阅读 Text 1", meta: "18句 · 5题", status: "ready" },
     { id: "2012-p3", label: "阅读 Text 3", meta: "24句 · 5题", status: "ready" },
     { id: "2012-p4", label: "阅读 Text 4", meta: "18句 · 5题", status: "ready" },
+    { id: "2012-p5", label: "阅读 Part B", meta: "28句 · 5题", status: "ready" },
   ],
   2011: [
     { id: "2011-cloze", label: "完形填空", meta: "16句 · 20题", status: "ready" },
@@ -1560,7 +1562,12 @@ export const articleContents: Record<string, ArticleContent> = {
     title: "经济衰退：失业、阶层差距与社会变化", description: "18句、36—40题。区分局部好处与总体影响、名校生的反事实参照和普通人的机会损失；保留比较倒装、部分否定、双层翻译与出处中文义。",
     kind: "reading", sentences: passage2012P4Sentences, questions: passage2012P4Questions,
   },
+  "2012-p5": {
+    id: "2012-p5", year: 2012, sectionId: "p5", label: "阅读 Part B", badge: "2012 · 英语二 · 阅读 Part B",
+    title: "从伟人传记到民众史", description: "28句，41—45人物匹配，保留共享A—G七选项和两项多余；逐句区分人物观点及历史传统。",
+    kind: "reading", sentences: passage2012P5Sentences, questions: passage2012P5Questions,
+  },
 };
 
-export const allSentences = [...verifiedClozeSentences, ...verifiedPassage1Sentences, ...verifiedPassage2Sentences, ...verifiedPassage3Sentences, ...verifiedPassage4Sentences, ...verifiedPassage5Sentences, ...verifiedTranslationSentences, ...cloze2001Sentences, ...passage2001P1Sentences, ...passage2001P2Sentences, ...cloze2010Sentences, ...passage2010P1Sentences, ...passage2010P2Sentences, ...passage2010P3Sentences, ...passage2010P4Sentences, ...passage2010P5Sentences, ...translation2010Sentences, ...cloze2011Sentences, ...passage2011P1Sentences, ...passage2011P2Sentences, ...passage2011P3Sentences, ...passage2011P4Sentences, ...passage2011P5Sentences, ...translation2011Sentences, ...writing2011ASentences, ...writing2011BSentences, ...cloze2012Sentences, ...passage2012P1Sentences, ...passage2012P3Sentences, ...passage2012P4Sentences];
-export const allQuestions = [...verifiedClozeQuestions, ...verifiedPassage1Questions, ...verifiedPassage2Questions, ...verifiedPassage3Questions, ...verifiedPassage4Questions, ...verifiedPassage5Questions, ...cloze2001Questions, ...passage2001P1Questions, ...passage2001P2Questions, ...cloze2010Questions, ...passage2010P1Questions, ...passage2010P2Questions, ...passage2010P3Questions, ...passage2010P4Questions, ...passage2010P5Questions, ...cloze2011Questions, ...passage2011P1Questions, ...passage2011P2Questions, ...passage2011P3Questions, ...passage2011P4Questions, ...passage2011P5Questions, ...cloze2012Questions, ...passage2012P1Questions, ...passage2012P3Questions, ...passage2012P4Questions];
+export const allSentences = [...verifiedClozeSentences, ...verifiedPassage1Sentences, ...verifiedPassage2Sentences, ...verifiedPassage3Sentences, ...verifiedPassage4Sentences, ...verifiedPassage5Sentences, ...verifiedTranslationSentences, ...cloze2001Sentences, ...passage2001P1Sentences, ...passage2001P2Sentences, ...cloze2010Sentences, ...passage2010P1Sentences, ...passage2010P2Sentences, ...passage2010P3Sentences, ...passage2010P4Sentences, ...passage2010P5Sentences, ...translation2010Sentences, ...cloze2011Sentences, ...passage2011P1Sentences, ...passage2011P2Sentences, ...passage2011P3Sentences, ...passage2011P4Sentences, ...passage2011P5Sentences, ...translation2011Sentences, ...writing2011ASentences, ...writing2011BSentences, ...cloze2012Sentences, ...passage2012P1Sentences, ...passage2012P3Sentences, ...passage2012P4Sentences, ...passage2012P5Sentences];
+export const allQuestions = [...verifiedClozeQuestions, ...verifiedPassage1Questions, ...verifiedPassage2Questions, ...verifiedPassage3Questions, ...verifiedPassage4Questions, ...verifiedPassage5Questions, ...cloze2001Questions, ...passage2001P1Questions, ...passage2001P2Questions, ...cloze2010Questions, ...passage2010P1Questions, ...passage2010P2Questions, ...passage2010P3Questions, ...passage2010P4Questions, ...passage2010P5Questions, ...cloze2011Questions, ...passage2011P1Questions, ...passage2011P2Questions, ...passage2011P3Questions, ...passage2011P4Questions, ...passage2011P5Questions, ...cloze2012Questions, ...passage2012P1Questions, ...passage2012P3Questions, ...passage2012P4Questions, ...passage2012P5Questions];
