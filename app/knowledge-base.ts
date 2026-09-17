@@ -1,3 +1,4 @@
+import { passage2012P1PhraseGuides, passage2012P1PhraseAliases, passage2012P1PhraseGlosses, getPassage2012P1WordKnowledge } from "./2012-passage-1-knowledge";
 import { cloze2012PhraseGuides, cloze2012PhraseAliases, cloze2012PhraseGlosses, getCloze2012WordKnowledge } from "./2012-cloze-knowledge";
 import { writing2011BPhraseGuides, writing2011BPhraseAliases, writing2011BPhraseGlosses, getWriting2011BWordKnowledge } from "./2011-writing-b-knowledge";
 import { writing2011APhraseGuides, writing2011APhraseAliases, writing2011APhraseGlosses, getWriting2011AWordKnowledge } from "./2011-writing-a-knowledge";
@@ -544,6 +545,7 @@ const collocationGlosses: Record<string, { meaning: string; note?: string }> = {
 };
 
 const familyGlosses: Record<string, string> = {
+  imply: "v. 暗示；意味着，implication为相应名词，二者不合并原形统计。",
   strong: "强壮的；强烈的；有实力的",
   strength: "力量；实力；优点",
   strengthen: "加强；增强",
@@ -872,6 +874,14 @@ for (const [key, value] of Object.entries(cloze2012PhraseGlosses)) {
   if (!collocationGlosses[key]) collocationGlosses[key] = value;
 }
 
+for (const [key, value] of Object.entries(passage2012P1PhraseGuides)) {
+  if (!phraseGuides[key]) phraseGuides[key] = value;
+}
+Object.assign(phraseAliases, passage2012P1PhraseAliases);
+for (const [key, value] of Object.entries(passage2012P1PhraseGlosses)) {
+  if (!collocationGlosses[key]) collocationGlosses[key] = value;
+}
+
 for (const [key, value] of Object.entries(cloze2011PhraseGuides)) {
   if (!phraseGuides[key]) phraseGuides[key] = value;
 }
@@ -1002,6 +1012,10 @@ export function getWordKnowledge(headword: string, context?: { articleId?: strin
   }
   if (context?.articleId === "2012-cloze") {
     const contextualKnowledge = getCloze2012WordKnowledge(normalized(headword), context.sentenceId);
+    if (contextualKnowledge) return contextualKnowledge;
+  }
+  if (context?.articleId === "2012-p1") {
+    const contextualKnowledge = getPassage2012P1WordKnowledge(normalized(headword), context.sentenceId);
     if (contextualKnowledge) return contextualKnowledge;
   }
   if (context?.articleId === "2011-cloze") {

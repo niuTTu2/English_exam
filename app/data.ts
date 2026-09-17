@@ -1,3 +1,4 @@
+import { passage2012P1Sentences, passage2012P1Questions } from "./2012-passage-1-data";
 import { cloze2012Sentences, cloze2012Questions } from "./2012-cloze-data";
 import { writing2011BSentences, writing2011BTasks } from "./2011-writing-b-data";
 import { writing2011ASentences, writing2011ATasks } from "./2011-writing-a-data";
@@ -245,6 +246,7 @@ export const sectionsByYear = {
   ],
   2012: [
     { id: "2012-cloze", label: "完形填空", meta: "16句 · 20题", status: "ready" },
+    { id: "2012-p1", label: "阅读 Text 1", meta: "18句 · 5题", status: "ready" },
   ],
   2011: [
     { id: "2011-cloze", label: "完形填空", meta: "16句 · 20题", status: "ready" },
@@ -1539,7 +1541,12 @@ export const articleContents: Record<string, ArticleContent> = {
     title: "G.I. Joe：普通军人的真实形象", description: "16句、20题。按原卷核对军人经历、名称来源和影视形象；第7题记录参考答案依据，不将历史时点的说法误作今日事实。",
     kind: "cloze", sentences: cloze2012Sentences, questions: cloze2012Questions,
   },
+  "2012-p1": {
+    id: "2012-p1", year: 2012, sectionId: "p1", label: "阅读 Text 1", badge: "2012 · 英语二 · 阅读 Text 1",
+    title: "家庭作业：一刀切计分政策的缺陷", description: "18句、21—25题。区分作业数量、计分权重与教育价值；保留四项解析、双层翻译、句法和熟词多义。",
+    kind: "reading", sentences: passage2012P1Sentences, questions: passage2012P1Questions,
+  },
 };
 
-export const allSentences = [...verifiedClozeSentences, ...verifiedPassage1Sentences, ...verifiedPassage2Sentences, ...verifiedPassage3Sentences, ...verifiedPassage4Sentences, ...verifiedPassage5Sentences, ...verifiedTranslationSentences, ...cloze2001Sentences, ...passage2001P1Sentences, ...passage2001P2Sentences, ...cloze2010Sentences, ...passage2010P1Sentences, ...passage2010P2Sentences, ...passage2010P3Sentences, ...passage2010P4Sentences, ...passage2010P5Sentences, ...translation2010Sentences, ...cloze2011Sentences, ...passage2011P1Sentences, ...passage2011P2Sentences, ...passage2011P3Sentences, ...passage2011P4Sentences, ...passage2011P5Sentences, ...translation2011Sentences, ...writing2011ASentences, ...writing2011BSentences, ...cloze2012Sentences];
-export const allQuestions = [...verifiedClozeQuestions, ...verifiedPassage1Questions, ...verifiedPassage2Questions, ...verifiedPassage3Questions, ...verifiedPassage4Questions, ...verifiedPassage5Questions, ...cloze2001Questions, ...passage2001P1Questions, ...passage2001P2Questions, ...cloze2010Questions, ...passage2010P1Questions, ...passage2010P2Questions, ...passage2010P3Questions, ...passage2010P4Questions, ...passage2010P5Questions, ...cloze2011Questions, ...passage2011P1Questions, ...passage2011P2Questions, ...passage2011P3Questions, ...passage2011P4Questions, ...passage2011P5Questions, ...cloze2012Questions];
+export const allSentences = [...verifiedClozeSentences, ...verifiedPassage1Sentences, ...verifiedPassage2Sentences, ...verifiedPassage3Sentences, ...verifiedPassage4Sentences, ...verifiedPassage5Sentences, ...verifiedTranslationSentences, ...cloze2001Sentences, ...passage2001P1Sentences, ...passage2001P2Sentences, ...cloze2010Sentences, ...passage2010P1Sentences, ...passage2010P2Sentences, ...passage2010P3Sentences, ...passage2010P4Sentences, ...passage2010P5Sentences, ...translation2010Sentences, ...cloze2011Sentences, ...passage2011P1Sentences, ...passage2011P2Sentences, ...passage2011P3Sentences, ...passage2011P4Sentences, ...passage2011P5Sentences, ...translation2011Sentences, ...writing2011ASentences, ...writing2011BSentences, ...cloze2012Sentences, ...passage2012P1Sentences];
+export const allQuestions = [...verifiedClozeQuestions, ...verifiedPassage1Questions, ...verifiedPassage2Questions, ...verifiedPassage3Questions, ...verifiedPassage4Questions, ...verifiedPassage5Questions, ...cloze2001Questions, ...passage2001P1Questions, ...passage2001P2Questions, ...cloze2010Questions, ...passage2010P1Questions, ...passage2010P2Questions, ...passage2010P3Questions, ...passage2010P4Questions, ...passage2010P5Questions, ...cloze2011Questions, ...passage2011P1Questions, ...passage2011P2Questions, ...passage2011P3Questions, ...passage2011P4Questions, ...passage2011P5Questions, ...cloze2012Questions, ...passage2012P1Questions];

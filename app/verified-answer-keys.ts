@@ -1,3 +1,8 @@
+export const verifiedAnswerKey2012Passage1: Record<number, "A" | "B" | "C" | "D"> = { 21: "A", 22: "C", 23: "D", 24: "B", 25: "A" };
+export const verifiedAnswerSources2012Passage1 = [
+  { range: "21—25：A C D B A；23题D依据作业计分权重与动力的关系，C泛称教育权力未采用", label: "哈尔滨工程大学网站所载《2012年英语（二）试题解析》4—5页，教学参考非官方标准", url: "https://zyxw.hrbeu.edu.cn/__local/B/D4/EA/811048CF9A6D978F3D55818782D_15D0DB51_FF24B.pdf" },
+];
+
 export const verifiedAnswerKey2012Cloze: Record<number, "A" | "B" | "C" | "D"> = { 1: "A", 2: "B", 3: "D", 4: "A", 5: "C", 6: "D", 7: "C", 8: "A", 9: "C", 10: "B", 11: "D", 12: "C", 13: "C", 14: "A", 15: "D", 16: "A", 17: "B", 18: "C", 19: "B", 20: "D" };
 export const verifiedAnswerSources2012Cloze = [
   { range: "1—20；第7题明确列C symbolizing，B meaning语法上亦可成立，不能虚构排除规则", label: "哈尔滨工程大学网站所载《2012年英语（二）试题解析》1—3页（教学参考，非官方阅卷标准）", url: "https://zyxw.hrbeu.edu.cn/__local/B/D4/EA/811048CF9A6D978F3D55818782D_15D0DB51_FF24B.pdf" },

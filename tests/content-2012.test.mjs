@@ -17,6 +17,38 @@ const tokens = text => text.match(/[a-z]+(?:\d+[a-z]*)+\b|\d+(?:st|nd|rd|th)\b|\
 const articles = Object.values(data.articleContents).filter(article => article.year === 2012);
 const sourceHash = "b91cfe8e6a3eb63b02fc6573514e34a67937bf8160a5712ce640315e2da306f9";
 
+function checkReadingSource(id, startNumber, sentenceCount, key) {
+  const article = data.articleContents[id];
+  const fixture = JSON.parse(readFileSync(new URL('./fixtures/' + id + '.json', import.meta.url), "utf8"));
+  assert.equal(fixture.sha256, sourceHash);
+  assert.equal(article.sentences.length, sentenceCount);
+  assert.equal(normalize(article.sentences.map(sentence => sentence.text).join(" ")), normalize(fixture.paragraphs.map(row => row.text).join(" ")));
+  assert.equal(article.questions.length, 5);
+  article.questions.forEach((question, index) => {
+    assert.equal(question.id, 201200 + startNumber + index);
+    assert.equal(question.number, startNumber + index);
+    assert.equal(question.answer, key[question.number]);
+    assert.equal(question.prompt, fixture.questions[index * 5].text.replace(/^\d+\.\s*/, ""));
+    assert.deepEqual(question.options.map(option => option.text), fixture.questions.slice(index * 5 + 1, index * 5 + 5).map(row => row.text.replace(/^\[\s*[A-D]\s*\]\s*/, "")));
+    assert.deepEqual(Object.keys(question.explanations), ["A", "B", "C", "D"]);
+  });
+}
+
+test("2012Text1原卷、政策限定与嵌套从句准确", () => {
+  checkReadingSource("2012-p1", 21, 18, answers.verifiedAnswerKey2012Passage1);
+  const article = data.articleContents["2012-p1"];
+  assert.equal(article.sentences[2].beginnerSyntax.clauses.length, 2);
+  assert.equal(article.sentences[6].beginnerSyntax.clauses.length, 3);
+  assert.equal(article.sentences[15].beginnerSyntax.clauses.length, 4);
+  assert.match(article.questions[2].explanations.C, /泛化|范围/);
+  assert.match(article.sentences[13].natural, /如果/);
+  assert.match(article.sentences[14].natural, /若/);
+  for (const [token, number, meaning] of [["address", 4, /处理/], ["pass", 7, /放过/], ["well", 10, /表现|好/], ["works", 12, /奏效/], ["matters", 15, /重要/], ["matter", 17, /这件事/], ["right", 18, /正确|妥当/]]) assert.match(study.resolveEntry(token, false, '2012-p1-s' + number).contextualMeaning, meaning);
+  assert.match(study.resolveEntry("questioned", false, "question-201213-option-D").partOfSpeech, /v/);
+  assert.match(study.resolveEntry("questions", false, "2012-p1-s13").partOfSpeech, /n/);
+  assert.match(study.resolveEntry("articles", false, "2012-cloze-s5").contextualMeaning, /物品/);
+});
+
 test("2012每篇真实来源词卡、从句边界与年度出处有效", () => {
   assert.ok(articles.length > 0);
   for (const article of articles) {
