@@ -15,6 +15,30 @@ const study = await vite.ssrLoadModule("/app/study-app.tsx");
 const normalize = value => value.replace(/\s+/g, " ").replace(/\s+([,.;?!])/g, "$1").trim();
 const cloze = data.articleContents["2011-cloze"];
 
+test("2011英译汉46为三段七句整篇，保留约数、单位和指代", () => {
+  const article = data.articleContents["2011-translation"];
+  const fixture = JSON.parse(readFileSync(new URL("./fixtures/2011-translation.json", import.meta.url), "utf8"));
+  assert.equal(article.sentences.length, 7);
+  assert.equal(article.questions.length, 0);
+  assert.equal(article.translationTasks.length, 1);
+  const task = article.translationTasks[0];
+  assert.equal(task.id, 201146);
+  assert.equal(task.number, 46);
+  assert.equal(task.points, 15);
+  assert.equal(task.format, "passage");
+  assert.deepEqual(task.paragraphs.map(paragraph => paragraph.length), [1, 4, 2]);
+  assert.equal(task.source, fixture.paragraphs.map(row => row.text).join("\n\n"));
+  assert.equal(task.answer.split("\n\n").length, 3);
+  assert.match(article.sentences[0].natural, /约.*2%/);
+  assert.match(article.sentences[2].natural, /0\.2至7\.0克/);
+  assert.match(article.sentences[4].natural, /同时/);
+  assert.match(article.sentences[6].natural, /不应只是大企业/);
+  for (const [token, number, meaning] of [["IT", 1, /信息技术/], ["volume", 1, /总量|数量/], ["do", 1, /代替|排放/], ["toll", 2, /损害|代价/], ["then", 4, /因此/], ["While", 5, /同时/], ["which", 5, /制冷/], ["done", 7, /完成/]]) assert.match(study.resolveEntry(token, false, `2011-translation-s${number}`).contextualMeaning, meaning);
+  assert.equal(lexicon.canonicalLemma("CO2", { articleId: article.id }), "co2");
+  assert.equal(knowledge.getPhraseKnowledge("a great deal of heat").key, knowledge.getPhraseKnowledge("A great deal of attention").key);
+  assert.ok(study.resolveEntry("right", false, "2011-translation-s3").contextualSubstitutions[0].rewrittenSentence.includes('"correct" answer'));
+});
+
 test("2011PartB保留21句、五人物、共享七项且只有A/F多余", () => {
   const article = data.articleContents["2011-p5"];
   const fixture = JSON.parse(readFileSync(new URL("./fixtures/2011-p5.json", import.meta.url), "utf8"));

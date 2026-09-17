@@ -1,3 +1,4 @@
+import { translation2011Sentences, translation2011Tasks } from "./2011-translation-data";
 import { passage2011P5Sentences, passage2011P5Questions } from "./2011-passage-5-data";
 import { passage2011P4Sentences, passage2011P4Questions } from "./2011-passage-4-data";
 import { passage2011P3Sentences, passage2011P3Questions } from "./2011-passage-3-data";
@@ -229,6 +230,7 @@ export const sectionsByYear = {
     { id: "2011-p3", label: "阅读 Text 3", meta: "17句 · 5题", status: "ready" },
     { id: "2011-p4", label: "阅读 Text 4", meta: "17句 · 5题", status: "ready" },
     { id: "2011-p5", label: "阅读 Part B", meta: "21句 · 5题", status: "ready" },
+    { id: "2011-translation", label: "英译汉", meta: "7句 · 1题 · 15分", status: "ready" },
   ],
   2010: [
     { id: "2010-cloze", label: "完形填空", meta: "13句 · 20题", status: "ready" },
@@ -1495,7 +1497,11 @@ export const articleContents: Record<string, ArticleContent> = {
     id: "2011-p5", year: 2011, sectionId: "p5", label: "阅读 Part B", badge: "2011 · 英语二 · Part B", title: "公共健康政策：五个人物的不同主张",
     description: "第41—45题，21句。保留共享A—G七选项与两项多余；区分发言人、批评者和被批评者的观点，不重复统计共用选项。", kind: "reading", sentences: passage2011P5Sentences, questions: passage2011P5Questions,
   },
+  "2011-translation": {
+    id: "2011-translation", year: 2011, sectionId: "translation", label: "英译汉", badge: "2011 · 英语二 · 第46题", title: "数字生活的碳排放与减排责任",
+    description: "三段七句，整篇一次作答，15分。辨析约数比较、数据单位、制冷耗能因果与不只是企业的责任；参考译文不作自动评分。", kind: "translation", sentences: translation2011Sentences, questions: [], translationTasks: translation2011Tasks,
+  },
 };
 
-export const allSentences = [...verifiedClozeSentences, ...verifiedPassage1Sentences, ...verifiedPassage2Sentences, ...verifiedPassage3Sentences, ...verifiedPassage4Sentences, ...verifiedPassage5Sentences, ...verifiedTranslationSentences, ...cloze2001Sentences, ...passage2001P1Sentences, ...passage2001P2Sentences, ...cloze2010Sentences, ...passage2010P1Sentences, ...passage2010P2Sentences, ...passage2010P3Sentences, ...passage2010P4Sentences, ...passage2010P5Sentences, ...translation2010Sentences, ...cloze2011Sentences, ...passage2011P1Sentences, ...passage2011P2Sentences, ...passage2011P3Sentences, ...passage2011P4Sentences, ...passage2011P5Sentences];
+export const allSentences = [...verifiedClozeSentences, ...verifiedPassage1Sentences, ...verifiedPassage2Sentences, ...verifiedPassage3Sentences, ...verifiedPassage4Sentences, ...verifiedPassage5Sentences, ...verifiedTranslationSentences, ...cloze2001Sentences, ...passage2001P1Sentences, ...passage2001P2Sentences, ...cloze2010Sentences, ...passage2010P1Sentences, ...passage2010P2Sentences, ...passage2010P3Sentences, ...passage2010P4Sentences, ...passage2010P5Sentences, ...translation2010Sentences, ...cloze2011Sentences, ...passage2011P1Sentences, ...passage2011P2Sentences, ...passage2011P3Sentences, ...passage2011P4Sentences, ...passage2011P5Sentences, ...translation2011Sentences];
 export const allQuestions = [...verifiedClozeQuestions, ...verifiedPassage1Questions, ...verifiedPassage2Questions, ...verifiedPassage3Questions, ...verifiedPassage4Questions, ...verifiedPassage5Questions, ...cloze2001Questions, ...passage2001P1Questions, ...passage2001P2Questions, ...cloze2010Questions, ...passage2010P1Questions, ...passage2010P2Questions, ...passage2010P3Questions, ...passage2010P4Questions, ...passage2010P5Questions, ...cloze2011Questions, ...passage2011P1Questions, ...passage2011P2Questions, ...passage2011P3Questions, ...passage2011P4Questions, ...passage2011P5Questions];

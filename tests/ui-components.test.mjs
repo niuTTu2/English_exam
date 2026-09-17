@@ -125,3 +125,18 @@ test("renders sidebar skeletons deterministically", async () => {
   assert.equal(first, second);
   assert.match(first, /--skeleton-width:70%/);
 });
+
+test("2011全文翻译使用一个46题作答框及三段七句，而非七道翻译题", async () => {
+  const { TranslationTestTask } = await vite.ssrLoadModule("/app/study-app.tsx");
+  const { articleContents } = await vite.ssrLoadModule("/app/data.ts");
+  const task = articleContents["2011-translation"].translationTasks[0];
+  const props = { task, answer: "完整三段译文", onAnswer() {}, onSubmit() {}, onTerm() {} };
+  const pending = renderToStaticMarkup(React.createElement(TranslationTestTask, { ...props, submitted: false }));
+  assert.equal((pending.match(/<textarea/g) ?? []).length, 1);
+  assert.equal((pending.match(/<p><span data-sentence-id/g) ?? []).length, 3);
+  assert.match(pending, /translation-task-number">46</);
+  assert.doesNotMatch(pending, /class="translation-result"/);
+  const submitted = renderToStaticMarkup(React.createElement(TranslationTestTask, { ...props, submitted: true }));
+  assert.equal((submitted.match(/<details class="translation-analysis"/g) ?? []).length, 7);
+  assert.doesNotMatch(submitted, /<details class="translation-analysis" open/);
+});
