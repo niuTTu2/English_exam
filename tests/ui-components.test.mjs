@@ -28,6 +28,33 @@ test("写作字数辅助计数保留缩写与连字符，不混入汉字", async
   assert.equal(writingWordCount("I'm ready for university-level work in 2011."), 7);
 });
 
+test("图表作文原图在学习与自测均可读，至少150词提示不冒充评分", async () => {
+  const { WritingPromptChart, WritingTestTask } = await vite.ssrLoadModule("/app/study-app.tsx");
+  const { articleContents } = await vite.ssrLoadModule("/app/data.ts");
+  const task = articleContents["2011-writing-b"].writingTasks[0];
+  const chart = renderToStaticMarkup(React.createElement(WritingPromptChart, { task }));
+  assert.match(chart, /src="\/exams\/2011-writing-b-original\.jpg"/);
+  assert.match(chart, /alt="原卷柱状图/);
+  assert.match(chart, /不是精确标签/);
+  assert.match(chart, /scope="col">2008年/);
+  assert.match(chart, /scope="col">2009年/);
+  assert.equal((chart.match(/scope="row"/g) ?? []).length, 3);
+  assert.doesNotMatch(chart, /<details[^>]*open/);
+  const props = { task, answer: "The chart shows market shares.", onAnswer() {}, onSubmit() {}, onEdit() {}, onTerm() {}, submitted: false };
+  const pending = renderToStaticMarkup(React.createElement(WritingTestTask, props));
+  assert.equal((pending.match(/<textarea/g) ?? []).length, 1);
+  assert.equal((pending.match(/<img/g) ?? []).length, 1);
+  assert.match(pending, /至少150词/);
+  assert.match(pending, /尚未达到原题最低字数/);
+  assert.doesNotMatch(pending, /参考范文与逐段说明|One possible explanation/);
+  const adequate = renderToStaticMarkup(React.createElement(WritingTestTask, { ...props, answer: task.sample.english.join("\n\n") }));
+  assert.doesNotMatch(adequate, /尚未达到原题最低字数/);
+  const submitted = renderToStaticMarkup(React.createElement(WritingTestTask, { ...props, submitted: true }));
+  assert.equal((submitted.match(/<img/g) ?? []).length, 1);
+  assert.match(submitted, /不作自动评分/);
+  assert.doesNotMatch(submitted, /<details[^>]*open/);
+});
+
 test("2011书信自测只有一个输入框，提交前不泄露范文，提交后折叠并可继续修改", async () => {
   const { WritingTestTask, WritingStudyGuide } = await vite.ssrLoadModule("/app/study-app.tsx");
   const { articleContents } = await vite.ssrLoadModule("/app/data.ts");

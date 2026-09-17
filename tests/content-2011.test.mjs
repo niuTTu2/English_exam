@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 import test, { after } from "node:test";
 import { fileURLToPath } from "node:url";
 import { createServer } from "vite";
@@ -14,6 +15,67 @@ const answers = await vite.ssrLoadModule("/app/verified-answer-keys.ts");
 const study = await vite.ssrLoadModule("/app/study-app.tsx");
 const normalize = value => value.replace(/\s+/g, " ").replace(/\s+([,.;?!])/g, "$1").trim();
 const cloze = data.articleContents["2011-cloze"];
+
+test("2011图表作文48保留四句原题、原图字节、近似精度与最低字数", () => {
+  const article = data.articleContents["2011-writing-b"];
+  const fixture = JSON.parse(readFileSync(new URL("./fixtures/2011-writing-b.json", import.meta.url), "utf8"));
+  assert.equal(fixture.sha256, "c6c645b0aae768130cf35d6ace0bc86f3be31d946f4e7396a95168eb68988c82");
+  assert.equal(article.kind, "writing");
+  assert.equal(article.sentences.length, 4);
+  assert.equal(article.questions.length, 0);
+  assert.equal(normalize(article.sentences.map(sentence => sentence.text).join(" ")), normalize(fixture.paragraphs.map(row => row.text).join(" ")));
+  assert.equal(article.writingTasks.length, 1);
+  const task = article.writingTasks[0];
+  assert.equal(task.id, 201148);
+  assert.equal(task.number, 48);
+  assert.equal(task.genre, "chart-essay");
+  assert.equal(task.points, 15);
+  assert.deepEqual(task.wordLimit, { mode: "at-least", count: 150 });
+  assert.deepEqual(task.instructions, article.sentences);
+  assert.equal(task.chart.src, fixture.image.path);
+  const image = readFileSync(new URL(`../public${task.chart.src}`, import.meta.url));
+  assert.equal(createHash("sha256").update(image).digest("hex"), fixture.image.sha256);
+  assert.match(task.chart.note, /遮挡/);
+  assert.match(task.chart.note, /近似值/);
+  assert.match(task.chart.alt, /部分品牌/);
+  assert.deepEqual(task.chart.rows, [{ brand: "国产品牌", before: "略高于25%", after: "略高于30%" }, { brand: "日系品牌", before: "接近35%", after: "略高于25%" }, { brand: "美系品牌", before: "约10%", after: "约10%" }]);
+  const sample = task.sample.english.join(" ");
+  assert.ok(study.writingWordCount(sample) >= 150);
+  assert.equal(task.sample.english.length, 3);
+  assert.equal(task.sample.chinese.length, 3);
+  assert.equal(task.sample.notes.length, 3);
+  assert.match(sample, /market shares/);
+  assert.match(sample, /possible explanation/);
+  assert.match(sample, /might/);
+  assert.match(sample, /chart alone does not explain/);
+  assert.doesNotMatch(sample, /Dear|Yours|Zhang Wei|Li Ming/);
+  assert.ok(task.pitfalls.some(item => /绝对销量/.test(item)));
+  assert.ok(task.pitfalls.some(item => /100%/.test(item)));
+  assert.ok(!data.allSentences.some(sentence => task.sample.english.includes(sentence.text)));
+  for (const [token, number, meaning] of [["based", 1, /依据/], ["on", 1, /依据/], ["following", 1, /下面|下列/], ["writing", 2, /作文|写作/], ["comments", 2, /评论/], ["least", 3, /至少/], ["on", 4, /在/], ["points", 4, /分/]]) assert.match(study.resolveEntry(token, false, `2011-writing-b-s${number}`).contextualMeaning, meaning);
+  assert.equal(lexicon.canonicalLemma("writing", { articleId: article.id }), "writing");
+  assert.equal(lexicon.canonicalLemma("Write", { articleId: article.id }), "write");
+  assert.equal(knowledge.getPhraseKnowledge("based on the following chart").key, knowledge.getPhraseKnowledge("be based on").key);
+  assert.equal(knowledge.getPhraseKnowledge("at least 150 words").key, knowledge.getPhraseKnowledge("at least").key);
+  assert.match(study.resolveEntry("offer", false, "2011-writing-b-s2").contextualMeaning, /提出/);
+  assert.equal(study.resolveEntry("give", false, "2011-writing-b-s2").contextualSubstitutions[0].rewrittenSentence, "In your writing, you should 1)interpret the chart and 2)offer your comments.");
+});
+
+test("2011整卷九个模块连续覆盖1—48题，全部进入年度索引", () => {
+  const articles = Object.values(data.articleContents).filter(article => article.year === 2011);
+  assert.equal(articles.length, 9);
+  assert.equal(articles.flatMap(article => article.sentences).length, 137);
+  assert.deepEqual(data.sectionsByYear[2011].map(section => section.id), articles.map(article => article.id));
+  const tasks = articles.flatMap(article => [...article.questions, ...(article.translationTasks ?? []), ...(article.writingTasks ?? [])]);
+  assert.deepEqual(tasks.map(task => task.number).sort((left, right) => left - right), Array.from({ length: 48 }, (_, index) => index + 1));
+  assert.equal(new Set(tasks.map(task => task.id)).size, 48);
+  for (const task of tasks) assert.equal(task.id, 201100 + task.number);
+  const yearWords = study.buildYearWordItems(2011);
+  for (const article of articles) assert.ok(yearWords.some(word => word.contexts.some(context => context.sentenceId.startsWith(`${article.id}-`))), `${article.id} 应进入年度词表`);
+  const writingWord = yearWords.find(word => word.contexts.some(context => context.sentenceId === "2011-writing-b-s2" && context.sourceForm.toLowerCase() === "writing"));
+  assert.ok(writingWord);
+  assert.ok(writingWord.contexts.some(context => /作文|写作/.test(context.meaning)));
+});
 
 test("2011书信47完整保留原题六句、约100词和署名限制，范文不计考频", () => {
   const article = data.articleContents["2011-writing-a"];

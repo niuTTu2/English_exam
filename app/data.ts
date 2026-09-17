@@ -1,3 +1,4 @@
+import { writing2011BSentences, writing2011BTasks } from "./2011-writing-b-data";
 import { writing2011ASentences, writing2011ATasks } from "./2011-writing-a-data";
 import { translation2011Sentences, translation2011Tasks } from "./2011-translation-data";
 import { passage2011P5Sentences, passage2011P5Questions } from "./2011-passage-5-data";
@@ -250,6 +251,7 @@ export const sectionsByYear = {
     { id: "2011-p5", label: "阅读 Part B", meta: "21句 · 5题", status: "ready" },
     { id: "2011-translation", label: "英译汉", meta: "7句 · 1题 · 15分", status: "ready" },
     { id: "2011-writing-a", label: "写作 Part A", meta: "书信 · 第47题 · 10分", status: "ready" },
+    { id: "2011-writing-b", label: "写作 Part B", meta: "图表作文 · 第48题 · 15分", status: "ready" },
   ],
   2010: [
     { id: "2010-cloze", label: "完形填空", meta: "13句 · 20题", status: "ready" },
@@ -1524,7 +1526,11 @@ export const articleContents: Record<string, ArticleContent> = {
     id: "2011-writing-a", year: 2011, sectionId: "writing-a", label: "写作 Part A", badge: "2011 · 英语二 · 第47题", title: "祝贺大学录取与入学准备建议",
     description: "约100词书信，10分。原题六句指令逐句精读；独立写作、草稿保存、字数提示、参考范文与逐段说明，不作自动评分。", kind: "writing", sentences: writing2011ASentences, questions: [], writingTasks: writing2011ATasks,
   },
+  "2011-writing-b": {
+    id: "2011-writing-b", year: 2011, sectionId: "writing-b", label: "写作 Part B", badge: "2011 · 英语二 · 第48题", title: "轿车市场份额：图表解读与谨慎评论",
+    description: "至少150词，15分。原样保留2008—2009年原卷柱状图；以可辨认约数描述趋势，区分份额与销量、事实与可能原因。附参考范文和逐段指导，不自动评分。", kind: "writing", sentences: writing2011BSentences, questions: [], writingTasks: writing2011BTasks,
+  },
 };
 
-export const allSentences = [...verifiedClozeSentences, ...verifiedPassage1Sentences, ...verifiedPassage2Sentences, ...verifiedPassage3Sentences, ...verifiedPassage4Sentences, ...verifiedPassage5Sentences, ...verifiedTranslationSentences, ...cloze2001Sentences, ...passage2001P1Sentences, ...passage2001P2Sentences, ...cloze2010Sentences, ...passage2010P1Sentences, ...passage2010P2Sentences, ...passage2010P3Sentences, ...passage2010P4Sentences, ...passage2010P5Sentences, ...translation2010Sentences, ...cloze2011Sentences, ...passage2011P1Sentences, ...passage2011P2Sentences, ...passage2011P3Sentences, ...passage2011P4Sentences, ...passage2011P5Sentences, ...translation2011Sentences, ...writing2011ASentences];
+export const allSentences = [...verifiedClozeSentences, ...verifiedPassage1Sentences, ...verifiedPassage2Sentences, ...verifiedPassage3Sentences, ...verifiedPassage4Sentences, ...verifiedPassage5Sentences, ...verifiedTranslationSentences, ...cloze2001Sentences, ...passage2001P1Sentences, ...passage2001P2Sentences, ...cloze2010Sentences, ...passage2010P1Sentences, ...passage2010P2Sentences, ...passage2010P3Sentences, ...passage2010P4Sentences, ...passage2010P5Sentences, ...translation2010Sentences, ...cloze2011Sentences, ...passage2011P1Sentences, ...passage2011P2Sentences, ...passage2011P3Sentences, ...passage2011P4Sentences, ...passage2011P5Sentences, ...translation2011Sentences, ...writing2011ASentences, ...writing2011BSentences];
 export const allQuestions = [...verifiedClozeQuestions, ...verifiedPassage1Questions, ...verifiedPassage2Questions, ...verifiedPassage3Questions, ...verifiedPassage4Questions, ...verifiedPassage5Questions, ...cloze2001Questions, ...passage2001P1Questions, ...passage2001P2Questions, ...cloze2010Questions, ...passage2010P1Questions, ...passage2010P2Questions, ...passage2010P3Questions, ...passage2010P4Questions, ...passage2010P5Questions, ...cloze2011Questions, ...passage2011P1Questions, ...passage2011P2Questions, ...passage2011P3Questions, ...passage2011P4Questions, ...passage2011P5Questions];

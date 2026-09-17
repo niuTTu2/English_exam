@@ -1,0 +1,33 @@
+{
+  "source": "考研英语二2011年真题（整卷）.docx",
+  "sha256": "c6c645b0aae768130cf35d6ace0bc86f3be31d946f4e7396a95168eb68988c82",
+  "paragraphs": [
+    {
+      "index": 290,
+      "text": "Write an essay based on the following chart. In your writing, you should"
+    },
+    {
+      "index": 291,
+      "text": "1)interpret the chart and"
+    },
+    {
+      "index": 292,
+      "text": "2)give your comments."
+    },
+    {
+      "index": 293,
+      "text": "You should write at least 150 words."
+    },
+    {
+      "index": 294,
+      "text": "Write your essay on ANSWER SHEET 2. (15 points)"
+    }
+  ],
+  "image": {
+    "path": "/exams/2011-writing-b-original.jpg",
+    "sha256": "7f6a8aec6fa7efe4bbe6862025185631c3e74d120d3beaba15f9c4230f402115",
+    "width": 833,
+    "height": 553,
+    "note": "柱顶数字遮挡，仅从纵轴估读近似值。"
+  }
+}
