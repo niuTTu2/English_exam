@@ -5,8 +5,9 @@ import { OriginalPassage } from "./original-passage";
 import { ArticleGuidePanel } from "./article-guide-panel";
 import { QuestionEvidencePanel } from "./question-evidence-panel";
 import { SentencePracticePanel } from "./sentence-practice-panel";
+import { trainingSources, articleMapSource } from "./training-sources";
 import { TrainingReview } from "./training-review";
-import { emptyReflection, latestTaskAttempt, practiceMetrics, activePracticeSession, continuePracticeSession, addPracticeHint, hintAffectsTask, makePracticeAttempt, taskKey, type HintType, type PracticeSession, type PracticeSessions, type PracticeAttempts, type PracticeTask, type LearningReflection, type QuestionWork } from "./learning-model";
+import { emptyReflection, latestTaskAttempt, practiceMetrics, activePracticeSession, continuePracticeSession, addPracticeHint, practiceHintTargets, makePracticeAttempt, type HintType, type PracticeSession, type PracticeSessions, type PracticeAttempts, type PracticeTask, type LearningReflection, type QuestionWork } from "./learning-model";
 import { makeLocationAttempt, locationHistory, type LocationAttempts } from "./location-model";
 import { QuestionLocationPractice } from "./question-location-practice";
 import { vocabularyPriority } from "./vocabulary-priority";
@@ -78,6 +79,7 @@ import {
   questionOptionSourceId,
   type SentenceChunk,
   type ArticleContent,
+  type AnyQuestion,
   type TranslationTask,
   type WritingTask,
   translationTaskSentences,
@@ -1168,6 +1170,7 @@ export default function StudyApp() {
   const studiedCount = sentences.filter((sentence) => expanded.has(sentence.id)).length;
   const hasPractice = sentences.some(sentence => sentence.practice?.length);
   const trainingMetrics = practiceMetrics(sentences, practiceAttempts, reviewNow);
+  const trainingDue = practiceMetrics(trainingSources(activeArticle), practiceAttempts, reviewNow).due;
   const studiedProgress = Math.round(((hasPractice ? trainingMetrics.completed : studiedCount) / sentences.length) * 100);
   function savePracticeSession(articleId: string, session: PracticeSession) {
     practiceSessionsRef.current = { ...practiceSessionsRef.current, [articleId]: session };
@@ -1181,23 +1184,21 @@ export default function StudyApp() {
   }
   function recordPracticeHint(article: ArticleContent, type: HintType, source: string, at: number, sentenceId?: string, feedbackTask?: PracticeTask) {
     const session = beginPractice(article.id, at);
-    const affected = article.sentences.filter(s => !sentenceId || s.id === sentenceId).flatMap(s => (s.practice ?? [])
-      .filter(task => feedbackTask ? task.id === feedbackTask.id || feedbackTask.leaksToTaskIds?.includes(task.id) : hintAffectsTask(task, type, source))
-      .map(task => taskKey(s.id, task)));
+    const affected = practiceHintTargets(trainingSources(article), type, source, sentenceId, feedbackTask);
     savePracticeSession(article.id, addPracticeHint(session, { id: crypto.randomUUID(), type, source, at, taskKeys: affected }));
   }
-  function recordPractice(sentence: SentenceAnalysis, task: PracticeTask, answer: string, id: string, at: number) {
+  function recordPractice(sentence: { id: string }, task: PracticeTask, answer: string, id: string, at: number) {
     const session = beginPractice(activeArticle.id, at);
     const attempt = makePracticeAttempt({ id, at, articleId: activeArticle.id, sentenceId: sentence.id, task, answer, session });
     setPracticeAttempts(current => ({ ...current, [id]: attempt }));
     recordPracticeHint(activeArticle, "previous-answer", `${sentence.id}/${task.id}`, at, sentence.id, task);
   }
   function openPracticeSentence(id: string, at: number) {
-    const article = sentenceArticle.get(id);
+    const article = sentenceArticle.get(id) ?? Object.values(articleContents).find(article => `${article.id}-map` === id);
     if (!article) return;
     beginPractice(article.id, at);
     setActiveSection(article.id); setSelectedYear(article.year); setView("study"); setExpanded(current => new Set(current).add(id));
-    window.setTimeout(() => document.getElementById(`source-${id}`)?.scrollIntoView({ behavior: "smooth", block: "start" }), 0);
+    window.setTimeout(() => { const element = document.getElementById(`source-${id}`); if (element instanceof HTMLDetailsElement) element.open = true; element?.scrollIntoView({ behavior: "smooth", block: "start" }); }, 0);
   }
   function saveLocation(question: AnyQuestion, stage: "initial" | "review" | "legacy", at: number) {
     if (!question.reasoning) return;
@@ -1822,7 +1823,7 @@ export default function StudyApp() {
                 </div>
                 <div className="paper-progress">
                   <div><span>{hasPractice ? "训练完成" : "已查看（不代表掌握）"}</span><strong>{hasPractice ? trainingMetrics.completed : studiedCount}/{sentences.length} 句</strong></div>
-                  {hasPractice && <><div><span>独立掌握（最近作答）</span><strong>{trainingMetrics.independent}/{trainingMetrics.total}句</strong></div><div><span>今日待复习</span><strong>{trainingMetrics.due}项</strong></div></>}
+                  {hasPractice && <><div><span>独立掌握（最近作答）</span><strong>{trainingMetrics.independent}/{trainingMetrics.total}句</strong></div><div><span>今日待复习</span><strong>{trainingDue}项</strong></div></>}
                   <Progress value={studiedProgress} />
                 </div>
               </>
@@ -1840,7 +1841,10 @@ export default function StudyApp() {
             </div>
 
             <TabsContent value="study" className="mode-content">
-              <ArticleGuidePanel article={activeArticle} onSentence={openPracticeSentence} onOpen={at => { recordPracticeHint(activeArticle, "article-map", "article-map", at); }} />
+              <ArticleGuidePanel key={activeArticle.id} article={activeArticle} onSentence={openPracticeSentence} onOpen={at => { recordPracticeHint(activeArticle, "article-map", "article-map", at); }}
+                attempts={practiceAttempts} session={activePracticeSession(practiceSessions[activeArticle.id], reviewNow)} onBegin={at => beginPractice(activeArticle.id, at)}
+                onAttempt={(task, answer, at) => recordPractice(articleMapSource(activeArticle), task, answer, crypto.randomUUID(), at)}
+                onPreviousAnswer={(task, at) => recordPracticeHint(activeArticle, "previous-answer", `${articleMapSource(activeArticle).id}/${task.id}`, at, articleMapSource(activeArticle).id, task)} />
               <div className="sentence-mode-controls" aria-label="原句交互方式">
                 {([["read", "读句"], ["words", "词汇"], ["structure", "结构"]] as const).map(([mode, label]) => <Button key={mode} variant={sentenceMode === mode ? "default" : "outline"} aria-pressed={sentenceMode === mode} onClick={() => setSentenceMode(mode)}>{label}</Button>)}
                 {sentenceMode === "words" && <label><input type="checkbox" checked={showPhrases} onChange={event => setShowPhrases(event.target.checked)} />显示词组入口</label>}

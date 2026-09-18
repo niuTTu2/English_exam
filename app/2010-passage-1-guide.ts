@@ -4,6 +4,11 @@ const s = (number: number) => `2010-p1-s${number}`;
 const e = (number: number, quote: string, role: string): PassageEvidence => ({ sentenceId: s(number), quote, role });
 
 export const passage2010P1Guide: ArticleGuide = {
+  practice: [
+    { id: "opening-turn", leaksToTaskIds: ["paragraph-route"], revision: 1, kind: "choice", prompt: "第一段在全文中主要起什么作用？", options: ["只展示繁荣", "用拍卖成功引出市场转折", "证明艺术市场已复苏"], answer: "用拍卖成功引出市场转折", evidence: "It was a last victory.", feedback: "成功不是首段终点：last与随后雷曼破产并置，把拍卖变成繁荣结束的标志。", conceptId: "paragraph-role", errorType: "passage-logic", mapRevealsAnswer: true },
+    { id: "supply-demand", leaksToTaskIds: ["paragraph-route"], leaksToTasks: [{ sentenceId: "2010-p1-s17", taskId: "not-but" }], revision: 1, kind: "choice", prompt: "第五段怎样解释本轮市场困境？", options: ["完全没有买家", "仍有买家，但缺少可卖的好作品", "作品太多所以卖不掉"], answer: "仍有买家，但缺少可卖的好作品", evidence: "not a lack of demand but a lack of good work to sell", feedback: "not A but B否定需求不足、强调优质供给不足；没有出售压力的人选择等待。", conceptId: "paragraph-role", errorType: "passage-logic", mapRevealsAnswer: true },
+    { id: "paragraph-route", leaksToTaskIds: ["opening-turn", "supply-demand"], revision: 1, kind: "order", prompt: "回想原文，把五段的功能排回作者展开的顺序。", options: ["繁荣的最后时刻", "此前已转弱的背景", "危机冲击的证据", "低谷中的判断", "本轮低迷的供给特点"], answer: JSON.stringify(["繁荣的最后时刻", "此前已转弱的背景", "危机冲击的证据", "低谷中的判断", "本轮低迷的供给特点"]), evidence: "The current downturn in the art market is the worst", feedback: "开头的转折事件之后，补此前背景，再写冲击证据和业内判断，最后解释本轮低迷的供需特点。", conceptId: "passage-route", errorType: "passage-logic", mapRevealsAnswer: true },
+  ],
   route: ["繁荣的最后时刻", "此前已转弱的背景", "危机冲击的证据", "低谷中的判断", "本轮低迷的供给特点"],
   mainIdea: "文章描述艺术市场由繁荣转入低迷，再解释本轮低迷仍有买家、但优质作品供给不足的特点。销量、价格、拍卖行赔付和卖家观望共同支撑主线，不能只用价格或某场拍卖概括全文。",
   paragraphs: [

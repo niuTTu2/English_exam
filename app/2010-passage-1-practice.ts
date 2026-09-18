@@ -64,6 +64,45 @@ export const passage2010P1Practice: Record<string, PracticeTask[]> = {
   ],
 };
 
+
+// 保留任务ID；改变作答方式与答案时升版，旧记录仍保留但不冒充新题通过。
+function revise(n: number, id: string, update: Partial<PracticeTask>) {
+  const task = passage2010P1Practice[`2010-p1-s${n}`].find(task => task.id === id)!;
+  Object.assign(task, update, { revision: 2 });
+}
+function range(n: number, id: string, prompt: string, answer: string) { revise(n, id, { kind: "range", prompt, answer, options: [] }); }
+function link(n: number, id: string, prompt: string, pairs: Array<[string, string]>, distractors: string[] = []) {
+  revise(n, id, { kind: "link", prompt, links: pairs.map(([source, target]) => ({ source, target })), options: [...new Set([...pairs.map(([, target]) => target), ...distractors])], answer: JSON.stringify(pairs.map(([, target]) => target)) });
+}
+function order(n: number, id: string, prompt: string, blocks: string[], distractors: string[] = []) {
+  revise(n, id, { kind: "order", prompt, options: [...blocks, ...distractors], answer: JSON.stringify(blocks) });
+}
+range(1, "subject-head", "划出完整主语，包括限定比较范围的部分。", "The longest bull run in a century of art-market history");
+revise(1, "subject-head", { feedback: "主语到history结束，中心是bull run；in a century of art-market history也在主语里，限定longest的比较范围。中心词与完整主语范围要分开。" });
+link(1, "by-attachment", "把三组介词短语连接到直接说明的名词。", [["by Damien Hirst", "works"], ["of 56 works", "sale"], ["in London", "Sotheby's"]]);
+revise(1, "by-attachment", { feedback: "作品由Hirst创作，所以by…跟works；of 56 works说明拍卖内容，跟sale；in London在这里进一步定位Sotheby's。按层连接，不能全部挂到ended。" });
+order(2, "finite-versus-ing", "用词块拼出本句的主句主干，留下非谓语补充部分。", ["All but two pieces", "sold"], ["fetching more than £70m"]);
+range(4, "as-time", "划出交代同时背景的完整时间从句（含As）。", "As the auctioneer called out bids");
+link(5, "since-attachment", "连接after结构内部的修饰关系。", [["since 2003", "rising"], ["bewilderingly", "rising"]], ["losing", "market"]);
+revise(5, "since-attachment", { feedback: "since 2003给rising标上涨起点；bewilderingly也修饰rising，说明上涨令人眼花缭乱。两者都在after内部，不跟主句losing。" });
+order(5, "duration", "按时间关系排列三块意思，不强行推断失去势头何时结束。", ["自2003年以来经历上涨", "在这轮上涨之后", "到前文过去参照点，市场已失去势头一段时间"]);
+revise(5, "duration", { feedback: "先上涨，再减弱；for a while说明失去势头的过程已持续一段时间。过去完成进行时不保证这一过程在参照点结束。", leaksToTaskIds: ["since-attachment", "tense-reference"] });
+link(6, "firm-apposition", "把两个身份说明连接回对应的人或机构。", [["founder of Arts Economics", "Clare McAndrew"], ["a research firm", "Arts Economics"]], ["the figure"]);
+range(8, "matched-role", "划出修饰way的完整过去分词短语，从matched开始。", "matched by few other industries");
+range(9, "that-subject", "划出修饰weeks and months的整个定语从句（含that）。", "that followed Mr. Hirst's sale");
+order(10, "that-reference", "重建外层主谓宾；把收藏家的行为作为一个完整内容块。", ["that", "meant", "collectors stayed away from galleries and salerooms"], ["In the art world"]);
+range(11, "year-to", "划出给第二分句限定统计区间的完整时间介词短语。", "in the year to November 2008");
+link(12, "two-hads", "把两组had结构与各自作用连接起来。", [["had to pay", "当时不得不支付"], ["had placed", "在赔付之前已委托"]], ["当时正在委托"]);
+range(13, "since-clause", "划出限定比较起点的完整since从句，保留其内部时间短语。", "since the Japanese stopped buying Impressionists at the end of 1989");
+range(14, "far-more", "划出though引导的整个让步从句（含though）。", "though some have been far more fluctuant");
+revise(14, "far-more", { feedback: "though后有some / have been / far more fluctuant这组主系表。far加强比较级more；整个从句补充部分价格波动更大，并不推翻前面的平均数。" });
+range(15, "confident-content", "划出补足confident所确信内容的完整从句。", "we're at the bottom");
+order(16, "outer-predicate", "重建外层主系表，把插入语留在词块池里。", ["What makes this slump different from the last", "is", "that there are still buyers in the market"], ["he says"]);
+range(17, "who-that", "划出said的完整主语，把who从句也包含在内。", "Almost everyone who was interviewed for this special report");
+revise(17, "who-that", { feedback: "said之前的整个名词结构是主语，中心是everyone，Almost限定范围；who…限定受访的人。said后的that引出所说内容，不属于主语。" });
+link(19, "waiting-subject", "分别连接两层非谓语动作与真正执行者。", [["waiting", "anyone who does not have to sell"], ["to return", "confidence"]], ["the market"]);
+revise(19, "waiting-subject", { feedback: "等待的人是anyone who does not have to sell；wait for confidence to return中，恢复的是confidence。外层与内层动作有不同执行者。", leaksToTaskIds: ["return-subject"] });
+
 // 查词只有命中本任务的题眼才算提示；人名查询不会污染找谓语等任务。
 const hintWordsByTask: Record<string, Record<string, string[]>> = {
   "2010-p1-s1": { "main-predicate": ["ended"], "subject-head": ["run", "bull run"], "by-attachment": ["by"] },
@@ -86,9 +125,11 @@ const hintWordsByTask: Record<string, Record<string, string[]>> = {
   "2010-p1-s18": { "dash-predicate": ["deliver"] },
   "2010-p1-s19": { "waiting-subject": ["waiting"], "return-subject": ["return", "waiting for confidence to return"] },
 };
-const mapTasks = new Set(["2010-p1-s5/tense-reference", "2010-p1-s10/that-reference", "2010-p1-s12/them-reference", "2010-p1-s17/not-but"]);
+const mapTasks = new Set(["2010-p1-s5/since-attachment", "2010-p1-s5/duration", "2010-p1-s5/tense-reference", "2010-p1-s10/that-reference", "2010-p1-s12/them-reference", "2010-p1-s17/not-but"]);
 for (const [sentenceId, tasks] of Object.entries(passage2010P1Practice)) for (const task of tasks) {
   task.hintWords = hintWordsByTask[sentenceId]?.[task.id] ?? [];
   task.mapRevealsAnswer = mapTasks.has(`${sentenceId}/${task.id}`);
   if (sentenceId === "2010-p1-s16" && task.id === "outer-predicate") task.leaksToTaskIds = ["that-role"];
 }
+
+passage2010P1Practice["2010-p1-s17"].find(t => t.id === "not-but")!.leaksToTasks = [{ sentenceId: "2010-p1-map", taskId: "supply-demand" }];

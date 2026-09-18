@@ -8,6 +8,16 @@ after(() => vite.close());
 const { articleContents } = await vite.ssrLoadModule("/app/data.ts");
 const article = articleContents["2010-p1"];
 
+function checkTaskAnswer(task, text) {
+  if (task.kind === "token") return assert.ok(text.match(/[A-Za-z]+(?:['’\-][A-Za-z]+)*/g).includes(task.answer));
+  if (task.kind === "range") return assert.ok((task.rangeText ?? text).includes(task.answer));
+  if (task.kind === "choice") return assert.ok(task.options.includes(task.answer));
+  const answer = JSON.parse(task.answer);
+  assert.ok(answer.length && answer.every(value => task.options.includes(value)));
+  if (task.kind === "link") assert.deepEqual(answer, task.links.map(link => link.target));
+  else { assert.equal(task.kind, "order"); assert.equal(new Set(answer).size, answer.length); }
+}
+
 test("声明完成的训练层必须具备可核对的结构，不能只更改完成标签", async () => {
   const { withReviewedSyntax } = await vite.ssrLoadModule("/app/reviewed-syntax.ts");
   const { grammarConcepts, errorCategories } = await vite.ssrLoadModule("/app/learning-model.ts");
@@ -38,7 +48,7 @@ test("声明完成的训练层必须具备可核对的结构，不能只更改�
           assert.ok(task.id && task.prompt && task.feedback && Number.isSafeInteger(task.revision) && task.revision > 0);
           assert.ok(Object.hasOwn(grammarConcepts, task.conceptId) && Object.hasOwn(errorCategories, task.errorType));
           evidence({ sentenceId: sentence.id, quote: task.evidence });
-          assert.ok(task.kind === "token" ? sentence.text.match(/[A-Za-z]+(?:['’\-][A-Za-z]+)*/g).includes(task.answer) : task.options.includes(task.answer));
+          checkTaskAnswer(task, sentence.text);
         }
       }
       for (const ref of item.guide.references) {
@@ -95,7 +105,9 @@ test("篇章地图覆盖原卷五段十九句，指代与时间线都能回到�
   assert.match(guide.timeline.find(event => event.label.includes("统计区间")).event, /重叠/);
   assert.match(guide.voices.find(voice => voice.speaker === "Edward Dolman").boundary, /不等于作者/);
   const { ArticleGuidePanel } = await vite.ssrLoadModule("/app/article-guide-panel.tsx");
-  const html = renderToStaticMarkup(React.createElement(ArticleGuidePanel, { article, onSentence() {} }));
+  const initial = renderToStaticMarkup(React.createElement(ArticleGuidePanel, { article, onSentence() {} }));
+  assert.match(initial, /先尝试全部3项/); assert.doesNotMatch(initial, /class="article-main-idea"|class="paragraph-map"/);
+  const html = renderToStaticMarkup(React.createElement(ArticleGuidePanel, { article: { ...article, guide: { ...guide, practice: undefined } }, onSentence() {} }));
   assert.match(html, /指代|统计区间|是谁在作判断/);
   assert.doesNotMatch(html, /<details[^>]*\sopen(?:=|\s|>)/);
 });
@@ -161,7 +173,7 @@ test("十九句任务有真实证据与稳定概念，不用展开记录充当�
       assert.ok(sentence.text.includes(task.evidence), `${sentence.id}: ${task.evidence}`);
       assert.ok(Object.hasOwn(model.grammarConcepts, task.conceptId));
       assert.ok(Object.hasOwn(model.errorCategories, task.errorType));
-      assert.ok(task.kind === "token" ? sentence.text.includes(task.answer) : task.options.includes(task.answer));
+      checkTaskAnswer(task, sentence.text);
     }
     assert.equal(model.sentencePracticeStatus(sentence.practice, {}, sentence.id), "new");
   }
@@ -292,4 +304,58 @@ test("交卷后的新定位不锁住输入，初次与复盘结果分开保存",
   assert.equal((reading.match(/class="location-sentence"/g) ?? []).length, 19);
   assert.equal((reading.match(/aria-pressed="true"/g) ?? []).length, 1);
   assert.match(reading, /完成选择，返回原题/);
+});
+
+test("复杂句有生成型任务、原文范围可操作，改版历史不冒充新任务通过", async () => {
+  const m = await vite.ssrLoadModule("/app/learning-model.ts");
+  const { PracticeTaskInput } = await vite.ssrLoadModule("/app/practice-task-input.tsx");
+  for (const n of [1, 2, 4, 5, 6, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 19]) {
+    const sentence = article.sentences[n - 1];
+    assert.ok(sentence.practice.some(t => ["range", "link", "order"].includes(t.kind)), sentence.id);
+    for (const task of sentence.practice) {
+      checkTaskAnswer(task, sentence.text);
+      if (task.kind === "range") {
+        const source = task.rangeText ?? sentence.text, tokens = m.rangeTokens(source), offset = source.indexOf(task.answer);
+        const first = tokens.findIndex(token => token.start === offset), last = tokens.findIndex(token => token.end === offset + task.answer.length);
+        assert.ok(first >= 0 && last >= first, `${sentence.id}范围端点必须可点击`);
+        assert.equal(m.selectedRange(source, first, last), task.answer);
+      }
+      if (["range", "link", "order"].includes(task.kind)) {
+        assert.equal(task.revision, 2);
+        const old = { id: "old", sentenceId: sentence.id, taskId: task.id, revision: 1, answer: task.answer, correct: true, at: 1 };
+        assert.equal(m.latestTaskAttempt({ old }, task, sentence.id), undefined);
+        const html = renderToStaticMarkup(React.createElement(PracticeTaskInput, { task, text: sentence.text, attemptNumber: 0, onAnswer() {} }));
+        assert.match(html, /提交所选范围|提交连接|提交组合/);
+        assert.doesNotMatch(html, /正确答案/);
+      }
+    }
+  }
+  assert.equal(m.selectedRange("A quick test.", 2, 0), "A quick test");
+  assert.deepEqual(m.practiceOptions(["A", "B", "C"], "task", 0), m.practiceOptions(["A", "B", "C"], "task", 0));
+  assert.notDeepEqual(m.practiceOptions(["A", "B", "C"], "task", 0), m.practiceOptions(["A", "B", "C"], "task", 1));
+});
+
+test("地图先主动回忆三项，反馈只泄露声明的任务，不扩大到全篇句法", async () => {
+  const m = await vite.ssrLoadModule("/app/learning-model.ts");
+  const { trainingSources, articleMapSource } = await vite.ssrLoadModule("/app/training-sources.ts");
+  const sources = trainingSources(article), map = articleMapSource(article);
+  assert.equal(map.practice.length, 3);
+  for (const task of map.practice) { checkTaskAnswer(task, map.text); assert.ok(map.text.includes(task.evidence)); }
+  for (const source of sources) for (const task of source.practice ?? []) {
+    for (const id of task.leaksToTaskIds ?? []) assert.ok(source.practice.some(t => t.id === id));
+    for (const leak of task.leaksToTasks ?? []) assert.ok(sources.some(s => s.id === leak.sentenceId && s.practice?.some(t => t.id === leak.taskId)));
+  }
+  const targets = m.practiceHintTargets(sources, "previous-answer", "map-feedback", map.id, map.practice[1]);
+  assert.ok(targets.some(key => key.includes("2010-p1-s17/not-but")));
+  assert.ok(!targets.some(key => key.includes("2010-p1-s1/main-predicate")));
+  const first = article.sentences[0], predicate = first.practice[0], subject = first.practice[1];
+  assert.ok(!m.practiceHintTargets(sources, "previous-answer", "first-feedback", first.id, predicate).includes(m.taskKey(first.id, subject)));
+  const { SentencePracticePanel } = await vite.ssrLoadModule("/app/sentence-practice-panel.tsx");
+  const session = { id: "map-round", startedAt: 1, lastActiveAt: 5, hints: [] };
+  const attempts = {};
+  const props = { sentence: map, attempts, session, reflection: m.emptyReflection(), revealed: false, minAttempts: 3, allowReflection: false, revealLabel: "查看完整文章地图", onAttempt() {}, onReveal() {}, onRetry() {}, onReflection() {} };
+  map.practice.forEach((task, i) => attempts[i] = m.makePracticeAttempt({ id: String(i), articleId: article.id, sentenceId: map.id, task, answer: "__unsure__", at: 2 + i, session }));
+  const ready = renderToStaticMarkup(React.createElement(SentencePracticePanel, props));
+  assert.match(ready, /class="show-teaching">查看完整文章地图/);
+  assert.doesNotMatch(ready, /translation-trial/);
 });

@@ -4,7 +4,7 @@ export const grammarConcepts = {
   "clause-subject": "主语从句", "clause-predicative": "表语从句", "clause-time": "时间从句", "complement-content": "内容补足从句",
   "nonfinite-participle": "分词结构", "nonfinite-subject": "非谓语逻辑主语", "reference-pronoun": "指代",
   "tense-past-perfect-progressive": "过去完成进行时", "modal-obligation": "情态与义务", "comparison-scope": "比较与数量范围",
-  "time-reference": "时间参照", "negation-contrast": "否定与对比", "apposition": "同位说明", "author-voice": "观点归属",
+  "time-reference": "时间参照", "negation-contrast": "否定与对比", "apposition": "同位说明", "author-voice": "观点归属", "paragraph-role": "段落作用", "passage-route": "全文发展路线",
 } as const;
 export const errorCategories = {
   vocabulary: "单词不会", collocation: "固定搭配不会", predicate: "谓语没找对", subject: "主语范围判断错",
@@ -16,11 +16,14 @@ export type ErrorCategory = keyof typeof errorCategories;
 export const hintTypes = ["word", "syntax", "translation", "article-map", "previous-answer"] as const;
 export type HintType = typeof hintTypes[number];
 export type PracticeTask = {
-  id: string; revision: number; kind: "token" | "choice"; prompt: string; options: string[]; answer: string;
+  id: string; revision: number; kind: "token" | "choice" | "range" | "link" | "order"; prompt: string; options: string[]; answer: string;
   evidence: string; feedback: string; conceptId: GrammarConceptId; errorType: ErrorCategory;
+  links?: Array<{ source: string; target: string }>;
+  rangeText?: string;
   hintWords?: string[];
   mapRevealsAnswer?: boolean;
   leaksToTaskIds?: string[];
+  leaksToTasks?: Array<{ sentenceId: string; taskId: string }>;
 };
 export type PracticeAttempt = {
   id: string; articleId: string; sentenceId: string; taskId: string; revision: number; answer: string;
@@ -51,6 +54,11 @@ export function hintAffectsTask(task: PracticeTask, type: HintType, source: stri
   if (type === "article-map") return task.mapRevealsAnswer === true;
   if (type === "word") return (task.hintWords ?? []).some(word => word.toLowerCase() === source.toLowerCase());
   return type === "syntax" || type === "translation";
+}
+export function practiceHintTargets(sources: Array<{ id: string; practice?: PracticeTask[] }>, type: HintType, source: string, sentenceId?: string, feedbackTask?: PracticeTask) {
+  return sources.flatMap(s => (s.practice ?? []).filter(task => feedbackTask
+    ? (s.id === sentenceId && (task.id === feedbackTask.id || feedbackTask.leaksToTaskIds?.includes(task.id))) || feedbackTask.leaksToTasks?.some(target => target.sentenceId === s.id && target.taskId === task.id)
+    : (!sentenceId || sentenceId === s.id) && hintAffectsTask(task, type, source)).map(task => taskKey(s.id, task)));
 }
 export function makePracticeAttempt(input: { id: string; articleId: string; sentenceId: string; task: PracticeTask; answer: string; at: number; session: PracticeSession }): PracticeAttempt {
   const { task, session, ...base } = input;
@@ -129,4 +137,27 @@ export function preserveTrainingRecords(previous: Record<string, unknown>, incom
     }
   }
   return result;
+}
+
+
+/** 相同轮次顺序稳定；下一次尝试轮换位置，避免只记“第三项”。 */
+export function practiceOptions(options: string[], seed: string, attemptNumber: number) {
+  let hash = 0;
+  for (const char of seed) hash = (Math.imul(hash, 31) + char.charCodeAt(0)) >>> 0;
+  const values = hash % 2 ? [...options].reverse() : [...options];
+  const offset = values.length ? (hash + attemptNumber) % values.length : 0;
+  return [...values.slice(offset), ...values.slice(0, offset)];
+}
+export function rangeTokens(text: string) {
+  return [...text.matchAll(/[A-Za-z0-9£$]+(?:['’\-][A-Za-z0-9]+)*/g)].map(match => ({ text: match[0], start: match.index!, end: match.index! + match[0].length }));
+}
+export function selectedRange(text: string, start: number, end: number) {
+  const tokens = rangeTokens(text), first = tokens[Math.min(start, end)], last = tokens[Math.max(start, end)];
+  return first && last ? text.slice(first.start, last.end) : "";
+}
+export function practiceAnswerLabel(task: PracticeTask, answer: string) {
+  if (answer === "__unsure__") return "还没找到";
+  if (!["link", "order"].includes(task.kind)) return answer;
+  try { const values = JSON.parse(answer) as string[]; return values.map((value, i) => task.kind === "link" ? `${task.links?.[i]?.source} → ${value}` : `${i + 1}. ${value}`).join("；"); }
+  catch { return answer; }
 }

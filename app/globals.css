@@ -3956,3 +3956,17 @@ button.reference-row.is-linked:focus-visible {
 .question-location-practice .practice-action { min-height: 44px; padding: 10px 12px; margin: 8px 0; border: 1px solid #9db7ad; border-radius: 8px; background: #eff5f1; }
 .question-location-practice select { min-height: 44px; max-width: 100%; }
 .question-location-practice details > div { margin-top: 12px; border-top: 1px solid #d8e1dc; padding-top: 10px; }
+
+/* 生成型练习：键盘和触控均可操作，不要求拖拽。 */
+.practice-action, .block-bank button, .ordered-blocks button, .range-tokens button { min-height: 44px; padding: 8px 12px; border: 1px solid #b6c9bd; border-radius: 8px; background: #f7faf6; color: #23433e; cursor: pointer; max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
+.practice-action:disabled, .block-bank button:disabled { opacity: .5; cursor: default; }
+.block-bank, .ordered-blocks { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0; }
+.ordered-blocks { padding: 12px; border: 1px dashed #a5beb1; border-radius: 8px; }
+.range-tokens { max-height: 280px; overflow-y: auto; line-height: 2.8; }
+.range-tokens button { padding: 6px 5px; border-color: transparent; }
+.range-tokens button[aria-pressed="true"] { background: #d2e7dc; border-color: #749f90; }
+.range-task > p { overflow-wrap: anywhere; }
+.link-task label { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 8px; margin: 10px 0; }
+.link-task select { min-width: 0; width: 100%; min-height: 44px; background: white; border: 1px solid #bccac2; padding: 8px 4px; border-radius: 8px; }
+.link-task strong { overflow-wrap: anywhere; }
+.practice-feedback p { overflow-wrap: anywhere; }

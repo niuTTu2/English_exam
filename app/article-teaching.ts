@@ -1,3 +1,4 @@
+import type { PracticeTask } from "./learning-model";
 import type { LocationPolicy } from "./location-model";
 export type PassageEvidence = { sentenceId: string; quote: string; role: string };
 export type QuestionScope = "sentence" | "adjacent-sentences" | "paragraph" | "whole-passage";
@@ -18,6 +19,7 @@ export type QuestionReasoning = {
   wordingNotes?: Array<{ sourceId: string; text: string; explanation: string }>;
 };
 export type ArticleGuide = {
+  practice?: PracticeTask[];
   route: string[];
   mainIdea: string;
   paragraphs: Array<{ paragraphId: string; title: string; summary: string; relation: string }>;
