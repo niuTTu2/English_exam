@@ -506,7 +506,9 @@ test("Text 2词卡按正文和题目出处区分词性，重点建议不影响�
   assert.equal(vocabularyPriority(entry("divorce"), "2010-p2-s14", text2.id).id, "core");
   assert.equal(vocabularyPriority(entry("share"), "2010-p2-s15", text2.id).id, "sense");
   assert.equal(vocabularyPriority(entry("although"), "2010-p2-s10", text2.id).id, "function");
-  assert.equal(vocabularyPriority(entry("hacker"), "2010-p3-s1", "2010-p3"), undefined);
+  assert.equal(vocabularyPriority(entry("hacker"), "2010-p3-s1", "2010-p3").id, "recognition");
+  assert.equal(vocabularyPriority(entry("curtis"), "2010-p3-s3", "2010-p3").id, "name");
+  assert.equal(vocabularyPriority(entry("hacker"), "unknown-s1", "unknown"), undefined);
   assert.equal(vocabularyPriority(entry("momentum"), "2010-p1-s5", "2010-p1").id, "core");
 });
 

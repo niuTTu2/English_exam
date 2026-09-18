@@ -213,6 +213,7 @@ for (const [headword, partOfSpeech, contextualMeaning, use, forms] of related) {
   passage2010P3Lexicon[headword] = { partOfSpeech, contextualMeaning, use, specialForms: [forms], examSynonyms: [], confusions: [] };
 }
 export const passage2010P3LemmaAliases: Record<string, string> = Object.fromEntries(rows.flatMap(([headword, forms]) => forms.split(" ").filter(Boolean).map(form => [form, headword])));
+passage2010P3LemmaAliases.people = "people";
 export const passage2010P3FamilyAliases: Record<string, string> = { automatic: "automatic", automatically: "automatic", habit: "habit", habitual: "habit", habitually: "habit", consumer: "consume", consumption: "consume", creation: "create", advertising: "advertise", advertisement: "advertise", commercial: "commerce", commercially: "commerce", promotion: "promote", observation: "observe", moisturizer: "moisture", cleanser: "clean", whitener: "white", softener: "soft" };
 export const passage2010P3FormPartOfSpeech: Record<string, string> = { wipes: "n.（消毒湿巾）", finding: "v.-ing（寻找）", thinking: "v.-ing（思考）", improving: "v.-ing（改善）", making: "v.-ing（使成为）", buying: "v.-ing（购买）", following: "adj.（下列的）", had: "aux.（过去完成时）", have: "aux.（完成时）", has: "aux.（完成时）", that: "关系代词/从句连接词" };
 export const passage2010P3SentenceContexts: Record<string, Record<string, SentenceWordContext>> = {

@@ -1072,7 +1072,8 @@ test("2010 Text 3 词汇语境隔离、全词形覆盖及词组复用", async ()
   assert.match(lexicon.getLexicalGuide("art", { articleId: "2010-p1" }).contextualMeaning, /艺术/);
   assert.equal(guide("finding", 5).headword, "find");
   assert.match(guide("wipes", 6).contextualMeaning, /湿巾/);
-  assert.match(guide("use", 11).contextualMeaning, /名词/);
+  assert.match(guide("use", 11).partOfSpeech, /^n\./);
+  assert.equal(guide("use", 11).contextualMeaning, "使用");
   assert.match(guide("it's", 14).contextualMeaning, /培养/);
   assert.equal(lexicon.canonicalLemma("advertising", { articleId: article.id }), "advertising");
   assert.equal(lexicon.canonicalLemma("best", { articleId: "2010-p2", sentenceId: "2010-p2-s19" }), "best");

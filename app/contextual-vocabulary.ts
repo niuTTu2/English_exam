@@ -1,4 +1,6 @@
 import { passage2011P1SourceContexts } from "./2011-passage-1-contexts";
+import { passage2010P3PreferredContexts } from "./2010-passage-3-collocations";
+import { passage2010P3ReviewedContexts } from "./2010-passage-3-contexts";
 import { writing2012BSentenceContexts } from "./2012-writing-b-lexicon";
 import { writing2012ASentenceContexts } from "./2012-writing-a-lexicon";
 import { translation2012SentenceContexts } from "./2012-translation-lexicon";
@@ -76,7 +78,11 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
   ...cloze2011SentenceContexts,
   ...translation2010SentenceContexts,
   ...passage2010P2SentenceContexts,
-  ...passage2010P3SentenceContexts,
+  ...Object.fromEntries([...new Set([...Object.keys(passage2010P3SentenceContexts), ...Object.keys(passage2010P3ReviewedContexts), ...Object.keys(passage2010P3PreferredContexts)])].map(id => [id,
+    Object.fromEntries([...new Set([...Object.keys(passage2010P3SentenceContexts[id] ?? {}), ...Object.keys(passage2010P3ReviewedContexts[id] ?? {}), ...Object.keys(passage2010P3PreferredContexts[id] ?? {})])].map(head => [head, {
+      ...passage2010P3PreferredContexts[id]?.[head], ...passage2010P3SentenceContexts[id]?.[head], ...passage2010P3ReviewedContexts[id]?.[head],
+    }])),
+  ])),
   ...passage2010P4SentenceContexts,
   ...passage2010P5SentenceContexts,
   "p3-s10": { note: { partOfSpeech: "n.", contextualMeaning: "注释；说明性注释", use: "in the explanatory notes 中 notes 是 note 的复数，指解释译文的说明性注释；不是音符，也不是动词‘注意’。" } },

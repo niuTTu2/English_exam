@@ -20,6 +20,7 @@ import { cloze2011Sentences, cloze2011Questions } from "./2011-cloze-data";
 import { translation2010Sentences, translation2010Tasks } from "./2010-translation-data";
 import { passage2010P5Questions, passage2010P5Sentences } from "./2010-passage-5-data";
 import { passage2010P4Questions, passage2010P4Sentences } from "./2010-passage-4-data";
+import { passage2010P3Guide, passage2010P3Paragraphs } from "./2010-passage-3-guide";
 import { passage2010P3Questions, passage2010P3Sentences } from "./2010-passage-3-data";
 import { passage1Questions, passage1Sentences } from "./passage-1-data";
 import { passage2Questions, passage2Sentences } from "./passage-2-data";
@@ -1545,6 +1546,8 @@ export const articleContents: Record<string, ArticleContent> = {
     title: "消费习惯的商业塑造与公共卫生",
     description: "从肥皂洗手到瓶装水、口香糖和润肤品，理解广告如何借日常提示塑造习惯，并区分企业证言与作者的批评态度。",
     kind: "reading", sentences: passage2010P3Sentences, questions: passage2010P3Questions,
+    guide: passage2010P3Guide, paragraphs: passage2010P3Paragraphs,
+    teachingStatus: { syntax: true, vocabulary: true, evidence: true, practice: true },
   },
   "2010-p4": {
     id: "2010-p4", year: 2010, sectionId: "p4", label: "阅读 Text 4", badge: "2010 · 阅读 Text 4",
