@@ -50,6 +50,6 @@ Object.assign(passage2011P1PhraseGlosses, {
   "their own crises": { meaning: "他们自己的危机", note: "own强调董事亲自经历的危机，不是动词拥有。" },
   "does not mean that": { meaning: "并不意味着……", note: "mean接完整内容从句；本篇否定由相关性推出总是逃避危机的推断。" },
   "do less well": { meaning: "表现较差", note: "do为实义动词表现，less well为副词比较结构，与perform worse对应。" },
-  "a positive attitude": { meaning: "积极肯定的态度", note: "positive在态度题中指肯定方向，不是阳性、正数或数字鸿沟力量。" },
+  "a positive attitude": { meaning: "积极肯定的态度", note: "positive在态度题中表示积极肯定；应结合全文证据判断该评价是否成立。" },
   "a critical attitude": { meaning: "批评的态度", note: "critical在此指出问题，不是关键的或危急的；与scornful的强烈轻蔑有别。" },
 });
