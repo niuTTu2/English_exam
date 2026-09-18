@@ -377,7 +377,7 @@ export const passage2010P2SentenceContexts: Record<string, Record<string, Senten
     he: { contextualMeaning: "他（沙发上的丈夫）", use: "him 是 beside 的宾语，妻子坐在他旁边。" },
   },
   "2010-p2-s3": {
-    to: { partOfSpeech: "prep.", contextualMeaning: "与；对", use: "talk to me中to引出交谈对象，后接宾格me，不是不定式标记。" },
+    to: { partOfSpeech: "prep.", contextualMeaning: "与；对", use: "talk to them中to引出交谈对象，后接宾格them，回指抱怨的妻子们；不是不定式标记。" },
     frequently: { contextualMeaning: "经常地", use: "修饰 complain，强调女性反复提出这种抱怨。", contextualSubstitutions: [{ label: "often", chinese: "常常", fit: "direct", rewrittenSentence: "Toward the end of the evening, I commented that women often complain that their husbands don't talk to them.", nuance: "often 的书面色彩比 frequently 弱，但保留抱怨经常发生这一信息。", target: "word:often" }] },
     comment: { contextualMeaning: "评论道；谈到", use: "commented 后接完整 that 内容从句；不是2010完形干扰项里的搭配辨析。" },
     that: { contextualMeaning: "引出评论或抱怨的内容", use: "两个 that 分别引出 commented 与 complain 的宾语从句，都不在从句内部作主语或宾语。" },

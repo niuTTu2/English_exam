@@ -51,6 +51,8 @@ test("更多研究使用数量限定词，U.S.仍作为真实缩写单词进入�
     assert.match(resolveEntry(form, false, sourceId).partOfSpeech, partOfSpeech);
   }
   assert.equal(resolveEntry("as", false, "2010-p2-s15").contextualMeaning, "引出例子");
+  assert.match(resolveEntry("to", false, "2010-p2-s3").use, /talk to them/);
+  assert.doesNotMatch(resolveEntry("to", false, "2010-p2-s3").use, /talk to me/);
   const entry = resolveEntry("more", false, "question-201029-option-A");
   assert.match(entry.partOfSpeech, /determiner/);
   assert.equal(entry.contextualMeaning, "更多的");
