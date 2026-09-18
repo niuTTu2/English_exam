@@ -23,6 +23,7 @@ import { passage2010P3SentenceContexts } from "./2010-passage-3-lexicon";
 import { passage2010P2SentenceContexts } from "./2010-passage-2-lexicon";
 import { passage2010P1QuestionContexts } from "./2010-passage-1-question-contexts";
 import { passage2010P2QuestionContexts } from "./2010-passage-2-question-contexts";
+import { passage2010P2PreferredCollocations } from "./2010-passage-2-collocations";
 
 export type ArticleLexiconId = "cloze" | "p1" | "p2" | "p3" | "p4" | "p5" | "translation" | "2001-cloze" | "2001-p1" | "2001-p2" | "2010-cloze" | "2010-p1" | "2010-p2" | "2010-p3" | "2010-p4" | "2010-p5" | "2010-translation" | "2011-cloze" | "2011-p1" | "2011-p2" | "2011-p3" | "2011-p4" | "2011-p5" | "2011-translation" | "2011-writing-a" | "2011-writing-b" | "2012-cloze" | "2012-p1" | "2012-p2" | "2012-p3" | "2012-p4" | "2012-p5" | "2012-translation" | "2012-writing-a" | "2012-writing-b";
 
@@ -42,6 +43,7 @@ export type SentenceWordContext = {
   // 代词可简要注明指代；习语中不能独立释义的小品词应注明作用，整体义留给 use。
   contextualMeaning?: string;
   use?: string;
+  preferredCollocations?: string[];
   contextualSubstitutions?: ContextualSubstitution[];
 };
 
@@ -1071,12 +1073,17 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
 
 export function getSentenceWordContext(sentenceId: string | undefined, headword: string) {
   if (!sentenceId) return undefined;
-  return sentenceWordContexts[sentenceId]?.[headword];
+  const context = sentenceWordContexts[sentenceId]?.[headword];
+  const preferredCollocations = passage2010P2PreferredCollocations[sentenceId]?.[headword];
+  return preferredCollocations ? { ...context, preferredCollocations } : context;
 }
 
 type SentencePhraseContext = Pick<SentenceWordContext, "contextualMeaning" | "use" | "partOfSpeech"> & { knowledgeExpression?: string };
 
 const sentencePhraseContexts: Record<string, Record<string, SentencePhraseContext>> = {
+  "question-201028-option-C": {
+    "communication between couples": { knowledgeExpression: "between + plural noun", contextualMeaning: "夫妻双方之间的沟通", use: "between后直接接复数名词couples，不把原文补成A and B；整组修饰communication。" },
+  },
   "p2-s4": {
     "as well as": { knowledgeExpression: "almost as well as", contextualMeaning: "和……一样好（almost 表示几乎）" },
   },

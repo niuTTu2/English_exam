@@ -116,6 +116,7 @@ export const passage2010P2QuestionContexts: Record<string, Record<string, Senten
     moral: w("adj.", "道德方面的", "修饰decay，不是名词寓意；文章引用社会学家不代表谈道德衰败。"),
     decay: w("n.", "衰败；败坏", "moral decay作主语，decay不是本句谓语；deserves才承担时态。"),
     deserve: w("v.（第三人称单数）", "值得；应受到", "deserves后接more research，表达值得进一步研究。"),
+    more: w("determiner（比较级）", "更多的", "more限定不可数名词research，表示研究的量；不是修饰动作的副词。"),
     research: w("n.（不可数）", "研究", "作deserves的宾语，more表示更多研究；不是谓语动词。"),
     by: w("prep.", "由……进行", "by sociologists修饰research，说明研究者，不是说衰败由社会学家造成。"),
     sociologist: w("n.（复数）", "社会学家", "作by的宾语，表示研究者的职业；不专指Riessman一个人。"),

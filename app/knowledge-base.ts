@@ -21,6 +21,7 @@ import { passage2010P5PhraseGuides, passage2010P5PhraseAliases, passage2010P5Col
 import { passage2010P4PhraseGuides, passage2010P4PhraseAliases, passage2010P4CollocationGlosses } from "./2010-passage-4-knowledge";
 import { passage2010P3PhraseGuides, passage2010P3PhraseAliases, passage2010P3CollocationGlosses } from "./2010-passage-3-knowledge";
 import type { VocabEntry } from "./data";
+import { getPassage2010P2WordKnowledge } from "./2010-passage-2-word-knowledge";
 import {
   passage1CollocationGlosses,
   passage1FamilyGlosses,
@@ -1040,7 +1041,11 @@ export function getPhraseKnowledge(source: string): PhraseKnowledge | undefined 
   };
 }
 
-export function getWordKnowledge(headword: string, context?: { articleId?: string; sentenceId?: string }) {
+export function getWordKnowledge(headword: string, context?: { articleId?: string; sentenceId?: string; sourceId?: string }) {
+  if (context?.articleId === "2010-p2") {
+    const contextualKnowledge = getPassage2010P2WordKnowledge(normalized(headword), context.sourceId ?? context.sentenceId);
+    if (contextualKnowledge) return contextualKnowledge;
+  }
   if (context?.articleId === "2011-writing-b") {
     const contextualKnowledge = getWriting2011BWordKnowledge(normalized(headword), context.sentenceId);
     if (contextualKnowledge) return contextualKnowledge;

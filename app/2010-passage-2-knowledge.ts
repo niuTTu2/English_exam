@@ -40,6 +40,30 @@ const seeds: PhraseSeed[] = [
   ["with-noun-participle", "with + noun + past participle", ["with a newspaper held up in front of his face"], "某物处于被……的伴随状态", "with 复合结构；伴随状语", "a newspaper 是 with 的宾语，held up 是过去分词宾补，两者为被动关系。", "He sat with a newspaper held up in front of his face.", "他坐着，报纸举在脸前。", "没有独立的限定动词，不能把 with 结构标成完整从句。"],
   ["in-front-of-object", "in front of something", ["in front of his face"], "在某物前面", "位置状语", "in front of 为整体位置表达；his face 是参照物，报纸位于其前面。", "She stood in front of the house.", "她站在房屋前面。", "in front of 指外部前方，in the front of 常指某空间内部前部。"],
   ["glare-at-object", "glare at somebody / something", ["glares at the back of it"], "怒视；瞪着某人或某物", "谓语与目光对象补足语", "at 引目光所向；the back of it 指报纸背面，it 必须回指 newspaper。", "She glared at the back of the newspaper.", "她瞪着报纸的背面。", "glare 比 look 更带不满或怒意；不能把 it 错指为男人的脸。"],
+  ["judging-from-evidence", "judging from + evidence", ["Judging from the context"], "根据某依据判断", "固定评注表达", "judging from 引出判断依据；该表达评注整个判断，不要求句子主语是 judge 的动作发出者。", "Judging from the context, this word means a serious problem.", "根据语境，这个词意为一个严重问题。", "这里的 judging 是判断，不是名词 judges 所指的法官。"],
+  ["expression-means", "an expression means + meaning", ["the phrase means"], "某表达意思是……", "主语与释义谓语结构", "mean 直接接所表示的内容；the phrase 为单数，谓语用 means。此处展示规范搭配，不把引号与位置标注删除后伪称原文连续片段。", "The phrase means causing damage.", "这个短语的意思是造成损害。", "means 在这里是动词第三人称单数，不是名词手段，也不是 mean to do 的打算。"],
+  ["in-public", "in public", ["in public"], "在公开场合", "场合状语", "public 在固定表达 in public 中作名词，整组限定行为发生的场合。", "He talks more in public than at home.", "他在公开场合比在家说得更多。", "in public 不等于只在政府机关，也不是 public defender 的公共法律服务义。"],
+  ["share-housework", "share housework", ["Sharing housework", "Sharing housework."], "分担家务", "动词搭配；选项为动名词短语", "share 直接接不可数名词 housework；Sharing 把该行为作为期待的内容。", "Both partners should share housework.", "伴侣双方都应分担家务。", "这里 share 是动词分担，不是 their share 中的名词份额。"],
+  ["divorce-talk-title", "Divorce Talk", ["Divorce Talk"], "《离婚谈话》（书名）", "专有名词短语", "Divorce 与 Talk 共同构成书名，补充说明 book；Talk 在书名中为名词，不是正在执行谈话动作。", "The findings appear in the book Divorce Talk.", "这些发现见于《离婚谈话》一书。", "书名只需识别，不把它误解成要求夫妻谈离婚的祈使句。"],
+  ["more-research", "more + uncountable noun", ["more research"], "更多的不可数事物；此处为更多研究", "数量限定结构", "more 限定不可数名词 research；此处不修饰动词，也不构成 the more..., the more... 的关联比较。", "The issue deserves more research.", "这个问题值得更多研究。", "research 表研究活动时通常不可数；一项具体研究可以用 a study。"],
+  ["expectation-of-person", "an expectation of somebody", ["main expectation of their husbands"], "对某人抱有的期待", "名词与期待对象补足语", "of 引出被期待的人；题干的 wives' 才说明期待由谁提出。", "She had high expectations of her husband.", "她对丈夫抱有很高的期待。", "不能把 of their husbands 误解为期待由丈夫提出。"],
+  ["trust-person", "trust somebody", ["Trusting them", "Trusting them."], "信任某人", "及物动词搭配", "trust 直接接人物作宾语，动名词 Trusting 把该行为作为期待内容。", "They trust each other.", "他们互相信任。", "不加 to；信任与交谈是不同的行为。"],
+  ["support-career", "support somebody's career", ["Supporting their careers", "Supporting their careers."], "支持某人的事业", "动名词与名词宾语", "support 直接接 career，their 限定事业属于谁。", "He supports his wife's career.", "他支持妻子的事业。", "support 作动词可直接接宾语，不套名词 support for 的介词结构。"],
+  ["generate-motivation", "generate motivation", ["generating motivation"], "产生动力", "动词搭配", "generate 后接产生的结果，motivation 指做事的动力。", "Clear goals can generate motivation.", "明确的目标可以产生动力。", "动力与严重破坏不同，不能因同为结果名词就当作近义。"],
+  ["exert-influence", "exert influence", ["exerting influence"], "施加影响", "动词搭配", "exert 直接接 influence，影响的方向需由上下文说明。", "His advice exerted influence on the decision.", "他的建议对这一决定产生了影响。", "影响可以是正面或负面，不能自动等同于造成严重破坏。"],
+  ["cause-damage", "cause damage", ["causing damage"], "造成损害", "动词与不可数名词宾语", "damage 作不可数名词，表示受损结果；受损对象可由 to 引出。", "The storm caused damage to the bridge.", "暴风雨损坏了桥梁。", "damages 在法律语境可指赔偿金，与不可数损害义不同。"],
+  ["create-pressure", "create pressure", ["creating pressure"], "造成压力", "动词搭配", "create 后接结果名词 pressure；对谁的压力可由 on 引出。", "The deadline created pressure on the team.", "截止日期给团队带来了压力。", "产生压力不必然意味着已经造成严重损害。"],
+  ["all-of-following", "all of the following", ["All of the following"], "下列所有各项", "数量代词与范围补足语", "all 为数量代词，of the following 指明范围，following 在 the 后名词化。", "All of the following are true except one.", "下列各项除一项外均为真。", "遇到 EXCEPT 必须保留排除要求，不能直接选一个正确陈述。"],
+  ["which-of-following", "which of the following", ["Which of the following"], "下列哪一项", "疑问代词与选择范围", "which 为疑问代词，of the following 指向后面的候选项；可整体作疑问句主语。", "Which of the following best summarizes the text?", "下列哪一项最能概括这篇文章？", "不是关系代词 which 引导的定语从句。"],
+  ["percentage-of-whole", "percentage of + whole", ["nearly 50 percent of recent divorces"], "某一总体中的某个百分比", "比例名词短语", "of 后明确统计总体；nearly 50 percent of recent divorces 指近期离婚案例中的近一半。", "Nearly 50 percent of the cases involved a delay.", "近一半案例涉及延误。", "必须核对分母；离婚案例中的某原因比例与离婚率本身不是同一指标。"],
+  ["be-caused-by", "be caused by + cause", ["are caused by failed conversation"], "由某原因造成", "被动谓语及原因补足语", "be caused 为被动结构，by 引原因；本项把沟通失败断言为某些离婚的原因。", "The delay was caused by bad weather.", "延误是恶劣天气造成的。", "访谈中的原因归属不自动证明总体中的因果比例。"],
+  ["between-plural-noun", "between + plural noun", ["between couples"], "在所述各方之间", "介词与复数名词", "between 可以直接接表示各方的复数名词；这里限定夫妻之间的交流，不补造 A and B。", "Communication between partners matters.", "伴侣之间的沟通很重要。", "between A and B 是另一种展开形式，不能要求原句一定另有 and。"],
+  ["stem-from-cause", "stem from + cause", ["stems from sex inequalities", "stems from", "stem from"], "源于某原因", "动词与来源补足语", "stem 作不及物动词，from 引出根源；主语单数时用 stems。", "The problem stems from poor communication.", "问题源于沟通不畅。", "表原因来源，不是名词茎，也不能将相关性直接强化为因果。"],
+  ["expectations-from", "expectations from something", ["different expectations from their marriage"], "对从某事中得到什么的期待", "名词与期待来源补足语", "from their marriage 说明期待从婚姻中得到什么，different 修饰期待。", "They have different expectations from their marriage.", "他们对婚姻抱有不同期待。", "这个表达比对交谈的期待范围宽；不能在翻译中擅加 conversational。"],
+  ["immediately-after-text", "immediately after + noun phrase", ["immediately after this text"], "紧接在某事物之后", "副词修饰介词短语", "immediately 加强 after 的紧接关系，after 后为名词短语，不是完整时间从句。", "The explanation appears immediately after this paragraph.", "解释紧接在这一段后面。", "紧接下文与以后任意位置不同，篇章预测不能忽略这个范围。"],
+  ["account-of-object", "an account of something", ["a vivid account of the new book Divorce Talk"], "对某事物的叙述或介绍", "名词与内容补足语", "account 为叙述，of 引介绍对象；vivid 形容介绍生动，Divorce Talk 是 book 的书名说明。", "She gave a vivid account of the meeting.", "她生动地介绍了会议情况。", "此处 account 不是账户，也不是动词 account for 表解释。"],
+  ["description-of-object", "a description of something", ["a detailed description of the stereotypical cartoon"], "对某事物的描写", "名词与内容补足语", "description 为中心名词，of 引描写对象，detailed 修饰描述的详尽程度。", "The report contains a detailed description of the scene.", "报告包含对该场景的详细描述。", "description 是名词，不是 describe 的谓语形式。"],
+  ["introduction-to-person", "an introduction to somebody", ["a brief introduction to the political scientist Andrew Hacker"], "对某人的简要介绍", "名词与介绍对象补足语", "to 后接被介绍的人物名词短语；Andrew Hacker 是 political scientist 的姓名同位说明。", "The article gives a brief introduction to the scientist.", "文章简要介绍了这位科学家。", "to 是介词，不是不定式；introduction of 在其他语境还可表引入某事物。"],
 ];
 
 export const passage2010P2PhraseGuides: Record<string, PhraseKnowledge> = Object.fromEntries(seeds.map(([key, canonical, , meaning, grammarRole, rule, english, chinese, pitfall]) => [key, {
@@ -50,10 +74,24 @@ export const passage2010P2PhraseGuides: Record<string, PhraseKnowledge> = Object
 export const passage2010P2PhraseAliases: Record<string, string> = Object.fromEntries(seeds.flatMap(([key, canonical, sources]) => [...sources, canonical].map(source => [source.toLowerCase(), key])));
 export const passage2010P2CollocationGlosses = Object.fromEntries(seeds.flatMap(([, , sources, meaning, , rule]) => sources.map(source => [source.toLowerCase(), { meaning, note: rule }])));
 Object.assign(passage2010P2PhraseAliases, {
+  "talking to them": "talk-to-somebody",
+  "talking to them.": "talk-to-somebody",
+  "wreaking havoc": "wreak-havoc",
+  "attach much importance to communication": "attach-importance",
+  "tends to be more talkative": "tend-to-do",
+  "focus on": "focus-on-object",
+  "reasons for a high divorce rate": "reason-for-something",
   "communication between couples": "between-a-and-b",
   "between man and wife": "between-a-and-b",
 });
 Object.assign(passage2010P2CollocationGlosses, {
+  "talking to them": { meaning: "与她们交谈", note: "Talking为动名词，them回指题干中的妻子；to是引出交谈对象的介词。" },
+  "talking to them.": { meaning: "与她们交谈", note: "Talking为动名词，them回指题干中的妻子；to是引出交谈对象的介词。" },
+  "wreaking havoc": { meaning: "造成严重破坏", note: "wreaking是动词的-ing形式，havoc为不可数宾语；保留严重负面的程度。" },
+  "attach much importance to communication": { meaning: "很重视交流", note: "attach importance to为规范结构；much限定不可数importance，to后接名词communication。" },
+  "tends to be more talkative": { meaning: "往往更加健谈", note: "tends to表示倾向，to be后接形容词比较表达，不保证所有人都如此。" },
+  "focus on": { meaning: "集中关注；着重于", note: "on为引出话题的介词，后接名词或动名词；题干中的话题由选项补出。" },
+  "reasons for a high divorce rate": { meaning: "高离婚率的原因", note: "for引出需要解释的现象；other possible另外限定还有哪些可能原因。" },
   "communication between couples": { meaning: "夫妻双方之间的沟通", note: "本题 couples 指夫妻关系中的双方；不能脱离婚姻语境读成多对夫妻彼此聊天。" },
   "between man and wife": { meaning: "在丈夫和妻子之间", note: "man 与 wife 用 and 平行连接，between 短语限定所比较的交谈模式属于哪两方。" },
 });

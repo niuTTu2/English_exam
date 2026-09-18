@@ -105,6 +105,7 @@ export type LexicalGuide = {
   specialForms: string[];
   examSynonyms: string[];
   collocations?: string[];
+  preferredCollocations?: string[];
   otherMeanings?: string[];
   wordFamily?: string[];
   confusions?: string[];
@@ -870,6 +871,7 @@ export function getLexicalGuide(token: string, context?: LexicalContext): Lexica
   return {
     headword,
     partOfSpeech: contextualPos,
+    preferredCollocations: sentenceContext?.preferredCollocations,
     // 词义只解释当前单词；语境整义保存在 use 或词组卡。没有本篇覆盖时，
     // 先用共用词义，再借用其他篇的已审词条，避免早期文章的句意抢占通用释义。
     contextualMeaning: sentenceContext?.contextualMeaning ?? chronologicalEntry?.contextualMeaning ?? articleEntry?.contextualMeaning ?? contextualMeaning[headword] ?? passageEntry?.contextualMeaning,

@@ -248,10 +248,17 @@ const corpusSources = Object.values(articleContents).flatMap((article) => [
 const sourceById = new Map(corpusSources.map((source) => [source.id, source]));
 const phraseAnnotations = Object.values(articleContents).flatMap((article) => [
   ...article.sentences.flatMap((sentence) => sentence.phrases.map((label) => ({ label, sourceId: sentence.id }))),
+  ...article.questions.flatMap((question) => [
+    ...(question.analysis?.prompt?.phrases ?? []).map(label => ({ label, sourceId: `question-${question.id}-prompt` })),
+    ...(question.format === "matching" && question.id !== question.sharedOptionsId ? [] : question.options.flatMap(option =>
+      ((question.analysis?.options as Partial<Record<QuestionOptionKey, SentenceAnalysis>> | undefined)?.[option.key]?.phrases ?? [])
+        .map(label => ({ label, sourceId: questionOptionSourceId(question, option.key) })))),
+  ]),
   ...article.questions.filter(question => question.format !== "matching" || question.id === question.sharedOptionsId).flatMap((question) => question.options
     .filter((option) => option.text.includes(" ") && getPhraseKnowledge(option.text))
     .map((option) => ({ label: option.text, sourceId: questionOptionSourceId(question, option.key) }))),
-]).map((annotation) => ({ ...annotation, patternKey: getPhraseKnowledge(annotation.label)?.key }));
+]).filter((annotation, index, all) => all.findIndex(item => item.sourceId === annotation.sourceId && item.label.toLowerCase() === annotation.label.toLowerCase()) === index)
+  .map((annotation) => ({ ...annotation, patternKey: getPhraseKnowledge(annotation.label)?.key }));
 const phraseOccurrenceCache = new Map<string, Array<{ source: (typeof corpusSources)[number]; start: number; end: number; label: string }>>();
 const termContextCache = new Map<string, SavedTermContext[]>();
 const corpusTokens = corpusSources.flatMap((source) => tokenizeWords(source.text.toLowerCase()).map((form) => {
@@ -526,7 +533,7 @@ export function resolveEntry(label: string, isPhrase = false, sentenceId?: strin
       occurrences: currentOccurrences(label, true, sentenceId),
     };
   }
-  const mergedCollocations = Array.from(new Set([...(entry.collocations ?? []), ...(guide?.collocations ?? [])]));
+  const mergedCollocations = Array.from(new Set([...(guide?.preferredCollocations ?? []), ...(entry.collocations ?? []), ...(guide?.collocations ?? [])]));
   const mergedSynonyms = guide?.examSynonyms ?? entry.examSynonyms ?? [];
   const mergedFamily = Array.from(new Set([...(entry.wordFamily ?? []), ...(guide?.wordFamily ?? [])]));
   return {

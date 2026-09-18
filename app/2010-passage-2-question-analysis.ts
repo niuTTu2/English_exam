@@ -1,9 +1,38 @@
 import type { BeginnerSyntaxComponent, BeginnerClauseDetail, QuestionAnalysis, SentenceAnalysis, SyntaxVisualRole } from "./data";
 import { withReviewedSyntax } from "./reviewed-syntax";
 
+// 只保存题干/选项真实连续片段；规范原型由词组知识层提供。
+const questionPhrases: Record<string, string[]> = {
+  "201026-prompt-analysis": ["main expectation of their husbands"],
+  "201026-A-analysis": ["Talking to them"],
+  "201026-B-analysis": ["Trusting them"],
+  "201026-C-analysis": ["Supporting their careers"],
+  "201026-D-analysis": ["Sharing housework"],
+  "201027-prompt-analysis": ["Judging from the context", "wreaking havoc"],
+  "201027-A-analysis": ["generating motivation"],
+  "201027-B-analysis": ["exerting influence"],
+  "201027-C-analysis": ["causing damage"],
+  "201027-D-analysis": ["creating pressure"],
+  "201028-prompt-analysis": ["All of the following"],
+  "201028-A-analysis": ["tend to talk", "in public"],
+  "201028-B-analysis": ["nearly 50 percent of recent divorces", "are caused by failed conversation"],
+  "201028-C-analysis": ["attach much importance to communication", "between couples"],
+  "201028-D-analysis": ["tends to be more talkative", "at home"],
+  "201029-prompt-analysis": ["Which of the following"],
+  "201029-A-analysis": ["more research"],
+  "201029-B-analysis": ["stems from sex inequalities"],
+  "201029-C-analysis": ["different expectations from their marriage"],
+  "201029-D-analysis": ["between man and wife"],
+  "201030-prompt-analysis": ["immediately after this text", "focus on"],
+  "201030-A-analysis": ["a vivid account of the new book Divorce Talk", "Divorce Talk"],
+  "201030-B-analysis": ["a detailed description of the stereotypical cartoon"],
+  "201030-C-analysis": ["reasons for a high divorce rate"],
+  "201030-D-analysis": ["a brief introduction to the political scientist Andrew Hacker"],
+};
+
 const c = (text: string, form: string, fn: string, modifies: string, explanation: string, children?: BeginnerSyntaxComponent[]): BeginnerSyntaxComponent => ({ text, form, function: fn, modifies, explanation, children });
 const a = (id: string, text: string, trunk: string, components: BeginnerSyntaxComponent[], colors: SyntaxVisualRole[], meaning: string, focus: string, clauses: BeginnerClauseDetail[] = []): SentenceAnalysis => withReviewedSyntax({
-  id, number: 0, text, trunk, beginnerSyntax: { components, clauses }, layers: [{ label: "读题关键", text: focus }], grammar: [focus], literal: meaning, natural: meaning, logic: "先理解本项实际说了什么；是否选入须另看题目证据，不能用答案替代语言理解。", phrases: [],
+  id, number: 0, text, trunk, beginnerSyntax: { components, clauses }, layers: [{ label: "读题关键", text: focus }], grammar: [focus], literal: meaning, natural: meaning, logic: "先理解本项实际说了什么；是否选入须另看题目证据，不能用答案替代语言理解。", phrases: questionPhrases[id] ?? [],
 }, colors);
 const p = (...args: Parameters<typeof a>): SentenceAnalysis => ({ ...a(...args), textKind: "phrase" });
 const comparison = (text: string, subject: string, predicate: string): BeginnerClauseDetail => ({ text, type: "省略的比较分句", marker: "than", role: "限定比较对象；解释中的省略内容不补写回原文", subject, predicate, predicateDetails: [], translationOrder: "先理解被比较的性质或行为，再用‘比……’接上比较方。" });

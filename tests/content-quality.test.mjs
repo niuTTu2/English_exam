@@ -1326,7 +1326,11 @@ test("means 的语境原形贯通词卡、题干出处和年度次数且不误�
     assert.equal(entry.key, "mean");
     assert.match(entry.contextualMeaning, /意味着|意思/);
     assert.doesNotMatch(entry.use, /doesn't mean 与 does mean/);
-    assert.match(entry.grammarRole, /名词、动名词或内容从句/);
+    if (sourceId === "question-201027-prompt") {
+      assert.equal(entry.grammarRole, "第三人称单数谓语");
+      assert.match(entry.grammarSummary, /the phrase/);
+      assert.equal(entry.structures[0].pattern, "an expression means + meaning");
+    } else assert.match(entry.grammarRole, /名词、动名词或内容从句/);
     assert.doesNotMatch(entry.grammarSummary, /本文用 doesn't\/does mean/);
     assert.equal(entry.counts.lemma, study.currentCounts("mean", false).lemma);
     assert.ok(entry.occurrences.some((occurrence) => /第 27 题题干/.test(occurrence.section)));

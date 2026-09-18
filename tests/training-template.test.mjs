@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 const root = fileURLToPath(new URL("..", import.meta.url));
 const vite = await createServer({ configFile: false, root, resolve: { alias: { "@": root } }, server: { middlewareMode: true, hmr: false } });
 after(() => vite.close());
-const { articleContents } = await vite.ssrLoadModule("/app/data.ts");
+const { articleContents, questionOptionSourceId } = await vite.ssrLoadModule("/app/data.ts");
 const article = articleContents["2010-p1"];
 
 function checkTaskAnswer(task, text) {
@@ -21,20 +21,93 @@ function checkTaskAnswer(task, text) {
   else { assert.equal(task.kind, "order"); assert.equal(new Set(answer).size, answer.length); }
 }
 
+const englishTokens = text => text.match(/[A-Za-z]+(?:\d+[A-Za-z]*)+\b|\d+(?:st|nd|rd|th)\b|\d{4}s\b|(?:[A-Za-z]\.){2,}|(?<![A-Za-z0-9])[A-Za-z]+(?:-[A-Za-z]+)?(?:['’][A-Za-z]+)?/g) ?? [];
+const requireText = (value, label) => assert.ok(typeof value === "string" && value.trim(), `${label}不能为空`);
+
+function checkLanguageAnalysis(part, text, label, withReviewedSyntax) {
+  assert.ok(part, `${label}缺语言分析`);
+  assert.equal(part.text, text, `${label}分析必须使用本题实际文本`);
+  assert.equal(part.chunks.map(chunk => chunk.text).join(""), text, `${label}分块必须精确还原原文`);
+  assert.ok(part.chunks.every(chunk => chunk.visualRole && chunk.grammarFunction && !chunk.role));
+  assert.deepEqual(withReviewedSyntax(part, part.chunks.map(chunk => chunk.visualRole)).chunks, part.chunks);
+  const checkComponents = (components, parent) => components.forEach(component => {
+    requireText(component.text, `${label}成分原文`);
+    assert.ok(parent.includes(component.text), `${label}成分必须在父范围内：${component.text}`);
+    for (const field of ["form", "function", "modifies", "explanation"]) requireText(component[field], `${label}.${field}`);
+    checkComponents(component.children ?? [], component.text);
+  });
+  checkComponents(part.beginnerSyntax.components, text);
+  for (const clause of part.beginnerSyntax.clauses) {
+    requireText(clause.text, `${label}从句原文`);
+    assert.ok(text.includes(clause.text), `${label}从句必须为连续原文`);
+    assert.ok(!clause.objectOrComplement, `${label}不能混称宾语或表语`);
+  }
+  if (part.textKind === "phrase") {
+    assert.ok(!part.beginnerSyntax.components.some(component => component.function === "谓语"), `${label}短语不能虚构谓语`);
+  }
+}
+
 test("声明完成的训练层必须具备可核对的结构，不能只更改完成标签", async () => {
   const { withReviewedSyntax } = await vite.ssrLoadModule("/app/reviewed-syntax.ts");
-  const { grammarConcepts, errorCategories } = await vite.ssrLoadModule("/app/learning-model.ts");
+  const { grammarConcepts, errorCategories, rangeTokens, selectedRange } = await vite.ssrLoadModule("/app/learning-model.ts");
+  const { trainingSources, articleMapSource } = await vite.ssrLoadModule("/app/training-sources.ts");
+  const { assessLocation } = await vite.ssrLoadModule("/app/location-model.ts");
+  const { resolveEntry } = await vite.ssrLoadModule("/app/study-app.tsx");
+  const { getPhraseKnowledge } = await vite.ssrLoadModule("/app/knowledge-base.ts");
   assert.deepEqual(article.teachingStatus, { syntax: true, vocabulary: true, evidence: true, practice: true });
   for (const item of Object.values(articleContents)) {
     const status = item.teachingStatus;
     if (!status) continue; // 既有内容仍明确标作待升级，不用兼容界面冒充完成。
+    const completeReading = item.kind === "reading" && ["syntax", "vocabulary", "evidence", "practice"].every(layer => status[layer]);
     const sentences = new Map(item.sentences.map(sentence => [sentence.id, sentence]));
     const evidence = value => assert.ok(sentences.get(value.sentenceId)?.text.includes(value.quote) && value.quote.trim(), `${item.id}的证据必须来自连续原文`);
-    if (status.syntax) for (const sentence of item.sentences) {
-      assert.ok(sentence.beginnerSyntax?.reading?.focus, `${sentence.id}缺阅读关键`);
-      assert.ok(sentence.chunks.every(chunk => chunk.visualRole && chunk.grammarFunction && !chunk.role));
-      assert.deepEqual(withReviewedSyntax(sentence, sentence.chunks.map(chunk => chunk.visualRole)).chunks, sentence.chunks);
-      assert.equal(sentence.translationAlignment?.map(block => block.english).join(""), sentence.text);
+    if (status.syntax) {
+      for (const sentence of item.sentences) {
+        assert.ok(sentence.beginnerSyntax?.reading?.focus, `${sentence.id}缺阅读关键`);
+        checkLanguageAnalysis(sentence, sentence.text, sentence.id, withReviewedSyntax);
+        assert.equal(sentence.translationAlignment?.map(block => block.english).join(""), sentence.text);
+        assert.ok(sentence.translationAlignment.every(block => /[\u4e00-\u9fff]/.test(block.chinese)), `${sentence.id}词块译文缺中文`);
+      }
+      // 全题干/选项分析属于完整阅读模板；语法单层迁移不宣称完成其他题型训练。
+      for (const question of completeReading ? item.questions : []) {
+        const analysis = question.analysis;
+        assert.ok(analysis?.prompt, `${question.id}缺题干语言分析`);
+        assert.deepEqual(Object.keys(analysis.options ?? {}).sort(), question.options.map(option => option.key).sort(), `${question.id}必须覆盖原卷全部真实选项`);
+        checkLanguageAnalysis(analysis.prompt, question.prompt, `${question.id}题干`, withReviewedSyntax);
+        for (const option of question.options) checkLanguageAnalysis(analysis.options[option.key], option.text, `${question.id}选项${option.key}`, withReviewedSyntax);
+      }
+    }
+    if (status.vocabulary) {
+      const sources = [
+        ...item.sentences.map(sentence => ({ id: sentence.id, text: sentence.text, phrases: sentence.phrases })),
+        ...item.questions.flatMap(question => [
+          { id: `question-${question.id}-prompt`, text: question.prompt, phrases: question.analysis?.prompt?.phrases ?? [] },
+          ...question.options.map(option => ({ id: questionOptionSourceId(question, option.key), text: option.text, phrases: question.analysis?.options?.[option.key]?.phrases ?? [] })),
+        ]),
+      ];
+      for (const source of sources) {
+        for (const token of new Set(englishTokens(source.text))) {
+          const entry = resolveEntry(token, false, source.id), label = `${source.id}/${token}`;
+          assert.equal(entry.kind, "word", `${label}不能变成词组卡`);
+          assert.equal(entry.display, token, `${label}保留当前词形`);
+          for (const field of ["headword", "partOfSpeech", "contextualMeaning", "use"]) requireText(entry[field], `${label}.${field}`);
+          assert.ok(!entry.partOfSpeech.startsWith("word（"), `${label}不得使用推测词性`);
+          for (const collocation of entry.collocations) assert.ok(getPhraseKnowledge(collocation), `${label}/${collocation}缺搭配知识`);
+          for (const detail of entry.collocationDetails ?? []) {
+            requireText(detail.meaning, `${label}/${detail.label}搭配中文义`);
+            assert.ok(detail.target, `${label}/${detail.label}搭配不可点击`);
+          }
+          for (const structure of entry.structures ?? []) for (const field of ["pattern", "meaning", "rule"]) requireText(structure[field], `${label}结构.${field}`);
+        }
+        for (const phrase of source.phrases) {
+          assert.ok(phrase.trim() && source.text.toLowerCase().includes(phrase.toLowerCase()), `${source.id}/${phrase}必须为当前来源连续原文`);
+          assert.ok(getPhraseKnowledge(phrase), `${source.id}/${phrase}缺词组知识`);
+          const entry = resolveEntry(phrase, true, source.id);
+          assert.equal(entry.kind, "phrase");
+          assert.equal(entry.sourceExpression, phrase);
+          for (const field of ["canonicalForm", "partOfSpeech", "contextualMeaning", "use"]) requireText(entry[field], `${source.id}/${phrase}.${field}`);
+        }
+      }
     }
     if (status.practice) {
       assert.ok(item.guide && item.paragraphs?.length, `${item.id}缺原卷段落和篇章地图`);
@@ -42,16 +115,26 @@ test("声明完成的训练层必须具备可核对的结构，不能只更改�
       assert.equal(new Set(item.paragraphs.map(p => p.id)).size, item.paragraphs.length);
       assert.deepEqual(item.guide.paragraphs.map(p => p.paragraphId), item.paragraphs.map(p => p.id));
       assert.ok(item.guide.route.length && item.guide.mainIdea);
-      for (const sentence of item.sentences) {
-        assert.ok(item.guide.sentenceRoles[sentence.id]);
-        const tasks = sentence.practice;
-        assert.ok(tasks?.length >= 1 && tasks.length <= 3, `${sentence.id}需1—3个任务`);
+      const sources = trainingSources(item), map = articleMapSource(item);
+      assert.equal(map.practice?.length, 3, `${item.id}缺三项篇章回忆`);
+      for (const sentence of item.sentences) assert.ok(item.guide.sentenceRoles[sentence.id]);
+      for (const source of sources) {
+        const tasks = source.practice;
+        assert.ok(tasks?.length >= 1 && tasks.length <= 3, `${source.id}需1—3个任务`);
         assert.equal(new Set(tasks.map(task => task.id)).size, tasks.length);
         for (const task of tasks) {
           assert.ok(task.id && task.prompt && task.feedback && Number.isSafeInteger(task.revision) && task.revision > 0);
           assert.ok(Object.hasOwn(grammarConcepts, task.conceptId) && Object.hasOwn(errorCategories, task.errorType));
-          evidence({ sentenceId: sentence.id, quote: task.evidence });
-          checkTaskAnswer(task, sentence.text);
+          assert.ok(task.evidence.trim() && source.text.includes(task.evidence), `${source.id}/${task.id}证据必须为连续原文`);
+          checkTaskAnswer(task, source.text);
+          if (task.kind === "range") {
+            const text = task.rangeText ?? source.text, tokens = rangeTokens(text), offset = text.indexOf(task.answer);
+            const first = tokens.findIndex(token => token.start === offset), last = tokens.findIndex(token => token.end === offset + task.answer.length);
+            assert.ok(first >= 0 && last >= first, `${source.id}/${task.id}范围端点必须可点击`);
+            assert.equal(selectedRange(text, first, last), task.answer);
+          }
+          for (const id of task.leaksToTaskIds ?? []) assert.ok(tasks.some(target => target.id === id), `${source.id}/${task.id}反馈目标不存在：${id}`);
+          for (const target of task.leaksToTasks ?? []) assert.ok(sources.some(s => s.id === target.sentenceId && s.practice?.some(t => t.id === target.taskId)), `${source.id}/${task.id}跨来源反馈目标不存在`);
         }
       }
       for (const ref of item.guide.references) {
@@ -83,6 +166,19 @@ test("声明完成的训练层必须具备可核对的结构，不能只更改�
       }
       for (const group of reasoning.locatingGroups ?? []) assert.ok(group.length && group.every(id => sentences.has(id)));
       if (reasoning.scope !== "sentence") assert.ok(new Set(reasoning.evidence.map(entry => entry.sentenceId)).size > 1, "联合定位不能仍只有单句证据");
+      const policy = reasoning.locationPolicy, passageIds = [...sentences.keys()];
+      assert.ok(Number.isSafeInteger(policy?.revision) && policy.revision > 0 && policy.paths.length, `${question.id}缺有效定位规则版本和路径`);
+      assert.equal(new Set(policy.paths.map(path => path.id)).size, policy.paths.length, `${question.id}定位路径ID重复`);
+      for (const path of policy.paths) {
+        assert.ok(path.id && path.label && path.groups.length, `${question.id}定位路径缺说明或必要证据组`);
+        for (const group of path.groups) assert.ok(group.length && group.every(id => sentences.has(id)), `${question.id}/${path.id}必要证据句不存在`);
+        assert.ok(path.supportingSentenceIds.every(id => sentences.has(id)), `${question.id}/${path.id}补充证据句不存在`);
+        assert.ok(Number.isSafeInteger(path.maxSentences) && path.maxSentences > 0, `${question.id}/${path.id}选句上限无效`);
+        const representative = [...new Set(path.groups.map(group => group[0]))];
+        const singlePath = { ...reasoning, locationPolicy: { ...policy, paths: [path] } };
+        assert.equal(assessLocation(singlePath, { scope: reasoning.scope, sentenceIds: representative }, passageIds).passed, true, `${question.id}/${path.id}声明路径必须能够通过`);
+      }
+      assert.equal(assessLocation(reasoning, { scope: reasoning.scope, sentenceIds: passageIds }, passageIds).passed, false, `${question.id}全选全文不得通过`);
     }
   }
 });
@@ -125,39 +221,7 @@ test("词块翻译覆盖原文并显式区分补出的中文逻辑", () => {
   assert.match(article.sentences[11].literal, /担保赔付款/);
 });
 
-test("五题证据、范围、反向判断与拆句均引用真实原文", async () => {
-  for (const question of article.questions) {
-    const r = question.reasoning;
-    assert.ok(r && r.restatement && r.transfer);
-    assert.equal(new Set(r.evidence.map(e => e.id)).size, r.evidence.length);
-    r.evidence.forEach(checkEvidence);
-    const ids = new Set(r.evidence.map(e => e.id));
-    for (const option of question.options) {
-      const reason = r.options[option.key];
-      assert.equal(reason.judgment, option.key === question.answer ? "选入" : "排除");
-      assert.ok(reason.reasoning && reason.evidenceIds.length);
-      for (const id of reason.evidenceIds) assert.ok(ids.has(id));
-      if (option.key !== question.answer) assert.ok(reason.errorType);
-    }
-    for (const chain of r.paraphrases) {
-      for (const id of chain.evidenceIds) assert.ok(ids.has(id));
-      assert.ok(question.options.some(option => option.text === chain.optionText));
-    }
-    const analysis = question.analysis;
-    assert.equal(analysis.prompt.text, question.prompt);
-    assert.deepEqual(Object.keys(analysis.options ?? {}).sort(), question.options.map(option => option.key).sort(), "Text 1所有选项均有语言讲解，不只分析正确项");
-    for (const [key, option] of Object.entries(analysis.options ?? {})) assert.equal(option.text, question.options.find(o => o.key === key).text);
-    for (const part of [analysis.prompt, ...Object.values(analysis.options ?? {})]) {
-      assert.equal(part.chunks.map(c => c.text).join(""), part.text);
-      const checkChildren = (components, parent) => components.forEach(component => {
-        assert.ok(parent.includes(component.text), `${part.id}子成分必须在父范围内：${component.text}`);
-        checkChildren(component.children ?? [], component.text);
-      });
-      checkChildren(part.beginnerSyntax.components, part.text);
-      part.beginnerSyntax.clauses.forEach(clause => assert.ok(part.text.includes(clause.text)));
-      assert.ok(part.chunks.every(c => c.grammarFunction && c.visualRole));
-    }
-  }
+test("Text 1反向题保留事实判断，标题题证据覆盖五段", async () => {
   const q23 = article.questions[2].reasoning;
   assert.equal(q23.scope, "whole-passage");
   for (const key of ["A", "C", "D"]) assert.equal(q23.options[key].errorType, "事实成立，非本题所求");
@@ -285,12 +349,6 @@ test("定位同时检查覆盖、精确率与范围，全选不能通过，23题
   assert.equal(noise.coverage, 1); assert.equal(noise.precision, .5); assert.equal(noise.passed, false);
   assert.equal(assessLocation(q24, { scope: "whole-passage", sentenceIds: select(18) }, ids).passed, false);
   for (const numbers of [[5, 8], [8, 11, 14, 19], [7, 8, 11, 19]]) assert.equal(assessLocation(article.questions[2].reasoning, { scope: "whole-passage", sentenceIds: select(...numbers) }, ids).passed, true);
-  for (const question of article.questions) {
-    const policy = question.reasoning.locationPolicy;
-    assert.ok(policy.revision > 0 && policy.paths.length);
-    for (const path of policy.paths) assert.ok(path.groups.length && path.groups.flat().concat(path.supportingSentenceIds).every(id => ids.includes(id)));
-    assert.equal(assessLocation(question.reasoning, { scope: question.reasoning.scope, sentenceIds: ids }, ids).passed, false);
-  }
   const first = makeLocationAttempt({ id: "first", articleId: article.id, questionId: 201024, at: 1, stage: "initial", work: { scope: "sentence", sentenceIds: ids } }, q24, ids);
   const second = makeLocationAttempt({ id: "second", articleId: article.id, questionId: 201024, at: 2, stage: "review", work: { scope: "sentence", sentenceIds: select(18) } }, q24, ids);
   assert.ok(isLocationAttempt(first) && isLocationAttempt(second));
@@ -348,12 +406,6 @@ test("地图先主动回忆三项，反馈只泄露声明的任务，不扩大�
   const m = await vite.ssrLoadModule("/app/learning-model.ts");
   const { trainingSources, articleMapSource } = await vite.ssrLoadModule("/app/training-sources.ts");
   const sources = trainingSources(article), map = articleMapSource(article);
-  assert.equal(map.practice.length, 3);
-  for (const task of map.practice) { checkTaskAnswer(task, map.text); assert.ok(map.text.includes(task.evidence)); }
-  for (const source of sources) for (const task of source.practice ?? []) {
-    for (const id of task.leaksToTaskIds ?? []) assert.ok(source.practice.some(t => t.id === id));
-    for (const leak of task.leaksToTasks ?? []) assert.ok(sources.some(s => s.id === leak.sentenceId && s.practice?.some(t => t.id === leak.taskId)));
-  }
   const targets = m.practiceHintTargets(sources, "previous-answer", "map-feedback", map.id, map.practice[1]);
   assert.ok(targets.some(key => key.includes("2010-p1-s17/not-but")));
   assert.ok(!targets.some(key => key.includes("2010-p1-s1/main-predicate")));
@@ -392,57 +444,22 @@ test("复盘显示篇目与错误时间，能直接打开指定任务，词汇�
 
 const text2 = articleContents["2010-p2"];
 
-test("Text 2按用户原卷保留五段，题干及所有选项的语言分析与实际文本一致", () => {
+test("Text 2按用户原卷保留五段与答案，十二个短语选项不虚构从句", () => {
   const fixture = JSON.parse(readFileSync(new URL("./fixtures/2010-p2-source.json", import.meta.url), "utf8"));
   const normalize = text => text.replace(/\s+/g, " ").trim();
   const sentence = new Map(text2.sentences.map(s => [s.id, s.text]));
   assert.deepEqual(text2.paragraphs.map(p => normalize(p.sentenceIds.map(id => sentence.get(id)).join(" "))), fixture.paragraphs.map(normalize));
   assert.deepEqual(text2.questions.map(q => q.answer), ["A", "C", "B", "D", "B"]);
-  let phrases = 0;
-  for (const question of text2.questions) {
-    assert.equal(question.analysis.prompt.text, question.prompt);
-    assert.equal(Object.keys(question.analysis.options).length, 4);
-    for (const option of question.options) assert.equal(question.analysis.options[option.key].text, option.text);
-    for (const analysis of [question.analysis.prompt, ...Object.values(question.analysis.options)]) {
-      assert.equal(analysis.chunks.map(c => c.text).join(""), analysis.text);
-      assert.ok(analysis.chunks.every(c => c.visualRole && c.grammarFunction));
-      const check = (components, parent) => components.forEach(c => {
-        assert.ok(parent.includes(c.text), `${analysis.id}: ${c.text}`);
-        check(c.children ?? [], c.text);
-      });
-      check(analysis.beginnerSyntax.components, analysis.text);
-      for (const clause of analysis.beginnerSyntax.clauses) {
-        assert.ok(analysis.text.includes(clause.text));
-        assert.ok(!clause.objectOrComplement, "从句细节不能继续混称宾语或表语");
-      }
-      if (analysis.textKind === "phrase") {
-        phrases++;
-        assert.equal(analysis.beginnerSyntax.clauses.length, 0, "名词短语和动名词选项不能虚构完整从句");
-        assert.ok(!analysis.beginnerSyntax.components.some(c => c.function === "谓语"));
-      }
-    }
-  }
-  assert.equal(phrases, 12);
-  assert.ok(text2.sentences.every(s => s.translationAlignment.every(b => /[\u4e00-\u9fff]/.test(b.chinese))));
+  const phrases = text2.questions.flatMap(question => Object.values(question.analysis.options)).filter(part => part.textKind === "phrase");
+  assert.equal(phrases.length, 12);
+  for (const phrase of phrases) assert.equal(phrase.beginnerSyntax.clauses.length, 0, `${phrase.id}不能虚构完整从句`);
 });
 
-test("Text 2的范围答案可点击，反馈只影响声明的关联任务", async () => {
+test("Text 2的正文与地图反馈只影响声明的关联任务", async () => {
   const m = await vite.ssrLoadModule("/app/learning-model.ts");
   const { trainingSources, articleMapSource } = await vite.ssrLoadModule("/app/training-sources.ts");
   const sources = trainingSources(text2), map = articleMapSource(text2);
   assert.equal(text2.sentences.flatMap(s => s.practice).length, 35);
-  assert.equal(map.practice.length, 3);
-  for (const source of sources) for (const task of source.practice) {
-    checkTaskAnswer(task, source.text);
-    if (task.kind === "range") {
-      const text = task.rangeText ?? source.text, tokens = m.rangeTokens(text), offset = text.indexOf(task.answer);
-      const first = tokens.findIndex(t => t.start === offset), last = tokens.findIndex(t => t.end === offset + task.answer.length);
-      assert.ok(first >= 0 && last >= first, `${source.id}/${task.id}: 不可点击的范围端点`);
-      assert.equal(m.selectedRange(text, first, last), task.answer);
-    }
-    for (const id of task.leaksToTaskIds ?? []) assert.ok(source.practice.some(t => t.id === id));
-    for (const leak of task.leaksToTasks ?? []) assert.ok(sources.some(s => s.id === leak.sentenceId && s.practice.some(t => t.id === leak.taskId)));
-  }
   const targets = m.practiceHintTargets(sources, "previous-answer", "map-feedback", map.id, map.practice[1]);
   assert.ok(targets.includes(m.taskKey("2010-p2-s15", text2.sentences[14].practice[1])));
   assert.ok(!targets.includes(m.taskKey("2010-p2-s4", text2.sentences[3].practice[0])));
@@ -453,13 +470,6 @@ test("Text 2的范围答案可点击，反馈只影响声明的关联任务", as
 test("Text 2反向题保留统计口径，主旨定位需覆盖五段且不能全选过关", async () => {
   const { assessLocation } = await vite.ssrLoadModule("/app/location-model.ts");
   const ids = text2.sentences.map(s => s.id), select = (...numbers) => numbers.map(n => `2010-p2-s${n}`);
-  for (const question of text2.questions) {
-    const r = question.reasoning;
-    for (const path of r.locationPolicy.paths) {
-      assert.equal(assessLocation(r, { scope: r.scope, sentenceIds: path.groups.map(g => g[0]) }, ids).passed, true, `${question.id}/${path.id}`);
-    }
-    assert.equal(assessLocation(r, { scope: r.scope, sentenceIds: ids }, ids).passed, false);
-  }
   const q28 = text2.questions[2].reasoning;
   for (const path of [[13, 14], [9, 10, 13, 14, 18]]) assert.equal(assessLocation(q28, { scope: "whole-passage", sentenceIds: select(...path) }, ids).passed, true);
   assert.equal(assessLocation(q28, { scope: "sentence", sentenceIds: select(13, 14) }, ids).passed, false);

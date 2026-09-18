@@ -377,6 +377,7 @@ export const passage2010P2SentenceContexts: Record<string, Record<string, Senten
     he: { contextualMeaning: "他（沙发上的丈夫）", use: "him 是 beside 的宾语，妻子坐在他旁边。" },
   },
   "2010-p2-s3": {
+    to: { partOfSpeech: "prep.", contextualMeaning: "与；对", use: "talk to me中to引出交谈对象，后接宾格me，不是不定式标记。" },
     frequently: { contextualMeaning: "经常地", use: "修饰 complain，强调女性反复提出这种抱怨。", contextualSubstitutions: [{ label: "often", chinese: "常常", fit: "direct", rewrittenSentence: "Toward the end of the evening, I commented that women often complain that their husbands don't talk to them.", nuance: "often 的书面色彩比 frequently 弱，但保留抱怨经常发生这一信息。", target: "word:often" }] },
     comment: { contextualMeaning: "评论道；谈到", use: "commented 后接完整 that 内容从句；不是2010完形干扰项里的搭配辨析。" },
     that: { contextualMeaning: "引出评论或抱怨的内容", use: "两个 that 分别引出 commented 与 complain 的宾语从句，都不在从句内部作主语或宾语。" },
@@ -412,7 +413,7 @@ export const passage2010P2SentenceContexts: Record<string, Record<string, Senten
     home: { partOfSpeech: "adv.（方向）", contextualMeaning: "回家", use: "come home 中 home 作方向副词，不加 to；第10句 at home 才是位置表达。" },
     work: { contextualMeaning: "工作；上班的地方", use: "from work 说明下班回家的来处，不指艺术作品或家务总量。" },
     have: { contextualMeaning: "有", use: "have 是实义及物动词，nothing 作宾语，不是完成时助动词。" },
-    to: { contextualMeaning: "引出说明可说内容的不定式", use: "to say 后置修饰 nothing；此处不是介词，也不表示目的。" },
+    to: { partOfSpeech: "infinitive marker", contextualMeaning: "引出说明可说内容的不定式", use: "to say 后置修饰 nothing；此处不是介词，也不表示目的。" },
   },
   "2010-p2-s9": {
     if: { contextualMeaning: "如果；要不是", use: "If she didn't... 与 we'd... 配合，表示与妻子实际上维持谈话的情况相反的假设。" },
@@ -427,10 +428,10 @@ export const passage2010P2SentenceContexts: Record<string, Record<string, Senten
     home: { partOfSpeech: "n.", contextualMeaning: "家", use: "at home 作 talk less 的地点状语；不是 come home 的方向副词用法。" },
     that: { contextualMeaning: "引出这一反差的具体内容", use: "that 引导同位语从句解释 irony；主语在从句内部是 they，不由 that 充当。" },
     although: { contextualMeaning: "尽管", use: "引出让步从句，承认男子在外常比女性话多，再与在家话少对照。" },
-    more: { contextualMeaning: "更多地（说话量）", use: "more 修饰 talk，than women 给出比较方；不是修饰女性的人数。" },
+    more: { partOfSpeech: "adv.（比较级）", contextualMeaning: "更多地（说话量）", use: "more 修饰 talk，than women 给出比较方；不是修饰女性的人数。" },
     than: { contextualMeaning: "比", use: "than women 为省略比较分句，理解时补 talk，但不把补词写回原文。" },
     they: { contextualMeaning: "美国男性", use: "they 回指 American men，作同位语从句主句的主语。" },
-    less: { contextualMeaning: "较少地（交谈）", use: "less 修饰 talk，与公开场合的 more 对照，不修饰房屋大小。" },
+    less: { partOfSpeech: "adv.（比较级）", contextualMeaning: "较少地（交谈）", use: "less 修饰 talk，与公开场合的 more 对照，不修饰房屋大小。" },
   },
   "2010-p2-s11": {
     wreak: { contextualMeaning: "造成；引发", use: "wreak havoc with marriage 为整个动词搭配，不能只替换 wreak 而不检查后面的介词。", contextualSubstitutions: [{ label: "cause", chinese: "造成", fit: "with-adjustment", rewrittenSentence: "And this pattern is causing serious damage to marriage.", nuance: "cause serious damage 更直白；wreak havoc 带更强烈的破坏比喻。serious 保留原表达的严重程度。", adjustment: "将 wreaking havoc with 整体改为 causing serious damage to，damage 的受损对象用 to 引出。", target: "word:cause" }] },
@@ -467,6 +468,8 @@ export const passage2010P2SentenceContexts: Record<string, Record<string, Senten
     fail: { partOfSpeech: "adj.（分词形容词）", contextualMeaning: "失败的；未奏效的", use: "failed修饰conversation，说明沟通失败的状态，不是本句限定谓语。" },
   },
   "2010-p2-s15": {
+    more: { partOfSpeech: "pron.（比较级数量表达）", contextualMeaning: "更多的量", use: "doing far more than their share中more作数量性宾语中心，than their share给出比较基准。" },
+    as: { partOfSpeech: "prep.（such as的组成部分）", contextualMeaning: "引出例子", use: "与such组成such as，举例说明tangible inequities；整体义为例如，不是作为或正如。" },
     tangible: { contextualMeaning: "可以具体指出的", use: "修饰 inequities，后面用事业牺牲与家务分担列出实例。", contextualSubstitutions: [{ label: "concrete", chinese: "具体的", fit: "direct", rewrittenSentence: "In my own research, complaints from women about their husbands most often focused not on concrete inequities such as having given up the chance for a career to accompany a husband to his, or doing far more than their share of daily life-support work like cleaning, cooking and social arrangements.", nuance: "concrete 与 abstract 相对，强调具体；tangible 更强调明确可感。列举事实不变，仍与交流期待形成对照。", target: "word:concrete" }] },
     own: { contextualMeaning: "自己的", use: "my own research 强调作者本人开展的研究；own 不是拥有的谓语。" },
     from: { contextualMeaning: "来自（抱怨者）", use: "from women 后置修饰 complaints，交代抱怨的来源。" },
