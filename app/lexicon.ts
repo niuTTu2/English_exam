@@ -711,6 +711,7 @@ function inferPartOfSpeech(headword: string) {
 }
 
 const sourceLemmaAliases: Record<string, Record<string, string>> = {
+  "question-201025-option-A": { fluctuation: "fluctuation" },
   "2012-p3-s7": { ruling: "rule" },
   "p2-s5": { means: "mean" },
   "p2-s19": { means: "mean" },

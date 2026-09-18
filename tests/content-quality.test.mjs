@@ -53,6 +53,38 @@ test("单词本句义与词组、句意分开，保留词形与语境差异", as
   assert.equal(wordCard.contextualMeaning, "戏剧性的；引人注目的");
 });
 
+test("Text 1题干选项词卡使用各自语境，参与义不串成身体变化，名词不误并动词", async () => {
+  const { resolveEntry } = await vite.ssrLoadModule("/app/study-app.tsx");
+  const { passage2010P1QuestionContexts } = await vite.ssrLoadModule("/app/2010-passage-1-question-contexts.ts");
+  const card = (token, sourceId) => resolveEntry(token, false, sourceId);
+  const involved = card("involved", "question-201022-option-A");
+  assert.match(involved.contextualMeaning, /参与/);
+  assert.doesNotMatch(involved.use, /^has involved little physical change 表示只涉及/);
+  assert.match(involved.use, /involved in/);
+  assert.match(card("involved", "p2-s21").contextualMeaning, /涉及/);
+  assert.match(card("involved", "p2-s21").use, /physical change|身体变化/);
+  assert.match(card("worth", "question-201022-option-D").contextualMeaning, /值得/);
+  assert.doesNotMatch(card("worth", "question-201022-option-D").use, /65 billion/);
+  const fluctuation = card("Fluctuation", "question-201025-option-A");
+  assert.equal(fluctuation.headword, "fluctuation");
+  assert.match(fluctuation.partOfSpeech, /n\./);
+  assert.match(card("made", "question-201021-option-D").contextualMeaning, /完成|举行/);
+  for (const [sourceId, terms] of Object.entries(passage2010P1QuestionContexts)) {
+    const match = sourceId.match(/^question-(\d+)-(prompt|option-([A-D]))$/);
+    assert.ok(match, `来源ID无效：${sourceId}`);
+    const question = data.articleContents["2010-p1"].questions.find(q => q.id === Number(match[1]));
+    assert.ok(question, `找不到题目：${sourceId}`);
+    const text = match[2] === "prompt" ? question.prompt : question.options.find(option => option.key === match[3]).text;
+    for (const [lemma, entry] of Object.entries(terms)) {
+      const token = englishTokens(text).find(token => lexicon.canonicalLemma(token, { articleId: "2010-p1", sourceId }) === lemma);
+      assert.ok(token, `${sourceId}中没有原形${lemma}`);
+      assert.ok(entry.contextualMeaning && entry.use && entry.partOfSpeech);
+      assert.equal(card(token, sourceId).contextualMeaning, entry.contextualMeaning, `${sourceId}/${token}必须使用来源语境`);
+      assert.equal(card(token, sourceId).partOfSpeech, entry.partOfSpeech);
+    }
+  }
+});
+
 const forbiddenPlaceholder = /(待精审|后续补充|持续补充|结合本句成分理解|暂无资料|将在所属真题精审|该词未出现在)/;
 const forbiddenSyntaxPlaceholder = /(从引导词后找动作发出者|找带时态、情态或语态变化的动词|再看谓语后是否需要宾语|结合相邻主干判断)/;
 const normalizeText = (value) => value.replace(/\s+/g, " ").trim();
@@ -623,6 +655,15 @@ test("2010 年完形每句都有语境化同义替换且链接有效", () => {
 test("同一词条按文章和句子语境显示本句义与可替换表达", () => {
   const sentenceById = new Map(allSentences.map((sentence) => [sentence.id, sentence]));
   const articleBySentence = new Map(Object.values(data.articleContents).flatMap((article) => article.sentences.map((sentence) => [sentence.id, article.id])));
+  // 题干、选项同样是真题来源，不能把合法的题目语境误报为不存在的正文句。
+  for (const article of Object.values(data.articleContents)) for (const question of article.questions) {
+    const sources = [{ id: `question-${question.id}-prompt`, text: question.prompt }, ...question.options.map(option => ({ id: data.questionOptionSourceId(question, option.key), text: option.text }))];
+    for (const source of sources) {
+      if (sentenceById.has(source.id)) assert.equal(sentenceById.get(source.id).text, source.text, "共用选项来源必须一致");
+      sentenceById.set(source.id, source);
+      articleBySentence.set(source.id, article.id);
+    }
+  }
 
   for (const [sentenceId, wordContexts] of Object.entries(contextualVocabulary.sentenceWordContexts)) {
     const sentence = sentenceById.get(sentenceId);
