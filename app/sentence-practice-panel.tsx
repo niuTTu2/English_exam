@@ -1,38 +1,43 @@
 import { useState } from "react";
 import type { SentenceAnalysis } from "./data";
-import { errorCategories, latestTaskAttempt, type PracticeAttempts, type PracticeTask, type LearningReflection, type ErrorCategory } from "./learning-model";
+import { errorCategories, latestTaskAttempt, type PracticeAttempts, type PracticeTask, type PracticeSession, type LearningReflection, type ErrorCategory } from "./learning-model";
 
-export function SentencePracticePanel({ sentence, attempts, reflection, revealed, onAttempt, onReveal, onRetry, onReflection }: {
+export function SentencePracticePanel({ sentence, attempts, session, reflection, revealed, onAttempt, onReveal, onRetry, onReflection, onBegin = () => {}, onPreviousAnswer = () => {} }: {
   sentence: SentenceAnalysis; attempts: PracticeAttempts; reflection: LearningReflection; revealed: boolean;
+  session?: PracticeSession; onBegin?: () => void; onPreviousAnswer?: (task: PracticeTask) => void;
   onAttempt: (task: PracticeTask, answer: string) => void; onReveal: () => void; onRetry: () => void;
   onReflection: (value: LearningReflection) => void;
 }) {
   const [retry, setRetry] = useState<Set<string>>(new Set());
   const [taskIndex, setTaskIndex] = useState(0);
+  const [historyTask, setHistoryTask] = useState<string | null>(null);
   const tasks = sentence.practice ?? [];
-  const hasAttempt = tasks.some(task => latestTaskAttempt(attempts, task, sentence.id));
+  const hasAttempt = tasks.some(task => session && latestTaskAttempt(attempts, task, sentence.id)?.sessionId === session.id);
   function answer(task: PracticeTask, value: string) {
     onAttempt(task, value);
     setRetry(current => { const next = new Set(current); next.delete(task.id); return next; });
   }
   return <details className="sentence-practice" open={!revealed}>
     <summary>先试一试 · {tasks.filter(task => latestTaskAttempt(attempts, task, sentence.id)).length}/{tasks.length}项已作答</summary>
-    <p>先尝试，再查看讲解。不会时也可以记录卡点；答错不影响继续学习。</p>
-    <div className="practice-step-picker" aria-label="选择小任务">{tasks.map((task, index) => <button key={task.id} type="button" aria-pressed={taskIndex === index} onClick={() => setTaskIndex(index)}>任务{index + 1}{latestTaskAttempt(attempts, task, sentence.id) ? " · 已答" : ""}</button>)}</div>
+    <p>先尝试，再查看讲解。旧答案默认隐藏；本次只记录与这项任务有关的提示。</p>
+    <div className="practice-step-picker" aria-label="选择小任务">{tasks.map((task, index) => <button key={task.id} type="button" aria-pressed={taskIndex === index} onClick={() => { onBegin(); setTaskIndex(index); setHistoryTask(null); }}>任务{index + 1}{latestTaskAttempt(attempts, task, sentence.id) ? " · 有记录" : ""}</button>)}</div>
     {tasks.map((task, index) => {
       if (index !== taskIndex) return null;
-      const result = retry.has(task.id) ? undefined : latestTaskAttempt(attempts, task, sentence.id);
+      const previous = latestTaskAttempt(attempts, task, sentence.id);
+      const result = retry.has(task.id) || !session || previous?.sessionId !== session.id ? undefined : previous;
       return <section key={task.id} className="practice-task" aria-label={task.prompt}>
         <h4>{task.prompt}</h4>
         {task.kind === "token" ? <p className="predicate-picker">{sentence.text.split(/([A-Za-z]+(?:['’\-][A-Za-z]+)*)/).map((token, i) => /[A-Za-z]/.test(token) ? <button key={i} type="button" disabled={Boolean(result)} aria-label={`选 ${token} 为谓语`} onClick={() => answer(task, token)}>{token}</button> : <span key={i}>{token}</span>)}</p>
           : <div className="practice-choices">{task.options.map(option => <button type="button" key={option} disabled={Boolean(result)} aria-pressed={result?.answer === option} onClick={() => answer(task, option)}>{option}</button>)}</div>}
         {!result && <button type="button" className="practice-unsure" onClick={() => answer(task, "__unsure__")}>我还没找到，记录为需复习</button>}
         {result && <div className={`practice-feedback ${result.correct ? "is-correct" : "is-wrong"}`} role="status">
-          <strong>{result.correct ? result.assisted ? "复习答对（已接触提示）" : "首次作答正确" : "这项需要再练"}</strong>
+          <strong>{result.correct ? result.assisted ? "借助相关提示答对" : "本次独立答对" : "这项需要再练"}</strong>
+          {!!result.hintTypes?.length && <small>本次相关提示：{result.hintTypes.map(type => ({ word: "题眼查词", syntax: "句法讲解", translation: "译文", "article-map": "篇章地图", "previous-answer": "相关题目反馈" })[type]).join("、")}</small>}
           <p>参考：{task.answer}</p><p>{task.feedback}</p>
-          <button type="button" onClick={() => { setRetry(current => new Set(current).add(task.id)); onRetry(); }}>重新尝试（保留历史）</button>
+          <button type="button" onClick={() => { setRetry(current => new Set(current).add(task.id)); setHistoryTask(null); onBegin(); onRetry(); }}>重新尝试（保留历史）</button>
           {index + 1 < tasks.length && <button type="button" onClick={() => setTaskIndex(index + 1)}>下一小题</button>}
         </div>}
+        {!result && previous && <details onToggle={event => { if (event.currentTarget.open) { setHistoryTask(task.id); onPreviousAnswer(task); } }}><summary>查看上次作答（会用到答案提示）</summary>{historyTask === task.id && <p>上次：{previous.answer}；参考：{task.answer}。{task.feedback}</p>}</details>}
       </section>;
     })}
     <details><summary>翻译自测（可选）</summary><label className="translation-trial" htmlFor={`translation-trial-${sentence.id}`}>试着口头翻译，也可以先记下自己的译文

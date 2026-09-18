@@ -1,4 +1,4 @@
-import { isPracticeAttempt, errorCategories } from "./learning-model";
+import { isPracticeAttempt, isPracticeSession, errorCategories } from "./learning-model";
 type TimedSnapshot = { updatedAt: number };
 export type RemoteStudyState<Snapshot> = { state: Snapshot | null; updatedAt: number | null };
 export type LocalStudyState<Snapshot> = { state: Snapshot; base: RemoteStudyState<Snapshot> | null };
@@ -22,6 +22,7 @@ export function isStudySnapshot(value: unknown): value is TimedSnapshot & Record
   if (!isRecord(value) || value.version !== 1 || !Number.isSafeInteger(value.updatedAt) || Number(value.updatedAt) < 0) return false;
   const maps: Record<string, (entry: unknown) => boolean> = {
     practiceAttempts: isPracticeAttempt,
+    practiceSessions: isPracticeSession,
     practiceReveals: entry => Number.isSafeInteger(entry) && Number(entry) >= 0,
     learningReflections: entry => isRecord(entry) && typeof entry.translation === "string" && ["", "correct", "unclear", "wrong"].includes(String(entry.translationRating)) && stringArray(entry.errors) && entry.errors.every(key => Object.hasOwn(errorCategories, key)),
     questionWork: entry => isRecord(entry) && ["", "sentence", "adjacent-sentences", "paragraph", "whole-passage"].includes(String(entry.scope)) && stringArray(entry.sentenceIds),

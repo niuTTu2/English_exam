@@ -122,7 +122,7 @@ test("empty, invalid, oversized and wrong-account updates never change existing 
 test("an older client can update notes without deleting training records", async () => {
   const user = await seedUser("training-compatibility");
   const attempt = { id: "practice-one", articleId: "2010-p1", sentenceId: "2010-p1-s1", taskId: "main-predicate", revision: 1, answer: "ended", correct: true, assisted: false, at: 10, conceptId: "finite-predicate", errorType: "predicate" };
-  const first = studySnapshot({ practiceAttempts: { "practice-one": attempt }, practiceReveals: { "2010-p1-s1": 20 }, termNotes: { work: "原笔记" } });
+  const first = studySnapshot({ practiceAttempts: { "practice-one": attempt }, practiceReveals: { "2010-p1-s1": 20 }, practiceSessions: { "2010-p1": { id: "round", startedAt: 10, lastActiveAt: 20, hints: [] } }, termNotes: { work: "原笔记" } });
   const revision = (await (await writeStudy(user, first)).json()).updatedAt;
   const legacy = studySnapshot({ termNotes: { work: "旧页面修改的笔记" } });
   const write = await writeStudy(user, legacy, revision);
@@ -130,6 +130,7 @@ test("an older client can update notes without deleting training records", async
   const saved = await (await request("/api/study-state", "GET", undefined, user.cookie)).json();
   assert.deepEqual(saved.state.practiceAttempts, first.practiceAttempts);
   assert.deepEqual(saved.state.practiceReveals, first.practiceReveals);
+  assert.deepEqual(saved.state.practiceSessions, first.practiceSessions);
   assert.equal(saved.state.termNotes.work, "旧页面修改的笔记");
 });
 

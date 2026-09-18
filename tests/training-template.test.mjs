@@ -170,19 +170,19 @@ test("十九句任务有真实证据与稳定概念，不用展开记录充当�
   const second = { ...first, id: "second", at: 20, correct: true, assisted: true, answer: task.answer };
   assert.equal(model.sentencePracticeStatus(sentence.practice, { first }, sentence.id), "needs-review");
   assert.equal(model.sentencePracticeStatus(sentence.practice, { first, second }, sentence.id), "assisted");
-  assert.equal(model.practiceDueAt(first), first.at);
+  assert.equal(model.practiceDueAt(first), first.at + model.DAY_MS);
   assert.equal(model.practiceDueAt(second), second.at + 86400000);
   assert.equal(model.sentencePracticeStatus(sentence.practice, { stale: { ...second, revision: 99 } }, sentence.id), "new");
   const { TrainingReview } = await vite.ssrLoadModule("/app/training-review.tsx");
-  const review = renderToStaticMarkup(React.createElement(TrainingReview, { articles: [article], attempts: { first }, reflections: {}, questionWork: {}, submitted: {}, now: 0, onSentence() {}, onQuestion() {} }));
-  assert.match(review, /第3句 · 主系表/); // 刚答错立即出现，不依赖30秒刷新一次的时钟。
+  const review = renderToStaticMarkup(React.createElement(TrainingReview, { articles: [article], attempts: { first }, reflections: {}, questionWork: {}, submitted: {}, now: first.at + model.DAY_MS, onSentence() {}, onQuestion() {} }));
+  assert.match(review, /第3句 · 主系表/); // 答错按新规则次日到期；错误记录仍保留。
   assert.doesNotMatch(review, /本次没有到期/);
   const { SentencePracticePanel } = await vite.ssrLoadModule("/app/sentence-practice-panel.tsx");
-  const props = { sentence, attempts: {}, reflection: model.emptyReflection(), revealed: false, onAttempt() {}, onReveal() {}, onRetry() {}, onReflection() {} };
+  const props = { sentence, attempts: {}, session: { id: "round", startedAt: 0, lastActiveAt: 10, hints: [] }, reflection: model.emptyReflection(), revealed: false, onAttempt() {}, onReveal() {}, onRetry() {}, onReflection() {} };
   const before = renderToStaticMarkup(React.createElement(SentencePracticePanel, props));
   assert.doesNotMatch(before, /practice-feedback|参考：/);
   assert.match(before, /disabled=""[^>]*>先完成至少一项尝试/);
-  const after = renderToStaticMarkup(React.createElement(SentencePracticePanel, { ...props, attempts: { first } }));
+  const after = renderToStaticMarkup(React.createElement(SentencePracticePanel, { ...props, attempts: { first: { ...first, sessionId: "round" } } }));
   assert.match(after, /这项需要再练/);
   assert.match(after, /查看主干与讲解/);
   const { vocabularyPriority } = await vite.ssrLoadModule("/app/vocabulary-priority.ts");
@@ -204,4 +204,50 @@ test("定位练习在提交前不显示参考，空白未练不计错误", async
   const matched = renderToStaticMarkup(React.createElement(QuestionLocationPractice, { ...props, submitted: true, work: { scope: "adjacent-sentences", sentenceIds: ["2010-p1-s3", "2010-p1-s4"] } }));
   assert.match(matched, /已覆盖参考定位的关键位置/);
   assert.match(matched, /不等于推理一定正确/);
+});
+
+
+test("提示只作用于相关任务，隔日无提示重练恢复独立，间隔按实际历史递进", async () => {
+  const m = await vite.ssrLoadModule("/app/learning-model.ts");
+  const [predicate, subject] = article.sentences[0].practice;
+  const sentenceId = article.sentences[0].id;
+  let session = m.continuePracticeSession(undefined, 100, "round-1");
+  const add = (type, source, keys) => session = m.addPracticeHint(session, { id: `${type}-${source}`, type, source, at: 100, taskKeys: keys });
+  add("article-map", "map", article.sentences.flatMap(s => s.practice.filter(t => m.hintAffectsTask(t, "article-map", "map")).map(t => m.taskKey(s.id, t))));
+  add("word", "Damien Hirst", []);
+  const answer = (task, at, current = session) => m.makePracticeAttempt({ id: `a-${task.id}-${at}`, articleId: article.id, sentenceId, task, answer: task.answer, at, session: current });
+  assert.equal(answer(predicate, 101).assisted, false, "文章地图及人名不影响谓语题");
+  add("previous-answer", predicate.id, [m.taskKey(sentenceId, predicate)]);
+  assert.equal(answer(subject, 102).assisted, false, "第一题反馈不无条件污染第二题");
+  assert.equal(answer(predicate, 102).assisted, true, "本轮刚看过本题反馈的重做仍记提示");
+  assert.equal(m.hintAffectsTask(predicate, "word", "ended"), true);
+  const fresh = m.continuePracticeSession(session, 3 * m.DAY_MS, "round-2");
+  assert.equal(fresh.hints.length, 0);
+  const independent = answer(predicate, 3 * m.DAY_MS, fresh);
+  assert.equal(independent.relevantHintUsed, false);
+  const wrong = { ...answer(predicate, 101), correct: false, answer: "history" };
+  assert.equal(m.sentencePracticeStatus([predicate], { wrong, independent }, sentenceId), "independent");
+  const successes = [independent];
+  for (const days of [3, 7, 14, 30]) {
+    const schedule = m.practiceSchedule(successes);
+    assert.equal(schedule.intervalDays, days);
+    const nextSession = m.continuePracticeSession(undefined, schedule.dueAt, `round-${days}`);
+    successes.push(answer(predicate, schedule.dueAt, nextSession));
+  }
+  const firstSchedule = m.practiceSchedule([independent]);
+  assert.deepEqual(m.practiceSchedule([independent, { ...independent, id: "early", at: independent.at + 1 }]), firstSchedule, "提前刷题不晋级也不延后到期日");
+  const failed = { ...successes.at(-1), id: "failed", at: successes.at(-1).at + 1, correct: false };
+  assert.equal(m.practiceSchedule([...successes, failed]).intervalDays, 1);
+  assert.equal(m.practiceSchedule([...successes, failed]).streak, 0);
+  const metrics = m.practiceMetrics([{ id: sentenceId, practice: [predicate] }], { wrong }, 101);
+  assert.deepEqual(metrics, { total: 1, completed: 1, independent: 0, due: 0 });
+  const { SentencePracticePanel } = await vite.ssrLoadModule("/app/sentence-practice-panel.tsx");
+  const oldAnswerHidden = renderToStaticMarkup(React.createElement(SentencePracticePanel, { sentence: article.sentences[0], attempts: { wrong }, session: fresh, reflection: m.emptyReflection(), revealed: false, onAttempt() {}, onReveal() {}, onRetry() {}, onReflection() {} }));
+  assert.doesNotMatch(oldAnswerHidden, /practice-feedback|参考：/);
+  assert.ok(m.isPracticeAttempt(independent));
+  assert.equal(m.isPracticeAttempt({ ...independent, relevantHintUsed: true }), false);
+  assert.ok(m.isPracticeSession(fresh));
+  const restored = m.preserveTrainingRecords({ practiceAttempts: { independent }, practiceSessions: { [article.id]: fresh } }, { termNotes: { note: "旧端笔记" } });
+  assert.equal(restored.practiceAttempts.independent, independent);
+  assert.equal(restored.practiceSessions[article.id], fresh);
 });

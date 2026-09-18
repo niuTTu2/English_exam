@@ -2,7 +2,7 @@ import type { PracticeTask, GrammarConceptId, ErrorCategory } from "./learning-m
 const q = (id: string, prompt: string, options: string[], answer: number, evidence: string, feedback: string, conceptId: GrammarConceptId, errorType: ErrorCategory): PracticeTask => ({ id, revision: 1, kind: "choice", prompt, options, answer: options[answer], evidence, feedback, conceptId, errorType });
 export const passage2010P1Practice: Record<string, PracticeTask[]> = {
   "2010-p1-s1": [
-    { id: "main-predicate", revision: 1, kind: "token", prompt: "点出全句唯一承担主句时态的动词。", options: [], answer: "ended", evidence: "ended", feedback: "ended承担过去时，是主句谓语。其余主要是名词组和介词短语；先抓The longest bull run ended，再把修饰放回去。", conceptId: "finite-predicate", errorType: "predicate" },
+    { id: "main-predicate", revision: 1, kind: "token", prompt: "点出全句唯一承担主句时态的动词。", options: [], answer: "ended", evidence: "ended", feedback: "ended承担过去时，是主句谓语。先把承担时态的ended找出来，其余成分再单独判断。", conceptId: "finite-predicate", errorType: "predicate" },
     q("subject-head", "主语的核心是哪一组？", ["history", "bull run", "century"], 1, "The longest bull run", "bull run是中心；history在介词短语内，给longest限定比较范围。找主语不要选离谓语最近的名词。", "subject-head", "subject"),
     q("by-attachment", "by Damien Hirst直接说明谁？", ["sale", "ended", "works"], 2, "works by Damien Hirst", "它说明作品是谁创作的，直接跟works；拍卖不是由by这组来说明主办者。", "modifier-prepositional", "attachment"),
   ],
@@ -63,3 +63,32 @@ export const passage2010P1Practice: Record<string, PracticeTask[]> = {
     q("return-subject", "谁执行to return中的return？", ["confidence", "卖家anyone", "两者同时"], 0, "waiting for confidence to return", "wait for A to do里A执行do，恢复的是信心。不要把外层waiting的逻辑主语套给内层return。", "nonfinite-subject", "attachment"),
   ],
 };
+
+// 查词只有命中本任务的题眼才算提示；人名查询不会污染找谓语等任务。
+const hintWordsByTask: Record<string, Record<string, string[]>> = {
+  "2010-p1-s1": { "main-predicate": ["ended"], "subject-head": ["run", "bull run"], "by-attachment": ["by"] },
+  "2010-p1-s2": { "finite-versus-ing": ["sold", "fetching"], "all-but": ["but", "All but two"] },
+  "2010-p1-s3": { predicative: ["was"] },
+  "2010-p1-s4": { "as-time": ["As"], "main-subject": ["one"] },
+  "2010-p1-s5": { "since-attachment": ["since", "since 2003"], duration: ["for", "for a while"] },
+  "2010-p1-s6": { "worth-complement": ["worth"], "firm-apposition": ["Arts Economics"] },
+  "2010-p1-s7": { "to-endpoint": ["to", "come down to"] },
+  "2010-p1-s8": { "comparison-dimension": ["interest"], "matched-role": ["matched"] },
+  "2010-p1-s9": { "that-subject": ["that"], deeply: ["deeply"] },
+  "2010-p1-s10": { "that-reference": ["that"] },
+  "2010-p1-s11": { "by-percentage": ["by"], "year-to": ["to"] },
+  "2010-p1-s12": { "two-hads": ["had", "had to"], "them-reference": ["them"] },
+  "2010-p1-s13": { "since-clause": ["since"] },
+  "2010-p1-s14": { average: ["average", "on average"], "far-more": ["far"] },
+  "2010-p1-s15": { "confident-content": ["confident"] },
+  "2010-p1-s16": { different: ["different"], "that-role": ["that"] },
+  "2010-p1-s17": { "not-but": ["lack", "not a lack of demand but a lack of good work to sell"] },
+  "2010-p1-s18": { "dash-predicate": ["deliver"] },
+  "2010-p1-s19": { "waiting-subject": ["waiting"], "return-subject": ["return", "waiting for confidence to return"] },
+};
+const mapTasks = new Set(["2010-p1-s5/tense-reference", "2010-p1-s10/that-reference", "2010-p1-s12/them-reference", "2010-p1-s17/not-but"]);
+for (const [sentenceId, tasks] of Object.entries(passage2010P1Practice)) for (const task of tasks) {
+  task.hintWords = hintWordsByTask[sentenceId]?.[task.id] ?? [];
+  task.mapRevealsAnswer = mapTasks.has(`${sentenceId}/${task.id}`);
+  if (sentenceId === "2010-p1-s16" && task.id === "outer-predicate") task.leaksToTaskIds = ["that-role"];
+}
