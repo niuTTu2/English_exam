@@ -325,6 +325,29 @@ test("storage failures expose only a safe reference and preserve the previous pa
   assert.equal((await request("/api/auth/password", "POST", { email: user.email, password: passphrase })).status, 200);
 });
 
+test("session storage failures are retryable and do not claim the account is signed out", async () => {
+  const user = await seedUser("session-store-unavailable");
+  await database.prepare("ALTER TABLE sessions RENAME TO temporarily_unavailable_sessions").run();
+  try {
+    const response = await request("/api/auth/session", "GET", undefined, user.cookie);
+    assert.equal(response.status, 503);
+    assert.equal(response.headers.get("Cache-Control"), "no-store");
+    assert.equal(response.headers.has("Set-Cookie"), false);
+    const body = await response.json();
+    assert.deepEqual(body, {
+      error: "登录服务暂时无法检查，请稍后重试。",
+      code: "AUTH_SESSION_UNAVAILABLE",
+    });
+    assert.equal(Object.hasOwn(body, "user"), false, "an outage is not an anonymous session");
+    assert.doesNotMatch(JSON.stringify(body), /SQL|table|D1|session-store|example\.test/);
+  } finally {
+    await database.prepare("ALTER TABLE temporarily_unavailable_sessions RENAME TO sessions").run();
+  }
+  const restored = await request("/api/auth/session", "GET", undefined, user.cookie);
+  assert.equal(restored.status, 200);
+  assert.equal((await restored.json()).user.email, user.email);
+});
+
 test("a missing password migration does not discard an existing valid session", async () => {
   const user = await seedUser("migration-unavailable");
   await database.prepare("DROP TABLE user_passwords").run();
@@ -332,6 +355,7 @@ test("a missing password migration does not discard an existing valid session", 
   const session = await response.json();
   assert.equal(session.user.email, user.email);
   assert.equal(session.passwordConfigured, false);
+  assert.equal(session.passwordUnavailable, true);
   const login = await request("/api/auth/password", "POST", { email: user.email, password: passphrase });
   assert.equal(login.status, 503);
   assert.doesNotMatch(await login.text(), /SQL|table|D1|password_hash/);

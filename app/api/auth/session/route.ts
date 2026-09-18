@@ -16,6 +16,7 @@ export async function GET(request: Request) {
   try {
     const user = await getSessionUser(request);
     let passwordConfigured = passwordServiceReady();
+    let passwordUnavailable = false;
     let hasPassword = false;
     if (passwordConfigured) {
       try {
@@ -24,16 +25,22 @@ export async function GET(request: Request) {
         hasPassword = Boolean(credential);
       } catch {
         passwordConfigured = false;
+        passwordUnavailable = true;
       }
     }
     return Response.json({
       configured: emailServiceReady(),
       passwordConfigured,
+      passwordUnavailable,
       user: user ? { email: user.email, hasPassword } : null,
     }, { headers: { "Cache-Control": "no-store" } });
   } catch {
-    return Response.json({ configured: emailServiceReady(), passwordConfigured: false, user: null },
-      { headers: { "Cache-Control": "no-store" } });
+    // An unavailable session store cannot establish that the visitor is signed out.
+    // Do not send a successful anonymous response that would switch their local record owner.
+    return Response.json(
+      { error: "登录服务暂时无法检查，请稍后重试。", code: "AUTH_SESSION_UNAVAILABLE" },
+      { status: 503, headers: { "Cache-Control": "no-store" } },
+    );
   }
 }
 

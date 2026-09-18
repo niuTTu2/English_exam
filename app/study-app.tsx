@@ -11,6 +11,7 @@ import { emptyReflection, latestTaskAttempt, practiceMetrics, activePracticeSess
 import { makeLocationAttempt, locationHistory, type LocationAttempts } from "./location-model";
 import { QuestionLocationPractice } from "./question-location-practice";
 import { vocabularyPriority } from "./vocabulary-priority";
+import { AuthSessionError, readAuthSession } from "./auth-session";
 
 import {
   ArrowLeft,
@@ -844,6 +845,9 @@ export default function StudyApp() {
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [emailConfigured, setEmailConfigured] = useState(false);
   const [passwordConfigured, setPasswordConfigured] = useState(false);
+  const [passwordUnavailable, setPasswordUnavailable] = useState(false);
+  const [sessionCheckState, setSessionCheckState] = useState<"loading" | "ready" | "error">("loading");
+  const [sessionCheckError, setSessionCheckError] = useState("");
   const [hasPassword, setHasPassword] = useState(false);
   const [authMode, setAuthMode] = useState<"password" | "code">("password");
   const [loginPassword, setLoginPassword] = useState("");
@@ -864,6 +868,8 @@ export default function StudyApp() {
   const [conflictingRemote, setConflictingRemote] = useState<RemoteStudyState<PersistedStudyState> | null>(null);
   const [hasLegacyBackup, setHasLegacyBackup] = useState(false);
   const syncGeneration = useRef(0);
+  const sessionCheckGeneration = useRef(0);
+  const sessionCheckController = useRef<AbortController | null>(null);
   const restoringAccount = useRef(false);
   const uploadController = useRef<AbortController | null>(null);
   const previousOnline = useRef(true);
@@ -985,13 +991,62 @@ export default function StudyApp() {
     }
   }, [applySnapshot]);
 
+  const cancelSessionCheck = useCallback(() => {
+    sessionCheckGeneration.current += 1;
+    sessionCheckController.current?.abort();
+    sessionCheckController.current = null;
+  }, []);
+
+  const checkSession = useCallback(async () => {
+    cancelSessionCheck();
+    const checkGeneration = sessionCheckGeneration.current;
+    const accountGeneration = syncGeneration.current;
+    const controller = new AbortController();
+    sessionCheckController.current = controller;
+    const isCurrent = () => !controller.signal.aborted
+      && checkGeneration === sessionCheckGeneration.current && accountGeneration === syncGeneration.current;
+    setSessionCheckState("loading");
+    setSessionCheckError("");
+    try {
+      const session = await readAuthSession({ signal: controller.signal });
+      if (!isCurrent()) return;
+      setEmailConfigured(session.configured);
+      setPasswordConfigured(session.passwordConfigured);
+      setPasswordUnavailable(Boolean(session.passwordUnavailable));
+      setAuthMode(current => current === "code" && session.configured ? "code" : session.passwordConfigured ? "password" : "code");
+      // Only a validated, successful response may enter the existing account restoration path.
+      if (!session.user) {
+        if (snapshotOwner.current) {
+          const guest = readLocalStudyState<PersistedStudyState>(window.localStorage, null);
+          snapshotOwner.current = null;
+          remoteBase.current = guest?.base ?? null;
+          applySnapshot(guest?.state ?? emptyStudyState());
+          window.localStorage.removeItem(ACTIVE_ACCOUNT_KEY);
+        }
+        setSessionCheckState("ready");
+        return;
+      }
+      setHasPassword(Boolean(session.user.hasPassword));
+      setSessionCheckState("ready");
+      await restoreAccount(session.user.email);
+    } catch (error) {
+      if (!isCurrent()) return;
+      setSessionCheckError(error instanceof AuthSessionError ? error.message : "登录状态暂时无法读取，请重试。本机记录已保留。");
+      setSessionCheckState("error");
+    } finally {
+      if (sessionCheckController.current === controller) sessionCheckController.current = null;
+    }
+  }, [applySnapshot, cancelSessionCheck, restoreAccount]);
+
   useEffect(() => {
+    let active = true;
     const handleOnline = () => { setOnline(true); };
     const handleOffline = () => { setOnline(false); setSyncState("offline"); };
     window.addEventListener("online", handleOnline);
     window.addEventListener("offline", handleOffline);
 
     queueMicrotask(() => {
+      if (!active) return;
       setOnline(navigator.onLine);
       try {
         setHasLegacyBackup(Boolean(window.localStorage.getItem(LEGACY_STORAGE_KEY)));
@@ -1013,30 +1068,16 @@ export default function StudyApp() {
         .catch(() => undefined);
     }
 
-    const sessionGeneration = syncGeneration.current;
-    void fetch("/api/auth/session")
-      .then((response) => response.json() as Promise<{ configured?: boolean; passwordConfigured?: boolean; user?: { email: string; hasPassword?: boolean } | null }>)
-      .then(async (session) => {
-        if (sessionGeneration !== syncGeneration.current) return;
-        setEmailConfigured(Boolean(session.configured));
-        setPasswordConfigured(Boolean(session.passwordConfigured));
-        if (!session.passwordConfigured) setAuthMode("code");
-        if (!session.user) {
-          if (snapshotOwner.current) {
-            const guest = readLocalStudyState<PersistedStudyState>(window.localStorage, null);
-            snapshotOwner.current = null;
-            remoteBase.current = guest?.base ?? null;
-            applySnapshot(guest?.state ?? emptyStudyState());
-            window.localStorage.removeItem(ACTIVE_ACCOUNT_KEY);
-          }
-          return;
-        }
-        setHasPassword(Boolean(session.user.hasPassword));
-        await restoreAccount(session.user.email);
-      })
-      .catch(() => undefined);
+    queueMicrotask(() => { if (active) void checkSession(); });
 
     return () => {
+      active = false;
+      cancelSessionCheck();
+      syncGeneration.current += 1;
+      restoringAccount.current = false;
+      readyToUpload.current = false;
+      uploadController.current?.abort();
+      uploadController.current = null;
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
     };
@@ -1046,9 +1087,20 @@ export default function StudyApp() {
 
   useEffect(() => {
     const reconnected = online && !previousOnline.current;
-    previousOnline.current = online;
-    if (reconnected && userEmail) void restoreAccount(userEmail);
-  }, [online, userEmail, restoreAccount]);
+    if (reconnected && authBusy) return;
+    if (!reconnected) {
+      previousOnline.current = online;
+      return;
+    }
+    let active = true;
+    queueMicrotask(() => {
+      if (!active) return;
+      previousOnline.current = online;
+      if (userEmail) void restoreAccount(userEmail);
+      else void checkSession();
+    });
+    return () => { active = false; };
+  }, [online, userEmail, authBusy, checkSession, restoreAccount]);
 
   const persistedState = useMemo<PersistedStudyState>(() => ({
     version: 1,
@@ -1508,6 +1560,7 @@ export default function StudyApp() {
 
   async function requestLoginCode() {
     if (authBusy) return;
+    cancelSessionCheck();
     setAuthBusy(true);
     setAuthError("");
     try {
@@ -1528,6 +1581,7 @@ export default function StudyApp() {
 
   async function verifyLoginCode() {
     if (!requestId || authBusy) return;
+    cancelSessionCheck();
     setAuthBusy(true);
     setAuthError("");
     try {
@@ -1558,6 +1612,7 @@ export default function StudyApp() {
 
   async function loginWithPassword() {
     if (authBusy) return;
+    cancelSessionCheck();
     setAuthBusy(true);
     setAuthError("");
     setAuthMessage("");
@@ -1623,6 +1678,7 @@ export default function StudyApp() {
 
   async function signOut() {
     if (authBusy) return;
+    cancelSessionCheck();
     setAuthBusy(true);
     syncGeneration.current += 1;
     restoringAccount.current = false;
@@ -1746,7 +1802,10 @@ export default function StudyApp() {
           <Badge variant="outline" className="status-badge">
             {online ? <Cloud /> : <WifiOff />} {syncLabel}
           </Badge>
-          <button type="button" className="avatar-chip" aria-label="打开个人账号" onClick={() => setAccountOpen(true)}>
+          <button type="button" className="avatar-chip" aria-label="打开个人账号" onClick={() => {
+            setAccountOpen(true);
+            if (!userEmail && sessionCheckState === "error" && !authBusy) void checkSession();
+          }}>
             {userEmail ? userEmail.slice(0, 1).toUpperCase() : <LogIn />}
           </button>
         </div>
@@ -2484,6 +2543,12 @@ export default function StudyApp() {
             {!userEmail && authMessage && <p className="auth-success" role="status">{authMessage}</p>}
           </div>
 
+          {!userEmail && sessionCheckState === "loading" && <div className="account-content" role="status">正在检查登录服务…</div>}
+          {!userEmail && sessionCheckState === "error" && <div className="account-content">
+            <p className="auth-error" role="alert">{sessionCheckError}</p>
+            <Button type="button" variant="outline" disabled={authBusy} onClick={() => void checkSession()}>重试检查登录服务</Button>
+          </div>}
+
           {userEmail ? (
             <div className="account-content">
               <div className="signed-in-card">
@@ -2508,12 +2573,12 @@ export default function StudyApp() {
                   <small>8—128 个字符即可，无需组合大小写或特殊符号。忘记密码时可使用邮箱验证码登录后重设。</small>
                   <Button type="submit" disabled={authBusy || !newPassword || !passwordConfirmation}>{authBusy ? "正在保存…" : "保存密码"}</Button>
                 </form>
-              ) : <small>密码服务暂不可用，已有邮箱验证码登录不受影响。</small>}
+              ) : <small>密码服务暂不可用，暂时无法设置或修改密码。</small>}
               {authError && <p className="auth-error" role="alert">{authError}</p>}
               {authMessage && <p className="auth-success" role="status">{authMessage}</p>}
               <Button type="button" variant="outline" disabled={authBusy} onClick={signOut}><LogOut />退出账号</Button>
             </div>
-          ) : emailConfigured || passwordConfigured ? (
+          ) : sessionCheckState !== "ready" ? null : emailConfigured || passwordConfigured ? (
             <form className="account-content" onSubmit={(event) => {
               event.preventDefault();
               if (authMode === "password") void loginWithPassword();
@@ -2573,18 +2638,20 @@ export default function StudyApp() {
               )}
               <small>{authMode === "code" ? "验证码有效期 10 分钟。首次登录后，可在此面板设置密码，下次直接登录。" : "已有验证码账号仍是同一个账号，学习记录不变。首次使用需先通过验证码登录并设置密码。"}</small>
               {!emailConfigured && <small>邮件服务暂不可用，已设置密码的账号仍可登录。</small>}
+              {passwordUnavailable && emailConfigured && <small>密码服务暂不可用，可使用邮箱验证码登录。</small>}
             </form>
           ) : (
             <div className="account-content">
               <div className="provider-pending">
                 <LockKeyhole />
-                <h3>邮件服务待接入</h3>
-                <p>登录流程和云端数据结构已经预留。接入邮件服务前，你仍可用本机模式完整学习，所有记录会保存在当前设备。</p>
+                <h3>登录服务暂不可用</h3>
+                <p>暂时无法使用账号登录，请稍后重试。本机学习记录仍保留在当前设备。</p>
               </div>
+              <Button type="button" variant="outline" disabled={authBusy} onClick={() => void checkSession()}>重试检查登录服务</Button>
               <div className="account-status-list">
                 <p><CircleCheck /><span>当前设备自动保存</span></p>
                 <p><CircleCheck /><span>已缓存内容可离线打开</span></p>
-                <p><Clock3 /><span>接入邮件服务后启用跨设备同步</span></p>
+                <p><Clock3 /><span>登录服务恢复后可使用账号同步</span></p>
               </div>
             </div>
           )}
