@@ -1098,7 +1098,7 @@ export function getWordKnowledge(headword: string, context?: { articleId?: strin
     if (contextualKnowledge) return contextualKnowledge;
   }
   if (context?.articleId === "2012-p1") {
-    const contextualKnowledge = getPassage2012P1WordKnowledge(normalized(headword), context.sentenceId);
+    const contextualKnowledge = getPassage2012P1WordKnowledge(normalized(headword), context.sourceId ?? context.sentenceId);
     if (contextualKnowledge) return contextualKnowledge;
   }
   if (context?.articleId === "2012-p2") {

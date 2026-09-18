@@ -18,12 +18,25 @@ const text2Names = new Set(["virginia", "andrew", "hacker", "catherine", "kohler
 const text2SourceNames: Record<string, string[]> = { "2010-p2-s13": ["talk"], "question-201030-option-A": ["divorce", "talk"] };
 const text2Functions = new Set([...functions, "if", "although", "while", "when", "except", "throughout", "instead"]);
 const text2Structures = new Set(["invite somebody to do something", "invite sb to do sth", "invite A to do B", "had invited men to join them", "keep the conversation going", "keep A doing", "keep somebody/something doing", "tend to do", "tend to talk", "tend to talk more than women", "wreak havoc with", "is wreaking havoc with marriage", "give A as B", "gave lack of communication as the reason", "amount to", "amounts to", "such as", "first and foremost", "attach importance to", "stem from", "stems from", "between A and B", "between man and wife", "in short"].map(value => value.toLowerCase()));
+const homeworkCore = new Set("scorn inflexible mandate impoverished chaotic contradictory implication standard empower impose eliminate significant appropriate meaningful authority restrict discourage faulty".split(" "));
+const homeworkSenses = new Set("count address pass close matter work flat review correct hold right place key approach".split(" "));
+const homeworkNames = new Set(["los", "angeles", "l.a.", "l.a", "unified"]);
+const homeworkStructures = new Set(["with the exception of", "is meant to address", "on their own", "giving a pass to students", "as much of it as they want", "no more than 10%", "rather than empowering teachers", "finds homework to be unimportant", "account for a significant portion", "does nothing to ensure", "are willing to review and correct", "be put on hold", "looks into the matter", "not too late", "do homework right"]);
 const text3Core = new Set("habit behavior consumer cue routine cultivate subtle invest influence impact campaign promote promotion controversy essential viable observe observation".split(" "));
 const text3Senses = new Set("art perfect figure turn spring production feature ritual manufacture scrub white power concern private commercial".split(" "));
 const text3Names = new Set("dr curtis london procter gamble colgate-palmolive unilever colgate crest tide carol berning".split(" "));
 const text3Structures = new Set(["figure out", "turn to somebody for help", "help somebody (to) do something", "help (to) do something", "in response to something", "invest money (in) doing something", "between A and B", "be essential to doing something", "tie A to B", "be used to do something", "so as to do something", "due to + cause", "belong to a category"].map(value => value.toLowerCase()));
 /** 编辑建议按本篇语境给出；不是官方考试词频排名，也不改变词义。 */
 export function vocabularyPriority(entry: Pick<VocabEntry, "headword" | "display" | "kind" | "canonicalForm">, sourceId: string, articleId?: string): VocabularyPriority | undefined {
+  if (articleId === "2012-p1") {
+    const head = entry.headword.toLowerCase(), surface = entry.display.toLowerCase();
+    if (homeworkNames.has(head)) return { id: "name", label: "背景专名 · 识别即可", reason: "这里是洛杉矶联合学区的名称或组成部分；识别本文政策制定者即可。", recommendedReview: false };
+    if (entry.kind === "phrase") return homeworkStructures.has(surface) ? { id: "structure", label: "必会结构", reason: "这组结构决定政策的对象、条件或建议范围，适合连同本句复习。", recommendedReview: true } : { id: "recognition", label: "本句表达 · 按需记忆", reason: "先理解当前关系，再自行决定是否加入复习。", recommendedReview: false };
+    if (homeworkSenses.has(head)) return { id: "sense", label: "熟词语境义", reason: "本篇用法容易与常见名词、动作或数量义混淆，应连同当前来源区分。", recommendedReview: true };
+    if (functions.has(head) || ["if", "while", "whether", "because", "no", "none"].includes(head)) return { id: "function", label: "功能词 · 看句法作用", reason: "回到本句辨明指代、条件、否定和从句层级，不用其他篇的关系代替。", recommendedReview: false };
+    if (homeworkCore.has(head)) return { id: "core", label: "核心迁移词", reason: "这些词有助于理解政策评价、教育价值与措施，适合结合本句搭配复习。", recommendedReview: true };
+    return { id: "recognition", label: "本句识别 · 按需记忆", reason: "先读懂当前语境，是否标记由你决定。", recommendedReview: false };
+  }
   if (articleId === "2011-p1") return passage2011P1Priority(entry);
   if (articleId !== "2010-p1" && articleId !== "2010-p2" && articleId !== "2010-p3") return undefined;
   const text2 = articleId === "2010-p2", text3 = articleId === "2010-p3";

@@ -1,3 +1,4 @@
+import { passage2012P1ReviewedContexts } from "./2012-passage-1-contexts";
 import type { SentenceWordContext } from "./contextual-vocabulary";
 import { reviewedLexicon, type LexiconRow } from "./2011-content-helpers";
 const rows: LexiconRow[] = [
@@ -131,3 +132,7 @@ export const passage2012P1SentenceContexts: Record<string, Record<string, Senten
   "2012-p1-s17": { matter: { contextualMeaning: "这件事；作业政策问题", use: "the matter为looks into宾语，和15句动词matters不同。", partOfSpeech: "n." }, while: { contextualMeaning: "在……期间", use: "引董事会调查期间的时间从句，不是尽管。" }, look: { contextualMeaning: "调查（look into）", use: "looks into the matter为调查政策问题，不取看里面的空间义。" } },
   "2012-p1-s18": { it: { contextualMeaning: "形式主语", use: "真正主语是for L.A. Unified to do homework right。" }, right: { contextualMeaning: "妥当地；正确地", use: "副词修饰do，双关要求学区把作业政策做好。" } },
 };
+
+for (const [sourceId, contexts] of Object.entries(passage2012P1ReviewedContexts)) {
+  passage2012P1SentenceContexts[sourceId] = { ...passage2012P1SentenceContexts[sourceId], ...Object.fromEntries(Object.entries(contexts).map(([headword, context]) => [headword, { ...passage2012P1SentenceContexts[sourceId]?.[headword], ...context }])) };
+}

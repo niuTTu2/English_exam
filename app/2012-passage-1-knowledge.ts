@@ -1,3 +1,4 @@
+import { passage2012P1ReviewedContexts, passage2012P1ContextGlosses } from "./2012-passage-1-contexts";
 import type { WordKnowledge } from "./knowledge-base";
 import { reviewedPhrases, type PhraseRow } from "./2011-content-helpers";
 import { passage2012P1Lexicon, passage2012P1CollocationGlosses, passage2012P1SentenceContexts } from "./2012-passage-1-lexicon";
@@ -44,8 +45,10 @@ const rows: PhraseRow[] = [
 const reviewed = reviewedPhrases(rows);
 export const passage2012P1PhraseGuides = reviewed.guides;
 export const passage2012P1PhraseAliases = reviewed.aliases;
-export const passage2012P1PhraseGlosses = { ...passage2012P1CollocationGlosses, ...reviewed.glosses };
+export const passage2012P1PhraseGlosses = { ...passage2012P1CollocationGlosses, ...reviewed.glosses, ...passage2012P1ContextGlosses };
 export function getPassage2012P1WordKnowledge(headword: string, sentenceId?: string): WordKnowledge | undefined {
+  const sourceContext = sentenceId ? passage2012P1ReviewedContexts[sentenceId]?.[headword] : undefined;
+  if (sourceContext) return { grammarRole: sourceContext.partOfSpeech!, grammarSummary: sourceContext.use!, structures: [{ pattern: sourceContext.pattern, meaning: sourceContext.patternMeaning, rule: sourceContext.use! }], pitfalls: [] };
   const entry = passage2012P1Lexicon[headword];
   if (!entry) return undefined;
   const context = sentenceId ? passage2012P1SentenceContexts[sentenceId]?.[headword] : undefined;

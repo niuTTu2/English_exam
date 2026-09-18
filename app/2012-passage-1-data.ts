@@ -1,7 +1,10 @@
 import type { Question } from "./data";
+import { upgradePassage2012P1Sentence } from "./2012-passage-1-reading";
+import { passage2012P1Reasoning } from "./2012-passage-1-evidence";
+import { passage2012P1QuestionAnalysis } from "./2012-passage-1-question-analysis";
 import { sentenceFactory, segment, clause } from "./2011-content-helpers";
 const sentence = sentenceFactory("2012-p1");
-export const passage2012P1Sentences = [
+const passage2012P1SentenceDrafts = [
   sentence(1, [
     segment("Homework has never been terribly popular with students and even many parents, ", "predicate", "主语加现在完成时系表结构", "第一分句", "评价作业受欢迎程度", "never否定一直以来的受欢迎程度，terribly加强popular；even把家长包括进来。"),
     segment("but in recent years ", "connector", "转折连词加时间介词短语", "转折与时间状语", "限定后面被鄙视的时期", "but将不太受欢迎推进到更强烈的鄙视，不是态度转好。"),
@@ -90,7 +93,8 @@ export const passage2012P1Sentences = [
   ], "The homework rules should be put on hold.", "这些作业规定应暂缓执行，在此期间负责制定教育政策的学校董事会应调查此事并举行公开听证。", "应该先暂停这些作业规定，让负责制定教育政策的学校董事会调查清楚，并举行公开听证会。", "提出有条件暂缓和调查的改进方案，非否定全部教育管理。", ["be put on hold", "is responsible for setting educational policy", "looks into the matter", "conducts public hearings"], [clause("while the school board, which is responsible for setting educational policy, looks into the matter and conducts public hearings", "时间状语从句", "while", "说明暂缓规则的期间", "the school board", "looks into / conducts", "the matter / public hearings", "先译暂停规则，再译董事会调查和听证的安排。"), clause("which is responsible for setting educational policy", "非限制性定语从句", "which", "补充school board的职责", "which", "is", "responsible for setting educational policy为表语", "作为学校董事会后的职责说明插入译文。")]),
   sentence(18, [segment("It is not too late ", "predicate", "形式主语加否定系表结构", "主句", "评价行动时机", "not too late意味着仍然来得及，不是已经太迟。"), segment("for L.A. Unified to do homework right.", "subject", "for逻辑主语加不定式", "真正主语", "说明谁采取什么行动", "right为副词正确地；do homework在语境中兼有认真研究作业政策的双关。")], "It is not too late for L.A. Unified to do homework right.", "对洛杉矶联合学区来说，正确处理家庭作业还不算太晚。", "洛杉矶联合学区现在把作业这件事做好，还来得及。", "批评中保留改正空间，以作业的双关收束全文。", ["not too late", "do homework right"]),
 ];
-const question = (number: number, sentenceNumber: number, prompt: string, options: string[], answer: Question["answer"], locating: string, explanations: Question["explanations"]): Question => ({ id: 201200 + number, number, sentenceId: `2012-p1-s${sentenceNumber}`, prompt, options: options.map((text, index) => ({ key: "ABCD"[index] as Question["answer"], text })), answer, locating, explanations });
+export const passage2012P1Sentences = passage2012P1SentenceDrafts.map(upgradePassage2012P1Sentence);
+const question = (number: number, sentenceNumber: number, prompt: string, options: string[], answer: Question["answer"], locating: string, explanations: Question["explanations"]): Question => ({ id: 201200 + number, number, sentenceId: `2012-p1-s${sentenceNumber}`, prompt, options: options.map((text, index) => ({ key: "ABCD"[index] as Question["answer"], text })), answer, locating, explanations, reasoning: passage2012P1Reasoning[number], analysis: passage2012P1QuestionAnalysis[number] });
 export const passage2012P1Questions = [
   question(21, 1, "It is implied in Paragraph 1 that nowadays homework____.", ["is receiving more criticism", "is gaining more preferences", "is no longer an educational ritual", "is not required for advanced courses"], "A", "首句由从未很受欢迎进一步转向近年particularly scorned，说明遭受更多负面评价。", { A: "more criticism概括近年尤其受到轻视的态度变化。", B: "更多喜爱与particularly scorned相反。", C: "第二句仍把作业称为educational ritual，重新思考不等于惯例已消失。", D: "高级课程是10%计分上限的例外，不是没有作业要求。" }),
   question(22, 4, "L.A. Unified has made the rule about homework mainly because poor students ____.", ["tend to have moderate expectations for their education", "have asked for a different educational standard", "may have problems finishing their homework", "have voiced their complaints about homework"], "C", "第二段首句明确说规则旨在解决贫困或混乱家庭学生完成作业可能遇到的困难。", { A: "原文没有贫困学生降低教育期望的描述。", B: "降低标准是作者警惕的政策含义，不是学生提出的要求。", C: "may have problems finishing对应might have difficulty in completing，保留可能性。", D: "首段一般态度不证明贫困学生曾投诉，更非政策的直接依据。" }),

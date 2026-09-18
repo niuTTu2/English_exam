@@ -1,3 +1,4 @@
+import { passage2012P1Guide, passage2012P1Paragraphs } from "./2012-passage-1-guide";
 import { writing2012BSentences, writing2012BTasks } from "./2012-writing-b-data";
 import { writing2012ASentences, writing2012ATasks } from "./2012-writing-a-data";
 import { translation2012Sentences, translation2012Tasks } from "./2012-translation-data";
@@ -1617,6 +1618,7 @@ export const articleContents: Record<string, ArticleContent> = {
     id: "2012-p1", year: 2012, sectionId: "p1", label: "阅读 Text 1", badge: "2012 · 英语二 · 阅读 Text 1",
     title: "家庭作业：一刀切计分政策的缺陷", description: "18句、21—25题。区分作业数量、计分权重与教育价值；保留四项解析、双层翻译、句法和熟词多义。",
     kind: "reading", sentences: passage2012P1Sentences, questions: passage2012P1Questions,
+    paragraphs: passage2012P1Paragraphs, guide: passage2012P1Guide, teachingStatus: { syntax: true, vocabulary: true, evidence: true, practice: true },
   },
   "2012-p2": {
     id: "2012-p2", year: 2012, sectionId: "p2", label: "阅读 Text 2", badge: "2012 · 英语二 · 阅读 Text 2",
