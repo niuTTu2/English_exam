@@ -202,8 +202,8 @@ test("定位练习在提交前不显示参考，空白未练不计错误", async
   const blank = renderToStaticMarkup(React.createElement(QuestionLocationPractice, { ...props, submitted: true }));
   assert.match(blank, /不计作错误/);
   const matched = renderToStaticMarkup(React.createElement(QuestionLocationPractice, { ...props, submitted: true, work: { scope: "adjacent-sentences", sentenceIds: ["2010-p1-s3", "2010-p1-s4"] } }));
-  assert.match(matched, /已覆盖参考定位的关键位置/);
-  assert.match(matched, /不等于推理一定正确/);
+  assert.match(matched, /关键覆盖、选句精确度和范围判断均符合参考路径/);
+  assert.match(matched, /不能证明推理正确/);
 });
 
 
@@ -250,4 +250,46 @@ test("提示只作用于相关任务，隔日无提示重练恢复独立，间�
   const restored = m.preserveTrainingRecords({ practiceAttempts: { independent }, practiceSessions: { [article.id]: fresh } }, { termNotes: { note: "旧端笔记" } });
   assert.equal(restored.practiceAttempts.independent, independent);
   assert.equal(restored.practiceSessions[article.id], fresh);
+});
+
+test("定位同时检查覆盖、精确率与范围，全选不能通过，23题接受多条证据路径", async () => {
+  const { assessLocation, makeLocationAttempt, isLocationAttempt, locationHistory } = await vite.ssrLoadModule("/app/location-model.ts");
+  const ids = article.sentences.map(s => s.id), select = (...n) => n.map(n => `2010-p1-s${n}`);
+  const q24 = article.questions[3].reasoning;
+  assert.equal(assessLocation(q24, { scope: "sentence", sentenceIds: ids }, ids).passed, false);
+  const exact = assessLocation(q24, { scope: "sentence", sentenceIds: select(18) }, ids);
+  assert.equal(exact.passed, true);
+  assert.equal(assessLocation(q24, { scope: "sentence", sentenceIds: select(17, 18, 19) }, ids).passed, true);
+  const noise = assessLocation(q24, { scope: "sentence", sentenceIds: select(1, 18) }, ids);
+  assert.equal(noise.coverage, 1); assert.equal(noise.precision, .5); assert.equal(noise.passed, false);
+  assert.equal(assessLocation(q24, { scope: "whole-passage", sentenceIds: select(18) }, ids).passed, false);
+  for (const numbers of [[5, 8], [8, 11, 14, 19], [7, 8, 11, 19]]) assert.equal(assessLocation(article.questions[2].reasoning, { scope: "whole-passage", sentenceIds: select(...numbers) }, ids).passed, true);
+  for (const question of article.questions) {
+    const policy = question.reasoning.locationPolicy;
+    assert.ok(policy.revision > 0 && policy.paths.length);
+    for (const path of policy.paths) assert.ok(path.groups.length && path.groups.flat().concat(path.supportingSentenceIds).every(id => ids.includes(id)));
+    assert.equal(assessLocation(question.reasoning, { scope: question.reasoning.scope, sentenceIds: ids }, ids).passed, false);
+  }
+  const first = makeLocationAttempt({ id: "first", articleId: article.id, questionId: 201024, at: 1, stage: "initial", work: { scope: "sentence", sentenceIds: ids } }, q24, ids);
+  const second = makeLocationAttempt({ id: "second", articleId: article.id, questionId: 201024, at: 2, stage: "review", work: { scope: "sentence", sentenceIds: select(18) } }, q24, ids);
+  assert.ok(isLocationAttempt(first) && isLocationAttempt(second));
+  assert.deepEqual(locationHistory({ first, second }, 201024).map(a => a.result.passed), [false, true]);
+  const { preserveTrainingRecords } = await vite.ssrLoadModule("/app/learning-model.ts");
+  assert.equal(Object.keys(preserveTrainingRecords({ locationAttempts: { first } }, { locationAttempts: { second } }).locationAttempts).length, 2);
+  const { isStudySnapshot, hasStudyRecords } = await vite.ssrLoadModule("/app/study-sync.ts");
+  assert.ok(isStudySnapshot({ version: 1, updatedAt: 1, locationAttempts: { first, second } }));
+  assert.ok(hasStudyRecords({ locationAttempts: { first } }));
+  assert.equal(isStudySnapshot({ version: 1, updatedAt: 1, locationAttempts: { invalid: {} } }), false);
+});
+
+test("交卷后的新定位不锁住输入，初次与复盘结果分开保存", async () => {
+  const { QuestionLocationPractice } = await vite.ssrLoadModule("/app/question-location-practice.tsx");
+  const html = renderToStaticMarkup(React.createElement(QuestionLocationPractice, { question: article.questions[3], sentences: article.sentences, work: { scope: "sentence", sentenceIds: ["2010-p1-s18"] }, submitted: true, editing: true, onChange() {} }));
+  assert.match(html, /提交本次定位/); assert.doesNotMatch(html, /disabled/); assert.doesNotMatch(html, /关键覆盖 100/);
+  const { OriginalPassage } = await vite.ssrLoadModule("/app/original-passage.tsx");
+  const reading = renderToStaticMarkup(React.createElement(OriginalPassage, { article, marked: new Set(), onMark() {}, selection: { questionNumber: 24, ids: ["2010-p1-s18"], onToggle() {}, onDone() {} } }));
+  assert.equal((reading.match(/class="original-paragraph"/g) ?? []).length, 5);
+  assert.equal((reading.match(/class="location-sentence"/g) ?? []).length, 19);
+  assert.equal((reading.match(/aria-pressed="true"/g) ?? []).length, 1);
+  assert.match(reading, /完成选择，返回原题/);
 });

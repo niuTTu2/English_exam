@@ -74,3 +74,14 @@ export const passage2010P1Reasoning: Record<number, QuestionReasoning> = {
     transfer: "标题题用全文主线检验每个选项；结尾提供的细节应当能纳入主线，而非取代全文。",
   },
 };
+
+// 覆盖关键证据，同时限制无关句和过宽范围。多处事实核对允许两种推理路径。
+const ids = (...numbers: number[]) => numbers.map(n => `2010-p1-s${n}`);
+passage2010P1Reasoning[21].locationPolicy = { revision: 1, paths: [{ id: "success-crisis", label: "成功与危机联合定位", groups: [ids(2, 3), ids(4)], supportingSentenceIds: ids(1, 2, 3, 4), maxSentences: 4 }] };
+passage2010P1Reasoning[22].locationPolicy = { revision: 1, paths: [{ id: "quote-explanation", label: "引句与后句解释", groups: [ids(9), ids(10)], supportingSentenceIds: ids(16), maxSentences: 3 }] };
+passage2010P1Reasoning[23].locationPolicy = { revision: 1, paths: [
+  { id: "comparison-dimension", label: "直接识别B偷换比较维度", groups: [ids(8), ids(5)], supportingSentenceIds: ids(7, 11, 14, 19), maxSentences: 6 },
+  { id: "check-four-options", label: "逐项核对四个选项", groups: [ids(8), ids(11), ids(19), ids(5, 7, 14)], supportingSentenceIds: ids(5, 7, 14), maxSentences: 7 },
+] };
+passage2010P1Reasoning[24].locationPolicy = { revision: 1, paths: [{ id: "deliver", label: "第18句为核心，前后句可补充", groups: [ids(18)], supportingSentenceIds: ids(17, 19), maxSentences: 4 }] };
+passage2010P1Reasoning[25].locationPolicy = { revision: 1, paths: [{ id: "five-paragraph-route", label: "五段共同主线", groups: [ids(1, 3), ids(5, 7), ids(9, 10, 11, 12), ids(13, 14, 15), ids(16, 17, 19)], supportingSentenceIds: [], maxSentences: 8 }] };

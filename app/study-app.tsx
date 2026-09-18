@@ -7,6 +7,7 @@ import { QuestionEvidencePanel } from "./question-evidence-panel";
 import { SentencePracticePanel } from "./sentence-practice-panel";
 import { TrainingReview } from "./training-review";
 import { emptyReflection, latestTaskAttempt, practiceMetrics, activePracticeSession, continuePracticeSession, addPracticeHint, hintAffectsTask, makePracticeAttempt, taskKey, type HintType, type PracticeSession, type PracticeSessions, type PracticeAttempts, type PracticeTask, type LearningReflection, type QuestionWork } from "./learning-model";
+import { makeLocationAttempt, locationHistory, type LocationAttempts } from "./location-model";
 import { QuestionLocationPractice } from "./question-location-practice";
 import { vocabularyPriority } from "./vocabulary-priority";
 
@@ -156,6 +157,7 @@ type PersistedStudyState = {
   practiceSessions: PracticeSessions;
   learningReflections: Record<string, LearningReflection>;
   questionWork: Record<string, QuestionWork>;
+  locationAttempts: LocationAttempts;
   marks: Record<string, MarkTag[]>;
   termRatings: Record<string, Rating>;
   reviewSchedule: Record<string, ReviewSchedule>;
@@ -180,7 +182,7 @@ type PersistedStudyState = {
 function emptyStudyState(): PersistedStudyState {
   return {
     version: 1, updatedAt: 0, expanded: ["cloze-s1"], marks: {}, termRatings: {}, reviewSchedule: {}, termContexts: {},
-    practiceAttempts: {}, practiceReveals: {}, practiceSessions: {}, learningReflections: {}, questionWork: {},
+    practiceAttempts: {}, practiceReveals: {}, practiceSessions: {}, learningReflections: {}, questionWork: {}, locationAttempts: {},
     termNotes: {}, sentenceNotes: {}, sentenceMarks: [], answers: {}, translationAnswers: {}, submittedTranslationTasks: {},
     submitted: false, activeSection: "cloze", selectedYear: 2000, submittedSections: {}, revealTiming: "article", timerMode: "up",
     lists: ["本周重点"], listItems: { "本周重点": [] }, reviewFilter: "all",
@@ -792,6 +794,9 @@ export default function StudyApp() {
   const [practiceSessions, setPracticeSessions] = useState<PracticeSessions>({});
   const practiceSessionsRef = useRef<PracticeSessions>({});
   const [learningReflections, setLearningReflections] = useState<Record<string, LearningReflection>>({});
+  const [locationAttempts, setLocationAttempts] = useState<LocationAttempts>({});
+  const [locatingQuestionId, setLocatingQuestionId] = useState<number | null>(null);
+  const [editingLocationId, setEditingLocationId] = useState<number | null>(null);
   const [questionWork, setQuestionWork] = useState<Record<string, QuestionWork>>({});
   const [selectedTerm, setSelectedTerm] = useState<SelectedTerm | null>(null);
   const [termHistory, setTermHistory] = useState<SelectedTerm[]>([]);
@@ -890,6 +895,7 @@ export default function StudyApp() {
     setPracticeSessions(practiceSessionsRef.current);
     setLearningReflections(snapshot.learningReflections ?? {});
     setQuestionWork(snapshot.questionWork ?? {});
+    setLocationAttempts(snapshot.locationAttempts ?? {});
     if (snapshot.marks) setMarks(snapshot.marks);
     if (snapshot.termRatings) setTermRatings(snapshot.termRatings);
     if (snapshot.reviewSchedule) setReviewSchedule(snapshot.reviewSchedule);
@@ -1042,7 +1048,7 @@ export default function StudyApp() {
     version: 1,
     updatedAt: 0,
     expanded: Array.from(expanded),
-    practiceAttempts, practiceReveals, practiceSessions, learningReflections, questionWork,
+    practiceAttempts, practiceReveals, practiceSessions, learningReflections, questionWork, locationAttempts,
     marks,
     termRatings,
     reviewSchedule,
@@ -1062,7 +1068,7 @@ export default function StudyApp() {
     lists,
     listItems,
     reviewFilter,
-  }), [activeSection, answers, expanded, listItems, lists, marks, revealTiming, reviewFilter, reviewSchedule, selectedYear, sentenceMarks, sentenceNotes, submittedSections, submittedTranslationTasks, termContexts, termNotes, termRatings, timerMode, translationAnswers, practiceAttempts, practiceReveals, practiceSessions, learningReflections, questionWork]);
+  }), [activeSection, answers, expanded, listItems, lists, marks, revealTiming, reviewFilter, reviewSchedule, selectedYear, sentenceMarks, sentenceNotes, submittedSections, submittedTranslationTasks, termContexts, termNotes, termRatings, timerMode, translationAnswers, practiceAttempts, practiceReveals, practiceSessions, learningReflections, questionWork, locationAttempts]);
 
   useEffect(() => {
     if (contextPicker) firstContextOption.current?.focus();
@@ -1192,6 +1198,27 @@ export default function StudyApp() {
     beginPractice(article.id, at);
     setActiveSection(article.id); setSelectedYear(article.year); setView("study"); setExpanded(current => new Set(current).add(id));
     window.setTimeout(() => document.getElementById(`source-${id}`)?.scrollIntoView({ behavior: "smooth", block: "start" }), 0);
+  }
+  function saveLocation(question: AnyQuestion, stage: "initial" | "review" | "legacy", at: number) {
+    if (!question.reasoning) return;
+    const owner = questionArticle.get(question.id) ?? activeArticle;
+    const attempt = makeLocationAttempt({ id: crypto.randomUUID(), articleId: owner.id, questionId: question.id, at, stage, work: questionWork[question.id] ?? { scope: "", sentenceIds: [] } }, question.reasoning, owner.sentences.map(s => s.id));
+    if (attempt) setLocationAttempts(current => ({ ...current, [attempt.id]: attempt }));
+  }
+  function startLocationReview(questionId: number, at: number) {
+    const question = allQuestions.find(q => q.id === questionId);
+    if (question && !locationHistory(locationAttempts, questionId).length) saveLocation(question, "legacy", at);
+    setEditingLocationId(questionId);
+    setQuestionWork(current => ({ ...current, [questionId]: { scope: "", sentenceIds: [] } }));
+  }
+  function selectLocationInPassage(questionId: number) {
+    setLocatingQuestionId(questionId);
+    document.getElementById("original-passage")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+  function finishLocationSelection() {
+    const id = locatingQuestionId;
+    setLocatingQuestionId(null);
+    window.setTimeout(() => document.getElementById(`source-question-${id}-prompt`)?.scrollIntoView({ behavior: "smooth", block: "start" }), 0);
   }
   const selectedAnswers = questions.filter((question) => Boolean(answers[question.id])).length;
   const submittedTranslationCount = translationTasks.filter((task) => (
@@ -1950,7 +1977,12 @@ export default function StudyApp() {
                 </section>
               ) : (
                 <>
-                  {activeArticle.paragraphs ? <OriginalPassage article={activeArticle} marked={sentenceMarks} onMark={id => setSentenceMarks(current => { const next = new Set(current); if (next.has(id)) next.delete(id); else next.add(id); return next; })} /> : <div className="test-passage">
+                  {activeArticle.paragraphs ? <OriginalPassage selection={locatingQuestionId && questions.some(q => q.id === locatingQuestionId) ? {
+                    questionNumber: questions.find(q => q.id === locatingQuestionId)!.number ?? locatingQuestionId,
+                    ids: questionWork[locatingQuestionId]?.sentenceIds ?? [],
+                    onToggle: id => setQuestionWork(current => { const work = current[locatingQuestionId] ?? { scope: "", sentenceIds: [] }; return { ...current, [locatingQuestionId]: { ...work, sentenceIds: work.sentenceIds.includes(id) ? work.sentenceIds.filter(s => s !== id) : [...work.sentenceIds, id] } }; }),
+                    onDone: finishLocationSelection,
+                  } : undefined} article={activeArticle} marked={sentenceMarks} onMark={id => setSentenceMarks(current => { const next = new Set(current); if (next.has(id)) next.delete(id); else next.add(id); return next; })} /> : <div className="test-passage">
                     {sentences.map((sentence) => (
                       <article key={sentence.id} className="test-sentence" aria-label={`原文第 ${sentence.number} 句`}>
                         <p>{renderInteractiveText(sentence.testText ?? sentence.text, sentence.phrases, sentence.id, openTerm, false)}</p>
@@ -2003,7 +2035,7 @@ export default function StudyApp() {
                             })}
                           </div>
                           {question.format === "matching" && answers[question.id] && <p className="matching-selected">已选 {answers[question.id]}：{question.options.find(option => option.key === answers[question.id])?.text}</p>}
-                          {submitted && (question.reasoning ? <QuestionEvidencePanel question={question} onSentence={id => { setView("study"); setExpanded(current => new Set(current).add(id)); window.setTimeout(() => document.getElementById(`source-${id}`)?.scrollIntoView({ behavior: "smooth", block: "center" }), 0); }} /> : (
+                          {submitted && editingLocationId !== question.id && (question.reasoning ? <QuestionEvidencePanel question={question} onSentence={id => { setView("study"); setExpanded(current => new Set(current).add(id)); window.setTimeout(() => document.getElementById(`source-${id}`)?.scrollIntoView({ behavior: "smooth", block: "center" }), 0); }} /> : (
                             <div className="answer-analysis">
                               <p className="locating"><Layers3 /><span>{renderWords(question.locating, question.sentenceId, openTerm, `locating-${question.id}`)}</span></p>
                               {question.options.map((option) => (
@@ -2014,8 +2046,9 @@ export default function StudyApp() {
                               ))}
                             </div>
                           ))}
-                          {question.reasoning && <QuestionLocationPractice question={question} sentences={sentences} work={questionWork[question.id] ?? { scope: "", sentenceIds: [] }} submitted={submitted} onChange={work => setQuestionWork(current => ({ ...current, [question.id]: work }))} />}
-                          {submitted && question.analysis && (
+                          {question.reasoning && <QuestionLocationPractice question={question} sentences={sentences} work={questionWork[question.id] ?? { scope: "", sentenceIds: [] }} submitted={submitted} editing={editingLocationId === question.id} history={locationHistory(locationAttempts, question.id)}
+                            onChange={work => setQuestionWork(current => ({ ...current, [question.id]: work }))} onSelect={() => selectLocationInPassage(question.id)} onRetry={() => startLocationReview(question.id, Date.now())} onSave={() => { saveLocation(question, "review", Date.now()); setEditingLocationId(null); setLocatingQuestionId(null); }} />}
+                          {submitted && editingLocationId !== question.id && question.analysis && (
                             <QuestionAnalysisPanel question={question} onTerm={openTerm} />
                           )}
                         </article>
@@ -2026,6 +2059,8 @@ export default function StudyApp() {
                       className="submit-test"
                       disabled={selectedAnswers !== questions.length || submitted}
                       onClick={() => {
+                        const at = Date.now();
+                        questions.forEach(question => saveLocation(question, "initial", at));
                         setSubmittedSections((current) => ({ ...current, [activeSection]: true }));
                         setTimerRunning(false);
                       }}
@@ -2038,7 +2073,7 @@ export default function StudyApp() {
             </TabsContent>
 
             <TabsContent value="review" className="mode-content">
-              <TrainingReview articles={Object.values(articleContents)} attempts={practiceAttempts} reflections={learningReflections} questionWork={questionWork} submitted={submittedSections} now={reviewNow} onSentence={id => { openPracticeSentence(id, Date.now()); }} onQuestion={id => { const article = questionArticle.get(id); if (article) { setActiveSection(article.id); setSelectedYear(article.year); setView("test"); window.setTimeout(() => document.getElementById(`source-question-${id}-prompt`)?.scrollIntoView({ behavior: "smooth", block: "start" }), 0); } }} />
+              <TrainingReview articles={Object.values(articleContents)} attempts={practiceAttempts} reflections={learningReflections} questionWork={questionWork} locationAttempts={locationAttempts} submitted={submittedSections} now={reviewNow} onSentence={id => { openPracticeSentence(id, Date.now()); }} onQuestion={id => { const article = questionArticle.get(id); if (article) { startLocationReview(id, Date.now()); setActiveSection(article.id); setSelectedYear(article.year); setView("test"); window.setTimeout(() => document.getElementById(`source-question-${id}-prompt`)?.scrollIntoView({ behavior: "smooth", block: "start" }), 0); } }} />
               <section className="review-board">
                 <div className="review-board-heading">
                   <div>

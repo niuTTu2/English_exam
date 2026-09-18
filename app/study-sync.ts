@@ -1,3 +1,4 @@
+import { isLocationAttempt } from "./location-model";
 import { isPracticeAttempt, isPracticeSession, errorCategories } from "./learning-model";
 type TimedSnapshot = { updatedAt: number };
 export type RemoteStudyState<Snapshot> = { state: Snapshot | null; updatedAt: number | null };
@@ -21,6 +22,7 @@ function stringArray(value: unknown): value is string[] {
 export function isStudySnapshot(value: unknown): value is TimedSnapshot & Record<string, unknown> {
   if (!isRecord(value) || value.version !== 1 || !Number.isSafeInteger(value.updatedAt) || Number(value.updatedAt) < 0) return false;
   const maps: Record<string, (entry: unknown) => boolean> = {
+    locationAttempts: isLocationAttempt,
     practiceAttempts: isPracticeAttempt,
     practiceSessions: isPracticeSession,
     practiceReveals: entry => Number.isSafeInteger(entry) && Number(entry) >= 0,
@@ -59,7 +61,7 @@ export function hasStudyRecords(snapshot: unknown): boolean {
     if (isRecord(value)) return Object.values(value).some(nonempty);
     return typeof value === "string" ? Boolean(value.trim()) : typeof value === "number" || value === true;
   };
-  return ["practiceAttempts", "learningReflections", "questionWork", "marks", "termRatings", "reviewSchedule", "termContexts", "termNotes", "sentenceNotes", "sentenceMarks", "answers", "translationAnswers", "submittedTranslationTasks", "submittedSections", "listItems", "submitted"].some((key) => nonempty(snapshot[key]))
+  return ["locationAttempts", "practiceAttempts", "learningReflections", "questionWork", "marks", "termRatings", "reviewSchedule", "termContexts", "termNotes", "sentenceNotes", "sentenceMarks", "answers", "translationAnswers", "submittedTranslationTasks", "submittedSections", "listItems", "submitted"].some((key) => nonempty(snapshot[key]))
     || (Array.isArray(snapshot.lists) && snapshot.lists.some((name) => name !== "本周重点"));
 }
 

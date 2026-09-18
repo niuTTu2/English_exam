@@ -1,9 +1,10 @@
+import { assessLocation, locationHistory, type LocationAttempts } from "./location-model";
 import type { ArticleContent } from "./data";
 import { errorCategories, grammarConcepts, independentAttempt, latestTaskAttempt, taskAttempts, practiceSchedule, type PracticeAttempts, type LearningReflection, type QuestionWork } from "./learning-model";
 import { scopeLabels } from "./article-teaching";
 
-export function TrainingReview({ articles, attempts, reflections, questionWork, submitted, onSentence, onQuestion, now }: {
-  articles: ArticleContent[]; attempts: PracticeAttempts; reflections: Record<string, LearningReflection>; questionWork: Record<string, QuestionWork>; submitted: Record<string, boolean>;
+export function TrainingReview({ articles, attempts, reflections, questionWork, locationAttempts = {}, submitted, onSentence, onQuestion, now }: {
+  articles: ArticleContent[]; attempts: PracticeAttempts; reflections: Record<string, LearningReflection>; questionWork: Record<string, QuestionWork>; locationAttempts?: LocationAttempts; submitted: Record<string, boolean>;
   onSentence: (id: string) => void; onQuestion: (id: number) => void; now: number;
 }) {
   const tasks = articles.flatMap(article => article.sentences.flatMap(sentence => (sentence.practice ?? []).map(task => ({ article, sentence, task, result: latestTaskAttempt(attempts, task, sentence.id) }))));
@@ -14,9 +15,11 @@ export function TrainingReview({ articles, attempts, reflections, questionWork, 
   }).filter(item => item.total > 0);
   const marked = articles.flatMap(article => article.sentences).filter(sentence => reflections[sentence.id]?.errors.length || ["unclear", "wrong"].includes(reflections[sentence.id]?.translationRating ?? ""));
   const locations = articles.flatMap(article => submitted[article.id] ? article.questions.filter(question => {
+    const history = locationHistory(locationAttempts, question.id);
+    if (history.length) return !history.at(-1)!.result.passed;
     const work = questionWork[String(question.id)];
     if (!question.reasoning || !work || (!work.scope && !work.sentenceIds.length)) return false;
-    return (work.scope && work.scope !== question.reasoning.scope) || !(question.reasoning.locatingGroups ?? []).every(group => group.some(id => work.sentenceIds.includes(id)));
+    return assessLocation(question.reasoning, work, article.sentences.map(s => s.id))?.passed === false;
   }) : []);
   return <section className="training-review">
     <h3>拆句与定位复盘</h3><p>答错或借助提示答对：1天；连续独立答对按3、7、14、30天递进。提前重复练习不加速晋级，旧记录保留；独立表现按本次任务相关提示判断。</p>

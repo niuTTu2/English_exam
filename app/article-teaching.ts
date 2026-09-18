@@ -1,3 +1,4 @@
+import type { LocationPolicy } from "./location-model";
 export type PassageEvidence = { sentenceId: string; quote: string; role: string };
 export type QuestionScope = "sentence" | "adjacent-sentences" | "paragraph" | "whole-passage";
 export const scopeLabels: Record<QuestionScope, string> = { sentence: "单句定位", "adjacent-sentences": "前后句联合定位", paragraph: "段落范围", "whole-passage": "全文范围" };
@@ -8,7 +9,8 @@ export type QuestionReasoning = {
   restatement: string;
   keyInstruction: string;
   /** 每组至少命中一句；用于提示学生是否选中了关键定位，并非自动语义评分。 */
-  locatingGroups?: string[][];
+  locatingGroups?: string[][]; // 旧内容兼容，训练评分使用 locationPolicy
+  locationPolicy?: LocationPolicy;
   evidence: Array<PassageEvidence & { id: string; strength: "直接证据" | "上下文推断" | "全文概括" }>;
   paraphrases: Array<{ evidenceIds: string[]; meaning: string; optionText: string; relation: "同义转换" | "矛盾对照"; limit: string }>;
   options: Record<string, { judgment: "选入" | "排除"; errorType?: DistractorType; evidenceIds: string[]; reasoning: string }>;

@@ -3946,3 +3946,13 @@ button.reference-row.is-linked:focus-visible {
     animation-duration: 0.01ms !important;
   }
 }
+
+/* 定位模式复用连续原文，只有主动选证据时显示整句点击区。 */
+.location-selection-bar { position: sticky; top: 0; z-index: 3; padding: 12px; background: #edf5ef; border: 1px solid #acc3b9; border-radius: 10px; font: 14px/1.5 sans-serif; }
+.location-sentence { display: inline; padding: 3px 4px; min-height: 44px; text-align: left; line-height: inherit; border: 0; border-radius: 4px; background: transparent; color: inherit; cursor: pointer; }
+.location-sentence small { font: 11px sans-serif; color: #627a71; margin-right: 5px; }
+.location-sentence[aria-pressed="true"] { background: #d6e9df; outline: 1px solid #679488; }
+.location-sentence:focus-visible { outline: 2px solid #267570; }
+.question-location-practice .practice-action { min-height: 44px; padding: 10px 12px; margin: 8px 0; border: 1px solid #9db7ad; border-radius: 8px; background: #eff5f1; }
+.question-location-practice select { min-height: 44px; max-width: 100%; }
+.question-location-practice details > div { margin-top: 12px; border-top: 1px solid #d8e1dc; padding-top: 10px; }

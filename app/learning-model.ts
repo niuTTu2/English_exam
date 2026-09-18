@@ -122,7 +122,7 @@ export function isPracticeSession(value: unknown): value is PracticeSession {
 /** 不认识训练字段的旧页面也不能在同步时删掉新记录。当前没有清空训练历史的产品操作。 */
 export function preserveTrainingRecords(previous: Record<string, unknown>, incoming: Record<string, unknown>) {
   const result = { ...incoming };
-  for (const key of ["practiceAttempts", "practiceReveals", "practiceSessions", "learningReflections", "questionWork"]) {
+  for (const key of ["locationAttempts", "practiceAttempts", "practiceReveals", "practiceSessions", "learningReflections", "questionWork"]) {
     const oldMap = previous[key], newMap = incoming[key];
     if (oldMap && typeof oldMap === "object" && !Array.isArray(oldMap)) {
       result[key] = { ...oldMap, ...(newMap && typeof newMap === "object" && !Array.isArray(newMap) ? newMap : {}) };
