@@ -105,28 +105,30 @@ revise(19, "waiting-subject", { feedback: "等待的人是anyone who does not ha
 
 // 查词只有命中本任务的题眼才算提示；人名查询不会污染找谓语等任务。
 const hintWordsByTask: Record<string, Record<string, string[]>> = {
-  "2010-p1-s1": { "main-predicate": ["ended"], "subject-head": ["run", "bull run"], "by-attachment": ["by"] },
+  "2010-p1-s1": { "main-predicate": ["ended"], "subject-head": ["run", "the longest bull run"], "by-attachment": ["by"] },
   "2010-p1-s2": { "finite-versus-ing": ["sold", "fetching"], "all-but": ["but", "All but two"] },
   "2010-p1-s3": { predicative: ["was"] },
   "2010-p1-s4": { "as-time": ["As"], "main-subject": ["one"] },
   "2010-p1-s5": { "since-attachment": ["since", "since 2003"], duration: ["for", "for a while"] },
-  "2010-p1-s6": { "worth-complement": ["worth"], "firm-apposition": ["Arts Economics"] },
-  "2010-p1-s7": { "to-endpoint": ["to", "come down to"] },
+  "2010-p1-s6": { "worth-complement": ["worth"], "firm-apposition": ["firm", "a research firm"] },
+  "2010-p1-s7": { "to-endpoint": ["to", "may have come down to"] },
   "2010-p1-s8": { "comparison-dimension": ["interest"], "matched-role": ["matched"] },
   "2010-p1-s9": { "that-subject": ["that"], deeply: ["deeply"] },
   "2010-p1-s10": { "that-reference": ["that"] },
   "2010-p1-s11": { "by-percentage": ["by"], "year-to": ["to"] },
-  "2010-p1-s12": { "two-hads": ["had", "had to"], "them-reference": ["them"] },
+  "2010-p1-s12": { "two-hads": ["had"], "them-reference": ["them"] },
   "2010-p1-s13": { "since-clause": ["since"] },
   "2010-p1-s14": { average: ["average", "on average"], "far-more": ["far"] },
   "2010-p1-s15": { "confident-content": ["confident"] },
   "2010-p1-s16": { different: ["different"], "that-role": ["that"] },
-  "2010-p1-s17": { "not-but": ["lack", "not a lack of demand but a lack of good work to sell"] },
+  "2010-p1-s17": { "not-but": ["lack", "not a lack of demand but a lack of good work"] },
   "2010-p1-s18": { "dash-predicate": ["deliver"] },
   "2010-p1-s19": { "waiting-subject": ["waiting"], "return-subject": ["return", "waiting for confidence to return"] },
 };
 const mapTasks = new Set(["2010-p1-s5/since-attachment", "2010-p1-s5/duration", "2010-p1-s5/tense-reference", "2010-p1-s10/that-reference", "2010-p1-s12/them-reference", "2010-p1-s17/not-but"]);
+const revisedHintTasks = new Set(["2010-p1-s1/subject-head", "2010-p1-s6/firm-apposition", "2010-p1-s7/to-endpoint", "2010-p1-s12/two-hads", "2010-p1-s17/not-but"]);
 for (const [sentenceId, tasks] of Object.entries(passage2010P1Practice)) for (const task of tasks) {
+  if (revisedHintTasks.has(`${sentenceId}/${task.id}`)) task.revision += 1;
   task.hintWords = hintWordsByTask[sentenceId]?.[task.id] ?? [];
   task.mapRevealsAnswer = mapTasks.has(`${sentenceId}/${task.id}`);
   if (sentenceId === "2010-p1-s16" && task.id === "outer-predicate") task.leaksToTaskIds = ["that-role"];

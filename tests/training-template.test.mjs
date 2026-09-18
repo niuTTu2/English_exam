@@ -120,6 +120,7 @@ test("声明完成的训练层必须具备可核对的结构，不能只更改�
       for (const sentence of item.sentences) assert.ok(item.guide.sentenceRoles[sentence.id]);
       for (const source of sources) {
         const tasks = source.practice;
+        const clickableLabels = new Set([...englishTokens(source.text), ...(source.phrases ?? [])].map(label => label.toLowerCase()));
         assert.ok(tasks?.length >= 1 && tasks.length <= 3, `${source.id}需1—3个任务`);
         assert.equal(new Set(tasks.map(task => task.id)).size, tasks.length);
         for (const task of tasks) {
@@ -127,6 +128,7 @@ test("声明完成的训练层必须具备可核对的结构，不能只更改�
           assert.ok(Object.hasOwn(grammarConcepts, task.conceptId) && Object.hasOwn(errorCategories, task.errorType));
           assert.ok(task.evidence.trim() && source.text.includes(task.evidence), `${source.id}/${task.id}证据必须为连续原文`);
           checkTaskAnswer(task, source.text);
+          for (const label of task.hintWords ?? []) assert.ok(clickableLabels.has(label.toLowerCase()), `${source.id}/${task.id}提示词必须为实际词形或原文词组入口：${label}`);
           if (task.kind === "range") {
             const text = task.rangeText ?? source.text, tokens = rangeTokens(text), offset = text.indexOf(task.answer);
             const first = tokens.findIndex(token => token.start === offset), last = tokens.findIndex(token => token.end === offset + task.answer.length);
@@ -376,6 +378,7 @@ test("交卷后的新定位不锁住输入，初次与复盘结果分开保存",
 test("复杂句有生成型任务、原文范围可操作，改版历史不冒充新任务通过", async () => {
   const m = await vite.ssrLoadModule("/app/learning-model.ts");
   const { PracticeTaskInput } = await vite.ssrLoadModule("/app/practice-task-input.tsx");
+  const revisedHints = new Set(["2010-p1-s1/subject-head", "2010-p1-s6/firm-apposition", "2010-p1-s7/to-endpoint", "2010-p1-s12/two-hads", "2010-p1-s17/not-but"]);
   for (const n of [1, 2, 4, 5, 6, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 19]) {
     const sentence = article.sentences[n - 1];
     assert.ok(sentence.practice.some(t => ["range", "link", "order"].includes(t.kind)), sentence.id);
@@ -388,9 +391,12 @@ test("复杂句有生成型任务、原文范围可操作，改版历史不冒�
         assert.equal(m.selectedRange(source, first, last), task.answer);
       }
       if (["range", "link", "order"].includes(task.kind)) {
-        assert.equal(task.revision, 2);
-        const old = { id: "old", sentenceId: sentence.id, taskId: task.id, revision: 1, answer: task.answer, correct: true, at: 1 };
-        assert.equal(m.latestTaskAttempt({ old }, task, sentence.id), undefined);
+        assert.equal(task.revision, revisedHints.has(`${sentence.id}/${task.id}`) ? 3 : 2);
+        for (const revision of new Set([1, task.revision - 1])) {
+          const old = { id: "old", sentenceId: sentence.id, taskId: task.id, revision, answer: task.answer, correct: true, at: 1 };
+          assert.equal(m.latestTaskAttempt({ old }, task, sentence.id), undefined);
+          assert.equal(old.revision, revision, "旧事件保留原版本");
+        }
         const html = renderToStaticMarkup(React.createElement(PracticeTaskInput, { task, text: sentence.text, attemptNumber: 0, onAnswer() {} }));
         assert.match(html, /提交所选范围|提交连接|提交组合/);
         assert.doesNotMatch(html, /正确答案/);
