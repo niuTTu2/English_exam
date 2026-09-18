@@ -206,9 +206,10 @@
 ## 阅读训练的必要接入
 
 - `paragraphs`：从原卷核对段落，按顺序列句ID，不能依据句意猜原卷分段。
-- `guide`：段落主旨/关系、全文路线、句子作用、指代、时间和观点边界。引用回到真实句子。
+- `guide`：段落主旨/关系、全文路线、句子作用、指代、时间和观点边界。引用回到真实句子；practice保存地图解锁前的短回忆任务。
+- `reasoning.locationPolicy`：多条合理定位路径，每条有必需证据组、补充句和最大选句数；不能只要求命中几个句号就通过。
 - `translationAlignment` / `translationNotes`：词块与中文对应；标明根据上下文补出的中文逻辑词。
-- `practice`：每句1—3个任务，使用 `learning-model.ts`概念ID、稳定任务ID与revision，证据为连续原文；反馈解释判断方法。
+- `practice`：每句1—3个任务，使用 `learning-model.ts`概念ID、稳定任务ID与revision，证据为连续原文；反馈解释判断方法。复杂句至少一项range/link/order任务；题意、答案或形式改变增revision；hintWords、mapRevealsAnswer和leaksToTaskIds/leaksToTasks按实际泄露关系填写，禁止全句扩散。
 - `teachingStatus`：完成一层才置true，不把旧兼容数据标成完成；四项状态不能代替交付报告中的实际页面验收。
 
 只复制字段组织方式，不复制上一篇的本句义、主语、时间参照或题目证据。完整接手路线见 `TRAINING_TEMPLATE.md`。

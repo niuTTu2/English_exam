@@ -187,7 +187,7 @@ test("十九句任务有真实证据与稳定概念，不用展开记录充当�
   assert.equal(model.sentencePracticeStatus(sentence.practice, { stale: { ...second, revision: 99 } }, sentence.id), "new");
   const { TrainingReview } = await vite.ssrLoadModule("/app/training-review.tsx");
   const review = renderToStaticMarkup(React.createElement(TrainingReview, { articles: [article], attempts: { first }, reflections: {}, questionWork: {}, submitted: {}, now: first.at + model.DAY_MS, onSentence() {}, onQuestion() {} }));
-  assert.match(review, /第3句 · 主系表/); // 答错按新规则次日到期；错误记录仍保留。
+  assert.match(review, /2010 Text 1 · 第3句/); assert.match(review, /主系表/); // 答错按新规则次日到期；错误记录仍保留。
   assert.doesNotMatch(review, /本次没有到期/);
   const { SentencePracticePanel } = await vite.ssrLoadModule("/app/sentence-practice-panel.tsx");
   const props = { sentence, attempts: {}, session: { id: "round", startedAt: 0, lastActiveAt: 10, hints: [] }, reflection: model.emptyReflection(), revealed: false, onAttempt() {}, onReveal() {}, onRetry() {}, onReflection() {} };
@@ -199,7 +199,7 @@ test("十九句任务有真实证据与稳定概念，不用展开记录充当�
   assert.match(after, /查看主干与讲解/);
   const { vocabularyPriority } = await vite.ssrLoadModule("/app/vocabulary-priority.ts");
   const entry = headword => ({ headword, display: headword, kind: "word" });
-  assert.equal(vocabularyPriority(entry("hirst"), "2010-p1-s1", article.id).defaultReview, false);
+  assert.equal(vocabularyPriority(entry("hirst"), "2010-p1-s1", article.id).recommendedReview, false);
   assert.equal(vocabularyPriority(entry("momentum"), "2010-p1-s5", article.id).id, "core");
   assert.equal(vocabularyPriority(entry("note"), "2010-p1-s1", article.id).id, "sense");
   assert.equal(vocabularyPriority(entry("art"), "2010-p1-s6", article.id).id, "name");
@@ -358,4 +358,25 @@ test("地图先主动回忆三项，反馈只泄露声明的任务，不扩大�
   const ready = renderToStaticMarkup(React.createElement(SentencePracticePanel, props));
   assert.match(ready, /class="show-teaching">查看完整文章地图/);
   assert.doesNotMatch(ready, /translation-trial/);
+});
+
+test("复盘显示篇目与错误时间，能直接打开指定任务，词汇优先级明确是建议", async () => {
+  const m = await vite.ssrLoadModule("/app/learning-model.ts");
+  const sentence = article.sentences[4], task = sentence.practice[0];
+  const session = { id: "review-round", startedAt: 1, lastActiveAt: 2, hints: [] };
+  const attempt = m.makePracticeAttempt({ id: "wrong-link", articleId: article.id, sentenceId: sentence.id, task, answer: JSON.stringify(["losing", "losing"]), at: 2, session });
+  const { TrainingReview } = await vite.ssrLoadModule("/app/training-review.tsx");
+  const html = renderToStaticMarkup(React.createElement(TrainingReview, { articles: [article], attempts: { [attempt.id]: attempt }, reflections: {}, questionWork: {}, submitted: {}, now: m.DAY_MS + 2, onSentence() {}, onQuestion() {} }));
+  assert.match(html, /2010 Text 1 · 第5句/); assert.match(html, /The world art market/); assert.match(html, /上次错误/); assert.match(html, /since 2003 → losing/);
+  assert.match(html, /今日到期/); assert.match(html, /曾经借助提示/); assert.match(html, /全部文章/);
+  const { SentencePracticePanel } = await vite.ssrLoadModule("/app/sentence-practice-panel.tsx");
+  const direct = renderToStaticMarkup(React.createElement(SentencePracticePanel, { sentence, initialTaskId: "duration", attempts: {}, reflection: m.emptyReflection(), revealed: false, onAttempt() {}, onReveal() {}, onRetry() {}, onReflection() {} }));
+  assert.match(direct, /按时间关系排列三块意思/); assert.doesNotMatch(direct, /class="link-task"/);
+  const { vocabularyPriority } = await vite.ssrLoadModule("/app/vocabulary-priority.ts");
+  const name = vocabularyPriority({ headword: "hirst", display: "Hirst", kind: "word" }, "2010-p1-s1", article.id);
+  assert.match(name.reason, /建议不加入/); assert.doesNotMatch(name.reason, /默认/);
+  const functionWord = vocabularyPriority({ headword: "that", display: "that", kind: "word" }, "2010-p1-s9", article.id);
+  assert.equal(functionWord.recommendedReview, false); assert.match(functionWord.reason, /句法任务/);
+  assert.doesNotMatch(article.sentences[1].beginnerSyntax.components.map(c => `${c.modifies}${c.explanation}`).join(""), /对象性主语/);
+  assert.match(article.sentences[0].natural, /拍卖达米恩/);
 });

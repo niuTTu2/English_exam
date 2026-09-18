@@ -797,6 +797,9 @@ export default function StudyApp() {
   const practiceSessionsRef = useRef<PracticeSessions>({});
   const [learningReflections, setLearningReflections] = useState<Record<string, LearningReflection>>({});
   const [locationAttempts, setLocationAttempts] = useState<LocationAttempts>({});
+  const [practiceTarget, setPracticeTarget] = useState<{ sentenceId: string; taskId?: string } | null>(null);
+  const [evidenceOrigin, setEvidenceOrigin] = useState<{ questionId: number; articleId: string; number: number; option?: string; scrollY: number } | null>(null);
+  const [evidenceSections, setEvidenceSections] = useState<Record<number, string[]>>({});
   const [locatingQuestionId, setLocatingQuestionId] = useState<number | null>(null);
   const [editingLocationId, setEditingLocationId] = useState<number | null>(null);
   const [questionWork, setQuestionWork] = useState<Record<string, QuestionWork>>({});
@@ -1193,12 +1196,26 @@ export default function StudyApp() {
     setPracticeAttempts(current => ({ ...current, [id]: attempt }));
     recordPracticeHint(activeArticle, "previous-answer", `${sentence.id}/${task.id}`, at, sentence.id, task);
   }
-  function openPracticeSentence(id: string, at: number) {
+  function openPracticeSentence(id: string, at: number, taskId?: string) {
     const article = sentenceArticle.get(id) ?? Object.values(articleContents).find(article => `${article.id}-map` === id);
     if (!article) return;
     beginPractice(article.id, at);
+    setPracticeTarget({ sentenceId: id, taskId });
     setActiveSection(article.id); setSelectedYear(article.year); setView("study"); setExpanded(current => new Set(current).add(id));
     window.setTimeout(() => { const element = document.getElementById(`source-${id}`); if (element instanceof HTMLDetailsElement) element.open = true; element?.scrollIntoView({ behavior: "smooth", block: "start" }); }, 0);
+  }
+  function visitQuestionEvidence(question: AnyQuestion, sentenceId: string, at: number, option?: string) {
+    setEvidenceOrigin({ questionId: question.id, articleId: activeArticle.id, number: question.number ?? question.id, option, scrollY: window.scrollY });
+    openPracticeSentence(sentenceId, at);
+  }
+  function returnToQuestion() {
+    if (!evidenceOrigin) return;
+    const origin = evidenceOrigin, article = articleContents[origin.articleId];
+    setActiveSection(article.id); setSelectedYear(article.year); setView("test"); setEvidenceOrigin(null);
+    window.requestAnimationFrame(() => window.requestAnimationFrame(() => {
+      document.getElementById(`source-question-${origin.questionId}-prompt`)?.focus({ preventScroll: true });
+      window.scrollTo({ top: origin.scrollY, behavior: "instant" });
+    }));
   }
   function saveLocation(question: AnyQuestion, stage: "initial" | "review" | "legacy", at: number) {
     if (!question.reasoning) return;
@@ -1792,6 +1809,7 @@ export default function StudyApp() {
         </aside>
 
         <main className="study-main">
+          {evidenceOrigin && view === "study" && evidenceOrigin.articleId === activeArticle.id && <aside className="evidence-return-bar" aria-label="返回原题"><span>正在核对：第{evidenceOrigin.number}题{evidenceOrigin.option ? ` ${evidenceOrigin.option}项` : ""}</span><button type="button" onClick={returnToQuestion}>返回第{evidenceOrigin.number}题</button><button type="button" aria-label="关闭返回条" onClick={() => setEvidenceOrigin(null)}>×</button></aside>}
           <section className="paper-heading">
             {view === "vocabulary" ? (
               <>
@@ -1841,12 +1859,12 @@ export default function StudyApp() {
             </div>
 
             <TabsContent value="study" className="mode-content">
-              <ArticleGuidePanel key={activeArticle.id} article={activeArticle} onSentence={openPracticeSentence} onOpen={at => { recordPracticeHint(activeArticle, "article-map", "article-map", at); }}
+              <ArticleGuidePanel key={`${activeArticle.id}-${practiceTarget?.sentenceId === `${activeArticle.id}-map` ? practiceTarget.taskId ?? "" : ""}`} initialTaskId={practiceTarget?.sentenceId === `${activeArticle.id}-map` ? practiceTarget.taskId : undefined} article={activeArticle} onSentence={openPracticeSentence} onOpen={at => { recordPracticeHint(activeArticle, "article-map", "article-map", at); }}
                 attempts={practiceAttempts} session={activePracticeSession(practiceSessions[activeArticle.id], reviewNow)} onBegin={at => beginPractice(activeArticle.id, at)}
                 onAttempt={(task, answer, at) => recordPractice(articleMapSource(activeArticle), task, answer, crypto.randomUUID(), at)}
                 onPreviousAnswer={(task, at) => recordPracticeHint(activeArticle, "previous-answer", `${articleMapSource(activeArticle).id}/${task.id}`, at, articleMapSource(activeArticle).id, task)} />
               <div className="sentence-mode-controls" aria-label="原句交互方式">
-                {([["read", "读句"], ["words", "词汇"], ["structure", "结构"]] as const).map(([mode, label]) => <Button key={mode} variant={sentenceMode === mode ? "default" : "outline"} aria-pressed={sentenceMode === mode} onClick={() => setSentenceMode(mode)}>{label}</Button>)}
+                {([["read", "纯净原句"], ["words", "查词"], ["structure", "看结构"]] as const).map(([mode, label]) => <Button key={mode} variant={sentenceMode === mode ? "default" : "outline"} aria-pressed={sentenceMode === mode} onClick={() => setSentenceMode(mode)}>{label}</Button>)}
                 {sentenceMode === "words" && <label><input type="checkbox" checked={showPhrases} onChange={event => setShowPhrases(event.target.checked)} />显示词组入口</label>}
                 <p>{sentenceMode === "read" ? "先读原句，点右侧箭头进入学习。" : sentenceMode === "words" ? "点原句中的单词查词；整组表达在句子下方单独选择。" : "按完整词块看句法关系，点词块查看它的作用。"}</p>
               </div>
@@ -1861,7 +1879,8 @@ export default function StudyApp() {
               <div className="sentence-stack">
                 {sentences.map((sentence) => (
                   <StudySentence
-                    key={sentence.id}
+                    key={`${sentence.id}-${practiceTarget?.sentenceId === sentence.id ? practiceTarget.taskId ?? "" : ""}`}
+                    initialTaskId={practiceTarget?.sentenceId === sentence.id ? practiceTarget.taskId : undefined}
                     sentence={sentence}
                     mode={sentenceMode}
                     showPhrases={showPhrases}
@@ -2039,7 +2058,7 @@ export default function StudyApp() {
                             })}
                           </div>
                           {question.format === "matching" && answers[question.id] && <p className="matching-selected">已选 {answers[question.id]}：{question.options.find(option => option.key === answers[question.id])?.text}</p>}
-                          {submitted && editingLocationId !== question.id && (question.reasoning ? <QuestionEvidencePanel question={question} onSentence={id => { setView("study"); setExpanded(current => new Set(current).add(id)); window.setTimeout(() => document.getElementById(`source-${id}`)?.scrollIntoView({ behavior: "smooth", block: "center" }), 0); }} /> : (
+                          {submitted && editingLocationId !== question.id && (question.reasoning ? <QuestionEvidencePanel question={question} openSections={evidenceSections[question.id] ?? []} onSectionToggle={(id, open) => setEvidenceSections(current => { const sections = current[question.id] ?? []; return sections.includes(id) === open ? current : { ...current, [question.id]: open ? [...sections, id] : sections.filter(value => value !== id) }; })} onSentence={(id, option) => visitQuestionEvidence(question, id, Date.now(), option)} /> : (
                             <div className="answer-analysis">
                               <p className="locating"><Layers3 /><span>{renderWords(question.locating, question.sentenceId, openTerm, `locating-${question.id}`)}</span></p>
                               {question.options.map((option) => (
@@ -2077,7 +2096,7 @@ export default function StudyApp() {
             </TabsContent>
 
             <TabsContent value="review" className="mode-content">
-              <TrainingReview articles={Object.values(articleContents)} attempts={practiceAttempts} reflections={learningReflections} questionWork={questionWork} locationAttempts={locationAttempts} submitted={submittedSections} now={reviewNow} onSentence={id => { openPracticeSentence(id, Date.now()); }} onQuestion={id => { const article = questionArticle.get(id); if (article) { startLocationReview(id, Date.now()); setActiveSection(article.id); setSelectedYear(article.year); setView("test"); window.setTimeout(() => document.getElementById(`source-question-${id}-prompt`)?.scrollIntoView({ behavior: "smooth", block: "start" }), 0); } }} />
+              <TrainingReview articles={Object.values(articleContents)} attempts={practiceAttempts} reflections={learningReflections} questionWork={questionWork} locationAttempts={locationAttempts} submitted={submittedSections} now={reviewNow} onSentence={(id, taskId) => { openPracticeSentence(id, Date.now(), taskId); }} onQuestion={id => { const article = questionArticle.get(id); if (article) { startLocationReview(id, Date.now()); setActiveSection(article.id); setSelectedYear(article.year); setView("test"); window.setTimeout(() => document.getElementById(`source-question-${id}-prompt`)?.scrollIntoView({ behavior: "smooth", block: "start" }), 0); } }} />
               <section className="review-board">
                 <div className="review-board-heading">
                   <div>
@@ -3001,6 +3020,7 @@ function BeginnerSyntaxPanel({
 
 export function StudySentence({
   sentence,
+  initialTaskId,
   mode = "read",
   showPhrases = true,
   passageRole,
@@ -3021,6 +3041,7 @@ export function StudySentence({
   onNote,
 }: {
   sentence: SentenceAnalysis;
+  initialTaskId?: string;
   mode?: SentenceMode;
   showPhrases?: boolean;
   passageRole?: string;
@@ -3062,7 +3083,7 @@ export function StudySentence({
 
       {isExpanded && (
         <div className="sentence-analysis">
-          {sentence.practice?.length && <SentencePracticePanel sentence={sentence} attempts={attempts} session={session} onBegin={onBegin} onPreviousAnswer={onPreviousAnswer} reflection={reflection} revealed={Boolean(teachingVisible)} onAttempt={onAttempt} onReveal={() => { setTeachingSession(session?.id ?? null); onReveal(); }} onRetry={() => setTeachingSession(null)} onReflection={onReflection} />}
+          {sentence.practice?.length && <SentencePracticePanel initialTaskId={initialTaskId} sentence={sentence} attempts={attempts} session={session} onBegin={onBegin} onPreviousAnswer={onPreviousAnswer} reflection={reflection} revealed={Boolean(teachingVisible)} onAttempt={onAttempt} onReveal={() => { setTeachingSession(session?.id ?? null); onReveal(); }} onRetry={() => setTeachingSession(null)} onReflection={onReflection} />}
           {teachingVisible && <>
           {mode === "structure" && <div className="colored-sentence" aria-label="按词块查看语法作用">
             {sentence.chunks.map((chunk, index) => (

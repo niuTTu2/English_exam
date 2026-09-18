@@ -103,7 +103,7 @@ const passage2010P1Drafts: Omit<SentenceAnalysis, "chunks">[] = [
         }
       ], clauses: [] },
     literal: "艺术市场百年历史中持续最久的一轮牛市，以一场拍卖戏剧性地收场：这场名为《Beautiful Inside My Head Forever》的拍卖出售达米恩·赫斯特的56件作品，地点是伦敦苏富比，时间是2008年9月15日。",
-    natural: "2008年9月15日，达米恩·赫斯特的56件作品在伦敦苏富比举办的《Beautiful Inside My Head Forever》专场拍卖会上亮相；艺术市场百年来最长的一轮牛市就这样戏剧性地落幕。",
+    natural: "2008年9月15日，伦敦苏富比举行了一场名为《Beautiful Inside My Head Forever》的专场拍卖，拍卖达米恩·赫斯特的56件作品；艺术市场百年来持续时间最长的一轮牛市就这样戏剧性地落幕。",
     logic: "以牛市终结的标志性事件开篇，同时埋下‘盛况即转折点’的伏笔。",
     phrases: ["the longest bull run", "in a century of art-market history", "ended on a dramatic note", "a sale of 56 works", "at Sotheby's in London"],
   },
@@ -114,7 +114,7 @@ const passage2010P1Drafts: Omit<SentenceAnalysis, "chunks">[] = [
     trunk: "All but two pieces sold.",
     layers: [{ label: "数量主干", text: "All but two pieces sold：除两件外，其余作品全部售出。" }, { label: "结果", text: "fetching more than £70m：并取得超过七千万英镑的成交额。" }, { label: "同位评价", text: "a record...：这一金额创下单一艺术家专场拍卖纪录。" }],
     grammar: ["all but two = 除了两个以外全部；but 在此是介词‘除……之外’。", "sold 是 sell 的主动形式表达‘卖出、售出’，主语为商品时不必使用被动。", "fetching... 是现在分词结果状语；a record 是对前面金额的同位补充。"],
-    beginnerSyntax: { reading: passage2010P1Reading["2010-p1-s2"], components: [component("All but two pieces", "all but + 数量 + 复数名词", "主语", "是 sold 的对象性主语", "先读 but two‘除两件外’，再回到 all：其余全部。"), component("sold", "一般过去时不及物用法", "谓语", "说明作品成功成交", "这里不是‘作品卖别人’，而是商品以某价格售出。"), component("fetching more than £70m", "现在分词短语", "结果状语", "修饰整句成交结果", "fetch 在交易语境表示‘卖得、取得某金额’，逻辑主语仍是这批作品。"), component("a record for a sale by a single artist", "名词同位短语", "补充说明", "概括 £70m 的纪录性质", "原文是同位名词短语，不是一个省略式从句；for 说明哪类纪录，by 说明专场所属艺术家。")], clauses: [] },
+    beginnerSyntax: { reading: passage2010P1Reading["2010-p1-s2"], components: [component("All but two pieces", "all but + 数量 + 复数名词", "主语", "pieces是主语，说明售出的是哪些作品", "先读but two‘除两件外’，再回到all：其余全部。sell在这里表示作品售出，作品可以直接作主语，不需要被动语态。"), component("sold", "一般过去时不及物用法", "谓语", "说明作品成功成交", "这里不是‘作品卖别人’，而是商品以某价格售出。"), component("fetching more than £70m", "现在分词短语", "结果状语", "修饰整句成交结果", "fetch 在交易语境表示‘卖得、取得某金额’，逻辑主语仍是这批作品。"), component("a record for a sale by a single artist", "名词同位短语", "补充说明", "概括 £70m 的纪录性质", "原文是同位名词短语，不是一个省略式从句；for 说明哪类纪录，by 说明专场所属艺术家。")], clauses: [] },
     literal: "除两件作品外其余全部售出，取得超过七千万英镑，成为单一艺术家作品拍卖的纪录。",
     natural: "除两件流拍外，其余作品全部成交，总额超过7000万英镑，创下单一艺术家专场拍卖纪录。",
     logic: "用惊人成交结果证明上一句所谓的‘戏剧性’与市场最后的繁荣。",

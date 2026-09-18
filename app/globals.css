@@ -3970,3 +3970,26 @@ button.reference-row.is-linked:focus-visible {
 .link-task select { min-width: 0; width: 100%; min-height: 44px; background: white; border: 1px solid #bccac2; padding: 8px 4px; border-radius: 8px; }
 .link-task strong { overflow-wrap: anywhere; }
 .practice-feedback p { overflow-wrap: anywhere; }
+
+.evidence-return-bar { position: fixed; bottom: max(16px, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); z-index: 35; width: max-content; max-width: calc(100vw - 24px); display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 12px; background: #174c48; color: white; border-radius: 12px; box-shadow: 0 5px 20px #153d4433; font-size: 14px; }
+.evidence-return-bar button { min-height: 44px; min-width: 44px; padding: 8px; border: 1px solid #8dad9d; border-radius: 8px; }
+.training-review-filters { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 16px 0; }
+.training-review-filters label { display: grid; gap: 6px; min-width: 0; }
+.training-review-filters select { width: 100%; min-width: 0; min-height: 44px; padding: 8px; border: 1px solid #b4c8bf; border-radius: 8px; background: white; }
+.training-review-list button { text-align: left; overflow-wrap: anywhere; }
+.review-excerpt { font-family: Georgia, serif; }
+.sentence-mode-controls button, .practice-step-picker button, .practice-feedback button, .show-teaching, .practice-unsure { min-height: 44px; }
+.translation-trial textarea { scroll-margin-block: 100px; min-height: 100px; }
+@media (max-width: 600px) {
+  .training-review-filters { grid-template-columns: minmax(0, 1fr); }
+  .sentence-mode-controls { flex-wrap: wrap; }
+  .sentence-mode-controls button { flex: 1 1 auto; }
+  .link-task label { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+  .link-task label > span { display: none; }
+  .range-tokens { max-height: 220px; }
+  .paper-progress { max-width: 100%; min-width: 0; }
+  .study-main { min-width: 0; padding-bottom: 110px; }
+  .practice-task, .question-location-practice, .article-guide, .training-review { min-width: 0; overflow-wrap: anywhere; }
+  .evidence-return-bar span { flex: 1 1 130px; }
+  .translation-trial textarea, .link-task select, .question-location-practice select, .training-review-filters select { font-size: 16px; }
+}
