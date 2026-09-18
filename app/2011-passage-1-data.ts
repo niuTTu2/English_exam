@@ -1,8 +1,13 @@
+import { withReviewedSyntax } from "./reviewed-syntax";
+import { passage2011P1Reviewed } from "./2011-passage-1-reading";
+import { passage2011P1Practice } from "./2011-passage-1-practice";
+import { passage2011P1Reasoning } from "./2011-passage-1-evidence";
+import { passage2011P1QuestionAnalysis } from "./2011-passage-1-question-analysis";
 import type { Question, SentenceAnalysis } from "./data";
 import { clause, segment, sentenceFactory } from "./2011-content-helpers";
 
 const sentence = sentenceFactory("2011-p1");
-export const passage2011P1Sentences: SentenceAnalysis[] = [
+const originalSentences: SentenceAnalysis[] = [
   sentence(1, [
     segment("Ruth Simmons ", "subject", "人名", "第一分句主语", "joined的施事", "鲁思·西蒙斯是本文个案人物。"),
     segment("joined ", "predicate", "一般过去时动词", "第一分句谓语", "说明Simmons的任职变动", "join直接接组织，不加介词。"),
@@ -74,7 +79,7 @@ export const passage2011P1Sentences: SentenceAnalysis[] = [
   ], "they checked which directors stayed.", "随后，他们只是核查从一份委托投票说明书到下一份仍留任的是哪些董事。", "接着，他们对照前后两份委托投票说明书，核查哪些董事仍在任。", "从连续披露材料识别董事去留，不武断说成任满两届。", ["from one proxy statement to the next"], [clause("which directors stayed from one proxy statement to the next", "嵌入疑问宾语从句", "which", "checked核查的内容", "which directors", "stayed", "from one proxy statement to the next（时间跨度）", "按‘核查哪些董事仍留任’顺译，which不是指代database的关系词。")]),
 ];
 
-passage2011P1Sentences.push(
+originalSentences.push(
   sentence(11, [
     segment("The most likely reason for departing a board ", "subject", "含动名词补足的名词短语", "第一分句主语", "was的主语", "中心词reason；for departing说明离任这件事的原因，most likely保留概率判断。"),
     segment("was age, ", "predicate", "系动词加名词表语", "第一分句谓语及表语", "解释reason", "age指年龄因素，并非所有离职都因年老。"),
@@ -153,10 +158,18 @@ passage2011P1Sentences.push(
 function question(number: number, sentenceNumber: number, prompt: string, options: [string, string, string, string], answer: Question["answer"], locating: string, explanations: Question["explanations"]): Question {
   return { id: 201100 + number, number, sentenceId: `2011-p1-s${sentenceNumber}`, prompt, options: options.map((text, index) => ({ key: (["A", "B", "C", "D"] as const)[index], text })), answer, locating, explanations };
 }
-export const passage2011P1Questions: Question[] = [
+const originalQuestions: Question[] = [
   question(21, 3, "According to Paragraph 1, Ms. Simmons was criticized for____.", ["gaining excessive profits", "failing to fulfill her duty", "refusing to make compromises", "leaving the board in tough times"], "B", "第一段第3句：任薪酬委员会成员却让巨额奖金未经质疑通过，批评针对监督失职。", { A: "奖金发放是监督对象，原文没说Simmons本人获取暴利。", B: "未就巨额奖金尽到监督、质疑职责，正是反问的指向。", C: "原文没有她拒绝妥协的情节，反而是未加质疑。", D: "先受到批评，后在次年2月离职；选项把后续行为偷换成先前批评原因。" }),
   question(22, 6, "We learn from Paragraph 2 that outside directors are supposed to be____.", ["generous investors", "unbiased executives", "share price forecasters", "independent advisers"], "D", "第二段less biased advisers、enough independence共同说明应有的独立顾问角色。", { A: "财富来自别处是保持独立的条件，不是要求慷慨投资。", B: "unbiased方向接近，但executives管理者偷换了advisers顾问的角色。", C: "股价下跌是应提供建议的情境，不代表职责是预测价格。", D: "independent对应enough independence，advisers直接复现应有角色。" }),
   question(23, 13, "According to the researchers from Ohio University, after an outside director's surprise departure, the firm is likely to____.", ["become more stable", "report increased earnings", "do less well in the stock market", "perform worse in lawsuits"], "C", "第三段明确说the stock is likely to perform worse。", { A: "更稳定的是部分董事转去的新公司，不是意外离任后的原公司。", B: "增加的是重述盈利数据的概率，不是盈利水平。", C: "do less well in the stock market与股票perform worse同义对应，且保留likely。", D: "被列入集体诉讼的风险上升，不等于诉讼中的表现或胜败更差。" }),
   question(24, 18, "It can be inferred from the last paragraph that outside directors____.", ["may stay for the attractive offers from the firm", "have often had records of wrongdoings in the firm", "are accustomed to stress-free work in the firm", "will decline incentives from the firm"], "A", "末段公司想留住董事就可能必须create incentives，说明有吸引力的条件可能促成留任。", { A: "由留任需要激励合理推出，may保留不确定性。", B: "违规发生时在董事会不等于本人实施违规或有违规记录。", C: "原文讨论困难时期去留，没有证明他们习惯无压力工作。", D: "与为留任创造激励的逻辑相反，原文没有一概拒绝激励。" }),
   question(25, 19, "The author's attitude toward the role of outside directors is____.", ["permissive", "positive", "scornful", "critical"], "D", "首段反问失职，第二段以supposed to、presumably提出应有标准，末段揭示提前离任可保全声誉并需要留任激励。全文对实际履职提出批评。中国教育在线阅卷标准答案取D；部分解析转载取B，已在交付报告登记分歧。", { A: "permissive是纵容或宽容，原文没有为失职开脱或表示放任。", B: "第二段肯定的是应有的独立顾问职责，不能据此判定全文对实际角色持积极态度。个别旧解析取此项，未采用。", C: "scornful是蔑视嘲弄，语气过强；作者仍以研究和条件分析问题。", D: "critical最能概括用应有职责对照离任行为、声誉利益与激励缺陷的批评立场。" }),
 ];
+
+export const passage2011P1Sentences: SentenceAnalysis[] = originalSentences.map((sentence) => {
+  const reviewed = passage2011P1Reviewed[sentence.number];
+  const result = withReviewedSyntax({ ...sentence, beginnerSyntax: { components: reviewed.components, clauses: reviewed.clauses, reading: reviewed.reading }, layers: reviewed.components.map(c => ({label:c.function,text:c.explanation})), grammar: reviewed.components.map(c => `${c.text}：${c.form}；${c.explanation}`), translationNotes: reviewed.translationNotes, practice: passage2011P1Practice[sentence.id] }, reviewed.colors);
+  if (result.chunks.length !== reviewed.chinese.length) throw new Error(`${sentence.id}: 词块译文数量不匹配`);
+  return { ...result, translationAlignment: result.chunks.map((chunk, i) => ({ english: chunk.text, chinese: reviewed.chinese[i] })) };
+});
+export const passage2011P1Questions: Question[] = originalQuestions.map(question => ({ ...question, reasoning: passage2011P1Reasoning[question.number!], analysis: passage2011P1QuestionAnalysis[question.number!] }));

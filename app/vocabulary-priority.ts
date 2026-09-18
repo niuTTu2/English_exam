@@ -1,3 +1,4 @@
+import { passage2011P1Priority } from "./2011-passage-1-priority";
 import type { VocabEntry } from "./data";
 export type VocabularyPriority = { id: "core" | "sense" | "structure" | "function" | "recognition" | "name"; label: string; reason: string; recommendedReview: boolean };
 const core = new Set("momentum bankruptcy controversy downturn demand fluctuate guarantee sector confidence debt decline lack wealth greed passion supply price peak average interview promote circulation surpass appropriate".split(" "));
@@ -19,6 +20,7 @@ const text2Functions = new Set([...functions, "if", "although", "while", "when",
 const text2Structures = new Set(["invite somebody to do something", "invite sb to do sth", "invite A to do B", "had invited men to join them", "keep the conversation going", "keep A doing", "keep somebody/something doing", "tend to do", "tend to talk", "tend to talk more than women", "wreak havoc with", "is wreaking havoc with marriage", "give A as B", "gave lack of communication as the reason", "amount to", "amounts to", "such as", "first and foremost", "attach importance to", "stem from", "stems from", "between A and B", "between man and wife", "in short"].map(value => value.toLowerCase()));
 /** 编辑建议按本篇语境给出；不是官方考试词频排名，也不改变词义。 */
 export function vocabularyPriority(entry: Pick<VocabEntry, "headword" | "display" | "kind" | "canonicalForm">, sourceId: string, articleId?: string): VocabularyPriority | undefined {
+  if (articleId === "2011-p1") return passage2011P1Priority(entry);
   if (articleId !== "2010-p1" && articleId !== "2010-p2") return undefined;
   const text2 = articleId === "2010-p2";
   const articleNames = text2 ? text2Names : names;

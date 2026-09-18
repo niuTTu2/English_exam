@@ -1,3 +1,4 @@
+import { getPassage2011P1SourceKnowledge, passage2011P1ContextGlosses } from "./2011-passage-1-contexts";
 import type { WordKnowledge } from "./knowledge-base";
 import { reviewedPhrases, type PhraseRow } from "./2011-content-helpers";
 import { passage2011P1Lexicon, passage2011P1CollocationGlosses, passage2011P1SentenceContexts } from "./2011-passage-1-lexicon";
@@ -31,9 +32,11 @@ const rows: PhraseRow[] = [
 const reviewed = reviewedPhrases(rows);
 export const passage2011P1PhraseGuides = reviewed.guides;
 export const passage2011P1PhraseAliases = reviewed.aliases;
-export const passage2011P1PhraseGlosses = { ...passage2011P1CollocationGlosses, ...reviewed.glosses };
+export const passage2011P1PhraseGlosses = { ...passage2011P1CollocationGlosses, ...reviewed.glosses, ...passage2011P1ContextGlosses };
 
 export function getPassage2011P1WordKnowledge(headword: string, sentenceId?: string): WordKnowledge | undefined {
+  const sourceKnowledge = getPassage2011P1SourceKnowledge(headword, sentenceId);
+  if (sourceKnowledge) return sourceKnowledge;
   const entry = passage2011P1Lexicon[headword];
   if (!entry) return undefined;
   const context = sentenceId ? passage2011P1SentenceContexts[sentenceId]?.[headword] : undefined;
@@ -41,3 +44,12 @@ export function getPassage2011P1WordKnowledge(headword: string, sentenceId?: str
   const rule = context?.use ?? entry.use;
   return { grammarRole: context?.partOfSpeech ?? entry.partOfSpeech, grammarSummary: rule, structures: [{ pattern, meaning: passage2011P1CollocationGlosses[pattern.toLowerCase()].meaning, rule }], pitfalls: entry.examSynonyms };
 }
+
+Object.assign(passage2011P1PhraseGlosses, {
+  "she said": { meaning: "她说道", note: "后置的主动引述语：she为说话者，said标明前面解释的来源。" },
+  "their own crises": { meaning: "他们自己的危机", note: "own强调董事亲自经历的危机，不是动词拥有。" },
+  "does not mean that": { meaning: "并不意味着……", note: "mean接完整内容从句；本篇否定由相关性推出总是逃避危机的推断。" },
+  "do less well": { meaning: "表现较差", note: "do为实义动词表现，less well为副词比较结构，与perform worse对应。" },
+  "a positive attitude": { meaning: "积极肯定的态度", note: "positive在态度题中指肯定方向，不是阳性、正数或数字鸿沟力量。" },
+  "a critical attitude": { meaning: "批评的态度", note: "critical在此指出问题，不是关键的或危急的；与scornful的强烈轻蔑有别。" },
+});

@@ -1,3 +1,4 @@
+import { passage2011P1SourceContexts } from "./2011-passage-1-contexts";
 import { writing2012BSentenceContexts } from "./2012-writing-b-lexicon";
 import { writing2012ASentenceContexts } from "./2012-writing-a-lexicon";
 import { translation2012SentenceContexts } from "./2012-translation-lexicon";
@@ -1070,6 +1071,10 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
   "2010-p1-s18": { deliver: { contextualMeaning: "送达；输送", use: "deliver A to B 为拟人化动宾方向结构。", contextualSubstitutions: [{ label: "bring", chinese: "带来；使进入", fit: "direct", rewrittenSentence: "The three Ds – death, debt and divorce – still bring works of art to the market.", nuance: "bring 是中性带来；deliver 更形象地把三种变故写成向市场输送作品的力量。", target: "word:bring" }] } },
   "2010-p1-s19": { away: { contextualMeaning: "远离；不在场", use: "is keeping away 是现在进行时，省略了 from the market。", contextualSubstitutions: [{ label: "hold back", chinese: "暂不行动；观望", fit: "direct", rewrittenSentence: "But anyone who does not have to sell is holding back, waiting for confidence to return.", nuance: "hold back 直接突出暂缓出售；keep away 强调从市场离场。", target: "phrase:hold back" }] } },
 };
+
+for (const [sourceId, contexts] of Object.entries(passage2011P1SourceContexts)) {
+  sentenceWordContexts[sourceId] = { ...sentenceWordContexts[sourceId], ...contexts };
+}
 
 export function getSentenceWordContext(sentenceId: string | undefined, headword: string) {
   if (!sentenceId) return undefined;
