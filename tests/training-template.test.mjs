@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 const root = fileURLToPath(new URL("..", import.meta.url));
 const vite = await createServer({ configFile: false, root, resolve: { alias: { "@": root } }, server: { middlewareMode: true, hmr: false } });
 after(() => vite.close());
-const { articleContents, questionOptionSourceId } = await vite.ssrLoadModule("/app/data.ts");
+const { articleContents, questionOptionSourceId, translationTaskSentences } = await vite.ssrLoadModule("/app/data.ts");
 const article = articleContents["2010-p1"];
 
 function checkTaskAnswer(task, text) {
@@ -23,6 +23,44 @@ function checkTaskAnswer(task, text) {
 
 const englishTokens = text => text.match(/[A-Za-z]+(?:\d+[A-Za-z]*)+\b|\d+(?:st|nd|rd|th)\b|\d{4}s\b|(?:[A-Za-z]\.){2,}|(?<![A-Za-z0-9])[A-Za-z]+(?:-[A-Za-z]+)?(?:['’][A-Za-z]+)?/g) ?? [];
 const requireText = (value, label) => assert.ok(typeof value === "string" && value.trim(), `${label}不能为空`);
+
+function checkWrittenTaskBoundary(item) {
+  assert.equal(item.questions.length, 0, `${item.id}不能伪造客观题`);
+  const tasks = item.kind === "translation" ? item.translationTasks : item.writingTasks;
+  assert.ok(tasks?.length, `${item.id}缺原卷主观任务`);
+  assert.equal(new Set(tasks.map(task => task.id)).size, tasks.length);
+  const sources = tasks.flatMap(task => item.kind === "translation" ? translationTaskSentences(task) : task.instructions);
+  assert.deepEqual(sources.map(source => [source.id, source.text]), item.sentences.map(source => [source.id, source.text]), `${item.id}任务边界须保留原卷来源，不能加入范文`);
+  for (const task of tasks) {
+    if (item.kind === "translation") {
+      const taskSources = translationTaskSentences(task);
+      assert.equal(task.source.replace(/\s+/g, " ").trim(), taskSources.map(source => source.text).join(" ").replace(/\s+/g, " ").trim(), `${task.id}作答原文与分析来源不一致`);
+      assert.ok(taskSources.some(source => source.id === task.sentenceId));
+      for (const field of ["prompt", "answer", "locating"]) requireText(task[field], `${task.id}.${field}`);
+      if (task.format === "passage") {
+        assert.ok(task.paragraphs.every(paragraph => paragraph.length));
+        assert.ok(Number.isFinite(task.points) && task.points > 0);
+      }
+    } else {
+      assert.ok(Number.isFinite(task.points) && task.points > 0);
+      assert.ok(["about", "at-least"].includes(task.wordLimit?.mode) && task.wordLimit.count > 0);
+      for (const field of ["requirements", "checklist", "pitfalls"]) {
+        assert.ok(task[field]?.length, `${task.id}缺${field}`);
+        task[field].forEach(value => requireText(value, `${task.id}.${field}`));
+      }
+      assert.ok(task.outline?.length && task.languageTips?.length);
+      for (const section of task.outline) for (const field of ["title", "content"]) requireText(section[field], `${task.id}.outline.${field}`);
+      assert.ok(task.sample?.english?.length && task.sample.notes?.length);
+      assert.equal(task.sample.english.length, task.sample.chinese?.length);
+      for (const field of ["english", "chinese", "notes"]) task.sample[field].forEach(value => requireText(value, `${task.id}.sample.${field}`));
+      for (const tip of task.languageTips) for (const field of ["english", "chinese", "usage"]) requireText(tip[field], `${task.id}.languageTips.${field}`);
+      if (task.genre === "chart-essay") {
+        assert.ok(task.chart?.rows?.length, `${task.id}缺原图数据`);
+        for (const field of ["src", "alt", "note"]) requireText(task.chart[field], `${task.id}.chart.${field}`);
+      }
+    }
+  }
+}
 
 function checkLanguageAnalysis(part, text, label, withReviewedSyntax) {
   assert.ok(part, `${label}缺语言分析`);
@@ -58,6 +96,8 @@ test("声明完成的训练层必须具备可核对的结构，不能只更改�
   for (const item of Object.values(articleContents)) {
     const status = item.teachingStatus;
     if (!status) continue; // 既有内容仍明确标作待升级，不用兼容界面冒充完成。
+    const written = item.kind === "translation" || item.kind === "writing";
+    if (written && (status.evidence || status.practice)) checkWrittenTaskBoundary(item);
     const completeReading = item.kind === "reading" && ["syntax", "vocabulary", "evidence", "practice"].every(layer => status[layer]);
     const sentences = new Map(item.sentences.map(sentence => [sentence.id, sentence]));
     const evidence = value => assert.ok(sentences.get(value.sentenceId)?.text.includes(value.quote) && value.quote.trim(), `${item.id}的证据必须来自连续原文`);
@@ -110,14 +150,16 @@ test("声明完成的训练层必须具备可核对的结构，不能只更改�
       }
     }
     if (status.practice) {
-      assert.ok(item.guide && item.paragraphs?.length, `${item.id}缺原卷段落和篇章地图`);
-      assert.deepEqual(item.paragraphs.flatMap(paragraph => paragraph.sentenceIds), [...sentences.keys()]);
-      assert.equal(new Set(item.paragraphs.map(p => p.id)).size, item.paragraphs.length);
-      assert.deepEqual(item.guide.paragraphs.map(p => p.paragraphId), item.paragraphs.map(p => p.id));
-      assert.ok(item.guide.route.length && item.guide.mainIdea);
+      if (!written || item.guide) {
+        assert.ok(item.guide && item.paragraphs?.length, `${item.id}缺原卷段落和篇章地图`);
+        assert.deepEqual(item.paragraphs.flatMap(paragraph => paragraph.sentenceIds), [...sentences.keys()]);
+        assert.equal(new Set(item.paragraphs.map(p => p.id)).size, item.paragraphs.length);
+        assert.deepEqual(item.guide.paragraphs.map(p => p.paragraphId), item.paragraphs.map(p => p.id));
+        assert.ok(item.guide.route.length && item.guide.mainIdea);
+        for (const sentence of item.sentences) assert.ok(item.guide.sentenceRoles[sentence.id]);
+      }
       const sources = trainingSources(item), map = articleMapSource(item);
-      assert.equal(map.practice?.length, 3, `${item.id}缺三项篇章回忆`);
-      for (const sentence of item.sentences) assert.ok(item.guide.sentenceRoles[sentence.id]);
+      if (item.guide) assert.equal(map.practice?.length, 3, `${item.id}缺三项篇章回忆`);
       for (const source of sources) {
         const tasks = source.practice;
         const clickableLabels = new Set([...englishTokens(source.text), ...(source.phrases ?? [])].map(label => label.toLowerCase()));
@@ -183,6 +225,14 @@ test("声明完成的训练层必须具备可核对的结构，不能只更改�
       assert.equal(assessLocation(reasoning, { scope: reasoning.scope, sentenceIds: passageIds }, passageIds).passed, false, `${question.id}全选全文不得通过`);
     }
   }
+});
+
+test("翻译写作验收保留原任务边界，缺少主观任务不能以空题目列表冒充证据完成", () => {
+  for (const item of Object.values(articleContents).filter(item => ["translation", "writing"].includes(item.kind))) checkWrittenTaskBoundary(item);
+  const translation = articleContents["2011-translation"], writing = articleContents["2011-writing-a"];
+  assert.throws(() => checkWrittenTaskBoundary({ ...translation, translationTasks: [] }), /缺原卷主观任务/);
+  assert.throws(() => checkWrittenTaskBoundary({ ...translation, translationTasks: translation.translationTasks.map(task => ({ ...task, source: "Invented source." })) }), /作答原文与分析来源不一致/);
+  assert.throws(() => checkWrittenTaskBoundary({ ...writing, writingTasks: writing.writingTasks.map(task => ({ ...task, requirements: [] })) }), /缺requirements/);
 });
 
 function checkEvidence(evidence) {
