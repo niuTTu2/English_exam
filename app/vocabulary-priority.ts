@@ -11,16 +11,28 @@ const sourceNames: Record<string, string[]> = {
   "question-201021-option-C": ["beautiful", "inside", "my", "head", "forever"],
 };
 const structures = new Set(["all but two", "all but two pieces", "file for bankruptcy", "filed for bankruptcy", "fall by", "fell by two-thirds", "be down by", "down by nearly 90%", "not a but b", "not a lack of demand but a lack of good work to sell", "have to do", "had to pay out", "wait for a to do", "waiting for confidence to return", "for a while", "since 2003"]);
+const text2Core = new Set("communication conversation expectation spouse inequality tangible complaint divorce pattern context havoc trust support attach motivation exert damage pressure stem vivid brief epidemic tend crystallize irony represent focus".split(" "));
+const text2Senses = new Set(["address", "room", "look", "give", "share", "mean", "account", "figure", "work", "given"]);
+const text2Names = new Set(["virginia", "andrew", "hacker", "catherine", "kohler", "riessman"]);
+const text2SourceNames: Record<string, string[]> = { "2010-p2-s13": ["talk"], "question-201030-option-A": ["divorce", "talk"] };
+const text2Functions = new Set([...functions, "if", "although", "while", "when", "except", "throughout", "instead"]);
+const text2Structures = new Set(["invite somebody to do something", "invite sb to do sth", "invite A to do B", "had invited men to join them", "keep the conversation going", "keep A doing", "keep somebody/something doing", "tend to do", "tend to talk", "tend to talk more than women", "wreak havoc with", "is wreaking havoc with marriage", "give A as B", "gave lack of communication as the reason", "amount to", "amounts to", "such as", "first and foremost", "attach importance to", "stem from", "stems from", "between A and B", "between man and wife", "in short"].map(value => value.toLowerCase()));
 /** 编辑建议按本篇语境给出；不是官方考试词频排名，也不改变词义。 */
 export function vocabularyPriority(entry: Pick<VocabEntry, "headword" | "display" | "kind" | "canonicalForm">, sourceId: string, articleId?: string): VocabularyPriority | undefined {
-  if (articleId !== "2010-p1") return undefined;
+  if (articleId !== "2010-p1" && articleId !== "2010-p2") return undefined;
+  const text2 = articleId === "2010-p2";
+  const articleNames = text2 ? text2Names : names;
+  const articleSourceNames = text2 ? text2SourceNames : sourceNames;
+  const articleStructures = text2 ? text2Structures : structures;
+  const articleSenses = text2 ? text2Senses : familiar;
+  const articleCore = text2 ? text2Core : core;
   const head = entry.headword.toLowerCase(), surface = entry.display.toLowerCase();
-  if (names.has(head) || sourceNames[sourceId]?.includes(head)) return { id: "name", label: "背景专名 · 识别即可", reason: "此处用于人名、地名、机构名或拍卖名称；建议不加入单独背词复习，仍可自行标记。", recommendedReview: false };
-  if (entry.kind === "phrase") return structures.has(surface) || structures.has((entry.canonicalForm ?? head).toLowerCase())
+  if (articleNames.has(head) || articleSourceNames[sourceId]?.includes(head)) return { id: "name", label: "背景专名 · 识别即可", reason: text2 ? "此处用于人名、地名或书名；识别出处即可，仍可自愿标记。" : "此处用于人名、地名、机构名或拍卖名称；建议不加入单独背词复习，仍可自行标记。", recommendedReview: false };
+  if (entry.kind === "phrase") return articleStructures.has(surface) || articleStructures.has((entry.canonicalForm ?? head).toLowerCase())
     ? { id: "structure", label: "必会结构", reason: "重点记完整关系和可接成分，再回到本句确认修饰对象。", recommendedReview: true }
     : { id: "recognition", label: "本句表达 · 按需记忆", reason: "先理解本句组合；是否加入复习由你选择。", recommendedReview: false };
-  if (familiar.has(head)) return { id: "sense", label: "熟词语境义", reason: "重点区分本句义与最熟悉的基本义，不能把整个词组的意思塞给这个单词。", recommendedReview: true };
-  if (functions.has(head)) return { id: "function", label: "功能词 · 看句法作用", reason: "建议在句法任务中复习它连接或引出的成分，不脱离句子单独背词。", recommendedReview: false };
-  if (core.has(head)) return { id: "core", label: "核心迁移词", reason: "适合结合本句用法与关键搭配复习，能帮助理解同类议论文章。", recommendedReview: true };
+  if (articleSenses.has(head)) return { id: "sense", label: "熟词语境义", reason: "重点区分本句义与最熟悉的基本义，不能把整个词组的意思塞给这个单词。", recommendedReview: true };
+  if ((text2 ? text2Functions : functions).has(head)) return { id: "function", label: "功能词 · 看句法作用", reason: "建议在句法任务中复习它连接或引出的成分，不脱离句子单独背词。", recommendedReview: false };
+  if (articleCore.has(head)) return { id: "core", label: "核心迁移词", reason: "适合结合本句用法与关键搭配复习，能帮助理解同类议论文章。", recommendedReview: true };
   return { id: "recognition", label: "本句识别 · 按需记忆", reason: "先保证读懂当前语境，不必把每张词卡的所有扩展都背下来。", recommendedReview: false };
 }

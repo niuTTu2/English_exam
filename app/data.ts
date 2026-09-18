@@ -35,6 +35,7 @@ import { passage2010P1Guide } from "./2010-passage-1-guide";
 import type { ArticleGuide, QuestionReasoning } from "./article-teaching";
 import type { PracticeTask } from "./learning-model";
 import { passage2010P2Questions, passage2010P2Sentences } from "./2010-passage-2-data";
+import { passage2010P2Guide } from "./2010-passage-2-guide";
 import type { ContextualSubstitution } from "./contextual-vocabulary";
 import type { VocabularySenseGuide } from "./vocabulary-senses";
 import { verifiedTrunks2000 } from "./verified-syntax-2000";
@@ -1533,6 +1534,10 @@ export const articleContents: Record<string, ArticleContent> = {
     kind: "reading",
     sentences: passage2010P2Sentences,
     questions: passage2010P2Questions,
+    guide: passage2010P2Guide,
+    teachingStatus: { syntax: true, vocabulary: true, evidence: true, practice: true },
+    paragraphs: [[1, 2, 3, 4, 5, 6, 7, 8, 9], [10, 11], [12, 13, 14], [15, 16, 17, 18], [19]]
+      .map((numbers, index) => ({ id: `2010-p2-paragraph-${index + 1}`, sentenceIds: numbers.map(number => `2010-p2-s${number}`) })),
   },
   "2010-p3": {
     id: "2010-p3", year: 2010, sectionId: "p3", label: "阅读 Text 3", badge: "2010 · 阅读 Text 3",

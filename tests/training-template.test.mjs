@@ -3,7 +3,10 @@ import test, { after } from "node:test";
 import { createServer } from "vite";
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-const vite = await createServer({ configFile: false, server: { middlewareMode: true, hmr: false } });
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+const root = fileURLToPath(new URL("..", import.meta.url));
+const vite = await createServer({ configFile: false, root, resolve: { alias: { "@": root } }, server: { middlewareMode: true, hmr: false } });
 after(() => vite.close());
 const { articleContents } = await vite.ssrLoadModule("/app/data.ts");
 const article = articleContents["2010-p1"];
@@ -385,4 +388,129 @@ test("复盘显示篇目与错误时间，能直接打开指定任务，词汇�
   assert.equal(functionWord.recommendedReview, false); assert.match(functionWord.reason, /句法任务/);
   assert.doesNotMatch(article.sentences[1].beginnerSyntax.components.map(c => `${c.modifies}${c.explanation}`).join(""), /对象性主语/);
   assert.match(article.sentences[0].natural, /拍卖达米恩/);
+});
+
+const text2 = articleContents["2010-p2"];
+
+test("Text 2按用户原卷保留五段，题干及所有选项的语言分析与实际文本一致", () => {
+  const fixture = JSON.parse(readFileSync(new URL("./fixtures/2010-p2-source.json", import.meta.url), "utf8"));
+  const normalize = text => text.replace(/\s+/g, " ").trim();
+  const sentence = new Map(text2.sentences.map(s => [s.id, s.text]));
+  assert.deepEqual(text2.paragraphs.map(p => normalize(p.sentenceIds.map(id => sentence.get(id)).join(" "))), fixture.paragraphs.map(normalize));
+  assert.deepEqual(text2.questions.map(q => q.answer), ["A", "C", "B", "D", "B"]);
+  let phrases = 0;
+  for (const question of text2.questions) {
+    assert.equal(question.analysis.prompt.text, question.prompt);
+    assert.equal(Object.keys(question.analysis.options).length, 4);
+    for (const option of question.options) assert.equal(question.analysis.options[option.key].text, option.text);
+    for (const analysis of [question.analysis.prompt, ...Object.values(question.analysis.options)]) {
+      assert.equal(analysis.chunks.map(c => c.text).join(""), analysis.text);
+      assert.ok(analysis.chunks.every(c => c.visualRole && c.grammarFunction));
+      const check = (components, parent) => components.forEach(c => {
+        assert.ok(parent.includes(c.text), `${analysis.id}: ${c.text}`);
+        check(c.children ?? [], c.text);
+      });
+      check(analysis.beginnerSyntax.components, analysis.text);
+      for (const clause of analysis.beginnerSyntax.clauses) {
+        assert.ok(analysis.text.includes(clause.text));
+        assert.ok(!clause.objectOrComplement, "从句细节不能继续混称宾语或表语");
+      }
+      if (analysis.textKind === "phrase") {
+        phrases++;
+        assert.equal(analysis.beginnerSyntax.clauses.length, 0, "名词短语和动名词选项不能虚构完整从句");
+        assert.ok(!analysis.beginnerSyntax.components.some(c => c.function === "谓语"));
+      }
+    }
+  }
+  assert.equal(phrases, 12);
+  assert.ok(text2.sentences.every(s => s.translationAlignment.every(b => /[\u4e00-\u9fff]/.test(b.chinese))));
+});
+
+test("Text 2的范围答案可点击，反馈只影响声明的关联任务", async () => {
+  const m = await vite.ssrLoadModule("/app/learning-model.ts");
+  const { trainingSources, articleMapSource } = await vite.ssrLoadModule("/app/training-sources.ts");
+  const sources = trainingSources(text2), map = articleMapSource(text2);
+  assert.equal(text2.sentences.flatMap(s => s.practice).length, 35);
+  assert.equal(map.practice.length, 3);
+  for (const source of sources) for (const task of source.practice) {
+    checkTaskAnswer(task, source.text);
+    if (task.kind === "range") {
+      const text = task.rangeText ?? source.text, tokens = m.rangeTokens(text), offset = text.indexOf(task.answer);
+      const first = tokens.findIndex(t => t.start === offset), last = tokens.findIndex(t => t.end === offset + task.answer.length);
+      assert.ok(first >= 0 && last >= first, `${source.id}/${task.id}: 不可点击的范围端点`);
+      assert.equal(m.selectedRange(text, first, last), task.answer);
+    }
+    for (const id of task.leaksToTaskIds ?? []) assert.ok(source.practice.some(t => t.id === id));
+    for (const leak of task.leaksToTasks ?? []) assert.ok(sources.some(s => s.id === leak.sentenceId && s.practice.some(t => t.id === leak.taskId)));
+  }
+  const targets = m.practiceHintTargets(sources, "previous-answer", "map-feedback", map.id, map.practice[1]);
+  assert.ok(targets.includes(m.taskKey("2010-p2-s15", text2.sentences[14].practice[1])));
+  assert.ok(!targets.includes(m.taskKey("2010-p2-s4", text2.sentences[3].practice[0])));
+  const premise = text2.sentences[13];
+  assert.ok(m.practiceHintTargets(sources, "previous-answer", "premise-feedback", premise.id, premise.practice[0]).includes(m.taskKey(premise.id, premise.practice[1])));
+});
+
+test("Text 2反向题保留统计口径，主旨定位需覆盖五段且不能全选过关", async () => {
+  const { assessLocation } = await vite.ssrLoadModule("/app/location-model.ts");
+  const ids = text2.sentences.map(s => s.id), select = (...numbers) => numbers.map(n => `2010-p2-s${n}`);
+  for (const question of text2.questions) {
+    const r = question.reasoning;
+    for (const path of r.locationPolicy.paths) {
+      assert.equal(assessLocation(r, { scope: r.scope, sentenceIds: path.groups.map(g => g[0]) }, ids).passed, true, `${question.id}/${path.id}`);
+    }
+    assert.equal(assessLocation(r, { scope: r.scope, sentenceIds: ids }, ids).passed, false);
+  }
+  const q28 = text2.questions[2].reasoning;
+  for (const path of [[13, 14], [9, 10, 13, 14, 18]]) assert.equal(assessLocation(q28, { scope: "whole-passage", sentenceIds: select(...path) }, ids).passed, true);
+  assert.equal(assessLocation(q28, { scope: "sentence", sentenceIds: select(13, 14) }, ids).passed, false);
+  assert.equal(q28.options.B.judgment, "选入");
+  assert.match(q28.options.B.reasoning, /50%修饰离婚率/);
+  for (const option of ["A", "C", "D"]) assert.equal(q28.options[option].errorType, "事实成立，非本题所求");
+  const q29 = text2.questions[3].reasoning;
+  assert.equal(assessLocation(q29, { scope: "whole-passage", sentenceIds: select(18) }, ids).passed, false);
+  assert.equal(assessLocation(q29, { scope: "whole-passage", sentenceIds: select(2, 10, 13, 16, 19) }, ids).passed, true);
+  assert.match(text2.questions[4].reasoning.paraphrases[0].limit, /未提供真实后文/);
+});
+
+test("Text 2词卡按正文和题目出处区分词性，重点建议不影响其他文章", async () => {
+  const { resolveEntry } = await vite.ssrLoadModule("/app/study-app.tsx");
+  const { vocabularyPriority } = await vite.ssrLoadModule("/app/vocabulary-priority.ts");
+  const card = (word, n) => resolveEntry(word, false, `2010-p2-s${n}`);
+  assert.match(card("home", 8).partOfSpeech, /^adv/);
+  assert.match(card("home", 10).partOfSpeech, /^n\./);
+  assert.match(card("share", 15).partOfSpeech, /^n\./);
+  assert.match(card("share", 18).partOfSpeech, /^v\./);
+  assert.match(card("Given", 14).partOfSpeech, /^prep/);
+  assert.match(card("given", 15).partOfSpeech, /^v\./);
+  assert.match(resolveEntry("means", false, "question-201027-prompt").contextualMeaning, /意思/);
+  assert.match(resolveEntry("account", false, "question-201030-option-A").contextualMeaning, /介绍|叙述/);
+  const entry = word => ({ headword: word, display: word, kind: "word" });
+  assert.equal(vocabularyPriority(entry("hacker"), "2010-p2-s12", text2.id).recommendedReview, false);
+  assert.equal(vocabularyPriority(entry("divorce"), "question-201030-option-A", text2.id).id, "name");
+  assert.equal(vocabularyPriority(entry("divorce"), "2010-p2-s14", text2.id).id, "core");
+  assert.equal(vocabularyPriority(entry("share"), "2010-p2-s15", text2.id).id, "sense");
+  assert.equal(vocabularyPriority(entry("although"), "2010-p2-s10", text2.id).id, "function");
+  assert.equal(vocabularyPriority(entry("hacker"), "2010-p3-s1", "2010-p3"), undefined);
+  assert.equal(vocabularyPriority(entry("momentum"), "2010-p1-s5", "2010-p1").id, "core");
+});
+
+test("Text 2训练入口先尝试再讲解，错误能以正确篇目进入统一复盘", async () => {
+  const m = await vite.ssrLoadModule("/app/learning-model.ts");
+  const { ArticleGuidePanel } = await vite.ssrLoadModule("/app/article-guide-panel.tsx");
+  const guide = renderToStaticMarkup(React.createElement(ArticleGuidePanel, { article: text2, onSentence() {} }));
+  assert.match(guide, /先尝试全部3项/);
+  assert.doesNotMatch(guide, /class="article-main-idea"|class="paragraph-map"/);
+  const { SentencePracticePanel } = await vite.ssrLoadModule("/app/sentence-practice-panel.tsx");
+  const sentence = text2.sentences[13], task = sentence.practice[1];
+  const session = { id: "text2-round", startedAt: 1, lastActiveAt: 2, hints: [] };
+  const attempt = m.makePracticeAttempt({ id: "text2-rate", articleId: text2.id, sentenceId: sentence.id, task, answer: task.options[1], at: 2, session });
+  assert.equal(attempt.correct, false);
+  const initial = renderToStaticMarkup(React.createElement(SentencePracticePanel, { sentence, attempts: {}, session, reflection: m.emptyReflection(), revealed: false, onAttempt() {}, onReveal() {}, onRetry() {}, onReflection() {} }));
+  assert.doesNotMatch(initial, /practice-feedback|参考：/);
+  assert.match(initial, /先完成至少一项尝试/);
+  const { TrainingReview } = await vite.ssrLoadModule("/app/training-review.tsx");
+  const review = renderToStaticMarkup(React.createElement(TrainingReview, { articles: [text2], attempts: { [attempt.id]: attempt }, reflections: {}, questionWork: {}, submitted: {}, now: m.DAY_MS + 2, onSentence() {}, onQuestion() {} }));
+  assert.match(review, /2010 Text 2 · 第14句/);
+  assert.match(review, /nearly 50 percent/);
+  assert.match(review, /上次错误/);
 });
