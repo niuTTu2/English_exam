@@ -787,6 +787,7 @@ function translationAnswerKey(articleId: ArticleId, taskId: number) {
 export default function StudyApp() {
   const [view, setView] = useState<AppView>("test");
   const [sentenceMode, setSentenceMode] = useState<SentenceMode>("read");
+  const [studyPart, setStudyPart] = useState<"passage" | "questions">("passage");
   const [showPhrases, setShowPhrases] = useState(true);
   const [selectedYear, setSelectedYear] = useState<number>(2000);
   const [activeSection, setActiveSection] = useState<ArticleId>("cloze");
@@ -798,7 +799,7 @@ export default function StudyApp() {
   const [learningReflections, setLearningReflections] = useState<Record<string, LearningReflection>>({});
   const [locationAttempts, setLocationAttempts] = useState<LocationAttempts>({});
   const [practiceTarget, setPracticeTarget] = useState<{ sentenceId: string; taskId?: string } | null>(null);
-  const [evidenceOrigin, setEvidenceOrigin] = useState<{ questionId: number; articleId: string; number: number; option?: string; scrollY: number } | null>(null);
+  const [evidenceOrigin, setEvidenceOrigin] = useState<{ questionId: number; articleId: string; number: number; option?: string; scrollY: number; view: "study" | "test" } | null>(null);
   const [evidenceSections, setEvidenceSections] = useState<Record<number, string[]>>({});
   const [locatingQuestionId, setLocatingQuestionId] = useState<number | null>(null);
   const [editingLocationId, setEditingLocationId] = useState<number | null>(null);
@@ -1201,17 +1202,23 @@ export default function StudyApp() {
     if (!article) return;
     beginPractice(article.id, at);
     setPracticeTarget({ sentenceId: id, taskId });
-    setActiveSection(article.id); setSelectedYear(article.year); setView("study"); setExpanded(current => new Set(current).add(id));
+    setActiveSection(article.id); setSelectedYear(article.year); setView("study"); setStudyPart("passage"); setExpanded(current => new Set(current).add(id));
     window.setTimeout(() => { const element = document.getElementById(`source-${id}`); if (element instanceof HTMLDetailsElement) element.open = true; element?.scrollIntoView({ behavior: "smooth", block: "start" }); }, 0);
   }
   function visitQuestionEvidence(question: AnyQuestion, sentenceId: string, at: number, option?: string) {
-    setEvidenceOrigin({ questionId: question.id, articleId: activeArticle.id, number: question.number ?? question.id, option, scrollY: window.scrollY });
+    setEvidenceOrigin({ questionId: question.id, articleId: activeArticle.id, number: question.number ?? question.id, option, scrollY: window.scrollY, view: view === "study" ? "study" : "test" });
     openPracticeSentence(sentenceId, at);
+  }
+  function openQuestionStudy(questionId?: number) {
+    setView("study"); setStudyPart("questions");
+    window.requestAnimationFrame(() => window.requestAnimationFrame(() => {
+      document.getElementById(questionId ? `source-question-${questionId}-prompt` : "question-study-heading")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }));
   }
   function returnToQuestion() {
     if (!evidenceOrigin) return;
     const origin = evidenceOrigin, article = articleContents[origin.articleId];
-    setActiveSection(article.id); setSelectedYear(article.year); setView("test"); setEvidenceOrigin(null);
+    setActiveSection(article.id); setSelectedYear(article.year); setView(origin.view); setStudyPart("questions"); setEvidenceOrigin(null);
     window.requestAnimationFrame(() => window.requestAnimationFrame(() => {
       document.getElementById(`source-question-${origin.questionId}-prompt`)?.focus({ preventScroll: true });
       window.scrollTo({ top: origin.scrollY, behavior: "instant" });
@@ -1859,6 +1866,11 @@ export default function StudyApp() {
             </div>
 
             <TabsContent value="study" className="mode-content">
+              {questions.length > 0 && <nav className="study-section-nav" aria-label="精读内容">
+                <Button variant={studyPart === "passage" ? "default" : "outline"} aria-pressed={studyPart === "passage"} onClick={() => setStudyPart("passage")}><BookOpenText />正文精读</Button>
+                <Button variant={studyPart === "questions" ? "default" : "outline"} aria-pressed={studyPart === "questions"} onClick={() => setStudyPart("questions")}><ListChecks />题目与选项（{questions.length}题）</Button>
+              </nav>}
+              <div hidden={questions.length > 0 && studyPart === "questions"}>
               <ArticleGuidePanel key={`${activeArticle.id}-${practiceTarget?.sentenceId === `${activeArticle.id}-map` ? practiceTarget.taskId ?? "" : ""}`} initialTaskId={practiceTarget?.sentenceId === `${activeArticle.id}-map` ? practiceTarget.taskId : undefined} article={activeArticle} onSentence={openPracticeSentence} onOpen={at => { recordPracticeHint(activeArticle, "article-map", "article-map", at); }}
                 attempts={practiceAttempts} session={activePracticeSession(practiceSessions[activeArticle.id], reviewNow)} onBegin={at => beginPractice(activeArticle.id, at)}
                 onAttempt={(task, answer, at) => recordPractice(articleMapSource(activeArticle), task, answer, crypto.randomUUID(), at)}
@@ -1908,6 +1920,14 @@ export default function StudyApp() {
                   />
                 ))}
               </div>
+              </div>
+              {questions.length > 0 && <div hidden={studyPart !== "questions"}>
+                <section className="question-study-section" aria-label="题目与选项精读">
+                  <h3 id="question-study-heading">题目与选项精读</h3>
+                  <p>无需交卷。点英文查词；在各选项下展开选择依据或语言讲解。查看解析不会替你作答或计为掌握。</p>
+                  {questions.map(question => <QuestionStudyCard key={question.id} question={question} onTerm={openTerm} onSentence={(id, option) => visitQuestionEvidence(question, id, Date.now(), option)} />)}
+                </section>
+              </div>}
             </TabsContent>
 
             <TabsContent value="test" className="mode-content">
@@ -1962,6 +1982,10 @@ export default function StudyApp() {
                     : activeArticle.paragraphs ? `按原卷段落限时默读，再完成${questionNumberLabel(questions)}。初读不提供查词提示；可在文末标记难句，提交后查看解析。` : `先限时默读全文，再完成${questionNumberLabel(questions)}；不提前显示逐句讲解。点选项字母作答；词汇讲解按你的设置解锁。`}</p>
               </div>
 
+              {questions.length > 0 && <nav className="study-section-nav" aria-label="题目快捷入口">
+                <Button variant="outline" onClick={() => document.getElementById("test-questions")?.scrollIntoView({ behavior: "smooth", block: "start" })}>直接查看题目（{questions.length}题）</Button>
+                <Button variant="outline" onClick={() => openQuestionStudy()}>学习题目与选项解析</Button>
+              </nav>}
               {activeArticle.kind === "writing" ? (
                 <section className="writing-test-section">
                   {writingTasks.map(task => {
@@ -2013,7 +2037,7 @@ export default function StudyApp() {
                     ))}
                   </div>}
 
-                  <section className="question-section">
+                  <section className="question-section" id="test-questions">
                     <div className="question-heading">
                       <div><span>{activeArticle.kind === "cloze" ? "完形选择" : questions.every(question => question.format === "true-false") ? "阅读判断（T / F）" : questions.every(question => question.format === "matching") ? "人物观点匹配（A—G）" : "阅读选择"}</span><strong>{selectedAnswers}/{questions.length} 已作答</strong></div>
                       {submitted && <Badge className="score-badge">{correctAnswers}/{questions.length}</Badge>}
@@ -2074,6 +2098,7 @@ export default function StudyApp() {
                           {submitted && editingLocationId !== question.id && question.analysis && (
                             <QuestionAnalysisPanel question={question} onTerm={openTerm} />
                           )}
+                          <Button className="question-study-link" variant="outline" onClick={() => openQuestionStudy(question.id)}>进入第{question.number ?? question.id}题精读 · 查看解析与用法</Button>
                         </article>
                       ))}
                     </div>
@@ -2721,6 +2746,49 @@ export function MatchingOptionBank({ question, onTerm }: { question: Question; o
   </section>;
 }
 
+/** 精读入口与作答状态分离；所有题型复用原题及稳定的词汇来源 ID。 */
+export function QuestionStudyCard({ question, onTerm, onSentence }: {
+  question: Question;
+  onTerm: (label: string, sentenceId: string, isPhrase?: boolean) => void;
+  onSentence: (id: string, option?: string) => void;
+}) {
+  const optionAnalyses: Partial<Record<QuestionOptionKey, SentenceAnalysis>> = question.analysis?.options ?? {};
+  return <article className="question-card question-study-card" aria-label={`第${question.number ?? question.id}题精读`}>
+    <div className="question-prompt" id={`source-question-${question.id}-prompt`} tabIndex={-1} data-source-location>
+      <span>{question.number ?? question.id}</span>
+      <p>{renderWords(question.prompt, `question-${question.id}-prompt`, onTerm, `study-prompt-${question.id}`)}</p>
+    </div>
+    {question.analysis?.prompt && <QuestionAnalysisBlock label="题干怎么读 · 结构与用法" analysis={question.analysis.prompt} sentenceId={`question-${question.id}-prompt`} onTerm={onTerm} />}
+    <div className="study-option-list">
+      {question.options.map(option => {
+        const sourceId = questionOptionSourceId(question, option.key);
+        const judgment = question.reasoning?.options[option.key];
+        const analysis = optionAnalyses[option.key];
+        const ownsSource = question.format !== "matching" || question.id === question.sharedOptionsId;
+        return <section key={option.key} className="study-option" aria-label={`${option.key}项精读`}>
+          <div className="study-option-text" id={ownsSource ? `source-${sourceId}` : undefined} tabIndex={-1} data-source-location={ownsSource || undefined}>
+            <strong>{option.key}</strong><p>{renderWords(option.text, sourceId, onTerm, `study-${question.id}-${option.key}`)}</p>
+          </div>
+          {option.text.includes(" ") && getPhraseKnowledge(option.text) && <button type="button" className="guide-source-link" onClick={() => onTerm(option.text, sourceId, true)}>查看整组表达的含义与搭配</button>}
+          <details className="study-option-reason">
+            <summary>{option.key}项 · 为什么选／不选</summary>
+            <p><strong>{judgment ? judgment.judgment : option.key === question.answer ? "本题应选" : "本题不选"}{judgment?.errorType ? ` · ${judgment.errorType}` : ""}</strong></p>
+            <p>{renderWords(judgment?.reasoning ?? questionExplanation(question, option.key), sourceId, onTerm, `study-reason-${question.id}-${option.key}`)}</p>
+            {judgment ? judgment.evidenceIds.map(id => {
+              const evidence = question.reasoning?.evidence.find(item => item.id === id);
+              return evidence && <button type="button" key={id} className="guide-source-link" onClick={() => onSentence(evidence.sentenceId, option.key)}>{evidence.role} · 回原文</button>;
+            }) : <><p>{question.locating}</p><button type="button" className="guide-source-link" onClick={() => onSentence(question.sentenceId, option.key)}>回原文核对</button></>}
+          </details>
+          {analysis && <QuestionAnalysisBlock label={`${option.key}项 · 句意、时态与搭配用法`} analysis={analysis} sentenceId={sourceId} onTerm={onTerm} />}
+        </section>;
+      })}
+    </div>
+    {question.reasoning && <details className="study-question-reasoning"><summary>整题思路与原文证据</summary><QuestionEvidencePanel question={question} onSentence={onSentence} showOptionDetails={false} /></details>}
+    {question.analysis?.answer && <QuestionAnalysisBlock label="答案放回原句怎么读" analysis={question.analysis.answer} sentenceId={question.sentenceId} onTerm={onTerm} />}
+    {question.options.some(option => !optionAnalyses[option.key] && option.text.trim().includes(" ")) && <p className="question-analysis-coverage">本题部分选项的整句拆解尚待补充；现有选择依据均可展开，单词和已收录词组可点击查看。</p>}
+  </article>;
+}
+
 function QuestionAnalysisPanel({
   question,
   onTerm,
@@ -2737,11 +2805,11 @@ function QuestionAnalysisPanel({
     .filter((item): item is { option: Question["options"][number]; analysis: SentenceAnalysis } => Boolean(item.analysis));
 
   return (
-    <details className="question-analysis-panel" aria-label={`第 ${question.number ?? question.id} 题提交后句读`}>
+    <details className="question-analysis-panel" aria-label={`第 ${question.number ?? question.id} 题语言讲解`}>
       <summary className="question-analysis-heading">
         <BookOpenCheck />
-        <strong>题干与选项按需拆句</strong>
-        <span>题干、选项与正确答案的结构对照</span>
+        <strong>题干与选项的结构、时态与搭配</strong>
+        <span>按需查看各项语言用法</span>
       </summary>
       {analysis.prompt && (
         <QuestionAnalysisBlock
@@ -2958,6 +3026,8 @@ function QuestionAnalysisBlock({
         <ChevronDown />
       </summary>
       <div className="question-analysis-body">
+        <p className="question-language-meaning"><strong>这句话／词组的意思：</strong>{analysis.natural}</p>
+        {analysis.layers.find(layer => layer.label === "读题关键") && <p className="question-language-focus"><strong>读题关键：</strong>{renderWords(analysis.layers.find(layer => layer.label === "读题关键")!.text, sentenceId, onTerm, `${analysis.id}-reading-key`)}</p>}
         <p className="question-analysis-text">
           {renderInteractiveText(analysis.text, phrases, sentenceId, onTerm, true)}
         </p>
@@ -2994,10 +3064,10 @@ function QuestionAnalysisBlock({
             </section>
           </div>
         </details>
-        <div className="question-translation-block">
+        {analysis.literal !== analysis.natural && <div className="question-translation-block">
           <div><span>结构直译</span><p>{analysis.literal}</p></div>
           <div><span>通顺译文</span><p>{analysis.natural}</p></div>
-        </div>
+        </div>}
         <div className="question-logic-note"><Brain /><p><strong>句间逻辑</strong>{renderWords(analysis.logic, sentenceId, onTerm, `${analysis.id}-logic`)}</p></div>
       </div>
     </details>

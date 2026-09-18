@@ -142,9 +142,15 @@ test("五题证据、范围、反向判断与拆句均引用真实原文", async
     }
     const analysis = question.analysis;
     assert.equal(analysis.prompt.text, question.prompt);
+    assert.deepEqual(Object.keys(analysis.options ?? {}).sort(), question.options.map(option => option.key).sort(), "Text 1所有选项均有语言讲解，不只分析正确项");
     for (const [key, option] of Object.entries(analysis.options ?? {})) assert.equal(option.text, question.options.find(o => o.key === key).text);
     for (const part of [analysis.prompt, ...Object.values(analysis.options ?? {})]) {
       assert.equal(part.chunks.map(c => c.text).join(""), part.text);
+      const checkChildren = (components, parent) => components.forEach(component => {
+        assert.ok(parent.includes(component.text), `${part.id}子成分必须在父范围内：${component.text}`);
+        checkChildren(component.children ?? [], component.text);
+      });
+      checkChildren(part.beginnerSyntax.components, part.text);
       part.beginnerSyntax.clauses.forEach(clause => assert.ok(part.text.includes(clause.text)));
       assert.ok(part.chunks.every(c => c.grammarFunction && c.visualRole));
     }

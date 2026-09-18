@@ -170,6 +170,41 @@ test("2011 matching renders one seven-option bank with stable source anchors", a
   assert.doesNotMatch(html, /正确答案/);
 });
 
+test("精读无需提交即可查看原题、逐项依据和语言讲解，兼容不同选择题型", async () => {
+  const { QuestionStudyCard, default: StudyApp } = await vite.ssrLoadModule("/app/study-app.tsx");
+  const { articleContents } = await vite.ssrLoadModule("/app/data.ts");
+  const article = articleContents["2010-p1"];
+  for (const question of article.questions) {
+    const html = renderToStaticMarkup(React.createElement(QuestionStudyCard, { question, onTerm() {}, onSentence() {} }));
+    assert.match(html, new RegExp(`id="source-question-${question.id}-prompt"`));
+    assert.match(html, /题干怎么读 · 结构与用法/);
+    for (const option of question.options) {
+      assert.ok(html.includes(`id="source-question-${question.id}-option-${option.key}"`));
+      assert.ok(html.includes(`${option.key}项 · 为什么选／不选`));
+      assert.ok(html.includes(`${option.key}项 · 句意、时态与搭配用法`));
+      assert.ok(html.includes(`data-syntax-panel="${question.analysis.options[option.key].id}"`));
+    }
+    assert.doesNotMatch(html, /选择 [A-D]|提交答案|尚待补充/);
+    assert.doesNotMatch(html, /<details[^>]*\sopen(?:=|\s|>)/, "题目可读，长解释默认折叠");
+    assert.match(html, /<button type="button" class="term-token"/);
+  }
+  const negative = renderToStaticMarkup(React.createElement(QuestionStudyCard, { question: article.questions[2], onTerm() {}, onSentence() {} }));
+  assert.equal((negative.match(/事实成立，非本题所求/g) ?? []).length, 3, "NOT题不把不选项说成事实错误");
+  const title = renderToStaticMarkup(React.createElement(QuestionStudyCard, { question: article.questions[4], onTerm() {}, onSentence() {} }));
+  assert.equal((title.match(/读懂这个短语/g) ?? []).length, 4);
+  assert.equal((title.match(/短语核心/g) ?? []).length, 4);
+  const legacy = [articleContents.cloze.questions[0], articleContents["2011-p5"].questions[0], ...Object.values(articleContents).flatMap(a => a.questions).filter(q => q.format === "true-false").slice(0, 1)];
+  for (const question of legacy) {
+    const html = renderToStaticMarkup(React.createElement(QuestionStudyCard, { question, onTerm() {}, onSentence() {} }));
+    for (const option of question.options) assert.ok(html.includes(`${option.key}项 · 为什么选／不选`));
+    assert.match(html, /回原文核对/);
+  }
+  const initialTest = renderToStaticMarkup(React.createElement(StudyApp));
+  assert.match(initialTest, /直接查看题目/);
+  assert.match(initialTest, /学习题目与选项解析/);
+  assert.doesNotMatch(initialTest, /class="study-option-reason"|class="question-analysis-body"|class="answer-analysis"/, "自测未交卷不直接显示精读答案");
+});
+
 async function readCssTree(directory) {
   const entries = await readdir(directory, { withFileTypes: true });
   const contents = await Promise.all(

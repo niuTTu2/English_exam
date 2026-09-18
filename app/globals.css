@@ -1621,6 +1621,22 @@ details.beginner-clause-card {
   background: rgba(255,255,255,0.64);
 }
 
+.study-section-nav { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.study-section-nav button { min-height: 44px; height: auto; white-space: normal; }
+.question-study-section, .question-study-card, .study-option-list { display: grid; gap: 14px; min-width: 0; }
+.question-study-section > h3, .question-study-section > p { margin: 0; }
+.question-study-section > p, .question-analysis-coverage { color: #64736d; font-size: 12px; line-height: 1.7; }
+.study-option { padding: 12px; border: 1px solid #dce1da; border-radius: 10px; min-width: 0; background: #fffefa; }
+.study-option-text { display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: 8px; align-items: baseline; }
+.study-option-text > p { margin: 0 0 8px; font: 16px/1.8 Georgia, serif; overflow-wrap: anywhere; }
+.study-option-reason > summary, .study-question-reasoning > summary, .question-study-card .question-analysis-block > summary { min-height: 44px; padding: 10px 8px; cursor: pointer; font-size: 13px; color: #315b59; }
+.study-option-reason { font-size: 13px; line-height: 1.8; }
+.study-option-reason > p { margin: 4px 0 10px; }
+.study-option .question-analysis-block { margin-top: 6px; }
+#test-questions, #question-study-heading, .question-study-card [data-source-location] { scroll-margin-top: 130px; }
+.question-study-link { margin-top: 12px; min-height: 44px; height: auto; white-space: normal; }
+.question-language-meaning, .question-language-focus { margin: 0; padding: 10px; font-size: 13px; line-height: 1.8; background: #f1f6f2; border-radius: 7px; }
+
 .question-prompt {
   display: flex;
   align-items: flex-start;

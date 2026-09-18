@@ -107,6 +107,8 @@ export type SentenceAnalysis = {
   id: string;
   number: number;
   text: string;
+  /** 选项/标题可以是短语；由精审者声明，不从词形自动推断。 */
+  textKind?: "sentence" | "phrase";
   testText?: string;
   chunks: SentenceChunk[];
   trunk: string;

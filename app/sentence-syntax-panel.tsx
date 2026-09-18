@@ -35,10 +35,10 @@ export function SentenceSyntaxPanel({ analysis, renderText, compact = false }: {
   return (
     <section className={`beginner-syntax-panel ${compact ? "is-compact" : ""}`} data-syntax-panel={analysis.id}>
       <header className="beginner-syntax-heading">
-        <div><span>读懂这句话</span><strong>先读主干，再看修饰关系和本句难点</strong></div>
+        <div><span>{analysis.textKind === "phrase" ? "读懂这个短语" : "读懂这句话"}</span><strong>{analysis.textKind === "phrase" ? "先找中心词，再看修饰关系；短语不一定有谓语" : "先读主干，再看修饰关系和本句难点"}</strong></div>
       </header>
       <div className="beginner-step">
-        <div className="beginner-step-title"><div><strong>主干</strong><small>按原文保留核心关系，暂时放下次要说明</small></div></div>
+        <div className="beginner-step-title"><div><strong>{analysis.textKind === "phrase" ? "短语核心" : "主干"}</strong><small>按原文保留核心关系，暂时放下次要说明</small></div></div>
         <p className="beginner-trunk">{renderText(analysis.trunk, `${analysis.id}-trunk`)}</p>
         {guide.reading && <p className="syntax-reading-focus"><b>本句关键</b>{renderText(guide.reading.focus, `${analysis.id}-focus`)}</p>}
       </div>
