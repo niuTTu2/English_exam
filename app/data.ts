@@ -17,6 +17,7 @@ import { translation2011Sentences, translation2011Tasks } from "./2011-translati
 import { passage2011P5Sentences, passage2011P5Questions } from "./2011-passage-5-data";
 import { passage2011P4Sentences, passage2011P4Questions } from "./2011-passage-4-data";
 import { passage2011P3Sentences, passage2011P3Questions } from "./2011-passage-3-data";
+import { passage2011P2Guide, passage2011P2Paragraphs } from "./2011-passage-2-guide";
 import { passage2011P2Sentences, passage2011P2Questions } from "./2011-passage-2-data";
 import { passage2011P1Guide, passage2011P1Paragraphs } from "./2011-passage-1-guide";
 import { passage2011P1Sentences, passage2011P1Questions } from "./2011-passage-1-data";
@@ -1602,6 +1603,8 @@ export const articleContents: Record<string, ArticleContent> = {
   },
   "2011-p2": {
     id: "2011-p2", year: 2011, sectionId: "p2", label: "阅读 Text 2", badge: "2011 · 英语二 · Text 2", title: "报业的艰难求生与独特价值",
+    paragraphs: passage2011P2Paragraphs, guide: passage2011P2Guide,
+    teachingStatus: { syntax: true, vocabulary: true, evidence: true, practice: true },
     description: "第26—30题，五段30句。保留反问、残句和倒装，理解报业复苏的成本、收入结构比较与差异化经营。", kind: "reading", sentences: passage2011P2Sentences, questions: passage2011P2Questions,
   },
   "2011-p3": {

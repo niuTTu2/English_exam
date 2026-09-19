@@ -1,3 +1,4 @@
+import { passage2011P2SourceContexts } from "./2011-passage-2-contexts";
 import { passage2011P1SourceContexts } from "./2011-passage-1-contexts";
 import { passage2010P4PreferredContexts } from "./2010-passage-4-collocations";
 import { passage2010P4ReviewedContexts } from "./2010-passage-4-contexts";
@@ -1087,7 +1088,7 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
   "2010-p1-s19": { away: { contextualMeaning: "远离；不在场", use: "is keeping away 是现在进行时，省略了 from the market。", contextualSubstitutions: [{ label: "hold back", chinese: "暂不行动；观望", fit: "direct", rewrittenSentence: "But anyone who does not have to sell is holding back, waiting for confidence to return.", nuance: "hold back 直接突出暂缓出售；keep away 强调从市场离场。", target: "phrase:hold back" }] } },
 };
 
-for (const [sourceId, contexts] of Object.entries(passage2011P1SourceContexts)) {
+for (const [sourceId, contexts] of Object.entries({...passage2011P1SourceContexts, ...passage2011P2SourceContexts})) {
   sentenceWordContexts[sourceId] = { ...sentenceWordContexts[sourceId], ...contexts };
 }
 for (const [sourceId, contexts] of Object.entries(passage3Contexts)) {

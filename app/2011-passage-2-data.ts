@@ -1,8 +1,13 @@
+import { withReviewedSyntax } from "./reviewed-syntax";
+import { passage2011P2Reviewed } from "./2011-passage-2-reading";
+import { passage2011P2Practice } from "./2011-passage-2-practice";
+import { passage2011P2Reasoning } from "./2011-passage-2-evidence";
+import { passage2011P2QuestionAnalysis } from "./2011-passage-2-question-analysis";
 import type { Question, SentenceAnalysis } from "./data";
 import { clause, segment, sentenceFactory } from "./2011-content-helpers";
 
 const sentence = sentenceFactory("2011-p2");
-export const passage2011P2Sentences: SentenceAnalysis[] = [
+const originalSentences: SentenceAnalysis[] = [
   sentence(1, [
     segment("Whatever ", "subject", "强调疑问代词", "疑问主语", "happened的主语", "此处等于加强语气的what，不引无论什么的让步从句。"),
     segment("happened ", "predicate", "过去时不及物动词", "谓语", "追问原先预测的去向", "happen to引出所谈对象：报纸的所谓消亡。"),
@@ -167,10 +172,18 @@ export const passage2011P2Sentences: SentenceAnalysis[] = [
 function question(number: number, sentenceNumber: number, prompt: string, options: [string, string, string, string], answer: Question["answer"], locating: string, explanations: Question["explanations"]): Question {
   return { id: 201100 + number, number, sentenceId: `2011-p2-s${sentenceNumber}`, prompt, options: options.map((text, index) => ({ key: (["A", "B", "C", "D"] as const)[index], text })), answer, locating, explanations };
 }
-export const passage2011P2Questions: Question[] = [
+const originalQuestions: Question[] = [
   question(26, 4, 'By saying "Newspapers like … their own doom" (Lines3-4, Para. 1), the author indicates that newspapers____.', ["neglected the sign of crisis", "failed to get state subsidies", "were not charitable corporations", "were in a desperate situation"], "D", "第一段回忆一年前危机：报纸已在记述自身doom，衰退还可能夺走剩余广告和读者。", { A: "正在报道自身厄运，说明察觉危机而非忽视迹象。", B: "政府是否应补贴仍是讨论问题，未说申请补贴失败。", C: "慈善组织是救济设想，不是这句话直接表达的重点。", D: "自述衰亡体现当时困境深重、前景悲观，与desperate situation对应。" }),
   question(27, 18, "Some newspapers refused delivery to distant suburbs probably because____.", ["readers threatened to pay less", "newspapers wanted to reduce costs", "journalists reported little about these areas", "subscribers complained about slimmer products"], "B", "第三段并列裁员、提价、缩减配送等求生措施，偏远配送成本高，缩减配送属于节流。", { A: "原文实际说读者正在付更多的钱，没说威胁少付。", B: "与段内削减成本、维持经营的措施逻辑一致，解释配送范围收缩。", C: "没有说减少报道这些地理区域导致拒送。", D: "slimmer products确实出现，但没有订户投诉导致拒送的因果。" }),
   question(28, 23, "Compared with their American counterparts, Japanese newspapers are much more stable because they____.", ["have more sources of revenue", "have more balanced newsrooms", "are less dependent on advertising", "are less affected by readership"], "C", "第四段美国广告占收入87%，日本35%，随后指出日本更稳。", { A: "文章比较现有读者与广告收入的比例，未说日本收入来源种类更多。", B: "balanced修饰businesses的收入结构，不是编辑部人员或报道配比。", C: "广告收入占比较低，依赖程度更低，与比例数据和结论直接相连。", D: "读者收入仍是收入一部分，原文没有说日本不易受读者数量影响。" }),
   question(29, 25, "What can be inferred from the last paragraph about the current newspaper business?", ["Distinctiveness is an essential feature of newspapers.", "Completeness is to blame for the failure of newspaper.", "Foreign bureaus play a crucial role in the newspaper business.", "Readers have lost their interest in car and film reviews."], "A", "末段削减集中在least distinctive领域，结尾又说completeness不再是优势，重心转向独特价值。", { A: "从裁减同质化领域、放弃全面覆盖可推出独特性至关重要。", B: "不再是优势不等于应为报纸失败承担因果责任，原文也未说全部失败。", C: "驻外机构被大幅裁撤是例子，不能据此推出其在当前策略中最关键。", D: "评论岗位被裁不等于读者不再感兴趣，文中强调特色不足而非兴趣消失。" }),
   question(30, 19, "The most appropriate title for this text would be____.", ["American Newspapers: Struggling for Survival", "American Newspapers: Gone with the Wind", "American Newspapers: A Thriving Business", "American Newspapers: A Hopeless Story"], "A", "全文由濒临消亡的预测，转向存活、低水平盈利、裁员紧缩、改善收入结构与突出特色的求生过程。", { A: "概括危机下艰难求生，兼顾有所恢复与付出代价。", B: "Gone with the Wind暗示消失，忽视存活和重新盈利。", C: "Thriving夸大繁荣，忽视利润率下降、裁员和内容收缩。", D: "Hopeless否认转机，与已恢复盈利及策略奏效相反。" }),
 ];
+
+export const passage2011P2Sentences: SentenceAnalysis[] = originalSentences.map((sentence) => {
+  const reviewed = passage2011P2Reviewed[sentence.number];
+  const result = withReviewedSyntax({ ...sentence, textKind: reviewed.textKind ?? sentence.textKind, beginnerSyntax: { components: reviewed.components, clauses: reviewed.clauses, reading: reviewed.reading }, layers: reviewed.components.map(c => ({label:c.function,text:c.explanation})), grammar: reviewed.components.map(c => `${c.text}：${c.form}；${c.explanation}`), translationNotes: reviewed.translationNotes, practice: passage2011P2Practice[sentence.id] }, reviewed.colors);
+  if (result.chunks.length !== reviewed.chinese.length) throw new Error(`${sentence.id}: 词块译文数量不匹配`);
+  return { ...result, translationAlignment: result.chunks.map((chunk, i) => ({ english: chunk.text, chinese: reviewed.chinese[i] })) };
+});
+export const passage2011P2Questions: Question[] = originalQuestions.map(question => ({ ...question, reasoning: passage2011P2Reasoning[question.number!], analysis: passage2011P2QuestionAnalysis[question.number!] }));

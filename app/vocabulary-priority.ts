@@ -1,3 +1,4 @@
+import { passage2011P2Priority } from "./2011-passage-2-priority";
 import { passage2011P1Priority } from "./2011-passage-1-priority";
 import { passage2000P1Priority } from "./2000-passage-1-priority";
 import type { VocabEntry } from "./data";
@@ -71,6 +72,7 @@ export function vocabularyPriority(entry: Pick<VocabEntry, "headword" | "display
     if (homeworkCore.has(head)) return { id: "core", label: "核心迁移词", reason: "这些词有助于理解政策评价、教育价值与措施，适合结合本句搭配复习。", recommendedReview: true };
     return { id: "recognition", label: "本句识别 · 按需记忆", reason: "先读懂当前语境，是否标记由你决定。", recommendedReview: false };
   }
+  if (articleId === "2011-p2") return passage2011P2Priority(entry);
   if (articleId === "2011-p1") return passage2011P1Priority(entry);
   if (articleId !== "2010-p1" && articleId !== "2010-p2" && articleId !== "2010-p3" && articleId !== "2010-p4") return undefined;
   const text2 = articleId === "2010-p2", text3 = articleId === "2010-p3", text4 = articleId === "2010-p4";

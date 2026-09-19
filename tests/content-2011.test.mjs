@@ -256,7 +256,8 @@ test("2011Text2五段30句保留反问、残句、倒装与原题26—30", () =>
   assert.match(article.sentences[0].beginnerSyntax.components[0].form, /疑问/);
   assert.match(article.sentences[12].text, /^Not the 20%/);
   assert.equal(article.sentences[26].text, "So have science and general business reporters.");
-  assert.match(article.sentences[26].beginnerSyntax.clauses[0].predicate, /省略gone/);
+  assert.equal(article.sentences[26].beginnerSyntax.clauses.length, 0, "肯定承接倒装不是从句");
+  assert.match(article.sentences[26].beginnerSyntax.components[1].explanation, /gone.*省略/);
   assert.match(article.sentences[21].text, /87%/);
   assert.match(article.sentences[22].text, /35%/);
   assert.match(article.questions[0].prompt, /Lines3-4/);

@@ -1,3 +1,4 @@
+import { passage2011P2ContextGlosses, getPassage2011P2SourceKnowledge } from "./2011-passage-2-contexts";
 import type { WordKnowledge } from "./knowledge-base";
 import { reviewedPhrases, type PhraseRow } from "./2011-content-helpers";
 import { passage2011P2Lexicon, passage2011P2CollocationGlosses, passage2011P2SentenceContexts } from "./2011-passage-2-lexicon";
@@ -32,9 +33,11 @@ const rows: PhraseRow[] = [
 const reviewed = reviewedPhrases(rows);
 export const passage2011P2PhraseGuides = reviewed.guides;
 export const passage2011P2PhraseAliases = reviewed.aliases;
-export const passage2011P2PhraseGlosses = { ...passage2011P2CollocationGlosses, ...reviewed.glosses };
+export const passage2011P2PhraseGlosses = { ...passage2011P2CollocationGlosses, ...reviewed.glosses, ...passage2011P2ContextGlosses };
 
 export function getPassage2011P2WordKnowledge(headword: string, sentenceId?: string): WordKnowledge | undefined {
+  const source = getPassage2011P2SourceKnowledge(headword, sentenceId);
+  if (source) return source;
   const entry = passage2011P2Lexicon[headword];
   if (!entry) return undefined;
   const context = sentenceId ? passage2011P2SentenceContexts[sentenceId]?.[headword] : undefined;
