@@ -26,6 +26,10 @@ import { passage2010P3Questions, passage2010P3Sentences } from "./2010-passage-3
 import { passage1Questions, passage1Sentences } from "./passage-1-data";
 import { passage2Questions, passage2Sentences } from "./passage-2-data";
 import { passage3Questions, passage3Sentences } from "./passage-3-data";
+import { withPassage3Teaching } from "./passage-3-reviewed";
+import { passage3Guide, passage3Paragraphs } from "./passage-3-guide";
+import { passage3Reasoning } from "./passage-3-evidence";
+import { passage3QuestionAnalysis } from "./passage-3-question-analysis";
 import { passage4Questions, passage4Sentences } from "./passage-4-data";
 import { passage5Questions, passage5Sentences } from "./passage-5-data";
 import { translationSentences, translationTasks } from "./translation-data";
@@ -1363,14 +1367,14 @@ function applyVerifiedQuestion(question: Question): Question {
 const verifiedClozeSentences = sentences.map(applyVerifiedSyntax);
 const verifiedPassage1Sentences = passage1Sentences.map(applyVerifiedSyntax);
 const verifiedPassage2Sentences = passage2Sentences.map(applyVerifiedSyntax);
-const verifiedPassage3Sentences = passage3Sentences.map(applyVerifiedSyntax);
+const verifiedPassage3Sentences = passage3Sentences.map(sentence => withPassage3Teaching(applyVerifiedSyntax(sentence)));
 const verifiedPassage4Sentences = passage4Sentences.map(applyVerifiedSyntax);
 const verifiedPassage5Sentences = passage5Sentences.map(applyVerifiedSyntax);
 const verifiedTranslationSentences = translationSentences.map(applyVerifiedSyntax);
 const verifiedClozeQuestions = questions.map(applyVerifiedQuestion);
 const verifiedPassage1Questions = passage1Questions.map(applyVerifiedQuestion);
 const verifiedPassage2Questions = passage2Questions.map(applyVerifiedQuestion);
-const verifiedPassage3Questions = passage3Questions.map(applyVerifiedQuestion);
+const verifiedPassage3Questions = passage3Questions.map(question => ({ ...applyVerifiedQuestion(question), analysis: passage3QuestionAnalysis(question), reasoning: passage3Reasoning[question.id] }));
 const verifiedPassage4Questions = passage4Questions.map(applyVerifiedQuestion);
 const verifiedPassage5Questions = passage5Questions.map(applyVerifiedQuestion);
 const verifiedTranslationTasks = translationTasks.map((task) => task.format === "passage"
@@ -1425,6 +1429,9 @@ export const articleContents: Record<string, ArticleContent> = {
     kind: "reading",
     sentences: verifiedPassage3Sentences,
     questions: verifiedPassage3Questions,
+    paragraphs: passage3Paragraphs,
+    guide: passage3Guide,
+    teachingStatus: { syntax: true, vocabulary: true, evidence: true, practice: true },
   },
   p4: {
     id: "p4",

@@ -2,6 +2,7 @@ import { passage2010P3SourcePhraseGuides, passage2010P3SourcePhraseAliases, pass
 import { getPassage2010P3WordKnowledge } from "./2010-passage-3-contexts";
 import { getPassage2001P1SourceKnowledge } from "./2001-passage-1-contexts";
 import { passage2001P1QuestionPhraseGuides, passage2001P1QuestionPhraseAliases, passage2001P1QuestionCollocationGlosses } from "./2001-passage-1-question-knowledge";
+import { getPassage3WordKnowledge } from "./passage-3-word-knowledge";
 import { writing2012BPhraseGuides, writing2012BPhraseAliases, writing2012BPhraseGlosses, getWriting2012BWordKnowledge } from "./2012-writing-b-knowledge";
 import { writing2012APhraseGuides, writing2012APhraseAliases, writing2012APhraseGlosses, getWriting2012AWordKnowledge } from "./2012-writing-a-knowledge";
 import { translation2012PhraseGuides, translation2012PhraseAliases, translation2012PhraseGlosses, getTranslation2012WordKnowledge } from "./2012-translation-knowledge";
@@ -1065,6 +1066,10 @@ export function getWordKnowledge(headword: string, context?: { articleId?: strin
   if (context?.articleId === "2001-p1") {
     const knowledge = getPassage2001P1SourceKnowledge(normalized(headword), context.sourceId ?? context.sentenceId);
     if (knowledge) return knowledge;
+  }
+  if (context?.articleId === "p3") {
+    const contextualKnowledge = getPassage3WordKnowledge(normalized(headword), context.sourceId ?? context.sentenceId);
+    if (contextualKnowledge) return contextualKnowledge;
   }
   if (context?.articleId === "2010-p2") {
     const contextualKnowledge = getPassage2010P2WordKnowledge(normalized(headword), context.sourceId ?? context.sentenceId);

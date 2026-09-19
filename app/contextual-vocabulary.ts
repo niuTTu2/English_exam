@@ -2,6 +2,7 @@ import { passage2011P1SourceContexts } from "./2011-passage-1-contexts";
 import { passage2010P3PreferredContexts } from "./2010-passage-3-collocations";
 import { passage2010P3ReviewedContexts } from "./2010-passage-3-contexts";
 import { passage2001P1SourceContexts } from "./2001-passage-1-contexts";
+import { passage3Contexts } from "./passage-3-contexts";
 import { writing2012BSentenceContexts } from "./2012-writing-b-lexicon";
 import { writing2012ASentenceContexts } from "./2012-writing-a-lexicon";
 import { translation2012SentenceContexts } from "./2012-translation-lexicon";
@@ -203,7 +204,7 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
         {
           label: "consider",
           chinese: "认为；把……看作",
-          fit: "direct",
+          fit: "with-adjustment",
           rewrittenSentence: "When a new movement in art attains a certain fashion, it is advisable to find out what its advocates are aiming at, for, however farfetched and unreasonable their principles may seem today, it is possible that in years to come they may be considered normal.",
           nuance: "consider A + 补语时通常不用 as；因此替换后需删去原句的 as。",
           adjustment: "把 be regarded as normal 改为 be considered normal，不能保留 as。",
@@ -1081,6 +1082,10 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
 
 for (const [sourceId, contexts] of Object.entries(passage2011P1SourceContexts)) {
   sentenceWordContexts[sourceId] = { ...sentenceWordContexts[sourceId], ...contexts };
+}
+for (const [sourceId, contexts] of Object.entries(passage3Contexts)) {
+  const target = sentenceWordContexts[sourceId] ??= {};
+  for (const [headword, context] of Object.entries(contexts)) target[headword] = { ...target[headword], ...context };
 }
 
 export function getSentenceWordContext(sentenceId: string | undefined, headword: string) {

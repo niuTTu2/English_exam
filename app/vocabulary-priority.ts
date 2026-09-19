@@ -28,6 +28,15 @@ const text3Names = new Set("dr curtis london procter gamble colgate-palmolive un
 const text3Structures = new Set(["figure out", "turn to somebody for help", "help somebody (to) do something", "help (to) do something", "in response to something", "invest money (in) doing something", "between A and B", "be essential to doing something", "tie A to B", "be used to do something", "so as to do something", "due to + cause", "belong to a category"].map(value => value.toLowerCase()));
 /** 编辑建议按本篇语境给出；不是官方考试词频排名，也不改变词义。 */
 export function vocabularyPriority(entry: Pick<VocabEntry, "headword" | "display" | "kind" | "canonicalForm">, sourceId: string, articleId?: string): VocabularyPriority | undefined {
+  if (articleId === "p3") {
+    const head = entry.headword.toLowerCase();
+    if (entry.kind === "phrase") return { id: "structure", label: "本句结构", reason: "结合本句确认搭配的范围、修饰对象及可接成分。", recommendedReview: true };
+    if (new Set("turkish bulgarian".split(" ")).has(head)) return { id: "name", label: "背景名称 · 识别即可", reason: "此处交代军官的国籍，识别故事人物即可。", recommendedReview: false };
+    if (new Set("note type will class fashion novel review approach speed".split(" ")).has(head)) return { id: "sense", label: "熟词语境义", reason: "结合当前来源区分词性与义项，再读回所在结构。", recommendedReview: true };
+    if (new Set([...functions, "however", "whatever", "till", "when", "if"]).has(head)) return { id: "function", label: "功能词 · 看句法作用", reason: "在当前句中辨认连接、指代及从句内部作用。", recommendedReview: false };
+    if (new Set("advocate advisable principle unreasonable corresponding require interpret stress essential qualify finite imitate confuse explanatory fulfill proposition expression indicative transient phenomenon".split(" ")).has(head)) return { id: "core", label: "核心迁移词", reason: "建议结合本句义和常用结构复习，帮助阅读观点评论类文章。", recommendedReview: true };
+    return { id: "recognition", label: "本句识别 · 按需记忆", reason: "先理解当前句意，再选择是否单独复习。", recommendedReview: false };
+  }
   if (articleId === "2001-p1") {
     const head = entry.headword.toLowerCase(), form = (entry.canonicalForm ?? entry.display).toLowerCase();
     if (["british", "united", "kingdom"].includes(head)) return { id: "name", label: "背景专名 · 识别即可", reason: "本篇限定英国地质学的历史案例，识别地域即可。", recommendedReview: false };

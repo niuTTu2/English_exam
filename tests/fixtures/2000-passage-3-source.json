@@ -1,0 +1,179 @@
+{
+  "source": "用户上传 2000.pdf；页面标题2000，忽略1986元数据",
+  "sha256": "6de345bdc851e924ea3033a7ad7b1af7f8c3f68ecaf649e5a6ecb2d58ffd6212",
+  "pages": [
+    3,
+    4
+  ],
+  "paragraphs": [
+    [
+      1,
+      2
+    ],
+    [
+      3,
+      4,
+      5,
+      6,
+      7,
+      8
+    ],
+    [
+      9,
+      10
+    ],
+    [
+      11,
+      12,
+      13
+    ]
+  ],
+  "sentences": [
+    {
+      "id": "p3-s1",
+      "text": "When a new movement in art attains a certain fashion, it is advisable to find out what its advocates are aiming at, for, however farfetched and unreasonable their principles may seem today, it is possible that in years to come they may be regarded as normal."
+    },
+    {
+      "id": "p3-s2",
+      "text": "With regard to Futurist poetry, however, the case is rather difficult, for whatever Futurist poetry may be—even admitting that the theory on which it is based may be right—it can hardly be classed as Literature."
+    },
+    {
+      "id": "p3-s3",
+      "text": "This, in brief, is what the Futurist says: for a century, past conditions of life have been conditionally speeding up, till now we live in a world of noise and violence and speed."
+    },
+    {
+      "id": "p3-s4",
+      "text": "Consequently, our feelings, thoughts and emotions have undergone a corresponding change."
+    },
+    {
+      "id": "p3-s5",
+      "text": "This speeding up of life, says the Futurist, requires a new form of expression."
+    },
+    {
+      "id": "p3-s6",
+      "text": "We must speed up our literature too, if we want to interpret modern stress."
+    },
+    {
+      "id": "p3-s7",
+      "text": "We must pour out a large stream of essential words, unhampered by stops, or qualifying adjectives, or finite verbs."
+    },
+    {
+      "id": "p3-s8",
+      "text": "Instead of describing sounds we must make up words that imitate them; we must use many sizes of type and different colored inks on the same page, and shorten or lengthen words at will."
+    },
+    {
+      "id": "p3-s9",
+      "text": "Certainly their descriptions of battles are confused."
+    },
+    {
+      "id": "p3-s10",
+      "text": "But it is a little upsetting to read in the explanatory notes that a certain line describes a fight between a Turkish and a Bulgarian officer on a bridge off which they both fall into the river—and then to find that the line consists of the noise of their falling and the weights of the officers: “Pluff! Pluff! A hundred and eighty-five kilograms.”"
+    },
+    {
+      "id": "p3-s11",
+      "text": "This, though it fulfills the laws and requirements of Futurist poetry, can hardly be classed as Literature."
+    },
+    {
+      "id": "p3-s12",
+      "text": "All the same, no thinking man can refuse to accept their first proposition: that a great change in our emotional life calls for a change of expression."
+    },
+    {
+      "id": "p3-s13",
+      "text": "The whole question is really this: have we essentially changed?"
+    }
+  ],
+  "questions": [
+    {
+      "id": 19,
+      "prompt": "This passage is mainly.",
+      "options": [
+        {
+          "key": "A",
+          "text": "a survey of new approaches to art"
+        },
+        {
+          "key": "B",
+          "text": "a review of Futurist poetry"
+        },
+        {
+          "key": "C",
+          "text": "about merits of the Futurist movement"
+        },
+        {
+          "key": "D",
+          "text": "about laws and requirements of literature"
+        }
+      ],
+      "answer": "B"
+    },
+    {
+      "id": 20,
+      "prompt": "When a novel literary idea appears, people should try to.",
+      "options": [
+        {
+          "key": "A",
+          "text": "determine its purposes"
+        },
+        {
+          "key": "B",
+          "text": "ignore its flaws"
+        },
+        {
+          "key": "C",
+          "text": "follow the new fashions"
+        },
+        {
+          "key": "D",
+          "text": "accept the principles"
+        }
+      ],
+      "answer": "A"
+    },
+    {
+      "id": 21,
+      "prompt": "Futurists claim that we must.",
+      "options": [
+        {
+          "key": "A",
+          "text": "increase the production of literature"
+        },
+        {
+          "key": "B",
+          "text": "use poetry to relieve modern stress"
+        },
+        {
+          "key": "C",
+          "text": "develop new modes of expression"
+        },
+        {
+          "key": "D",
+          "text": "avoid using adjectives and verbs"
+        }
+      ],
+      "answer": "C"
+    },
+    {
+      "id": 22,
+      "prompt": "The author believes that Futurist poetry is.",
+      "options": [
+        {
+          "key": "A",
+          "text": "based on reasonable principles"
+        },
+        {
+          "key": "B",
+          "text": "new and acceptable to ordinary people"
+        },
+        {
+          "key": "C",
+          "text": "indicative of a basic change in human nature"
+        },
+        {
+          "key": "D",
+          "text": "more of a transient phenomenon than literature"
+        }
+      ],
+      "answer": "D"
+    }
+  ]
+}

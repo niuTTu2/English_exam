@@ -1,0 +1,86 @@
+import type { SentenceWordContext } from "./contextual-vocabulary";
+const w = (partOfSpeech: string, contextualMeaning: string, use: string, preferredCollocations?: string[]): SentenceWordContext => ({ partOfSpeech, contextualMeaning, use, ...(preferredCollocations ? { preferredCollocations } : {}) });
+
+// 只记录人工确认的本来源义项；相同原形不复制为另一个规范词条。
+export const passage3Contexts: Record<string, Record<string, SentenceWordContext>> = {
+  "p3-s1": {
+    when: w("conj.", "当……时", "引出新艺术运动形成风潮这一时间背景。"), fashion: w("n.", "风尚；流行", "attains的宾语中心，不是塑造这个动词。", ["attains a certain fashion"]),
+    advocate: w("n.（复数）", "倡导者；拥护者", "advocates是are aiming的主语，its指新艺术运动。", ["its advocates"]), aim: w("v.（现在分词）", "以……为目标", "are aiming at中aiming与are组成进行时，what为前置的at宾语。", ["aiming at"]),
+    for: w("conj.", "因为", "连接前面的建议与后面的理由；不是for a century的时间介词。"), however: w("adv.（让步程度）", "无论多么", "与farfetched and unreasonable一起前置，引出让步从句。"),
+    it: w("pron.（形式主语）", "形式主语，无具体所指", "本句两处it分别预占不定式与that主语从句的位置，不把它们指向艺术运动。"), they: w("pron.", "它们（这些原则）", "they是may be regarded的主语，回指their principles，不指倡导者。"),
+    what: w("pron.", "什么；所追求的目标", "引出find out的内容从句，并作末尾at的宾语。", ["what its advocates are aiming at"]), come: w("v.（不定式）", "到来", "to come修饰years，表示未来年份，不是过去分词。", ["in years to come"]),
+    regard: w("v.（过去分词）", "把……视为", "may be regarded as normal为情态被动结构；as normal说明被归入的性质。", ["be regarded as normal"]),
+  },
+  "p3-s2": {
+    regard: w("n.（固定介词结构中的名词）", "涉及；关于", "with regard to整体限定话题，regard不是被动谓语。", ["with regard to"]), however: w("adv.（连接）", "不过；然而", "在逗号间连接前句原则与本句具体难题，不是however+形容词的让步程度结构。"),
+    whatever: w("pron.（让步关系）", "无论什么", "整个whatever从句作让步状语；whatever自身在从句中作be的表语，不能混称让步表语从句。"),
+    admit: w("v.（现在分词）", "承认", "even admitting是让步插入，that从句是承认的内容；只是退一步假设。"), it: w("pron.", "它（未来主义诗歌）", "on which it is based与后面的it can hardly be classed都回指Futurist poetry，不是形式主语。"),
+    which: w("pron.（关系代词）", "该理论", "which回指theory并作on的宾语；on which整体前置。", ["on which it is based"]), theory: w("n.", "理论", "on which it is based修饰theory：诗歌以该理论为基础，而非理论以诗歌为基础。"),
+    class: w("v.（过去分词）", "归类", "can hardly be classed as Literature表示几乎不能归入文学，不是学校班级。", ["can hardly be classed as Literature"]), right: w("adj.", "正确的", "作may be的表语，保留可能与让步范围。"),
+  },
+  "p3-s3": {
+    this: w("pron.", "这（下文的说法）", "向后指冒号后的转述，不只回指上一句。"), brief: w("n.（固定结构成分）", "简要说明", "in brief整体作概括状语，brief在此不直接修饰名词。", ["in brief"]),
+    for: w("prep.", "持续（多久）", "for a century修饰have been speeding up的持续范围，非原因连词。"), past: w("adj.", "过去的", "past修饰conditions；这是用户原卷实际文字。"), condition: w("n.（复数）", "状况；条件", "conditions of life作加速谓语的主语，指生活状况；不改写成其他词。", ["conditions of life"]),
+    conditionally: w("adv.", "有条件地", "修饰speeding up；原卷确为conditionally，未说明具体条件，不推导线性或非线性规律。"),
+    till: w("conj.", "直到", "后接now we live...完整时间从句，不能只把till now当作终止在now的短语。", ["till now"]),
+    what: w("pron.", "所说的内容", "what the Futurist says作is的表语；what也是says的宾语。"), noise: w("n.", "噪声；喧闹", "与violence和speed同级，描述转述中的生活环境，非军官落水的那次声响。"),
+  },
+  "p3-s4": { change: w("n.", "变化", "作have undergone的宾语中心，corresponding把变化接回生活加速。", ["have undergone a corresponding change"]), corresponding: w("adj.", "相应的", "修饰change，说明与上句外部生活变化对应，不是有限谓语。") },
+  "p3-s5": { speed: w("n.（动名词化过程）", "加速", "This speeding up of life把生活加速整体当成主语，requires按单数使用。", ["speeding up of life"]), say: w("v.（第三人称单数）", "说；主张", "says the Futurist是倒装插入语，其主语是the Futurist，不能取代requires。"), form: w("n.", "形式", "new form是requires的宾语中心，不是形成这一动词。", ["a new form of expression"]) },
+  "p3-s6": { speed: w("v.", "加快", "must speed up our literature为及物结构，不是增加文学产量。", ["speed up our literature"]), interpret: w("v.（不定式）", "表现；阐释", "to interpret补足want，modern stress是interpret的宾语；不是relieve缓解。", ["interpret modern stress"]), stress: w("n.", "紧张压力", "modern stress为interpret的对象，不是重读某音节的动作。", ["interpret modern stress"]) },
+  "p3-s7": {
+    stream: w("n.", "流；连续的一股", "a large stream of essential words比喻连续词流，stream不单独承担整组的中文义。", ["a large stream of essential words"]),
+    stop: w("n.（复数）", "标点；停顿标记", "stops为by后的第一组名词，不是第三人称单数动词停止。"), qualify: w("v.（分词作定语）", "修饰；限定", "qualifying修饰adjectives，指修饰性的形容词，不是获得资格。"),
+    unhampered: w("adj.（过去分词形式）", "不受妨碍的", "补充倾吐词语时不受传统形式束缚的状态，不是过去时谓语。", ["unhampered by"]), finite: w("adj.", "限定的；有时态等限定形式的", "finite修饰verbs，缩小动词范围；不能把选项所有动词的说法当作同义。"),
+    out: w("adv.（动词小品词）", "向外（构成倾吐义）", "与pour构成pour out，不是find out查明的out。", ["pour out"]),
+  },
+  "p3-s8": {
+    type: w("n.", "印刷字体", "many sizes of type指不同字号，不是type动词打字。"), ink: w("n.（复数）", "墨水", "不同种类或颜色的墨水可用inks；与sizes of type并列作use的宾语。"), will: w("n.", "意愿", "at will整体表示随意，不是将来时助动词。", ["at will"]),
+    they: w("pron.（宾格them）", "它们（声音）", "them是imitate的宾语，回指sounds；that回指words。", ["imitate them"]), that: w("pron.（关系代词）", "这些词（关系指代）", "that在定语从句中作imitate的主语，修饰words。", ["that imitate them"]),
+    use: w("v.", "使用", "must use支配字体大小和墨水两个宾语组，与shorten or lengthen共用主语和情态动词。"), color: w("adj.（分词作定语）", "带颜色的", "colored修饰inks，在different colored inks中谈墨水颜色，不是有限谓语。"),
+    up: w("adv.（动词小品词）", "构成创造、编造义的小品词", "make up words整体表示创造词语，不是speed up加速。", ["make up words"]),
+  },
+  "p3-s9": { confuse: w("adj.（分词形容词）", "混乱的", "confused作are的表语，描述descriptions，不是指作者被弄糊涂。"), their: w("possessive det.", "他们的（未来主义者的）", "修饰descriptions，回指前段提出这些写作方法的人。") },
+  "p3-s10": {
+    it: w("pron.（形式主语）", "形式主语，无具体所指", "对应to read...与and then to find...两个并列真正主语，不指桥或军官。"), little: w("adv.（a little程度结构）", "稍微；有点", "a little修饰upsetting，表示不适程度。", ["a little upsetting"]),
+    upset: w("adj.（现在分词形容词）", "令人不适的", "upsetting是is后的表语，说明两项阅读体验使人不适。", ["a little upsetting"]),
+    note: w("n.（复数）", "注释", "explanatory notes是介绍诗行故事的说明；notes在这里指注释。", ["in the explanatory notes"]), line: w("n.", "诗行", "同一行诗被注释描述，后来再检查其实际内容；不是队列或几何线。"),
+    fight: w("n.", "打斗；交战", "describes的宾语中心，between后给出双方，on a bridge给出事件地点。", ["a fight between a Turkish and a Bulgarian officer"]),
+    off: w("prep.", "从……上离开", "off which前置，其中which回指bridge；它表示落水起点。", ["off which"]), which: w("pron.（关系代词）", "那座桥", "which作off的宾语，关系从句修饰bridge。", ["off which"]),
+    they: w("pron.", "他们（两名军官）", "they both作fall的主语；与第8句them指声音的语境不同。"), fall: w("v.", "掉落；坠落", "they both fall为关系从句主谓，off which标起点，into the river标终点。", ["fall into the river"]),
+    consist: w("v.（第三人称单数）", "由……组成", "consists是不及物动词，of后有声音与体重两组并列成分，不是系动词。", ["consists of"]), weight: w("n.（复数）", "体重", "weights指军官的体重，不是统计权重；原文没有说明185公斤的具体归属。", ["the weights of the officers"]),
+    that: w("conj.", "引出所读到或发现的内容", "两处that分别引出read和find的宾语从句，均不在从句内部作主语或宾语。"),
+  },
+  "p3-s11": { this: w("pron.", "这（所举诗行及写法）", "回指第10句例子，作主句主语。"), it: w("pron.", "它（这类诗行）", "让步从句中回指This，不是形式主语。"), law: w("n.（复数）", "规则", "与requirements并列，指流派创作规则，不是国家法律。", ["fulfills the laws and requirements of Futurist poetry"]), though: w("conj.", "尽管", "引出让步从句；主句仍有hardly近否定。") },
+  "p3-s12": { no: w("det.", "没有任何", "no限定thinking man；和can refuse结合为没有人能拒绝这项原则。"), think: w("adj.（分词作定语）", "会思考的；有思想的", "thinking修饰man，不是主句谓语，也不是思考动作作主语。"),
+    that: w("conj.", "引出主张的具体内容", "that引出proposition的同位语从句，自身不充当从句主宾成分。"), call: w("v.（第三人称单数）", "要求；需要", "calls for整体表示需要，for后是a change of expression，不是打电话。", ["calls for a change of expression"]), change: w("n.", "变化", "两次change都为名词；in our emotional life给变化领域，of expression给变化对象。", ["a great change in our emotional life", "a change of expression"]),
+    all: w("adv.（固定连接语成分）", "加强让步连接的成分", "all the same整体表示尽管如此，不把all单独解释成所有人。", ["all the same"]), same: w("adj.（固定连接语成分）", "同样的", "在all the same中与其他词一起构成尽管如此的连接义。", ["all the same"]),
+  },
+  "p3-s13": { change: w("v.（过去分词）", "改变", "changed与前置的have组成现在完成时疑问句，询问截至语境现在的变化。", ["essentially changed"]), have: w("aux.（完成时助动词）", "构成完成时", "have在直接疑问句中前置到we之前，不是拥有。"), this: w("pron.", "这一问题（下文所问）", "作is的表语，向后指直接疑问句。") },
+  "question-19-prompt": { passage: w("n.", "文章；篇章", "This passage指整篇文本，不仅一个段落。"), mainly: w("adv.", "主要地", "限定主旨判断，is后的表语由选项补足。") },
+  "question-19-option-A": { survey: w("n.", "调查；概览", "a survey是名词中心，of引出调查对象。"), approach: w("n.（复数）", "方法；途径", "approaches to art中approaches是名词，不是接近这一动词。"), to: w("prep.", "针对；涉及", "to art是approaches的对象或领域补足，不是不定式。") },
+  "question-19-option-B": { review: w("n.", "评论；评述", "a review of Futurist poetry中是文章性质名词，不是复习动作。"), futurist: w("adj.", "未来主义的", "修饰poetry，限定流派；不是复数倡导者主语。") },
+  "question-19-option-C": { about: w("prep.", "关于", "引出merits这个讨论对象，不是大约。"), merit: w("n.（复数）", "优点；长处", "merits是about的宾语，非值得这一动词。"), movement: w("n.", "运动；思潮", "Futurist修饰movement，指艺术运动。") },
+  "question-19-option-D": { about: w("prep.", "关于", "后接laws与requirements两个并列名词。"), law: w("n.（复数）", "规则", "literature限定文学规则，不是法律条文。"), requirement: w("n.（复数）", "要求", "与laws并列，of literature共同限定二者。") },
+  "question-20-prompt": { novel: w("adj.", "新颖的", "修饰idea，不是小说这个名词。"), literary: w("adj.", "文学的", "限定idea的领域。"), appear: w("v.（第三人称单数）", "出现", "appears是when从句谓语，无表语，不按seem理解。"), to: w("不定式标记", "引出待补动作", "try to之后由选项接动词原形。") },
+  "question-20-option-A": { determine: w("v.", "查明；确定", "determine its purposes表示查明目标，不是替艺术运动制定目标。"), its: w("possessive det.", "它的（新观念的）", "修饰purposes，回接题干idea。"), purpose: w("n.（复数）", "目的；目标", "determine的宾语中心。") },
+  "question-20-option-B": { ignore: w("v.", "忽略；不理会", "其对象是its flaws，不是查明目标。"), flaw: w("n.（复数）", "缺陷", "ignore的宾语；缺陷是否应忽略另看文本。") },
+  "question-20-option-C": { follow: w("v.", "追随", "follow fashions是随潮流，不是了解其目的。"), fashion: w("n.（复数）", "风尚；潮流", "fashions为follow的宾语，不是动词塑造。") },
+  "question-20-option-D": { accept: w("v.", "接受", "accept principles表示接受原则，不能只读成理解。"), principle: w("n.（复数）", "原则", "accept的直接宾语。") },
+  "question-21-prompt": { futurist: w("n.（复数）", "未来主义者", "Futurists是claim的主语，与Futurist poetry中的修饰语不同。"), claim: w("v.", "主张；声称", "claim后接that内容，区分被转述观点与作者判断。"), that: w("conj.", "引出主张内容", "that we must...是宾语从句，that自身不作从句主语。"), must: w("modal v.", "必须", "待接选项中的动词原形，表达未来主义者的要求。") },
+  "question-21-option-A": { increase: w("v.", "增加", "以production为宾语，强调产量。"), production: w("n.", "产出；生产", "名词production不并入produce的屈折次数，of literature限定对象。") },
+  "question-21-option-B": { use: w("v.", "使用", "use的对象是poetry，后面的to relieve另说明目的。"), relieve: w("v.（不定式）", "缓解；减轻", "relieve modern stress不同于原文interpret modern stress。"), to: w("不定式标记", "为了（引出目的动作）", "to relieve修饰use poetry的目的。"), stress: w("n.", "压力", "被relieve缓解的对象，不是重读。") },
+  "question-21-option-C": { develop: w("v.", "发展；形成", "与new modes构成动宾，强调方式创新。"), mode: w("n.（复数）", "方式；模式", "of expression限定表达方式，不是作品数量。") },
+  "question-21-option-D": { avoid: w("v.", "避免", "avoid接动名词using，不能说avoid to use。"), use: w("v.（动名词）", "使用", "using作avoid的宾语，adjectives and verbs是using的对象。"), adjective: w("n.（复数）", "形容词", "选项未加原文qualifying限定，不能补写成同义范围。"), verb: w("n.（复数）", "动词", "选项未加finite限定，范围包含所有动词。") },
+  "question-22-prompt": { author: w("n.", "作者", "询问文章作者的评价，而非Futurists的自述。"), believe: w("v.（第三人称单数）", "认为", "believes后接that内容从句。"), that: w("conj.", "引出认为的内容", "that Futurist poetry is...中that不作主语，表语由选项补足。") },
+  "question-22-option-A": { base: w("v.（过去分词）", "以……为基础", "based与题干is形成被动结构，on引出依据。", ["is based on"]), on: w("prep.", "以……为依据", "be based on的固定介词，不是地点在上面。"), reasonable: w("adj.", "合理的", "明确肯定principles的性质，不能自动降格为原文may be right。") },
+  "question-22-option-B": { new: w("adj.", "新的", "与acceptable并列作待补表语。"), acceptable: w("adj.", "可接受的", "to ordinary people补充接受者，不是作者本人是否认可。"), to: w("prep.", "对……而言", "to ordinary people接名词，补足acceptable。"), ordinary: w("adj.", "普通的", "修饰people。") },
+  "question-22-option-C": { indicative: w("adj.", "表明……的", "indicative of作is后的表语，不是indicate的谓语动词。"), of: w("prep.", "所表明的（内容）", "indicative of固定连接内容，不是普通所属关系。"), change: w("n.", "变化", "a basic change为名词，in human nature限定在人性领域。"), nature: w("n.", "本性；本质", "human nature指人性，不是自然景物。") },
+  "question-22-option-D": { more: w("adv.（比较程度）", "更像；更大程度上", "more of A than B比较类别归属，不是比较数量。"), transient: w("adj.", "短暂的", "修饰phenomenon；是选项的概括措辞，原文未给具体持续时间。"), phenomenon: w("n.", "现象", "a transient phenomenon为单数名词短语。"), than: w("比较连接成分", "比起；与其说", "引出literature这一类别，与more of呼应。") },
+};
+
+// 同句相同原形的不同实际词形需分开：第3句既有speeding也有名词speed。
+export const passage3FormContexts: Record<string, Record<string, SentenceWordContext>> = {
+  "p3-s3": { speeding: w("v.（现在分词）", "加速", "与have been构成现在完成进行时，后面的up为小品词。", ["speeding up"]), speed: w("n.", "速度", "在noise and violence and speed中是并列名词，作为of的宾语；不是主句的speeding动词。") },
+  "p3-s10": { falling: w("v.（动名词）", "坠落", "their falling为动名词复合结构，their是执行者，整体作noise后of的宾语。", ["the noise of their falling"]) },
+};
