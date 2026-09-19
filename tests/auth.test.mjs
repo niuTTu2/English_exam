@@ -13,6 +13,7 @@ const bundled = await build({
     import * as session from './app/api/auth/session/route.ts';
     import * as code from './app/api/auth/verify-code/route.ts';
     import * as study from './app/api/study-state/route.ts';
+    import { packVocabularySnapshot } from './app/vocabulary-learning/codec.ts';
     const deriveBits = crypto.subtle.deriveBits.bind(crypto.subtle);
     crypto.subtle.deriveBits = (algorithm, ...args) => {
       if (algorithm.name === 'PBKDF2' && algorithm.iterations > 100000) {
@@ -22,6 +23,7 @@ const bundled = await build({
     };
     const routes = { '/api/auth/password': password, '/api/auth/session': session, '/api/auth/verify-code': code, '/api/study-state': study };
     export default { async fetch(request) {
+      if (new URL(request.url).pathname === '/__test-pack') return Response.json(packVocabularySnapshot(await request.json()));
       return routes[new URL(request.url).pathname]?.[request.method]?.(request) ?? new Response('Not found', { status: 404 });
     } };
   `, resolveDir: root, loader: "ts" },
@@ -80,9 +82,71 @@ test("legacy unversioned clients cannot overwrite existing cloud records", async
 
 const studySnapshot = (extra = {}) => ({ version: 1, updatedAt: 0, termNotes: {}, answers: {}, ...extra });
 
+const vocabularyFixture = () => {
+  const context = { id: "2010-p1-s1:note", sourceId: "2010-p1-s1", articleId: "2010-p1", year: 2010, sourceType: "sentence", sentenceId: "2010-p1-s1", expression: "note" };
+  const memory = { id: "vocab-note-tone", termKey: "note", kind: "word", senseId: "reviewed:tone", headword: "note", partOfSpeech: "n", meaning: "基调；意味",
+    primaryContextId: context.id, contexts: [context], status: "review", dueAt: 200, intervalDays: 1, consecutiveKnown: 1, lapses: 0,
+    spelling: { enabled: false, attempts: 0, correct: 0 }, paused: false, createdAt: 100, updatedAt: 100 };
+  const attempt = { id: "vocab-attempt", memoryId: memory.id, sessionId: "vocab-session", queueItemId: "vocab-item", contextId: context.id,
+    kind: "reading", rating: "known", createdAt: 100, wasNew: true };
+  return { vocabularyMemories: { [memory.id]: memory }, vocabularyAttempts: { [attempt.id]: attempt },
+    vocabularyQueueState: { updatedAt: 100 }, vocabularyMigration: { version: 1, migratedKeys: { note: [memory.id] }, unresolvedKeys: [], completedAt: 100 } };
+};
+
 async function writeStudy(user, state, expectedUpdatedAt = null, extra = {}) {
   return request("/api/study-state", "PUT", { state, expectedUpdatedAt, accountEmail: user.email, ...extra }, user.cookie);
 }
+
+test("old clients retain vocabulary progress and unknown future fields on the real study route", async () => {
+  const user = await seedUser("vocabulary-old-client");
+  const vocabulary = vocabularyFixture();
+  const original = studySnapshot({ ...vocabulary, termNotes: { note: "原笔记" }, futureStudyField: { version: 2, retained: true } });
+  const first = await writeStudy(user, original);
+  assert.equal(first.status, 200);
+  const revision = (await first.json()).updatedAt;
+  const oldPage = await writeStudy(user, studySnapshot({ termNotes: { note: "旧页面更新笔记" } }), revision);
+  assert.equal(oldPage.status, 200);
+  const saved = await (await request("/api/study-state", "GET", undefined, user.cookie)).json();
+  for (const [key, value] of Object.entries(vocabulary)) assert.deepEqual(saved.state[key], value, key);
+  assert.deepEqual(saved.state.futureStudyField, original.futureStudyField);
+  assert.equal(saved.state.termNotes.note, "旧页面更新笔记");
+});
+
+test("vocabulary payload corruption and attempt rewrites never modify cloud data", async () => {
+  const user = await seedUser("vocabulary-validation");
+  const original = studySnapshot(vocabularyFixture());
+  const revision = (await (await writeStudy(user, original)).json()).updatedAt;
+  const malformed = { ...original, vocabularyMemories: { bad: {} } };
+  assert.equal((await writeStudy(user, malformed, revision)).status, 400);
+  const changedAttempt = structuredClone(original);
+  changedAttempt.vocabularyAttempts["vocab-attempt"].rating = "forgot";
+  assert.equal((await writeStudy(user, changedAttempt, revision)).status, 409);
+  const tooLarge = await writeStudy(user, { ...original, termNotes: { synthetic: "x".repeat(1_500_001) } }, revision);
+  assert.equal(tooLarge.status, 413);
+  assert.match((await tooLarge.json()).error, /不会截断/);
+  const saved = await (await request("/api/study-state", "GET", undefined, user.cookie)).json();
+  assert.deepEqual(saved.state, original);
+  assert.equal(saved.updatedAt, revision);
+});
+
+test("the study route accepts lossless envelopes, exposes expanded GET data and rejects broken envelopes", async () => {
+  const user = await seedUser("vocabulary-packed-client");
+  const original = studySnapshot({ ...vocabularyFixture(), termNotes: { note: "原始记录" } });
+  const packed = await (await request("/__test-pack", "POST", original)).json();
+  assert.ok(packed.vocabularyEnvelope);
+  const result = await writeStudy(user, packed);
+  assert.equal(result.status, 200);
+  const revision = (await result.json()).updatedAt;
+  const row = await database.prepare("SELECT payload FROM study_states WHERE user_id = ?").bind(user.userId).first();
+  assert.ok(JSON.parse(row.payload).vocabularyEnvelope, "database stores the compact representation");
+  const read = await (await request("/api/study-state", "GET", undefined, user.cookie)).json();
+  assert.deepEqual(read.state, original, "old clients always see the expanded, compatible snapshot");
+  const broken = structuredClone(packed);
+  broken.vocabularyEnvelope.strings[0] = [-1];
+  assert.equal((await writeStudy(user, broken, revision)).status, 400);
+  const preserved = await database.prepare("SELECT payload FROM study_states WHERE user_id = ?").bind(user.userId).first();
+  assert.equal(preserved.payload, row.payload);
+});
 
 test("study reads identify the account and writes use a monotonically increasing server revision", async () => {
   const user = await seedUser("study-version");
@@ -112,7 +176,7 @@ test("empty, invalid, oversized and wrong-account updates never change existing 
   assert.equal((await writeStudy(user, studySnapshot(), revision)).status, 409);
   for (const invalid of [null, [], {}, { ...state, answers: { 21: [] } }, { ...state, updatedAt: -1 }]) assert.equal((await writeStudy(user, invalid, revision)).status, 400);
   assert.equal((await writeStudy(user, state, revision, { accountEmail: "other@example.test" })).status, 409);
-  assert.equal((await writeStudy(user, studySnapshot({ termNotes: { big: "x".repeat(500_001) } }), revision)).status, 413);
+  assert.equal((await writeStudy(user, studySnapshot({ termNotes: { big: "x".repeat(1_500_001) } }), revision)).status, 413);
   assert.equal((await request("/api/study-state", "PUT", "{bad", user.cookie)).status, 400);
   assert.equal((await request("/api/study-state", "PUT", {}, user.cookie, "https://attacker.test")).status, 403);
   assert.equal((await request("/api/study-state", "PUT", {})).status, 401);

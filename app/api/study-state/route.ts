@@ -5,6 +5,8 @@ import { studyStates } from "../../../db/schema";
 import { getSessionUser, isSameOrigin } from "../_lib/auth";
 import { hasStudyRecords, isStudySnapshot } from "../../study-sync";
 import { preserveTrainingRecords } from "../../learning-model";
+import { preserveVocabularyRecords } from "../../vocabulary-learning/persistence";
+import { MAX_STUDY_STORAGE_BYTES, packVocabularySnapshot, studyStorageBytes, unpackVocabularySnapshot } from "../../vocabulary-learning/codec";
 
 function reply(body: unknown, status = 200) {
   return Response.json(body, { status, headers: { "Cache-Control": "no-store" } });
@@ -20,7 +22,7 @@ export async function GET(request: Request) {
     .from(studyStates)
     .where(eq(studyStates.userId, user.id))
     .limit(1);
-  return reply({ state: state ? JSON.parse(state.payload) : null, updatedAt: state?.updatedAt ?? null, accountEmail: user.email });
+  return reply({ state: state ? unpackVocabularySnapshot(JSON.parse(state.payload)) : null, updatedAt: state?.updatedAt ?? null, accountEmail: user.email });
   } catch {
     return reply({ error: "云端记录暂时无法读取，已暂停同步，请保留本机记录。" }, 503);
   }
@@ -36,7 +38,11 @@ export async function PUT(request: Request) {
   if (!payload || typeof payload !== "object" || Array.isArray(payload)) return reply({ error: "学习记录格式不正确，未写入云端。" }, 400);
   if (!("expectedUpdatedAt" in payload)) return reply({ error: "当前页面版本过旧，已阻止覆盖云端记录。请刷新页面后重新登录。" }, 428);
   if (payload.accountEmail !== user.email) return reply({ error: "登录账号已变化，已停止上传，请刷新后重新登录。" }, 409);
-  if (!isStudySnapshot(payload.state) || !(payload.expectedUpdatedAt === null || (Number.isSafeInteger(payload.expectedUpdatedAt) && Number(payload.expectedUpdatedAt) >= 0 && Number(payload.expectedUpdatedAt) < Number.MAX_SAFE_INTEGER))) {
+  let incoming: unknown;
+  try { incoming = unpackVocabularySnapshot(payload.state); } catch {
+    return reply({ error: "词汇封包损坏，未写入云端。请保留原始记录并导出备份。" }, 400);
+  }
+  if (!isStudySnapshot(incoming) || !(payload.expectedUpdatedAt === null || (Number.isSafeInteger(payload.expectedUpdatedAt) && Number(payload.expectedUpdatedAt) >= 0 && Number(payload.expectedUpdatedAt) < Number.MAX_SAFE_INTEGER))) {
     return reply({ error: "学习记录或同步版本不正确，未写入云端。" }, 400);
   }
   const db = getDb();
@@ -44,10 +50,17 @@ export async function PUT(request: Request) {
   if (!backupReady) return reply({ error: "云端备份保护尚未就绪，已暂停上传，本机记录已保留。" }, 503);
   const [existing] = await db.select().from(studyStates).where(eq(studyStates.userId, user.id)).limit(1);
   if ((existing?.updatedAt ?? null) !== payload.expectedUpdatedAt) return reply({ error: "云端记录已在其他设备更新，已停止覆盖。请重试同步以合并记录。" }, 409);
-  const safeState = preserveTrainingRecords(existing ? JSON.parse(existing.payload) : {}, payload.state);
-  const serialized = JSON.stringify(safeState);
-  if (serialized.length > 500_000) return reply({ error: "学习记录过大，请先导出备份后精简笔记。" }, 413);
-  if (existing && hasStudyRecords(JSON.parse(existing.payload)) && !hasStudyRecords(payload.state)) {
+  const previous = existing ? unpackVocabularySnapshot(JSON.parse(existing.payload)) : {};
+  let safeState: Record<string, unknown>;
+  try {
+    safeState = preserveVocabularyRecords(previous, preserveTrainingRecords(previous, incoming));
+  } catch {
+    return reply({ error: "词汇尝试记录发生冲突，已保留云端原记录。请重新同步，本机记录不会被清空。" }, 409);
+  }
+  const compact = packVocabularySnapshot(safeState);
+  const serialized = JSON.stringify(compact);
+  if (studyStorageBytes(compact) > MAX_STUDY_STORAGE_BYTES) return reply({ error: "学习记录无损封包后仍超过当前云同步容量（1.5 MB），本次未上传。本机完整记录仍保留，请先导出备份；不会截断词汇或学习历史。" }, 413);
+  if (existing && hasStudyRecords(previous) && !hasStudyRecords(incoming)) {
     return reply({ error: "已阻止空白记录覆盖已有学习数据，请保留备份并重试同步。" }, 409);
   }
   const updatedAt = Math.max(Date.now(), Number(payload.expectedUpdatedAt ?? 0) + 1);

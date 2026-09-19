@@ -1,5 +1,7 @@
 import { isLocationAttempt } from "./location-model";
 import { isPracticeAttempt, isPracticeSession, errorCategories } from "./learning-model";
+import { isAtomicVocabularyPath, isVocabularySnapshotFields, preserveVocabularyRecords } from "./vocabulary-learning/persistence";
+import { packVocabularySnapshot, unpackVocabularySnapshot } from "./vocabulary-learning/codec";
 type TimedSnapshot = { updatedAt: number };
 export type RemoteStudyState<Snapshot> = { state: Snapshot | null; updatedAt: number | null };
 export type LocalStudyState<Snapshot> = { state: Snapshot; base: RemoteStudyState<Snapshot> | null };
@@ -21,6 +23,7 @@ function stringArray(value: unknown): value is string[] {
 
 export function isStudySnapshot(value: unknown): value is TimedSnapshot & Record<string, unknown> {
   if (!isRecord(value) || value.version !== 1 || !Number.isSafeInteger(value.updatedAt) || Number(value.updatedAt) < 0) return false;
+  if (!isVocabularySnapshotFields(value)) return false;
   const maps: Record<string, (entry: unknown) => boolean> = {
     locationAttempts: isLocationAttempt,
     practiceAttempts: isPracticeAttempt,
@@ -61,7 +64,7 @@ export function hasStudyRecords(snapshot: unknown): boolean {
     if (isRecord(value)) return Object.values(value).some(nonempty);
     return typeof value === "string" ? Boolean(value.trim()) : typeof value === "number" || value === true;
   };
-  return ["locationAttempts", "practiceAttempts", "learningReflections", "questionWork", "marks", "termRatings", "reviewSchedule", "termContexts", "termNotes", "sentenceNotes", "sentenceMarks", "answers", "translationAnswers", "submittedTranslationTasks", "submittedSections", "listItems", "submitted"].some((key) => nonempty(snapshot[key]))
+  return ["vocabularyMemories", "vocabularyAttempts", "vocabularySessions", "locationAttempts", "practiceAttempts", "learningReflections", "questionWork", "marks", "termRatings", "reviewSchedule", "termContexts", "termNotes", "sentenceNotes", "sentenceMarks", "answers", "translationAnswers", "submittedTranslationTasks", "submittedSections", "listItems", "submitted"].some((key) => nonempty(snapshot[key]))
     || (Array.isArray(snapshot.lists) && snapshot.lists.some((name) => name !== "本周重点"));
 }
 
@@ -82,7 +85,9 @@ export function sameStudySnapshot(first: TimedSnapshot | null, second: TimedSnap
 export function prepareLocalSnapshot<Snapshot extends TimedSnapshot>(
   current: Snapshot, previous: Snapshot | null, initialUpdatedAt = 0, now = Date.now(),
 ): Snapshot {
-  return { ...current, updatedAt: previous ? sameStudySnapshot(current, previous) ? previous.updatedAt : now : initialUpdatedAt };
+  const safe = previous ? preserveVocabularyRecords(previous as Record<string, unknown>, current as Record<string, unknown>) as Snapshot : current;
+  if (previous && sameStudySnapshot(safe, previous)) return previous;
+  return { ...safe, updatedAt: previous ? now : initialUpdatedAt };
 }
 
 export function reconcileStudyState<Snapshot extends TimedSnapshot>(
@@ -94,6 +99,10 @@ export function reconcileStudyState<Snapshot extends TimedSnapshot>(
   function merge(base: unknown, current: unknown, cloud: unknown, path: string): unknown {
     if (sameValue(current, base)) return cloud;
     if (sameValue(cloud, base) || sameValue(current, cloud)) return current;
+    if (isAtomicVocabularyPath(path)) {
+      conflicts.push(path);
+      return current;
+    }
     if (isRecord(current) && isRecord(cloud) && (base === undefined || base === null || isRecord(base))) {
       const entries = new Set([...Object.keys(isRecord(base) ? base : {}), ...Object.keys(current), ...Object.keys(cloud)]);
       return Object.fromEntries([...entries].map((key) => [key, merge(isRecord(base) ? base[key] : undefined, current[key], cloud[key], path ? `${path}.${key}` : key)]).filter(([, value]) => value !== undefined));
@@ -108,7 +117,10 @@ export function reconcileStudyState<Snapshot extends TimedSnapshot>(
     conflicts.push(path);
     return current;
   }
-  return { state: merge(local.base.state, local.state, remote.state, "") as Snapshot, conflicts };
+  const baseline = isRecord(local.base.state) ? local.base.state : {};
+  const safeLocal = preserveVocabularyRecords(baseline, local.state as Record<string, unknown>);
+  const safeRemote = preserveVocabularyRecords(baseline, remote.state as Record<string, unknown>);
+  return { state: merge(local.base.state, safeLocal, safeRemote, "") as Snapshot, conflicts };
 }
 
 export async function readRemoteSnapshot<Snapshot extends TimedSnapshot>(
@@ -116,7 +128,8 @@ export async function readRemoteSnapshot<Snapshot extends TimedSnapshot>(
 ): Promise<RemoteStudyState<Snapshot>> {
   const response = await fetcher("/api/study-state", { cache: "no-store" });
   if (!response.ok) throw new Error("云端记录暂时无法读取，本机记录已保留，暂不上传以免覆盖。请重试同步。");
-  const remote: unknown = await response.json();
+  const received: unknown = await response.json();
+  const remote = isRecord(received) ? { ...received, state: unpackVocabularySnapshot(received.state) } : received;
   if (!isRecord(remote) || remote.accountEmail !== email || !(remote.state === null || isStudySnapshot(remote.state))
     || !(remote.state === null ? remote.updatedAt === null : Number.isSafeInteger(remote.updatedAt) && Number(remote.updatedAt) >= 0)) {
     throw new Error("云端记录格式或账号异常，已暂停同步；请刷新后重新登录，本机记录不会上传。");
@@ -127,7 +140,9 @@ export async function readRemoteSnapshot<Snapshot extends TimedSnapshot>(
 export function readLocalStudyState<Snapshot extends TimedSnapshot>(storage: Storage, email: string | null): LocalStudyState<Snapshot> | null {
   const saved = storage.getItem(studyStorageKey(email));
   if (!saved) return null;
-  const record: unknown = JSON.parse(saved);
+  const original: unknown = JSON.parse(saved);
+  const record = isRecord(original) ? { ...original, state: unpackVocabularySnapshot(original.state),
+    ...(isRecord(original.base) ? { base: { ...original.base, state: unpackVocabularySnapshot(original.base.state) } } : {}) } : original;
   if (!isRecord(record) || !isStudySnapshot(record.state) || !(record.base === null || (isRecord(record.base)
     && (record.base.state === null || isStudySnapshot(record.base.state))
     && (record.base.state === null ? record.base.updatedAt === null : Number.isSafeInteger(record.base.updatedAt))))) {
@@ -136,16 +151,38 @@ export function readLocalStudyState<Snapshot extends TimedSnapshot>(storage: Sto
   return record as LocalStudyState<Snapshot>;
 }
 
-export function saveLocalStudyState<Snapshot>(storage: Storage, email: string | null, record: LocalStudyState<Snapshot>) {
-  storage.setItem(studyStorageKey(email), JSON.stringify(record));
+export function saveLocalStudyState<Snapshot>(storage: Storage, email: string | null, record: LocalStudyState<Snapshot>, options: { replaceVocabularyAfterBackup?: boolean } = {}) {
+  if (!isStudySnapshot(record.state)) throw new Error("本机学习记录校验失败，已停止写回并保留原始记录，请先导出备份。");
+  if (!(record.base === null || (isRecord(record.base) && (record.base.state === null || isStudySnapshot(record.base.state))
+    && (record.base.state === null ? record.base.updatedAt === null : Number.isSafeInteger(record.base.updatedAt) && Number(record.base.updatedAt) >= 0)))) {
+    throw new Error("本机同步基线校验失败，已停止写回并保留原始记录。");
+  }
+  const existing = storage.getItem?.(studyStorageKey(email));
+  let state = record.state;
+  if (existing) {
+    // A corrupt existing envelope must never be replaced by a newly rendered empty state.
+    const original = readLocalStudyState(storage, email);
+    if (original) {
+      if (options.replaceVocabularyAfterBackup) preserveLocalStudyState(storage, email, original);
+      else state = preserveVocabularyRecords(original.state as Record<string, unknown>, record.state) as typeof state;
+    }
+  }
+  storage.setItem(studyStorageKey(email), JSON.stringify({ ...record, state: packVocabularySnapshot(state),
+    base: record.base ? { ...record.base, state: packVocabularySnapshot(record.base.state) } : null }));
 }
 
 export function preserveLocalStudyState<Snapshot>(storage: Storage, email: string | null, record: LocalStudyState<Snapshot>) {
   const prefix = `${studyStorageKey(email)}:backup:`;
-  const serialized = JSON.stringify(record);
+  const serialized = JSON.stringify({ ...record, state: packVocabularySnapshot(record.state),
+    base: record.base ? { ...record.base, state: packVocabularySnapshot(record.base.state) } : null });
   for (let index = 0; index < storage.length; index += 1) {
     const key = storage.key(index);
     if (key?.startsWith(prefix) && storage.getItem(key) === serialized) return;
   }
   storage.setItem(`${prefix}${crypto.randomUUID()}`, serialized);
+}
+
+/** Only for the user's explicit conflict choice; the original is backed up before replacement. */
+export function replaceLocalStudyStateAfterBackup<Snapshot>(storage: Storage, email: string | null, record: LocalStudyState<Snapshot>) {
+  saveLocalStudyState(storage, email, record, { replaceVocabularyAfterBackup: true });
 }
