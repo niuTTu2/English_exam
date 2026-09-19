@@ -1,0 +1,16 @@
+.mode-list-with-vocabulary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); height: auto; max-width: 100%; }
+.mode-list-with-vocabulary button { min-width: 0; min-height: 44px; }
+.vl-enroll-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.vl-enroll-actions button { min-height: 44px; white-space: normal; }
+.vl-source-picker { min-width: 0; display: grid; gap: 10px; margin-block: 14px; padding: 16px; border: 1px solid #c7d4cd; border-radius: 12px; background: #f5f8f5; }
+.vl-source-picker h3 { margin: 0; font-size: 17px; }
+.vl-source-picker > button { display: grid; gap: 6px; min-width: 0; min-height: 44px; text-align: left; padding: 12px; border: 1px solid #cad6ce; border-radius: 10px; background: white; overflow-wrap: anywhere; }
+.vl-source-picker span { color: #60746a; font-size: 12px; }
+.vl-source-picker p { margin: 0; font-family: Georgia, serif; line-height: 1.7; }
+.is-vocabulary-learning .paper-nav .review-summary { display: none; }
+@media (max-width: 600px) {
+  .mode-list-with-vocabulary button { font-size: 11px; gap: 4px; padding-inline: 3px; }
+  .mode-list-with-vocabulary svg { width: 14px; height: 14px; }
+  .is-vocabulary-learning .paper-nav .section-list { display: none; }
+  .is-vocabulary-learning .paper-nav { padding-bottom: 10px; }
+}

@@ -12,6 +12,13 @@ import { makeLocationAttempt, locationHistory, type LocationAttempts } from "./l
 import { QuestionLocationPractice } from "./question-location-practice";
 import { vocabularyPriority } from "./vocabulary-priority";
 import { AuthSessionError, readAuthSession } from "./auth-session";
+import { createVocabularyCorpus, type ResolvedVocabularyCandidate } from "./vocabulary-learning/corpus";
+import { VocabularyLearning } from "./vocabulary-learning/vocabulary-learning";
+import { type VocabularyLearningData, type VocabularyMark } from "./vocabulary-learning/model";
+import { migrateLegacyVocabulary, resolveLegacyVocabularySource } from "./vocabulary-learning/migration";
+import { vocabularyDataFrom, enrollVocabulary } from "./vocabulary-learning/study-bridge";
+import { unknownStudyFields } from "./vocabulary-learning/persistence";
+import "./vocabulary-learning/integration.css";
 
 import {
   ArrowLeft,
@@ -101,10 +108,10 @@ import { getSentencePhraseContext } from "./contextual-vocabulary";
 import {
   ACTIVE_ACCOUNT_KEY, LEGACY_STORAGE_KEY, hasStudyRecords, isStudySnapshot, prepareLocalSnapshot,
   preserveLocalStudyState, readLocalStudyState, readRemoteSnapshot, reconcileStudyState,
-  sameStudySnapshot, saveLocalStudyState, studyStorageKey, type RemoteStudyState,
+  sameStudySnapshot, saveLocalStudyState, replaceLocalStudyStateAfterBackup, studyStorageKey, type RemoteStudyState,
 } from "./study-sync";
 
-type AppView = "study" | "test" | "review" | "vocabulary";
+type AppView = "study" | "test" | "review" | "vocabulary" | "vocabulary-learning";
 type SentenceMode = "read" | "words" | "structure";
 type ArticleId = keyof typeof articleContents;
 type RevealTiming = "instant" | "sentence" | "article";
@@ -151,7 +158,7 @@ type YearPhraseItem = {
   sentenceId: string;
 };
 
-type PersistedStudyState = {
+type PersistedStudyState = VocabularyLearningData & {
   version: 1;
   updatedAt: number;
   expanded: string[];
@@ -201,7 +208,6 @@ function normalizeStudyState(snapshot: Partial<PersistedStudyState>): PersistedS
 }
 
 const markTags: MarkTag[] = ["完全不会", "有些陌生", "不会搭配", "容易混淆"];
-const ratings: Rating[] = ["正确", "模糊", "错误"];
 
 
 const phraseGlosses: Record<string, string> = {
@@ -792,8 +798,36 @@ function translationAnswerKey(articleId: ArticleId, taskId: number) {
   return `${articleId}:${taskId}`;
 }
 
+export const vocabularyCorpus = createVocabularyCorpus({ sources: corpusSources, phraseAnnotations, resolveEntry, findTermContexts, tokenizeWords });
+
 export default function StudyApp() {
-  const [view, setView] = useState<AppView>("test");
+  const [view, setViewState] = useState<AppView>("test");
+  const [vocabularyData, setVocabularyData] = useState<VocabularyLearningData>({});
+  const vocabularyRef = useRef<VocabularyLearningData>({});
+  const snapshotEpoch = useRef(0);
+  const [snapshotRevision, setSnapshotRevision] = useState(0);
+  const [snapshotIdentity, setSnapshotIdentity] = useState<{ epoch: number; owner: string | null }>({ epoch: 0, owner: null });
+  const [snapshotExtensions, setSnapshotExtensions] = useState<Record<string, unknown>>({});
+  const vocabularyWriteBlocked = useRef(false);
+  const [vocabularyError, setVocabularyError] = useState("");
+  const [vocabularyNotice, setVocabularyNotice] = useState("");
+  const [vocabularyChoices, setVocabularyChoices] = useState<{ key?: string; originKey?: string; mark?: VocabularyMark; candidates: ResolvedVocabularyCandidate[] } | null>(null);
+  const setView = useCallback((next: AppView) => {
+    if (typeof window !== "undefined") {
+      const learningHash = "#vocabulary-learning";
+      if (next === "vocabulary-learning" && window.location.hash !== learningHash) window.history.pushState(null, "", learningHash);
+      else if (next !== "vocabulary-learning" && window.location.hash === learningHash) window.history.pushState(null, "", `${window.location.pathname}${window.location.search}`);
+    }
+    setViewState(next);
+  }, []);
+
+  useEffect(() => {
+    const navigate = () => setViewState(window.location.hash === "#vocabulary-learning" ? "vocabulary-learning" : "test");
+    queueMicrotask(navigate);
+    window.addEventListener("popstate", navigate);
+    window.addEventListener("hashchange", navigate);
+    return () => { window.removeEventListener("popstate", navigate); window.removeEventListener("hashchange", navigate); };
+  }, []);
   const [sentenceMode, setSentenceMode] = useState<SentenceMode>("read");
   const [studyPart, setStudyPart] = useState<"passage" | "questions">("passage");
   const [showPhrases, setShowPhrases] = useState(true);
@@ -905,6 +939,22 @@ export default function StudyApp() {
 
   const applySnapshot = useCallback((snapshot: Partial<PersistedStudyState>) => {
     snapshot = normalizeStudyState(snapshot);
+    if (!isStudySnapshot(snapshot as unknown)) {
+      vocabularyWriteBlocked.current = true;
+      readyToUpload.current = false;
+      setVocabularyError("学习记录校验失败，原始数据已保留，已停止写回。请先导出本机备份。");
+      throw new Error("学习记录校验失败，原始数据已保留，已停止写回。");
+    }
+    vocabularyWriteBlocked.current = false;
+    snapshotEpoch.current += 1;
+    setSnapshotRevision(snapshotEpoch.current);
+    setSnapshotIdentity({ epoch: snapshotEpoch.current, owner: snapshotOwner.current });
+    setSnapshotExtensions(unknownStudyFields(snapshot as Record<string, unknown>));
+    vocabularyRef.current = vocabularyDataFrom(snapshot);
+    setVocabularyData(vocabularyRef.current);
+    setVocabularyError("");
+    setVocabularyNotice("");
+    setVocabularyChoices(null);
     snapshotRef.current = snapshot as PersistedStudyState;
     initialUpdatedAt.current = snapshot.updatedAt ?? 0;
     if (Array.isArray(snapshot.expanded)) setExpanded(new Set(snapshot.expanded));
@@ -1110,6 +1160,8 @@ export default function StudyApp() {
   }, [online, userEmail, authBusy, checkSession, restoreAccount]);
 
   const persistedState = useMemo<PersistedStudyState>(() => ({
+    ...snapshotExtensions,
+    ...vocabularyData,
     version: 1,
     updatedAt: 0,
     expanded: Array.from(expanded),
@@ -1133,7 +1185,54 @@ export default function StudyApp() {
     lists,
     listItems,
     reviewFilter,
-  }), [activeSection, answers, expanded, listItems, lists, marks, revealTiming, reviewFilter, reviewSchedule, selectedYear, sentenceMarks, sentenceNotes, submittedSections, submittedTranslationTasks, termContexts, termNotes, termRatings, timerMode, translationAnswers, practiceAttempts, practiceReveals, practiceSessions, learningReflections, questionWork, locationAttempts]);
+  }), [activeSection, answers, expanded, listItems, lists, marks, revealTiming, reviewFilter, reviewSchedule, selectedYear, sentenceMarks, sentenceNotes, submittedSections, submittedTranslationTasks, termContexts, termNotes, termRatings, timerMode, translationAnswers, practiceAttempts, practiceReveals, practiceSessions, learningReflections, questionWork, locationAttempts, vocabularyData, snapshotExtensions]);
+
+  const updateVocabulary = useCallback((update: (current: VocabularyLearningData) => VocabularyLearningData) => {
+    if (!hydrated || vocabularyWriteBlocked.current || !snapshotRef.current) throw new Error("记录尚未安全载入，暂不能保存学习结果。");
+    const next = update(vocabularyRef.current);
+    const snapshot = { ...snapshotRef.current, ...next, updatedAt: Date.now() };
+    try {
+      if (!isStudySnapshot(snapshot)) throw new Error("词汇记录校验失败，已停止写回并保留上一份记录。");
+      // Save the memory, immutable attempt and session cursor together before the next card.
+      saveLocalStudyState(window.localStorage, snapshotOwner.current, { state: snapshot, base: remoteBase.current });
+      snapshotEpoch.current += 1;
+      setSnapshotIdentity({ epoch: snapshotEpoch.current, owner: snapshotOwner.current });
+      snapshotRef.current = snapshot;
+      vocabularyRef.current = next;
+      setVocabularyData(next);
+    } catch (error) {
+      vocabularyWriteBlocked.current = true;
+      readyToUpload.current = false;
+      setRemoteReady(false);
+      const message = error instanceof Error ? error.message : "词汇保存失败，已停止写回，请先导出本机备份。";
+      setVocabularyError(message);
+      setSyncError(message);
+      throw error;
+    }
+  }, [hydrated]);
+
+  const ensureVocabularyMigration = useCallback(() => {
+    if (!hydrated || vocabularyWriteBlocked.current || !snapshotRef.current) return false;
+    try {
+      const previous = snapshotRef.current;
+      const result = migrateLegacyVocabulary(previous, vocabularyCorpus.resolveLegacyCandidates);
+      if (result.changed) {
+        preserveLocalStudyState(window.localStorage, snapshotOwner.current, { state: previous, base: remoteBase.current });
+        updateVocabulary(() => vocabularyDataFrom(result.state));
+      }
+      return true;
+    } catch (error) {
+      vocabularyWriteBlocked.current = true;
+      readyToUpload.current = false;
+      setRemoteReady(false);
+      setVocabularyError(error instanceof Error ? error.message : "旧词汇迁移失败，原记录已保留，已停止写回。");
+      return false;
+    }
+  }, [hydrated, updateVocabulary]);
+
+  useEffect(() => {
+    if (view === "vocabulary-learning" && hydrated) queueMicrotask(() => { ensureVocabularyMigration(); });
+  }, [view, hydrated, ensureVocabularyMigration, snapshotRevision]);
 
   useEffect(() => {
     if (contextPicker) firstContextOption.current?.focus();
@@ -1152,12 +1251,13 @@ export default function StudyApp() {
   }, []);
 
   useEffect(() => {
-    if (!hydrated) return;
-    const snapshot = prepareLocalSnapshot(persistedState, snapshotRef.current, initialUpdatedAt.current);
+    if (!hydrated || vocabularyWriteBlocked.current || snapshotIdentity.epoch !== snapshotEpoch.current || snapshotIdentity.owner !== snapshotOwner.current) return;
+    const previousSnapshot = snapshotRef.current;
+    const snapshot = prepareLocalSnapshot({ ...persistedState, ...vocabularyRef.current }, previousSnapshot, initialUpdatedAt.current);
     snapshotRef.current = snapshot;
     const generation = syncGeneration.current;
     try {
-      saveLocalStudyState(window.localStorage, snapshotOwner.current, { state: snapshot, base: remoteBase.current });
+      if (snapshot !== previousSnapshot) saveLocalStudyState(window.localStorage, snapshotOwner.current, { state: snapshot, base: remoteBase.current });
     } catch {
       readyToUpload.current = false;
       queueMicrotask(() => {
@@ -1214,7 +1314,7 @@ export default function StudyApp() {
       })();
     }, 450);
     return () => window.clearTimeout(id);
-  }, [hydrated, persistedState, remoteReady, userEmail]);
+  }, [hydrated, persistedState, remoteReady, userEmail, snapshotIdentity]);
 
   useEffect(() => {
     if (!timerRunning) return;
@@ -1465,14 +1565,44 @@ export default function StudyApp() {
       setReviewSchedule((schedule) => schedule[key]
         ? schedule
         : { ...schedule, [key]: { dueAt: now, intervalDays: 0, repetitions: 0 } });
+      if (!existing.includes(tag)) addSelectedVocabulary(tag);
     }
   }
 
-  function rateTerm(key: string, rating: Rating, now: number) {
-    setReviewNow(now);
-    if (marks[key]?.length) rememberSelectedContext(key);
-    setTermRatings((current) => ({ ...current, [key]: rating }));
-    setReviewSchedule((current) => ({ ...current, [key]: nextReviewSchedule(current[key], rating, now) }));
+  function addSelectedVocabulary(mark?: VocabularyMark) {
+    if (!selectedTerm || !ensureVocabularyMigration()) return;
+    const { label, sentenceId, entry } = selectedTerm;
+    if (mark === "不会搭配" && entry.kind === "word") {
+      const candidates = vocabularyCorpus.phraseCandidatesForWord(label, sentenceId);
+      if (candidates.length > 1) { setVocabularyChoices({ candidates, mark, originKey: selectedTerm.key }); return; }
+      if (candidates.length === 1) {
+        try {
+          updateVocabulary(current => enrollVocabulary(current, candidates[0], Date.now(), mark, selectedTerm.key));
+          setVocabularyNotice(`已将整个搭配“${candidates[0].context.expression}”加入待学词汇。`);
+        } catch { /* Keep the original snapshot and surface the persistent save error. */ }
+        return;
+      }
+      setVocabularyNotice("本出处没有已标注的对应搭配；请在原句中选择已有词组入口后加入。");
+      return;
+    }
+    const candidate = vocabularyCorpus.resolveCandidate(label, entry.kind === "phrase", sentenceId, true);
+    if (!candidate) { setVocabularyNotice("请从该词实际出现的真题原句或选项中加入学习。"); return; }
+    try {
+      updateVocabulary(current => enrollVocabulary(current, candidate, Date.now(), mark));
+      setVocabularyNotice(`已加入待学词汇：${candidate.context.expression}（当前语境义）。`);
+    } catch { /* The persistent error and original snapshot remain visible. */ }
+  }
+
+  function chooseVocabularyCandidate(candidate: ResolvedVocabularyCandidate) {
+    if (!vocabularyChoices) return;
+    try {
+      if (vocabularyChoices.key && snapshotRef.current) {
+        const resolved = resolveLegacyVocabularySource(snapshotRef.current, vocabularyChoices.key, candidate);
+        updateVocabulary(() => vocabularyDataFrom(resolved));
+      } else updateVocabulary(current => enrollVocabulary(current, candidate, Date.now(), vocabularyChoices.mark, vocabularyChoices.originKey));
+      setVocabularyNotice(`已保留“${candidate.context.expression}”的准确语境。`);
+      setVocabularyChoices(null);
+    } catch (error) { setVocabularyError(error instanceof Error ? error.message : "词汇保存失败，旧记录保留。"); }
   }
 
   function resetTest() {
@@ -1752,7 +1882,7 @@ export default function StudyApp() {
     if (!userEmail || !conflictingRemote?.state || snapshotOwner.current !== userEmail) return;
     try {
       preserveLocalStudyState(window.localStorage, userEmail, { state: snapshotRef.current!, base: remoteBase.current });
-      saveLocalStudyState(window.localStorage, userEmail, { state: conflictingRemote.state, base: conflictingRemote });
+      replaceLocalStudyStateAfterBackup(window.localStorage, userEmail, { state: conflictingRemote.state, base: conflictingRemote });
       remoteBase.current = conflictingRemote;
       applySnapshot(conflictingRemote.state);
       setConflictingRemote(null);
@@ -1796,7 +1926,7 @@ export default function StudyApp() {
   })();
 
   return (
-    <div className="study-shell">
+    <div className={`study-shell ${view === "vocabulary-learning" ? "is-vocabulary-learning" : ""}`}>
       <header className="topbar">
         <div className="brand-block">
           <div className="brand-mark" aria-hidden="true">句</div>
@@ -1834,7 +1964,7 @@ export default function StudyApp() {
           <nav className="section-list">
             {sectionsByYear[selectedYear as keyof typeof sectionsByYear].map((section) => {
               const isReady = section.status === "ready" && section.id in articleContents;
-              const isActive = isReady && section.id === activeSection && view !== "vocabulary";
+              const isActive = isReady && section.id === activeSection && view !== "vocabulary" && view !== "vocabulary-learning";
               return (
                 <button
                   key={section.id}
@@ -1866,6 +1996,11 @@ export default function StudyApp() {
             <p>标记后会自动进入间隔复习，也可以加入自定义清单。</p>
           </div>
 
+          <button type="button" className={`year-vocabulary-link ${view === "vocabulary-learning" ? "is-active" : ""}`}
+            onClick={() => setView("vocabulary-learning")} aria-current={view === "vocabulary-learning" ? "page" : undefined}>
+            <span className="section-icon"><Brain /></span><span className="section-copy"><strong>词汇学习</strong><small>在真题中记单词与搭配</small></span><ChevronRight />
+          </button>
+
           <button
             type="button"
             className={`year-vocabulary-link ${view === "vocabulary" ? "is-active" : ""}`}
@@ -1882,8 +2017,14 @@ export default function StudyApp() {
         </aside>
 
         <main className="study-main">
+          {vocabularyError && <div className="vl-message" role="alert"><p>{vocabularyError}</p><Button variant="outline" onClick={exportLocalBackup}>导出本机备份</Button></div>}
+          {vocabularyChoices && <section className="vl-source-picker" aria-label="选择词汇学习语境"><h3>{vocabularyChoices.key ? "选择旧记录对应的真实语境" : "选择需要整体记忆的搭配"}</h3>
+            {vocabularyChoices.candidates.map(candidate => <button type="button" key={candidate.context.id} onClick={() => chooseVocabularyCandidate(candidate)}>
+              <strong>{candidate.context.expression} · {candidate.entry.contextualMeaning}</strong><span>{candidate.context.year} · {candidate.sourceLabel}</span><p>{candidate.text}</p>
+            </button>)}<Button variant="outline" onClick={() => setVocabularyChoices(null)}>暂不选择，保留旧记录</Button>
+          </section>}
           {evidenceOrigin && view === "study" && evidenceOrigin.articleId === activeArticle.id && <aside className="evidence-return-bar" aria-label="返回原题"><span>正在核对：第{evidenceOrigin.number}题{evidenceOrigin.option ? ` ${evidenceOrigin.option}项` : ""}</span><button type="button" onClick={returnToQuestion}>返回第{evidenceOrigin.number}题</button><button type="button" aria-label="关闭返回条" onClick={() => setEvidenceOrigin(null)}>×</button></aside>}
-          <section className="paper-heading">
+          {view !== "vocabulary-learning" && <section className="paper-heading">
             {view === "vocabulary" ? (
               <>
                 <div>
@@ -1919,17 +2060,26 @@ export default function StudyApp() {
                 </div>
               </>
             )}
-          </section>
+          </section>}
 
           <Tabs value={view} onValueChange={(value) => setView(value as AppView)} className="mode-tabs">
             <div className="mode-toolbar">
-              <TabsList className="mode-list">
+              <TabsList className="mode-list mode-list-with-vocabulary">
                 <TabsTrigger value="test"><Clock3 />考场初读</TabsTrigger>
                 <TabsTrigger value="study"><BookOpenCheck />初学精读</TabsTrigger>
                 <TabsTrigger value="review"><Brain />错题复盘</TabsTrigger>
+                <TabsTrigger value="vocabulary-learning"><BookOpenText />词汇学习</TabsTrigger>
               </TabsList>
               <Badge variant="outline" className="offline-badge">{offlineReady ? "离线内容已缓存" : "正在准备离线内容"}</Badge>
             </div>
+
+            <TabsContent value="vocabulary-learning" className="mode-content">
+              {hydrated && !vocabularyError ? <VocabularyLearning data={vocabularyData} onUpdate={updateVocabulary} corpus={vocabularyCorpus}
+                articleId={activeSection} articleLabel={activeArticle.label} year={selectedYear} lists={lists} listItems={listItems} marks={marks} notes={termNotes}
+                onNote={(key, value) => setTermNotes(current => ({ ...current, [key]: value }))} onSource={goToSource}
+                onLegacyContext={key => setVocabularyChoices({ key, candidates: vocabularyCorpus.resolveLegacyCandidates(key) })} />
+                : <p role="status">{vocabularyError || "正在载入学习记录…"}</p>}
+            </TabsContent>
 
             <TabsContent value="study" className="mode-content">
               {questions.length > 0 && <nav className="study-section-nav" aria-label="精读内容">
@@ -2452,7 +2602,7 @@ export default function StudyApp() {
                 )}
 
                 <section className="mark-section">
-                  <span>这次遇到了什么问题？</span>
+                  <span>这次遇到了什么问题？标记即可加入待学词汇。</span>
                   <div className="mark-buttons">
                     {markTags.map((tag) => (
                       <Button
@@ -2463,6 +2613,13 @@ export default function StudyApp() {
                       >{tag}</Button>
                     ))}
                   </div>
+                  <div className="vl-enroll-actions"><Button variant="outline" disabled={!hydrated || Boolean(vocabularyError)} onClick={() => addSelectedVocabulary()}>加入待学词汇（本句义）</Button>
+                    <Button onClick={() => { setSelectedTerm(null); setContextPicker(null); setView("vocabulary-learning"); }}>进入词汇学习</Button></div>
+                  {vocabularyNotice && <p role="status">{vocabularyNotice}</p>}
+                  {vocabularyChoices && !vocabularyChoices.key && <div className="vl-source-picker" aria-label="选择待学搭配">
+                    {vocabularyChoices.candidates.map(candidate => <button type="button" key={candidate.context.id} onClick={() => chooseVocabularyCandidate(candidate)}><strong>{candidate.context.expression}</strong><span>{candidate.entry.contextualMeaning}</span></button>)}
+                    <Button variant="outline" onClick={() => setVocabularyChoices(null)}>取消选择</Button>
+                  </div>}
                 </section>
 
                 {lists.length > 0 && (
@@ -2497,17 +2654,8 @@ export default function StudyApp() {
 
                 {!termIsLocked && (
                   <section className="rating-section">
-                    <span>本次掌握情况</span>
-                    <div>
-                      {ratings.map((rating) => (
-                        <Button
-                          key={rating}
-                          size="sm"
-                          variant={termRatings[selectedTerm.key] === rating ? "default" : "ghost"}
-                          onClick={() => rateTerm(selectedTerm.key, rating, Date.now())}
-                        >{rating}</Button>
-                      ))}
-                    </div>
+                    <span>{termRatings[selectedTerm.key] ? `旧学习记录：${termRatings[selectedTerm.key]}` : "先回忆本句义，再进行四档自评"}</span>
+                    <Button variant="outline" onClick={() => { setSelectedTerm(null); setView("vocabulary-learning"); }}>进入词汇学习后自评</Button>
                   </section>
                 )}
 
