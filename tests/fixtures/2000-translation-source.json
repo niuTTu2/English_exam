@@ -1,0 +1,14 @@
+{
+  "source": "2000 (1).pdf",
+  "sha256": "4eb3d9c807216619162410da95936cac14f6af57f630aa425841d221c47ad0fe",
+  "page": 6,
+  "instructions": "Read the following passage carefully and then translate the underlined segments into Chinese. Your translation must be written neatly on ANSWER SHEET 2. (15 points)",
+  "precedingContext": "Governments throughout the world act on the assumption that the welfare of their people depends largely on the economic strength and wealth of the community.",
+  "sentences": [
+    { "number": 31, "text": "Under modern conditions, this requires varying measures of centralized control and hence the help of specialized scientists such as economists and operational research experts." },
+    { "number": 32, "text": "Furthermore, it is obvious that the strength of a country’s economy is directly bound up with the efficiency of its agriculture and industry, and that this in turn rests upon the efforts of scientists and technologists of all kinds." },
+    { "number": 33, "text": "Owing to the remarkable development in mass-communications, people everywhere are feeling new wants and are being exposed to new customs and ideas, while governments are often forced to introduce still further innovations for the reasons given above." },
+    { "number": 34, "text": "in the early industrialized countries of Europe the process of industrialization—with all the far-reaching changes in social patterns that followed—was spread over nearly a century, whereas nowadays a developing nation may undergo the same process in a decade or so." },
+    { "number": 35, "text": "Additional social stresses may also occur because of the population explosion or problems arising from mass migration movements—themselves made relatively easy nowadays by modern means of transport." }
+  ]
+}
