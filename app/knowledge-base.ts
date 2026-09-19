@@ -2,6 +2,7 @@ import { getTranslation2010ReviewedKnowledge } from "./2010-translation-contexts
 import { getTranslation2000ReviewedKnowledge } from "./2000-translation-contexts";
 import { getTranslation2011ReviewedKnowledge } from "./2011-translation-contexts";
 import { translation2011SourcePhraseGuides, translation2011SourcePhraseAliases, translation2011SourceCollocationGlosses } from "./2011-translation-collocations";
+import { getTranslation2012ReviewedKnowledge } from "./2012-translation-contexts";
 import { translation2010SourcePhraseGuides, translation2010SourcePhraseAliases, translation2010SourceCollocationGlosses } from "./2010-translation-collocations";
 import { getPassage2010P5WordKnowledge } from "./2010-passage-5-contexts";
 import { passage2010P5SourcePhraseGuides, passage2010P5SourcePhraseAliases, passage2010P5SourceCollocationGlosses } from "./2010-passage-5-collocations";
@@ -1111,6 +1112,10 @@ export function getPhraseKnowledge(source: string): PhraseKnowledge | undefined 
 export function getWordKnowledge(headword: string, context?: { articleId?: string; sentenceId?: string; sourceId?: string }) {
   if (context?.articleId === "2011-translation") {
     const reviewed = getTranslation2011ReviewedKnowledge(normalized(headword), context.sourceId ?? context.sentenceId);
+    if (reviewed) return reviewed;
+  }
+  if (context?.articleId === "2012-translation") {
+    const reviewed = getTranslation2012ReviewedKnowledge(normalized(headword), context.sourceId ?? context.sentenceId);
     if (reviewed) return reviewed;
   }
   if (context?.articleId === "translation") {

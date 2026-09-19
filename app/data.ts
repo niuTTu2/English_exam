@@ -9,7 +9,7 @@ import { passage2010P4Guide, passage2010P4Paragraphs } from "./2010-passage-4-gu
 import { cloze2001Guide } from "./2001-cloze-guide";
 import { writing2012BSentences, writing2012BTasks } from "./2012-writing-b-data";
 import { writing2012ASentences, writing2012ATasks } from "./2012-writing-a-data";
-import { translation2012Sentences, translation2012Tasks } from "./2012-translation-data";
+import { translation2012Sentences, translation2012Tasks, translation2012ArticleParagraphs } from "./2012-translation-data";
 import { passage2012P5Sentences, passage2012P5Questions } from "./2012-passage-5-data";
 import { passage2012P4Sentences, passage2012P4Questions } from "./2012-passage-4-data";
 import { passage2012P3Sentences, passage2012P3Questions } from "./2012-passage-3-data";
@@ -1706,6 +1706,8 @@ export const articleContents: Record<string, ArticleContent> = {
     kind: "reading", sentences: passage2012P5Sentences, questions: passage2012P5Questions,
   },
   "2012-translation": {
+    teachingStatus: { syntax: true, vocabulary: true, evidence: true, practice: true },
+    paragraphs: translation2012ArticleParagraphs,
     id: "2012-translation", year: 2012, sectionId: "translation", label: "英译汉", badge: "2012 · 英语二 · 英译汉",
     title: "人才外流：迁移选择与发展代价", description: "两段六句，第46题整篇一次作答，15分；核对迁入迁出、数据分母与未实现贡献，原卷非标准连接明确提示。",
     kind: "translation", sentences: translation2012Sentences, questions: [], translationTasks: translation2012Tasks,

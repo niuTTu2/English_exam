@@ -1,7 +1,10 @@
 import type { WordKnowledge } from "./knowledge-base";
 import { reviewedPhrases, type PhraseRow } from "./2011-content-helpers";
 import { translation2012Lexicon, translation2012CollocationGlosses, translation2012SentenceContexts } from "./2012-translation-lexicon";
+import { getTranslation2012ReviewedKnowledge } from "./2012-translation-contexts";
 const rows: PhraseRow[] = [
+  ["translation2012-departure-source-warning", "their best and brightest departure", "the departure of + person/group", "原卷瑕疵与规范表达对照", "语境上指本国优秀人才的离开", "原文连接不规范，不能把best and brightest硬讲成正常修饰departure，也无法断言唯一修补方式。canonical仅提供可迁移的规范表达，不是校正后的原文。", "The departure of their best and brightest worries them.", "他们最优秀、最聪明的人才的离开使他们忧虑。", "例句仅供学习，不能回填原文、主干或英文词块；原本拟用的英文形式无法由快照确定。"],
+  ["silicon-valley", "Silicon Valley", "Silicon Valley", "地名整体", "硅谷", "Silicon与Valley共同构成地名，不能拆成两个目的地；句中由to引出人才去向。", "They moved to Silicon Valley.", "他们迁往硅谷。", "此处是地名，不等于所有科技人才都去同一个地点，也不要与silicone硅酮混淆。"],
   ["worry-about", "worry about migration", "worry about + noun/doing", "担忧对象结构", "担心人口迁移", "about接担忧对象，迁移在此尚未限定方向。", "They worry about losing skilled workers.", "他们担心失去专业人才。", "worry是不及物时需about，不直接加完整名词宾语。"],
   ["concerned-at-prospect", "concerned at the prospect", "be concerned at the prospect of + noun/doing", "担忧前景结构", "担心……的前景", "at引触发担忧的情况，of补充具体前景。", "They are concerned at the prospect of departure.", "他们担心人才将离开。", "本文best and brightest departure原卷连接有瑕疵，不作规范例句复用。"],
   ["developing-countries", "developing countries", "developing countries", "国家发展阶段搭配", "发展中国家", "现在分词developing作定语，描述仍在发展阶段。", "The study concerns developing countries.", "研究涉及发展中国家。", "developed countries为发达国家，不可混同。"],
@@ -13,7 +16,7 @@ const rows: PhraseRow[] = [
   ["be-likely-to-do", "particularly likely to emigrate", "be likely to do", "可能性结构", "尤其可能移居国外", "particularly修饰likely，to说明可能发生的行动。", "Graduates are likely to emigrate.", "毕业生很可能移居国外。", "可能不等于一定发生，不能丢掉概率。"],
   ["more-than-education", "more than a high-school education", "more than + level of education", "学历程度比较", "高于高中水平的教育", "比较受教育程度，不是上过多个高中。", "She has more than a high-school education.", "她的受教育程度超过高中。", "不能缩减为受过高中教育，也不指定一定是博士。"],
   ["compared-with", "compared with around 3.3%", "compared with + comparison", "过去分词比较", "与约3.3%相比", "比较相同学历条件在不同分母群体中的占比。", "The rate was forty percent, compared with three percent elsewhere.", "这一比例为百分之四十，而另一群体为百分之三。", "别把比较数字误当比例增加的百分点。"],
-  ["over-age", "over the age 25", "over the age of + number", "年龄范围", "超过25岁", "原卷省略常见of，来源保留原样；规范结构另列。", "The survey covers people over the age of twenty-five.", "调查覆盖25岁以上的人。", "over为高于年龄界限，不能译成低于25岁；规范式与原文异形分开。"],
+  ["over-age", "over the age 25", "over the age of + number", "年龄范围（原文连接有瑕疵）", "超过25岁", "原卷未写规范式中的of，连接不规范，来源保留原样；不能把25硬讲成正常同位语，规范结构只另供学习。", "The survey covers people over the age of twenty-five.", "调查覆盖超过25岁的人。", "over为严格高于年龄界限，不包括25岁整；规范式中的of不能静默补入原文。"],
   ["brain-drain", '"brain drain"', "brain drain", "人才迁移隐喻", "人才流失；人才外流", "brain借指技能与知识人才，drain为从原国家流失。", "Brain drain worries policymakers.", "人才外流令政策制定者担忧。", "不是脑部排水，不能逐字硬译。"],
   ["has-long-done", "has long bothered", "have/has long + past participle", "持续完成时", "长期以来一直……", "long在助动词与分词间表示持续时间已久。", "The problem has long bothered them.", "这个问题长期困扰着他们。", "has不是单独拥有，long不是形容词修饰问题。"],
   ["deprive-of", "depriving them of much-needed skilled workers", "deprive A of B", "剥夺结构", "使A失去B", "A为国家，B为所需专业人才；分词说明损害方式。", "Migration can deprive a country of skilled workers.", "移民外流可能使一国失去专业人才。", "别交换国家与人才的位置，也不把of误当所属。"],
@@ -26,6 +29,8 @@ export const translation2012PhraseGuides = reviewed.guides;
 export const translation2012PhraseAliases = reviewed.aliases;
 export const translation2012PhraseGlosses = { ...translation2012CollocationGlosses, ...reviewed.glosses };
 export function getTranslation2012WordKnowledge(headword: string, sentenceId?: string): WordKnowledge | undefined {
+  const reviewedKnowledge = getTranslation2012ReviewedKnowledge(headword, sentenceId);
+  if (reviewedKnowledge) return reviewedKnowledge;
   const entry = translation2012Lexicon[headword];
   if (!entry) return undefined;
   const context = sentenceId ? translation2012SentenceContexts[sentenceId]?.[headword] : undefined;

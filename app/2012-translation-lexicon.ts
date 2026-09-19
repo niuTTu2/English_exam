@@ -1,5 +1,6 @@
 import type { SentenceWordContext } from "./contextual-vocabulary";
 import { reviewedLexicon, type LexiconRow } from "./2011-content-helpers";
+import { translation2012ReviewedContexts } from "./2012-translation-contexts";
 const rows: LexiconRow[] = [
   ["migration", "migrations", "n.", "人口迁移", "引出发展中国家对人才流动的担忧，是中性方向总称。", "worry about migration（担心人口迁移）", "immigration移入，emigration移出；migration本身不定方向。"],
   ["develop", "develops developed developing", "v.", "发展", "developing countries为发展中国家，developed world为发达国家群体。", "developing countries（发展中国家）", "-ing表示发展中，-ed表示已达到较高发展水平，不能对调。"],
@@ -57,7 +58,7 @@ translation2012Lexicon.privilege.otherMeanings = ["n. 特权；特殊待遇；�
 translation2012Lexicon.bright.otherMeanings = ["明亮的；鲜艳的；欢快的；有希望的。a bright future光明前途。"];
 translation2012Lexicon.drain.otherMeanings = ["n. 排水沟；持续的消耗，如a drain on resources资源消耗。", "v. 排干；耗尽精力或资金。drain away逐渐流失。"];
 translation2012Lexicon.departure.otherMeanings = ["出发、启程；偏离惯例。a departure from tradition对传统的偏离。"];
-export const translation2012SentenceContexts: Record<string, Record<string, SentenceWordContext>> = {
+const translation2012OriginalContexts: Record<string, Record<string, SentenceWordContext>> = {
   "2012-translation-s1": { develop: { contextualMeaning: "发展中的；发达的", use: "developing countries是发展中国家，developed world是发达世界；同句必须按词形辨方向。" }, they: { contextualMeaning: "发展中国家的人们", use: "they承接从句people。" } },
   "2012-translation-s2": { these: { contextualMeaning: "上述最优秀的人才", use: "回指best and brightest，非医院大学。" }, like: { contextualMeaning: "例如", use: "介词引英国、加拿大、澳大利亚三国例子。", partOfSpeech: "prep." } },
   "2012-translation-s3": { particularly: { contextualMeaning: "尤其；特别", use: "修饰likely的可能程度，不意味着所有受教育者都会移民。" } },
@@ -65,3 +66,10 @@ export const translation2012SentenceContexts: Record<string, Record<string, Sent
   "2012-translation-s5": { bother: { contextualSubstitutions: [{ label: "troubled", chinese: "困扰", fit: "direct", rewrittenSentence: 'This "brain drain" has long troubled policymakers in poor countries.', nuance: "bother突出持续造成烦恼，trouble同样表达令人忧虑，对人才外流的担忧命题不变。", target: "word:trouble" }] }, poor: { contextualMeaning: "贫穷的", use: "poor countries为经济较贫穷的国家，非质量低劣的国家。" } },
   "2012-translation-s6": { they: { contextualMeaning: "政策制定者；贫穷国家", use: "主语They回指policymakers；宾格them在depriving them中指他们的国家，两处须依句法区分。" }, their: { contextualMeaning: "这些贫穷国家的", use: "economies、universities、hospitals、factories均属于人才流出国。" }, it: { contextualMeaning: "人才外流", use: "宾语从句it承接brain drain。" }, can: { contextualMeaning: "本来可以", use: "could have统领taught、worked和come，保留未实现的贡献。" }, make: { contextualMeaning: "制造；生产", use: "工厂制造新产品，非使某人变成。" }, work: { contextualMeaning: "工作", use: "could have worked in hospitals指本可在医院工作。" }, for: { contextualMeaning: "供……；引出不定式的逻辑主语", use: "for their factories to make修饰products，非because。" } },
 };
+export const translation2012SentenceContexts: Record<string, Record<string, SentenceWordContext>> = Object.fromEntries(
+  Object.entries(translation2012ReviewedContexts).map(([sourceId, entries]) => [sourceId, Object.fromEntries(
+    [...new Set([...Object.keys(translation2012OriginalContexts[sourceId] ?? {}), ...Object.keys(entries)])].map(headword => [headword, {
+      ...translation2012OriginalContexts[sourceId]?.[headword], ...entries[headword],
+    }]),
+  )]),
+);

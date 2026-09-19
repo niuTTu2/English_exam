@@ -1,11 +1,12 @@
 import type { SentenceAnalysis, TranslationTask } from "./data";
 import { clause, segment, sentenceFactory } from "./2011-content-helpers";
+import { reviewTranslation2012 } from "./2012-translation-syntax";
 const sentence = sentenceFactory("2012-translation");
-export const translation2012Sentences: SentenceAnalysis[] = [
+const translation2012Drafts: SentenceAnalysis[] = [
   sentence(1, [
     segment("When people in developing countries worry about migration, ", "condition", "时间背景从句", "提供担忧出现的背景", "people为从句主语，in developing countries限定people", "when说明谈到人口迁移时的常见关切；migration泛指迁移，不先限定移入或移出。"),
     segment("they are usually concerned at the prospect ", "predicate", "主谓系表与频率副词", "主句及担忧的触发点", "they指发展中国家的人们", "concerned在此担忧，at引起担忧的前景，usually不是毫无例外。"),
-    segment("of their best and brightest departure ", "modifier", "原卷有语法瑕疵的名词结构", "说明prospect的内容", "语义由下句workers及全文brain drain限定为优秀人才离开", "原卷写best and brightest departure，名词化的人才称谓与departure间缺规范所有格连接；保留原样，不伪称标准结构。依上下文理解人才离开，不向原文补字。"),
+    segment("of their best and brightest departure ", "modifier", "原卷有语法瑕疵的片段", "语境上说明prospect的内容，内部连接存疑", "语义由下句workers及全文brain drain限定为优秀人才离开", "原卷写best and brightest departure，连接不规范；无法唯一确定原本拟用所有格还是其他结构，不把best and brightest硬讲成正常修饰departure。原文保留，依上下文解释人才离开，规范表达另供学习。"),
     segment("to Silicon Valley or to hospitals and universities in the developed world.", "modifier", "两组并列目的地介词短语", "修饰departure去向", "to Silicon Valley与to hospitals and universities并列", "in the developed world限定医院大学所在区域；developing与developed区分发展中与发达。"),
   ], "they are concerned at the prospect of departure.", "当发展中国家的人们担心人口迁移时，他们通常担忧的是：本国最优秀、最聪明的人才将离开，前往硅谷，或前往发达国家的医院和大学。", "发展中国家的人们谈到人口迁移，通常担心本国最优秀的人才流向硅谷，或发达国家的医院和大学。", "引入人才外流担忧。原卷best and brightest departure结构不规范；词面原样保留，译意由workers与brain drain上下文确定，不静默修补。", ["worry about migration", "concerned at the prospect", "developing countries", "the developed world"], [
     clause("When people in developing countries worry about migration", "时间背景状语从句", "When", "限定主句担忧的谈论场景", "people in developing countries", "worry", "about migration（担忧对象）", "先译发展中国家的人们谈到迁移时，再译具体担忧。"),
@@ -48,7 +49,12 @@ export const translation2012Sentences: SentenceAnalysis[] = [
     clause("who could have taught at their universities, worked in their hospitals and come up with clever new products for their factories to make", "定语从句", "who", "限定skilled workers", "who（专业人才）", "could have taught；could have worked；could have come up with", "at universities、in hospitals为地点；new products为come up with宾语", "先译这些人才本可，再平行展开教学、医疗工作和产品创新三项。"),
   ]),
 ];
+export const translation2012Sentences = translation2012Drafts.map(reviewTranslation2012);
+translation2012Sentences[0].phrases.push("their best and brightest departure", "Silicon Valley");
 export const translation2012Paragraphs = [translation2012Sentences.slice(0, 2), translation2012Sentences.slice(2)];
+export const translation2012ArticleParagraphs = translation2012Paragraphs.map((paragraph, index) => ({
+  id: `2012-translation-p${index + 1}`, sentenceIds: paragraph.map(item => item.id),
+}));
 export const translation2012Tasks: TranslationTask[] = [{
   id: 201246, number: 46, format: "passage", points: 15, sentenceId: "2012-translation-s1",
   prompt: "第46题：把两段英文完整译成中文，整篇一次作答，15分。参考译文仅供对照学习，不作自动评分。",
