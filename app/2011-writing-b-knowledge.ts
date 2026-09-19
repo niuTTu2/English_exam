@@ -8,16 +8,17 @@ const rows: PhraseRow[] = [
 const reviewed = reviewedPhrases(rows);
 export const writing2011BPhraseGuides = reviewed.guides;
 export const writing2011BPhraseAliases: Record<string, string> = { ...reviewed.aliases, "based on the following chart": "based-on", "at least 150 words": "p5-collocation-at-least" };
-export const writing2011BPhraseGlosses = {
+export const writing2011BPhraseGlosses: Record<string, { meaning: string; note: string }> = {
   ...writing2011BCollocationGlosses, ...reviewed.glosses,
   "based on the following chart": { meaning: "以下图为依据", note: "based on过去分词短语后置修饰essay，复用be based on规范结构；图表给出的是部分品牌份额。" },
   "at least 150 words": { meaning: "至少150词", note: "at least表示最低数量，150符合要求，少于150未达到题目下限；不是约150或至多150。" },
 };
 export function getWriting2011BWordKnowledge(headword: string, sentenceId?: string): WordKnowledge | undefined {
   const entry = writing2011BLexicon[headword];
-  if (!entry) return undefined;
   const context = sentenceId ? writing2011BSentenceContexts[sentenceId]?.[headword] : undefined;
-  const pattern = entry.collocations[0];
-  const rule = context?.use ?? entry.use;
-  return { grammarRole: context?.partOfSpeech ?? entry.partOfSpeech, grammarSummary: rule, structures: [{ pattern, meaning: writing2011BCollocationGlosses[pattern.toLowerCase()].meaning, rule }], pitfalls: entry.examSynonyms };
+  const patterns = context?.preferredCollocations ?? entry?.collocations;
+  if (!patterns?.length) return undefined;
+  const rule = context?.use ?? entry?.use, grammarRole = context?.partOfSpeech ?? entry?.partOfSpeech;
+  if (!rule || !grammarRole) throw new Error(`Missing chart writing context: ${sentenceId}/${headword}`);
+  return { grammarRole, grammarSummary: rule, structures: patterns.map(pattern => ({ pattern, meaning: writing2011BPhraseGlosses[pattern.toLowerCase()].meaning, rule })), pitfalls: entry?.examSynonyms ?? [] };
 }

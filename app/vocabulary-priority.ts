@@ -1,3 +1,4 @@
+import { writing2011BPriority } from "./2011-writing-b-priority";
 import { passage2011P2Priority } from "./2011-passage-2-priority";
 import { writing2011APriority } from "./2011-writing-a-priority";
 import { passage2011P1Priority } from "./2011-passage-1-priority";
@@ -36,6 +37,7 @@ const text4SourceNames:Record<string,string[]>={"2010-p4-s6":["state","west"],"2
 const text4Structures = new Set(["regard A as B","serve on a jury","on account of something","be entitled to something","the letter of the law","be said to do something","take turns doing something","conflict with something","be limited to something","a way around something","fail to do something","it is / was not until ... that ...","it was not until ... that ...","make somebody eligible for something","exempt somebody from something","have something done","keep somebody / something + adjective","usher in something","at random","a cross section of something","extend A to B","be representative of something","declare A to be B","fall short of something","be supposed to do something","center on something"].map(value=>value.toLowerCase()));
 /** 编辑建议按本篇语境给出；不是官方考试词频排名，也不改变词义。 */
 export function vocabularyPriority(entry: Pick<VocabEntry, "headword" | "display" | "kind" | "canonicalForm">, sourceId: string, articleId?: string): VocabularyPriority | undefined {
+  if (articleId === "2011-writing-b") return writing2011BPriority(entry);
   if (articleId === "2011-writing-a") return writing2011APriority(entry);
   if (articleId === "p1") return passage2000P1Priority(entry, sourceId);
   if (articleId === "p4") {

@@ -1640,8 +1640,9 @@ export const articleContents: Record<string, ArticleContent> = {
     teachingStatus: { syntax: true, vocabulary: true, evidence: true, practice: true },
   },
   "2011-writing-b": {
+    teachingStatus: { syntax: true, vocabulary: true, evidence: true, practice: true },
     id: "2011-writing-b", year: 2011, sectionId: "writing-b", label: "写作 Part B", badge: "2011 · 英语二 · 第48题", title: "轿车市场份额：图表解读与谨慎评论",
-    description: "至少150词，15分。原样保留2008—2009年原卷柱状图；以可辨认约数描述趋势，区分份额与销量、事实与可能原因。附参考范文和逐段指导，不自动评分。", kind: "writing", sentences: writing2011BSentences, questions: [], writingTasks: writing2011BTasks,
+    description: "至少150词，15分。原样保留2008—2009年原卷柱状图；以可辨认约数描述趋势，区分份额与销量、事实与可能原因。指令练习只测审题与语言理解；作文独立写作与自查，附参考范文和逐段指导，不自动评分。", kind: "writing", sentences: writing2011BSentences, questions: [], writingTasks: writing2011BTasks,
   },
   "2012-cloze": {
     id: "2012-cloze", year: 2012, sectionId: "cloze", label: "完形填空", badge: "2012 · 英语二 · 完形填空",

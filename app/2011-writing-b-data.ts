@@ -1,8 +1,9 @@
+import { withWriting2011BTeaching } from "./2011-writing-b-teaching";
 import type { SentenceAnalysis, WritingTask } from "./data";
 import { segment, sentenceFactory } from "./2011-content-helpers";
 
 const sentence = sentenceFactory("2011-writing-b");
-export const writing2011BSentences: SentenceAnalysis[] = [
+const originalWriting2011BSentences: SentenceAnalysis[] = [
   sentence(1, [
     segment("Write ", "predicate", "祈使动词原形", "写作要求谓语", "省略考生you为主语", "命令考生撰写，不是过去式wrote。"),
     segment("an essay ", "object", "不定冠词与单数名词", "Write的直接宾语", "说明要写的体裁", "essay为短文，与Part A书信不同；essay以元音音素起首，用an。"),
@@ -30,6 +31,8 @@ export const writing2011BSentences: SentenceAnalysis[] = [
     segment("(15 points)", "modifier", "括号分值", "题目信息补充", "标明第48题分值", "本题15分，不是系统可以自动判断的得分。"),
   ], "Write your essay.", "把你的短文写在答题卡2上。（15分）", "请在答题卡2上作答。本题15分。", "保留分值和作答位置，不创造选择题。", []),
 ];
+
+export const writing2011BSentences = originalWriting2011BSentences.map(withWriting2011BTeaching);
 
 export const writing2011BTasks: WritingTask[] = [{
   id: 201148, number: 48, genre: "chart-essay", points: 15, wordLimit: { mode: "at-least", count: 150 },
