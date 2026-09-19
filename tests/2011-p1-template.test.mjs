@@ -31,6 +31,11 @@ test('2011 Text1提示使用实际点击词形，地图和反馈只影响声明�
  const task=a.sentences[2].practice.find(t=>t.id==='let-actors');
  assert.ok(hintAffectsTask(task,'word','let'));
  assert.ok(!hintAffectsTask(task,'word','Simmons'));
+ for(const [index,sourceTask,targetTask] of [[2,'let-actors','failure-not-profit'],[2,'criticism-reason','failure-not-profit'],[5,'expected-role','standard-not-praise']]) {
+  const source=a.sentences[index],from=source.practice.find(t=>t.id===sourceTask),to=source.practice.find(t=>t.id===targetTask);
+  assert.equal(to.revision,2);
+  assert.ok(practiceHintTargets(sources,'previous-answer','',source.id,from).includes(taskKey(source.id,to)));
+ }
  const s=a.sentences[16], relation=s.practice.find(t=>t.id==='nested-relations'), time=s.practice.find(t=>t.id==='news-versus-wrongdoing');
  assert.ok(practiceHintTargets(sources,'previous-answer','',s.id,relation).includes(taskKey(s.id,time)));
  assert.ok(!practiceHintTargets(sources,'previous-answer','',s.id,time).includes(taskKey(s.id,relation)));
