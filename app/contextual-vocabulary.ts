@@ -1,4 +1,6 @@
 import { passage2011P1SourceContexts } from "./2011-passage-1-contexts";
+import { passage2010P4PreferredContexts } from "./2010-passage-4-collocations";
+import { passage2010P4ReviewedContexts } from "./2010-passage-4-contexts";
 import { passage2010P3PreferredContexts } from "./2010-passage-3-collocations";
 import { passage2010P3ReviewedContexts } from "./2010-passage-3-contexts";
 import { passage2001P1SourceContexts } from "./2001-passage-1-contexts";
@@ -86,7 +88,11 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
       ...passage2010P3PreferredContexts[id]?.[head], ...passage2010P3SentenceContexts[id]?.[head], ...passage2010P3ReviewedContexts[id]?.[head],
     }])),
   ])),
-  ...passage2010P4SentenceContexts,
+  ...Object.fromEntries([...new Set([...Object.keys(passage2010P4SentenceContexts), ...Object.keys(passage2010P4ReviewedContexts), ...Object.keys(passage2010P4PreferredContexts)])].map(id => [id,
+    Object.fromEntries([...new Set([...Object.keys(passage2010P4SentenceContexts[id] ?? {}), ...Object.keys(passage2010P4ReviewedContexts[id] ?? {}), ...Object.keys(passage2010P4PreferredContexts[id] ?? {})])].map(head => [head, {
+      ...passage2010P4PreferredContexts[id]?.[head], ...passage2010P4SentenceContexts[id]?.[head], ...passage2010P4ReviewedContexts[id]?.[head],
+    }])),
+  ])),
   ...passage2010P5SentenceContexts,
   "p3-s10": { note: { partOfSpeech: "n.", contextualMeaning: "注释；说明性注释", use: "in the explanatory notes 中 notes 是 note 的复数，指解释译文的说明性注释；不是音符，也不是动词‘注意’。" } },
   "p5-s5": { note: { partOfSpeech: "n.", contextualMeaning: "意味；色彩", use: "a heavy note of hypocrisy 中 note 表态度或表达的意味，heavy 强调程度，of hypocrisy 说明这种意味是虚伪；不是笔记或注释。" } },

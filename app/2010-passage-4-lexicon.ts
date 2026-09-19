@@ -166,6 +166,8 @@ const rows = [
 export const passage2010P4Lexicon: Record<string, Entry> = Object.fromEntries(rows.map(([headword, forms, partOfSpeech, contextualMeaning, use, comparison]) => [headword, { partOfSpeech, contextualMeaning, use: comparison && !/^[a-z][a-z -]*（.+）$/i.test(comparison) ? `${use}${comparison}` : use, specialForms: [forms ? `${headword}：${forms}` : "本义无需要另记的屈折变化"], examSynonyms: /^[a-z][a-z -]*（.+）$/i.test(comparison) ? [comparison] : [] }]));
 export const passage2010P4LemmaAliases: Record<string, string> = Object.fromEntries(rows.flatMap(([headword, forms]) => forms.split(" ").filter(Boolean).map(form => [form, headword])));
 passage2010P4LemmaAliases.including = "including";
+// 本篇 US 均为国家缩写；仅在本篇隔离，保留其他篇 us→we。
+passage2010P4LemmaAliases.us = "us";
 export const passage2010P4FamilyAliases: Record<string, string> = { juror: "jury", democratic: "democracy", literacy: "literate", illiterate: "literate", representative: "represent", unrepresentative: "represent", selection: "select", racial: "race", discrimination: "discriminate", antidiscrimination: "discriminate", educational: "education", requirement: "require", unconstitutional: "constitution", inadequacy: "adequate", development: "develop" };
 export const passage2010P4FormPartOfSpeech: Record<string, string> = { including: "prep.（包括）", representatives: "n.（代表）", representative: "adj.（有代表性的；代议的）", direct: "adj.（直接的）", right: "n.（权利）", following: "adj.（下列的）", surviving: "v.-ing（作定语）", best: "adj.（最高级）", mid: "构词成分（中期）", th: "序数词后缀" };
 export const passage2010P4SentenceContexts: Record<string, Record<string, SentenceWordContext>> = {

@@ -1,3 +1,5 @@
+import { getPassage2010P4WordKnowledge } from "./2010-passage-4-contexts";
+import { passage2010P4SourcePhraseGuides, passage2010P4SourcePhraseAliases, passage2010P4SourceCollocationGlosses } from "./2010-passage-4-collocations";
 import { passage2010P3SourcePhraseGuides, passage2010P3SourcePhraseAliases, passage2010P3SourceCollocationGlosses } from "./2010-passage-3-collocations";
 import { getPassage2010P3WordKnowledge } from "./2010-passage-3-contexts";
 import { getPassage2001P1SourceKnowledge } from "./2001-passage-1-contexts";
@@ -876,6 +878,15 @@ for (const [key, value] of Object.entries(passage2010P4PhraseGuides)) {
 }
 Object.assign(phraseAliases, passage2010P4PhraseAliases);
 Object.assign(collocationGlosses, passage2010P4CollocationGlosses);
+for (const [expression,key] of Object.entries(passage2010P4SourcePhraseAliases)) {
+ if (!phraseAliases[expression]) {
+  const guide=passage2010P4SourcePhraseGuides[key];
+  const existing=Object.values(phraseGuides).find(value=>value.canonical.toLowerCase()===guide.canonical.toLowerCase());
+  if(existing) phraseAliases[expression]=existing.key;
+  else {phraseGuides[key]=guide;phraseAliases[expression]=key;}
+ }
+ if(!collocationGlosses[expression]) collocationGlosses[expression]=passage2010P4SourceCollocationGlosses[expression];
+}
 for (const [key, value] of Object.entries(passage2010P5PhraseGuides)) {
   if (!phraseGuides[key]) phraseGuides[key] = value;
 }
@@ -1064,6 +1075,10 @@ export function getPhraseKnowledge(source: string): PhraseKnowledge | undefined 
 }
 
 export function getWordKnowledge(headword: string, context?: { articleId?: string; sentenceId?: string; sourceId?: string }) {
+  if (context?.articleId === "2010-p4") {
+    const knowledge=getPassage2010P4WordKnowledge(normalized(headword),context.sourceId??context.sentenceId);
+    if(knowledge) return knowledge;
+  }
   if (context?.articleId === "2010-p3") {
     const knowledge = getPassage2010P3WordKnowledge(normalized(headword), context.sourceId ?? context.sentenceId);
     if (knowledge) return knowledge;

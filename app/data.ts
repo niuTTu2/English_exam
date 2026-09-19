@@ -1,5 +1,6 @@
 import { passage2012P1Guide, passage2012P1Paragraphs } from "./2012-passage-1-guide";
 import { passage2000P1Guide, passage2000P1Paragraphs } from "./2000-passage-1-guide";
+import { passage2010P4Guide, passage2010P4Paragraphs } from "./2010-passage-4-guide";
 import { writing2012BSentences, writing2012BTasks } from "./2012-writing-b-data";
 import { writing2012ASentences, writing2012ATasks } from "./2012-writing-a-data";
 import { translation2012Sentences, translation2012Tasks } from "./2012-translation-data";
@@ -1570,6 +1571,8 @@ export const articleContents: Record<string, ArticleContent> = {
     title: "美国陪审制度的民主传统与历史改革",
     description: "从五项民主原则出发，梳理精英筛选、女性代表性与1968年法案和1975年判决，掌握让步论证、时间定位及主旨范围。",
     kind: "reading", sentences: passage2010P4Sentences, questions: passage2010P4Questions,
+    guide: passage2010P4Guide, paragraphs: passage2010P4Paragraphs,
+    teachingStatus: { syntax: true, vocabulary: true, evidence: true, practice: true },
   },
   "2010-p5": {
     id: "2010-p5", year: 2010, sectionId: "p5", label: "阅读 Part B", badge: "2010 · 阅读 Part B",

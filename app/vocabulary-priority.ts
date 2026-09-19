@@ -27,6 +27,11 @@ const text3Core = new Set("habit behavior consumer cue routine cultivate subtle 
 const text3Senses = new Set("art perfect figure turn spring production feature ritual manufacture scrub white power concern private commercial".split(" "));
 const text3Names = new Set("dr curtis london procter gamble colgate-palmolive unilever colgate crest tide carol berning".split(" "));
 const text3Structures = new Set(["figure out", "turn to somebody for help", "help somebody (to) do something", "help (to) do something", "in response to something", "invest money (in) doing something", "between A and B", "be essential to doing something", "tie A to B", "be used to do something", "so as to do something", "due to + cause", "belong to a category"].map(value => value.toLowerCase()));
+const text4Core = new Set("jury juror qualification competent select selection representative discrimination prohibit exempt eligible abolish require requirement conscience verdict principle reform tradition development inadequacy conform".split(" "));
+const text4Senses = new Set("letter regard trial peer pass act serve duty practice character case cross section immune rigid".split(" "));
+const text4Names = new Set("strauder virginia utah taylor louisiana united us v".split(" "));
+const text4SourceNames:Record<string,string[]>={"2010-p4-s6":["state","west"],"2010-p4-s11":["state"]};
+const text4Structures = new Set(["regard A as B","serve on a jury","on account of something","be entitled to something","the letter of the law","be said to do something","take turns doing something","conflict with something","be limited to something","a way around something","fail to do something","it is / was not until ... that ...","it was not until ... that ...","make somebody eligible for something","exempt somebody from something","have something done","keep somebody / something + adjective","usher in something","at random","a cross section of something","extend A to B","be representative of something","declare A to be B","fall short of something","be supposed to do something","center on something"].map(value=>value.toLowerCase()));
 /** 编辑建议按本篇语境给出；不是官方考试词频排名，也不改变词义。 */
 export function vocabularyPriority(entry: Pick<VocabEntry, "headword" | "display" | "kind" | "canonicalForm">, sourceId: string, articleId?: string): VocabularyPriority | undefined {
   if (articleId === "p1") return passage2000P1Priority(entry, sourceId);
@@ -58,20 +63,20 @@ export function vocabularyPriority(entry: Pick<VocabEntry, "headword" | "display
     return { id: "recognition", label: "本句识别 · 按需记忆", reason: "先读懂当前语境，是否标记由你决定。", recommendedReview: false };
   }
   if (articleId === "2011-p1") return passage2011P1Priority(entry);
-  if (articleId !== "2010-p1" && articleId !== "2010-p2" && articleId !== "2010-p3") return undefined;
-  const text2 = articleId === "2010-p2", text3 = articleId === "2010-p3";
-  const articleNames = text3 ? text3Names : text2 ? text2Names : names;
-  const articleSourceNames: Record<string, string[]> = text3 ? {} : text2 ? text2SourceNames : sourceNames;
-  const articleStructures = text3 ? text3Structures : text2 ? text2Structures : structures;
-  const articleSenses = text3 ? text3Senses : text2 ? text2Senses : familiar;
-  const articleCore = text3 ? text3Core : text2 ? text2Core : core;
+  if (articleId !== "2010-p1" && articleId !== "2010-p2" && articleId !== "2010-p3" && articleId !== "2010-p4") return undefined;
+  const text2 = articleId === "2010-p2", text3 = articleId === "2010-p3", text4 = articleId === "2010-p4";
+  const articleNames = text4 ? text4Names : text3 ? text3Names : text2 ? text2Names : names;
+  const articleSourceNames: Record<string, string[]> = text4 ? text4SourceNames : text3 ? {} : text2 ? text2SourceNames : sourceNames;
+  const articleStructures = text4 ? text4Structures : text3 ? text3Structures : text2 ? text2Structures : structures;
+  const articleSenses = text4 ? text4Senses : text3 ? text3Senses : text2 ? text2Senses : familiar;
+  const articleCore = text4 ? text4Core : text3 ? text3Core : text2 ? text2Core : core;
   const head = entry.headword.toLowerCase(), surface = entry.display.toLowerCase();
-  if (articleNames.has(head) || articleSourceNames[sourceId]?.includes(head)) return { id: "name", label: "背景专名 · 识别即可", reason: text3 ? "此处用于研究者、院校、公司或品牌名称；先分清文中的层级，不必单独背专名。" : text2 ? "此处用于人名、地名或书名；识别出处即可，仍可自愿标记。" : "此处用于人名、地名、机构名或拍卖名称；建议不加入单独背词复习，仍可自行标记。", recommendedReview: false };
+  if (articleNames.has(head) || articleSourceNames[sourceId]?.includes(head)) return { id: "name", label: "背景专名 · 识别即可", reason: text4 ? "此处是国名、州名或案件名称的组成；识别历史节点即可，仍可自行标记。" : text3 ? "此处用于研究者、院校、公司或品牌名称；先分清文中的层级，不必单独背专名。" : text2 ? "此处用于人名、地名或书名；识别出处即可，仍可自愿标记。" : "此处用于人名、地名、机构名或拍卖名称；建议不加入单独背词复习，仍可自行标记。", recommendedReview: false };
   if (entry.kind === "phrase") return articleStructures.has(surface) || articleStructures.has((entry.canonicalForm ?? head).toLowerCase())
     ? { id: "structure", label: "必会结构", reason: "重点记完整关系和可接成分，再回到本句确认修饰对象。", recommendedReview: true }
     : { id: "recognition", label: "本句表达 · 按需记忆", reason: "先理解本句组合；是否加入复习由你选择。", recommendedReview: false };
   if (articleSenses.has(head)) return { id: "sense", label: "熟词语境义", reason: "重点区分本句义与最熟悉的基本义，不能把整个词组的意思塞给这个单词。", recommendedReview: true };
-  if ((text2 || text3 ? text2Functions : functions).has(head)) return { id: "function", label: "功能词 · 看句法作用", reason: "建议在句法任务中复习它连接或引出的成分，不脱离句子单独背词。", recommendedReview: false };
+  if ((text2 || text3 || text4 ? text2Functions : functions).has(head)) return { id: "function", label: "功能词 · 看句法作用", reason: "建议在句法任务中复习它连接或引出的成分，不脱离句子单独背词。", recommendedReview: false };
   if (articleCore.has(head)) return { id: "core", label: "核心迁移词", reason: "适合结合本句用法与关键搭配复习，能帮助理解同类议论文章。", recommendedReview: true };
   return { id: "recognition", label: "本句识别 · 按需记忆", reason: "先保证读懂当前语境，不必把每张词卡的所有扩展都背下来。", recommendedReview: false };
 }
