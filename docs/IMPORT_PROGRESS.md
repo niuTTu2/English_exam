@@ -6,24 +6,27 @@
 
 ## 当前接续点
 
-- **全库实际进度：13/35模块、230/556句已通过完整训练层验收及生产构建，22模块326句继续迁移。** 2010 Text 1/2为基线；2010 Text 3、2011 Text 1、2012 Text 1已部署；2000 Text 1/3和2001 Text 1已随421d42b部署成功；本批再完成四篇阅读与2011写作A。保留逐篇独立提交，完形/Part B/翻译/写作按实际题型处理，无需逐篇确认。
+- **全库实际进度：24/35模块、401/556句通过完整训练层验收及生产构建；其余11模块155句继续迁移。** 35模块、556句中，已有24模块401句通过完整训练层检查及生产构建：2000 Text 1—5；2001完形及Text 1/2；2010 Text 1—4、Part B及翻译；2011 Text 1—3及写作A/B；2012 Text 1—3及写作A/B。其余11模块155句逐篇迁移中。累计614项逐句任务、57项地图回忆、405项阅读题语言拆解；2001完形另有20题干及80选项的来源词卡与逐项理由，不把词卡来源计成句法拆解。
 
-| 新完成篇 | 内容与检查 | 发布状态 |
-|---|---|---|
-| 2010 Text 3 | 16句、28句子任务、3地图回忆、7原段、5题/25语言分析；整合9/9与构建通过。报告 `change-reports/2010-text3-template-upgrade.md` | 0093487，Cloudflare成功 |
-| 2011 Text 1 | 19句、35句子任务、3地图回忆、4原段、5题/25语言分析；内容63/63、来源14/14、本篇4/4及构建通过。报告 `change-reports/2011-text1-template-upgrade.md` | 56bea3d，Cloudflare成功；线上核对精读入口与positive来源词卡；内部排错措辞另作小修 |
-| 2012 Text 1 | 18句、31句子任务、3地图回忆、5原段、5题/25语言分析；内容及专项、整合6/6与构建通过。报告 `change-reports/2012-text1-training-template.md` | 184f9a5，随398b930完成Cloudflare部署 |
-| 2000 Text 1 | 25句、33句子任务、3地图回忆、4段、4题20语言分析；原卷与来源专项5/5，公共合并门禁与构建通过。报告 `change-reports/2000-text1-training-template.md` | 随421d42b部署，Cloudflare成功 |
-| 2000 Text 3 | 13句、22句子任务、3地图回忆、4段、4题20语言分析；专项4/4，公共合并门禁与构建通过。报告 `change-reports/2000-passage3-training-template.md` | 随421d42b部署，Cloudflare成功 |
-| 2001 Text 1 | 16句、23句子任务、3地图回忆、4段、4题20语言分析；专项7/7，公共合并门禁与构建通过。报告 `change-reports/2001-text1-training-template.md` | 随421d42b部署，Cloudflare成功 |
+上一批13模块随`9fa6756`发布，已观察到Cloudflare成功，公开页核对2011写作A精读、先尝试后讲解与主观作文独立自检边界。以下11模块保留各自独立提交，本批构建通过后发布，部署结论以最终提交Cloudflare检查为准。
 
-| 2010 Text 4 | 14句、24句子任务、3地图、4段、5题25语言分析；独立原卷与词卡检查通过。报告 `change-reports/2010-text4-template-upgrade.md` | 本批构建通过，按独立提交发布 |
-| 2012 Text 2 | 18句、31句子任务、3地图、4段、5题25语言分析；保留原卷异常并列，词性与指代修正。报告 `change-reports/2012-text2-training-template.md` | 本批构建通过，按独立提交发布 |
-| 2011 Text 2 | 30句、37句子任务、3地图、5段、5题25语言分析；55实际来源词卡复核。报告 `change-reports/2011-text2-template-upgrade.md` | 本批构建通过，按独立提交发布 |
-| 2000 Text 4 | 17句、29句子任务、3地图、4段、4题20语言分析；恢复原卷引语，区分人物观点。报告 `change-reports/2000-passage4-training-template.md` | 本批构建通过，按独立提交发布 |
-| 2011 写作A | 6句、7指令任务；保留真实题设与署名、词数要求，不虚构地图/作文评分。报告 `change-reports/2011-writing-a-template-upgrade.md` | 本批构建通过，按独立提交发布 |
+| 本批完成模块 | 句数 | 逐句任务 | 地图回忆 | 报告 |
+|---|---:|---:|---:|---|
+| 2001 Text 2 | 27 | 39 | 3 | `change-reports/2001-text2-training-template.md` |
+| 2011 写作B | 4 | 5 | 0 | `change-reports/2011-writing-b-template-upgrade.md` |
+| 2000 Text 2 | 27 | 32 | 3 | `change-reports/2000-text2-training-template.md` |
+| 2012 Text 3 | 24 | 33 | 3 | `change-reports/2012-text3-training-template.md` |
+| 2012 写作A | 6 | 7 | 0 | `change-reports/2012-writing-a-template-upgrade.md` |
+| 2010 Part B | 28 | 35 | 3 | `change-reports/2010-partb-template-upgrade.md` |
+| 2012 写作B | 4 | 5 | 0 | `change-reports/2012-writing-b-template-upgrade.md` |
+| 2001 完形 | 9 | 17 | 3 | `change-reports/2001-cloze-training-template.md` |
+| 2000 Text 5 | 15 | 27 | 3 | `change-reports/2000-passage5-training-template.md` |
+| 2011 Text 3 | 17 | 28 | 3 | `change-reports/2011-text3-template-upgrade.md` |
+| 2010 翻译 | 10 | 16 | 0 | `change-reports/2010-translation-template-upgrade.md` |
 
-本批合并后四篇阅读专项14/14；写作专项4/4、2011来源14/14及主观任务/完成门禁通过；生产日志包含Build complete.。完成模块累计370项句子任务、36项地图回忆。当前并行接续：2000 Text 2/5、2001 Text 2、2010 Part B、2011 Text 3/写作B、2012 Text 3，未交付草稿均不计入完成。以下是Text 2首轮和更早导入历史，不得覆盖本段最新状态。
+检查：本批中段累计质量检查132/132；随后完形/Text5/词义回归21/21；最终合并的2011 Text3、2012写作B、2010翻译、全库原文及完成状态门禁60/60。生产日志明确包含`Build complete.`；类型复查10项既有诊断，新增的重复概念、范围任务options及T/F分析类型已修正，未宣称全仓类型检查通过。2000从句基线103，并保留逐来源精确数量断言。
+
+剩余：2000完形/翻译；2010完形；2011完形/Text4/Part B/翻译；2012完形/Text4/Part B/翻译。按来源逐篇完善，未交付草稿不计入完成。以下是早期导入和Text2首轮的历史记录，不得覆盖本段最新状态。
 
 - **当前交付：2010 Text 2完整训练模板**。2026-09-18用户确认手机交互完成，要求参照Text 1推广到Text 2；本篇已补19句精确角色、词块对译、35项句子任务、3项篇章回忆、原卷5段地图、5题证据与定位、25个题干/选项分析、128条题目词汇语境。检查及来源见`docs/change-reports/2010-text2-training-template.md`，最终提交与部署结果以Git历史及对应Cloudflare检查为准。完整新模板现覆盖Text 1、Text 2共38句；其余518句仍未迁移。本次不开始Text 3。
 - **Text 1基线保留**：任务提示/递进复习`1aab9d5`、定位评分/历史`23f7b48`、生成型练习/地图回忆`5f110a8`、导航/复盘`25a5c22`已推送；此前桌面验收见同日报告，手机交互完成来自本次用户确认。Text 2此前`cb4f87c`仅补逐句关系，本次才补齐完整模板，不能重复计算为新导入文章。
