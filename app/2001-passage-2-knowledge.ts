@@ -33,7 +33,7 @@ const seeds: PhraseSeed[] = [
   ["spread-internet-access", "spread Internet access", "spread/expand Internet access", "动宾搭配", "推广、普及互联网接入", "want to 后的动作与宾语", "spread 在此为及物动词，表示把接入机会扩展到更大范围。", "Governments want to spread Internet access.", "各国政府希望普及互联网接入。", "access 通常不可数。"],
   ["within-decade-two", "Within the next decade or two", "within + future time span", "时间范围状语", "在未来十到二十年内", "修饰将来时谓语", "within 表不超过该时间范围；a decade or two 是一二十年。", "The network will expand within the next decade.", "网络将在未来十年内扩展。", "within 强调期限内，不等于 throughout‘贯穿全程’。"],
   ["on-planet", "on the planet", "on the planet", "地点/范围短语", "在地球上；全球", "后置限定 people", "在全球人口语境中相当于 in the world。", "Billions of people on the planet need access.", "全球数十亿人需要接入机会。", "planet 前在此用 the，特指地球。"],
-  ["netted-together", "will be netted together", "be networked/netted together", "将来时被动结构", "将通过网络连接起来", "句子谓语", "will be + 过去分词构成将来时被动；net 在此动词化。", "More people will be netted together.", "更多人将被网络连接起来。", "原卷 he 是排印错误，正确助动词必须是 be。"],
+  ["netted-together", "will he netted together", "be networked/netted together", "将来时被动结构", "将通过网络连接起来", "句子谓语", "原卷保留he，按语法疑似应校读为be；规范式will be + 过去分词构成将来时被动，net在此为动词。", "More people will be netted together.", "更多人将被网络连接起来。", "原卷he疑似误排，不把he作为助动词教授；规范语法用be。"],
   ["as-result-2001p2", "As a result", "as a result", "结果连接语", "因此；结果", "句首结果状语", "总结前述原因并引出其结果；常用逗号与主句隔开。", "As a result, access expanded.", "因此，接入范围扩大了。", "as a result of 后必须接名词；本句没有 of。"],
   ["narrow-rather-widen", "narrow rather than widen", "A rather than B", "取舍并列结构", "缩小而不是扩大", "will 后两个并列动词", "rather than 连接同级成分；narrow 与 widen 共用 will。", "The divide may narrow rather than widen.", "这一鸿沟可能缩小而非扩大。", "两侧要保持语法平行。"],
   ["years-ahead", "in the years ahead", "in the time/years ahead", "时间状语", "在未来的岁月中", "修饰 will narrow", "ahead 后置修饰 years，表示从现在往后的时间。", "Conditions may improve in the years ahead.", "未来几年情况可能改善。", "不要译成空间上的‘前面的年份’。"],
@@ -107,6 +107,9 @@ export const passage2001P2PhraseGuides: Record<string, PhraseKnowledge> = Object
 export const passage2001P2PhraseAliases: Record<string, string> = Object.fromEntries(
   seeds.flatMap((seed) => [[seed[1].toLowerCase(), seed[0]], [seed[2].toLowerCase(), seed[0]]]),
 );
+
+// 保留旧规范表达入口，实际来源字形由上面的seed记录。
+passage2001P2PhraseAliases["will be netted together"] = "netted-together";
 
 export const passage2001P2CollocationGlosses: Record<string, { meaning: string; note?: string }> = Object.fromEntries(
   seeds.flatMap((seed) => [

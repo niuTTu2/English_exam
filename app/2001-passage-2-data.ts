@@ -1,6 +1,9 @@
+import { upgradePassage2001P2 } from "./2001-passage-2-teaching";
+import { passage2001P2QuestionAnalysis } from "./2001-passage-2-question-analysis";
+import { passage2001P2Reasoning } from "./2001-passage-2-evidence";
 import type { Question, SentenceAnalysis } from "./data";
 
-export const passage2001P2Sentences: SentenceAnalysis[] = [
+const passage2001P2Drafts: SentenceAnalysis[] = [
   {
     id: "2001-p2-s1", number: 1,
     text: "A great deal of attention is being paid today to the so-called digital divide—the division of the world into the info (information) rich and the info poor.",
@@ -218,23 +221,23 @@ export const passage2001P2Sentences: SentenceAnalysis[] = [
   },
   {
     id: "2001-p2-s9", number: 9,
-    text: "Within the next decade or two, one to two billion people on the planet will be netted together.",
+    text: "Within the next decade or two, one to two billion people on the planet will he netted together.",
     chunks: [
       { text: "Within the next decade or two, ", role: "modifier" }, { text: "one to two billion people", role: "subject" },
-      { text: " on the planet", role: "modifier" }, { text: " will be netted together.", role: "predicate" },
+      { text: " on the planet", role: "modifier" }, { text: " will he netted together.", role: "predicate" },
     ],
-    trunk: "one to two billion people will be netted together.",
-    layers: [{ label: "时间范围", text: "Within the next decade or two：在未来十到二十年内" }, { label: "预测", text: "one to two billion people... will be netted together：全球将有十亿到二十亿人被网络连接起来" }],
-    grammar: ["within + 时间段表示‘在……之内’，强调不超过这一范围。", "will be netted 是一般将来时被动；net 在此动词化，表示通过网络连接。", "来源 PDF 把 be 排成 he；结合语法与可靠文本应为 will be netted together，本条已按正确形式录入并保留校勘说明。"],
+    trunk: "one to two billion people will he netted together.",
+    layers: [{ label: "时间范围", text: "Within the next decade or two：在未来十到二十年内" }, { label: "预测", text: "one to two billion people... will he netted together：全球将有十亿到二十亿人被网络连接起来" }],
+    grammar: ["within + 时间段表示‘在……之内’，强调不超过这一范围。", "原卷印will he netted；按语法疑似把be误排为he。规范式will be netted为将来被动，net表示联网连接。", "保留第3页可见he字形，不把它作为正确助动词教授；中文按上下文意图解释联网预测。"],
     beginnerSyntax: { components: [
-      { text: "Within the next decade or two", form: "within + 时间段", function: "时间范围状语", modifies: "修饰 will be netted", explanation: "decade 是十年；a decade or two 即十年或二十年。" },
-      { text: "one to two billion people", form: "数值范围 + 复数名词", function: "主语", modifies: "是 will be netted 的承受者", explanation: "one to two 表从十亿到二十亿的估计范围。" },
+      { text: "Within the next decade or two", form: "within + 时间段", function: "时间范围状语", modifies: "修饰 will he netted", explanation: "decade 是十年；a decade or two 即十年或二十年。" },
+      { text: "one to two billion people", form: "数值范围 + 复数名词", function: "主语", modifies: "是 will he netted 的承受者", explanation: "one to two 表从十亿到二十亿的估计范围。" },
       { text: "on the planet", form: "on + 名词", function: "地点/范围状语", modifies: "修饰 people", explanation: "限定为地球上的人，即全球人口。" },
-      { text: "will be netted together", form: "一般将来时被动语态", function: "谓语", modifies: "预测人们将被网络连接", explanation: "will + be + 过去分词；together 强调彼此连在一起。" },
+      { text: "will he netted together", form: "一般将来时被动语态", function: "谓语", modifies: "预测人们将被网络连接", explanation: "will + be + 过去分词；together 强调彼此连在一起。" },
     ], clauses: [] },
     literal: "在未来一二十年内，地球上将有十亿到二十亿人被网络连接在一起。", natural: "未来十到二十年，全球将有十亿至二十亿人接入同一网络。",
     logic: "用具体规模预测说明互联网接入将迅速扩大。",
-    phrases: ["Within the next decade or two", "on the planet", "will be netted together"],
+    phrases: ["Within the next decade or two", "on the planet", "will he netted together"],
   },
   {
     id: "2001-p2-s10", number: 10,
@@ -599,7 +602,9 @@ export const passage2001P2Sentences: SentenceAnalysis[] = [
   },
 ];
 
-export const passage2001P2Questions: Question[] = [
+export const passage2001P2Sentences = passage2001P2Drafts.map(upgradePassage2001P2);
+
+const passage2001P2QuestionDrafts: Question[] = [
   {
     id: 200125, number: 25, sentenceId: "2001-p2-s3",
     prompt: "Digital divide is something _______.",
@@ -673,3 +678,9 @@ export const passage2001P2Questions: Question[] = [
     },
   },
 ];
+
+export const passage2001P2Questions: Question[] = passage2001P2QuestionDrafts.map(question => {
+  if (question.number === undefined) throw new Error("2001 Text2缺少原卷题号");
+  const reasoning = passage2001P2Reasoning[question.number];
+  return { ...question, analysis: passage2001P2QuestionAnalysis[question.number], reasoning, explanations: Object.fromEntries(Object.entries(reasoning.options).map(([key, value]) => [key, value.reasoning])) as Question["explanations"] };
+});

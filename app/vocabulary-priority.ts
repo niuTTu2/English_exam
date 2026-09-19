@@ -56,6 +56,15 @@ export function vocabularyPriority(entry: Pick<VocabEntry, "headword" | "display
     if (new Set("advocate advisable principle unreasonable corresponding require interpret stress essential qualify finite imitate confuse explanatory fulfill proposition expression indicative transient phenomenon".split(" ")).has(head)) return { id: "core", label: "核心迁移词", reason: "建议结合本句义和常用结构复习，帮助阅读观点评论类文章。", recommendedReview: true };
     return { id: "recognition", label: "本句识别 · 按需记忆", reason: "先理解当前句意，再选择是否单独复习。", recommendedReview: false };
   }
+  if (articleId === "2001-p2") {
+    const head = entry.headword.toLowerCase();
+    if (["united", "states", "america", "american", "brazil", "india", "britain", "english", "german", "dutch", "french"].includes(head)) return { id: "name", label: "背景专名 · 识别即可", reason: "识别美国历史案例与其他国家例证，重点区分投资、建设及拥有者。", recommendedReview: false };
+    if (entry.kind === "phrase") return { id: "structure", label: "本篇结构与搭配", reason: "把比较、因果、政策行为和对象关系连同当前表达一起复习。", recommendedReview: true };
+    if (["interest", "capital", "finance", "own", "net", "mean", "run", "case", "control", "positive", "narrow"].includes(head)) return { id: "sense", label: "熟词语境义", reason: "结合信息差距与经济建设语境辨明具体词义及词性。", recommendedReview: true };
+    if (new Set([...functions, "whether", "how", "only", "more", "much", "well", "so", "be", "have", "do", "must", "he"]).has(head)) return { id: "function", label: "功能词 · 看句法作用", reason: "按实际来源辨明从句、比较、指代与助动词作用；原卷异常字形另看用法说明。", recommendedReview: false };
+    if (["divide", "commercialize", "universalize", "access", "potential", "combat", "poverty", "impoverished", "prejudice", "sovereignty", "infrastructure", "investment", "corporation", "recognize", "justify"].includes(head)) return { id: "core", label: "核心迁移词", reason: "有助于理解技术普及、经济发展与外资政策的议论。", recommendedReview: true };
+    return { id: "recognition", label: "本句识别 · 按需记忆", reason: "先读清当前命题与论证对象，再按需要复习扩展。", recommendedReview: false };
+  }
   if (articleId === "2001-p1") {
     const head = entry.headword.toLowerCase(), form = (entry.canonicalForm ?? entry.display).toLowerCase();
     if (["british", "united", "kingdom"].includes(head)) return { id: "name", label: "背景专名 · 识别即可", reason: "本篇限定英国地质学的历史案例，识别地域即可。", recommendedReview: false };

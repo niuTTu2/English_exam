@@ -245,7 +245,7 @@ test("句子分析完整并可还原原文", () => {
     requireText(sentence.literal, `${sentence.id}.literal`);
     requireText(sentence.natural, `${sentence.id}.natural`);
     requireText(sentence.logic, `${sentence.id}.logic`);
-    assert.ok(sentence.chunks.length >= 2, `${sentence.id} 缺少彩色结构分块`);
+    assert.ok(sentence.chunks.length >= (sentence.textKind === "phrase" ? 1 : 2), `${sentence.id} 缺少彩色结构分块`);
     assert.equal(
       normalizeText(sentence.chunks.map((chunk) => chunk.text).join("")),
       normalizeText(sentence.text),
@@ -689,8 +689,9 @@ test("同一词条按文章和句子语境显示本句义与可替换表达", ()
         requireText(context.use, `${sentenceId}.${headword}.use`);
       }
       const actualGuide = lexicon.getLexicalGuide(headword, lexicalContext);
-      if (context.contextualMeaning) assert.equal(actualGuide.contextualMeaning, context.contextualMeaning);
-      if (context.use) assert.equal(actualGuide.use, context.use);
+      const effectiveContext = contextualVocabulary.getSentenceWordContext(sentenceId, headword) ?? context;
+      if (effectiveContext.contextualMeaning) assert.equal(actualGuide.contextualMeaning, effectiveContext.contextualMeaning);
+      if (effectiveContext.use) assert.equal(actualGuide.use, effectiveContext.use);
       assert.deepEqual(actualGuide.contextualSubstitutions, substitutions);
       for (const [index, item] of substitutions.entries()) {
         const label = `${sentenceId}.${headword}.contextualSubstitutions[${index}]`;

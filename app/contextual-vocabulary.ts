@@ -4,6 +4,7 @@ import { passage2010P4PreferredContexts } from "./2010-passage-4-collocations";
 import { passage2010P4ReviewedContexts } from "./2010-passage-4-contexts";
 import { passage2010P3PreferredContexts } from "./2010-passage-3-collocations";
 import { passage2010P3ReviewedContexts } from "./2010-passage-3-contexts";
+import { passage2001P2SourceContexts } from "./2001-passage-2-contexts";
 import { passage2001P1SourceContexts } from "./2001-passage-1-contexts";
 import { passage4Contexts } from "./passage-4-contexts";
 import { passage3Contexts } from "./passage-3-contexts";
@@ -785,12 +786,13 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
   "2001-p2-s9": {
     net: {
       contextualMeaning: "联网连接",
-      use: "will be netted together 是将来时被动语态；原卷 he 为排印错误，正确助动词为 be。",
+      use: "原卷will he netted中he疑似be误排；按规范将来被动will be netted理解人被联网连接。",
       contextualSubstitutions: [{
         label: "connected",
         chinese: "连接起来",
-        fit: "direct",
+        fit: "with-adjustment",
         rewrittenSentence: "Within the next decade or two, one to two billion people on the planet will be connected together.",
+        adjustment: "先将原卷疑似误排的he校读为be，再将netted换为connected；改写句展示规范英语，原文仍保留he。",
         nuance: "connected 是普通‘连接’；netted 更形象地突出人们被同一网络覆盖。",
         target: "word:connect",
       }],
@@ -1104,7 +1106,7 @@ for (const [sourceId, words] of Object.entries(passage2000P1Contexts)) {
 export function getSentenceWordContext(sentenceId: string | undefined, headword: string) {
   if (!sentenceId) return undefined;
   const base = sentenceWordContexts[sentenceId]?.[headword];
-  const override = passage2001P1SourceContexts[sentenceId]?.[headword];
+  const override = passage2001P1SourceContexts[sentenceId]?.[headword] ?? passage2001P2SourceContexts[sentenceId]?.[headword];
   const context = override ? { ...base, ...override } : base;
   const preferredCollocations = passage2010P2PreferredCollocations[sentenceId]?.[headword];
   return preferredCollocations ? { ...context, preferredCollocations } : context;
