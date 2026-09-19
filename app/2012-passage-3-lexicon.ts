@@ -1,3 +1,4 @@
+import { passage2012P3ReviewedContexts } from "./2012-passage-3-contexts";
 import type { SentenceWordContext } from "./contextual-vocabulary";
 import { reviewedLexicon, type LexiconRow } from "./2011-content-helpers";
 const rows: LexiconRow[] = [
@@ -10,11 +11,11 @@ const rows: LexiconRow[] = [
   ["itself", "", "reflexive pron.", "它本身", "强调Myriad case本身仍可能未结束，不另指其他案件。", "the case itself（该案本身）", "反身代词此处为同位强调，不是谓语宾语。"],
   ["argument", "arguments", "n.", "论点；理由", "three main arguments后面列出三项反对理由。", "arguments against patents（反对专利的论点）", "argument还可为争吵，本文是可论证的理由。"],
   ["despite", "", "prep.", "尽管；虽然", "后接appeals court's decision名词短语表达让步。", "despite a decision（尽管已有裁决）", "despite后不直接接完整从句；although是连词。"],
-  ["question", "questions", "n.", "问题；疑问", "big questions remain unanswered说明重大问题未明。", "unanswered questions（未解问题）", "不沿用完形questioned盘问动词义。"],
+  ["question", "questions", "n.", "问题；疑问", "big questions remain unanswered说明重大问题未明。", "unanswered questions（未解问题）", "questions为可数名词复数，表示有待澄清的疑问。"],
   ["advance", "advances advanced advancing", "v.", "发展；推进", "industry advances为产业不断发展，不是名词复数。", "the industry advances（产业发展）", "advance在完形选项为进步名词，在此由主语加谓语结构判为动词。"],
   ["unlikely", "", "adj.", "不大可能的", "unlikely to file many more是不大可能大量新增，并非绝不申请。", "be unlikely to happen（不大可能发生）", "unlikely为概率较低，impossible为不可能，力度不同。"],
   ["study", "studies studied studying", "v.", "研究", "studying后接how genes interact名词性从句。", "study gene interactions（研究基因互动）", "study也可为研究名词，本句为进行时动词。"],
-  ["look", "looks looked looking", "v.", "寻找（look for）", "looking for correlations为寻找有用关联，不是调查人物。", "look for correlations（寻找关联）", "look into是调查，look for是寻找，不能沿用Text 1的into义。"],
+  ["look", "looks looked looking", "v.", "寻找（look for）", "looking for correlations为寻找有用关联，不是调查人物。", "look for correlations（寻找关联）", "look into是调查，look for是寻找，两种介词结构不能混同。"],
   ["predict", "predicts predicted predicting", "v.", "预测", "与determine并列，表示关联研究可能用于预测药效。", "predict efficacy（预测疗效）", "预测并非证实，might进一步限定潜在用途。"],
   ["drug", "drugs", "n.", "药物", "a drug's efficacy为药物疗效，不是违禁毒品语境。", "a drug's efficacy（一种药物的疗效）", "drug可有毒品义，本句医疗研究语境取治疗药物。"],
   ["connect", "connects connected connecting", "v.", "联系；连接", "connecting the dots比喻把线索联系起来发现关系。", "connect the dots（把线索串联）", "本文不是画图或物理接线，须联系genes interact。"],
@@ -78,7 +79,7 @@ const rows: LexiconRow[] = [
   ["monopoly", "monopolies", "n.", "垄断；独占", "patents' monopolies为专利带来的排他性控制。", "patent monopolies（专利垄断）", "这里不是普通的高市场份额数据，而是批评者对排他权的描述。"],
   ["access", "accesses accessed accessing", "n.", "获得或使用的机会", "access to tests为获得检测服务的可及性，不是测试入口网址。", "access to genetic tests（获得基因检测的机会）", "access后通常用to，不把该to当不定式标记。"],
   ["genetic", "", "adj.", "遗传的；基因的", "genetic tests指基因检测，和gene名词不合并原形。", "genetic tests（基因检测）", "genetic形容词、genetics学科名词、gene基因名词须区分。"],
-  ["test", "tests tested testing", "n.", "检测；检验", "本篇为基因医学检测，不沿用Text 1的学校考试义。", "genetic tests（基因检测）", "test可为考试，本文需用生物医学检测语境。"],
+  ["test", "tests tested testing", "n.", "检测；检验", "本篇为基因医学检测，讨论检测服务及其可及性。", "genetic tests（基因检测）", "test可为考试，本文需用生物医学检测语境。"],
   ["task-force", "task-forces", "n.", "专项工作组", "a federal task-force指为特定任务设立的联邦工作组。", "a federal task-force（联邦专项工作组）", "不把task-force拆成普通任务和物理力量。"],
   ["urge", "urges urged urging", "v.", "敦促；呼吁", "urge reform是提出改革要求，非宣布改革已完成。", "urge reform（敦促改革）", "urge语气强于suggest，但仍不等于实施。"],
   ["department", "departments", "n.", "部门；部", "Department of Justice整体为美国司法部。", "the Department of Justice（司法部）", "department也可指大学系，本文为政府部门。"],
@@ -156,3 +157,8 @@ export const passage2012P3SentenceContexts: Record<string, Record<string, Senten
   "2012-p3-s23": { hold: { contextualMeaning: "举办；召开", use: "held a convention与第7句持有专利义不同。" }, on: { contextualMeaning: "关于；就……内容", use: "coach lawyers on后接培训话题。" } },
   "2012-p3-s24": { pack: { contextualSubstitutions: [{ label: "crowded", chinese: "挤满人的", fit: "direct", rewrittenSentence: "Each meeting was crowded.", nuance: "crowded保留人多拥挤的意思，但packed更强调座无虚席的程度。", target: "word:crowded" }] } },
 };
+
+for(const [sourceId,contexts] of Object.entries(passage2012P3ReviewedContexts)){
+  const target=passage2012P3SentenceContexts[sourceId]??={};
+  for(const [headword,context] of Object.entries(contexts))target[headword]={...target[headword],...context};
+}

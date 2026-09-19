@@ -78,6 +78,15 @@ export function vocabularyPriority(entry: Pick<VocabEntry, "headword" | "display
     if (new Set(["specialisation", "professionalisation", "accumulation", "distinction", "connotation", "integrate", "consequent", "requirement", "participation", "primacy", "acceptable", "incorporate", "reinforce", "differentiate", "differentiation", "crucial", "infer", "discrimination"]).has(head)) return { id: "core", label: "核心迁移词", reason: "有助于理解知识发展、制度分化与学术参与类议论。", recommendedReview: true };
     return { id: "recognition", label: "本句识别 · 按需记忆", reason: "先保证读懂当前句子，无需把所有扩展一并背诵。", recommendedReview: false };
   }
+  if (articleId === "2012-p3") {
+    const head=entry.headword.toLowerCase();
+    if (["myriad","genetics","utah","hans","sauer","mayo","bio"].includes(head)) return {id:"name",label:"背景专名 · 识别即可",reason:"识别争议当事方与发言来源即可，仍可自行标记。",recommendedReview:false};
+    if (entry.kind === "phrase") return {id:"structure",label:"本篇关键表达",reason:"结合观点归属、比较关系与研究对象复习。",recommendedReview:true};
+    if (["file","brief","suit","term","hear","hold","ruling","rule","coach","landscape","pack","critical","issue"].includes(head)) return {id:"sense",label:"熟词语境义",reason:"当前法律报道、会议或题目用法需要连句辨认词义词性。",recommendedReview:true};
+    if (functions.has(head) || ["whether","only","may","yet"].includes(head)) return {id:"function",label:"功能词 · 看句法作用",reason:"注意观点内容、历史时间、指代和可能性限制。",recommendedReview:false};
+    if (["patent","patentable","unpatentable","overturn","preliminary","suppress","innovation","monopoly","restrict","access","violate","correlation","efficacy","objective"].includes(head)) return {id:"core",label:"核心迁移词",reason:"这些词支撑科技、制度和争议报道的理解，适合按本句搭配复习。",recommendedReview:true};
+    return {id:"recognition",label:"本句识别 · 按需记忆",reason:"先理解本句，再决定是否加入复习。",recommendedReview:false};
+  }
   if (articleId === "2012-p2") {
     const head=entry.headword.toLowerCase();
     if (["jo","paoletti","daniel","cook","virgin","mary"].includes(head)) return {id:"name",label:"背景专名 · 识别即可",reason:"识别研究者姓名或文化象征出处，辅助分清观点来源。",recommendedReview:false};

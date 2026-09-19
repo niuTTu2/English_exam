@@ -1,3 +1,4 @@
+import { passage2012P3Guide, passage2012P3Paragraphs } from "./2012-passage-3-guide";
 import { passage2012P2Guide, passage2012P2Paragraphs } from "./2012-passage-2-guide";
 import { passage2012P1Guide, passage2012P1Paragraphs } from "./2012-passage-1-guide";
 import { passage2000P2Guide, passage2000P2Paragraphs } from "./2000-passage-2-guide";
@@ -1670,6 +1671,7 @@ export const articleContents: Record<string, ArticleContent> = {
     id: "2012-p3", year: 2012, sectionId: "p3", label: "阅读 Text 3", badge: "2012 · 英语二 · 阅读 Text 3",
     title: "基因专利：自然产物、创新与法律争议", description: "24句、31—35题。按文章历史时点理解判决与未决问题，区分作者、企业与批评者；保留自然产物类比、倒装比较和多义词卡。",
     kind: "reading", sentences: passage2012P3Sentences, questions: passage2012P3Questions,
+    paragraphs: passage2012P3Paragraphs, guide: passage2012P3Guide, teachingStatus: { syntax: true, vocabulary: true, evidence: true, practice: true },
   },
   "2012-p4": {
     id: "2012-p4", year: 2012, sectionId: "p4", label: "阅读 Text 4", badge: "2012 · 英语二 · 阅读 Text 4",

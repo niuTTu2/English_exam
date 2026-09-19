@@ -15,7 +15,7 @@
     "deploy:cloudflare": "node scripts/deploy-cloudflare.mjs",
     "start": "WRANGLER_LOG_PATH=.wrangler/wrangler.log vinext start",
     "test": "npm run build && node --test --test-concurrency=1 tests/*.test.mjs",
-    "quality:content": "node --test --test-concurrency=1 tests/content-quality.test.mjs tests/training-template.test.mjs tests/text2-hint-regression.test.mjs tests/text2-vocabulary-template.test.mjs tests/text2-collocations.test.mjs tests/training-2012-p1.test.mjs tests/text3-template-upgrade.test.mjs tests/2011-p1-template.test.mjs tests/2000-passage-1-training.test.mjs tests/2000-passage-3-training.test.mjs tests/2001-passage-1-template.test.mjs tests/training-2012-p2.test.mjs tests/text4-template-upgrade.test.mjs tests/2011-p2-template.test.mjs tests/2000-passage-4-training.test.mjs tests/2011-writing-a-template.test.mjs",
+    "quality:content": "node --test --test-concurrency=1 tests/content-quality.test.mjs tests/training-template.test.mjs tests/text2-hint-regression.test.mjs tests/text2-vocabulary-template.test.mjs tests/text2-collocations.test.mjs tests/training-2012-p1.test.mjs tests/text3-template-upgrade.test.mjs tests/2011-p1-template.test.mjs tests/2000-passage-1-training.test.mjs tests/2000-passage-3-training.test.mjs tests/2001-passage-1-template.test.mjs tests/training-2012-p2.test.mjs tests/text4-template-upgrade.test.mjs tests/2011-p2-template.test.mjs tests/2000-passage-4-training.test.mjs tests/2011-writing-a-template.test.mjs tests/training-2012-p3.test.mjs",
     "quality": "npm run lint && npm run quality:content && npm test",
     "lint": "bash scripts/sites-env.sh -- eslint . --ignore-pattern dist --ignore-pattern .next",
     "db:generate": "bash scripts/sites-env.sh -- drizzle-kit generate"
