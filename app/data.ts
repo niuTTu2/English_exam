@@ -1698,8 +1698,9 @@ export const articleContents: Record<string, ArticleContent> = {
     kind: "writing", sentences: writing2012ASentences, questions: [], writingTasks: writing2012ATasks,
   },
   "2012-writing-b": {
+    teachingStatus: { syntax: true, vocabulary: true, evidence: true, practice: true },
     id: "2012-writing-b", year: 2012, sectionId: "writing-b", label: "写作 Part B", badge: "2012 · 英语二 · 写作 Part B",
-    title: "员工工作满意度：年龄组比较与谨慎评论", description: "第48题，至少150词，15分。保留原卷满意度表及精确百分数，区分年龄组、比例与原因假设；教学范文不计入真题词频。",
+    title: "员工工作满意度：年龄组比较与谨慎评论", description: "第48题，至少150词，15分。保留原卷满意度表及精确百分数；指令练习只计审题与语言理解，作文独立写作与自查，不自动评分。",
     kind: "writing", sentences: writing2012BSentences, questions: [], writingTasks: writing2012BTasks,
   },
 };

@@ -1,3 +1,4 @@
+import { writing2012BPriority } from "./2012-writing-b-priority";
 import { writing2012APriority } from "./2012-writing-a-priority";
 import { writing2011BPriority } from "./2011-writing-b-priority";
 import { passage2011P2Priority } from "./2011-passage-2-priority";
@@ -44,6 +45,7 @@ const text5SourceNames:Record<string,string[]>={"2010-p5-s16":["red","arrow"],"2
 const text5Structures = new Set(["both A and B","make a difference","an approach to doing something","the answer lies with somebody","fly in formation","spend energy doing something","an increase of a percentage","apply something to something","have a turn","proceed to a destination","as much as an amount","be coupled with something","fall by an amount","work out a problem","travel in company","be separated by a distance","it remains to be seen how ...","allow somebody to do something","be easier to do something","as it happens","be on the case","have yet to do something","be low on something"].map(x=>x.toLowerCase()));
 /** 编辑建议按本篇语境给出；不是官方考试词频排名，也不改变词义。 */
 export function vocabularyPriority(entry: Pick<VocabEntry, "headword" | "display" | "kind" | "canonicalForm">, sourceId: string, articleId?: string): VocabularyPriority | undefined {
+  if (articleId === "2012-writing-b") return writing2012BPriority(entry);
   if (articleId === "2012-writing-a") return writing2012APriority(entry);
   if (articleId === "2011-writing-b") return writing2011BPriority(entry);
   if (articleId === "2011-writing-a") return writing2011APriority(entry);

@@ -11,12 +11,13 @@ const rows: PhraseRow[] = [
 const reviewed = reviewedPhrases(rows);
 export const writing2012BPhraseGuides = reviewed.guides;
 export const writing2012BPhraseAliases = reviewed.aliases;
-export const writing2012BPhraseGlosses = { ...writing2012BCollocationGlosses, ...reviewed.glosses };
+export const writing2012BPhraseGlosses: Record<string, { meaning: string; note: string }> = { ...writing2012BCollocationGlosses, ...reviewed.glosses };
 export function getWriting2012BWordKnowledge(headword: string, sentenceId?: string): WordKnowledge | undefined {
   const entry = writing2012BLexicon[headword];
-  if (!entry) return undefined;
   const context = sentenceId ? writing2012BSentenceContexts[sentenceId]?.[headword] : undefined;
-  const pattern = entry.collocations[0];
-  const rule = context?.use ?? entry.use;
-  return { grammarRole: context?.partOfSpeech ?? entry.partOfSpeech, grammarSummary: rule, structures: [{ pattern, meaning: writing2012BCollocationGlosses[pattern.toLowerCase()].meaning, rule }], pitfalls: entry.examSynonyms };
+  const patterns = context?.preferredCollocations ?? entry?.collocations;
+  if (!patterns?.length) return undefined;
+  const rule = context?.use ?? entry?.use, grammarRole = context?.partOfSpeech ?? entry?.partOfSpeech;
+  if (!rule || !grammarRole) throw new Error(`Missing table writing context: ${sentenceId}/${headword}`);
+  return { grammarRole, grammarSummary: rule, structures: patterns.map(pattern => ({ pattern, meaning: writing2012BPhraseGlosses[pattern.toLowerCase()].meaning, rule })), pitfalls: entry?.examSynonyms ?? [] };
 }

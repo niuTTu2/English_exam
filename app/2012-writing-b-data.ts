@@ -1,7 +1,8 @@
+import { withWriting2012BTeaching } from "./2012-writing-b-teaching";
 import type { SentenceAnalysis, WritingTask } from "./data";
 import { segment, sentenceFactory } from "./2011-content-helpers";
 const sentence = sentenceFactory("2012-writing-b");
-export const writing2012BSentences: SentenceAnalysis[] = [
+const originalWriting2012BSentences: SentenceAnalysis[] = [
   sentence(1, [
     segment("Write an essay ", "predicate", "祈使句动宾", "要求写文章", "省略主语you，essay为宾语", "不是给客服的邮件，不能沿用第47题称呼署名。"),
     segment("based on the following table.", "modifier", "过去分词定语", "限定essay依据", "based on修饰essay", "table为下方统计表，不是餐桌；following是随后给出的。"),
@@ -21,6 +22,8 @@ export const writing2012BSentences: SentenceAnalysis[] = [
     segment("(15 points)", "modifier", "括号分值说明", "整题分值", "对应第48题", "15是满分信息，不是页面自动评分。"),
   ], "Write your essay on ANSWER SHEET 2.", "在答题纸2上写你的文章。（15分）", "请在答题纸2上作答，本题15分。", "保持原卷位置及分值要求。", ["on ANSWER SHEET 2"]),
 ];
+export const writing2012BSentences = originalWriting2012BSentences.map(withWriting2012BTeaching);
+
 export const writing2012BTasks: WritingTask[] = [{
   id: 201248, number: 48, genre: "chart-essay", points: 15, wordLimit: { mode: "at-least", count: 150 }, instructions: writing2012BSentences,
   requirements: ["主题：某公司员工工作满意度调查；按年龄组比较满意、不清楚和不满意三类比例。", "≤40岁：16.7%、50.0%、33.3%；41—50岁：0.0%、36.0%、64.0%；>50岁：40.0%、50.0%、10.0%。数值按原图逐格读取，不是估计值。", "描述表格并给出评论，至少150词，15分；不用书信称呼署名。", "没有年份轴、调查人数或原因数据；不能写成逐年变化、年龄必然导致态度变化或某类绝对人数最多。"],
