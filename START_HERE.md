@@ -8,7 +8,7 @@
 
 用户已确认手机交互完成，本次以2010 Text 1为参考补齐Text 2。现在Text 1、Text 2各有19句精确句法、35项句子任务、3项篇章回忆、原卷5段地图及5题证据链；两篇都具备5题干和20选项语言拆解。Text 2另补25个题目来源的128条语境词汇，并复用任务提示、定位历史和复盘机制。完整范围与检查见`docs/change-reports/2010-text2-training-template.md`；发布结果以该提交的Cloudflare检查和交付消息为准。
 
-接手先读`docs/TRAINING_TEMPLATE.md`、`docs/SYNTAX_UPGRADE_PROGRESS.md`；35模块、556句中，已有5篇91句通过完整训练层检查及生产构建：2010 Text 1—3、2011 Text 1、2012 Text 1。其余30模块465句逐篇迁移中。2010继续Text 4，其他年份并行处理；用户再次确认直接应用于所有已导入文章，无需逐篇确认。部署状态另见台账。
+接手先读`docs/TRAINING_TEMPLATE.md`、`docs/SYNTAX_UPGRADE_PROGRESS.md`；35模块、556句中，已有8篇145句通过完整训练层检查及生产构建：2000 Text 1/3、2001 Text 1、2010 Text 1—3、2011 Text 1、2012 Text 1。其余27模块411句逐篇迁移中。2010继续Text 4，其他年份并行处理；用户再次确认直接应用于所有已导入文章，无需逐篇确认。部署状态另见台账。
 
 ## 最快测试方法（Windows）
 
