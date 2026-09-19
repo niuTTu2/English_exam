@@ -9,6 +9,7 @@ import { getPassage2001P2SourceKnowledge } from "./2001-passage-2-contexts";
 import { passage2001P2QuestionPhraseGuides, passage2001P2QuestionPhraseAliases, passage2001P2QuestionCollocationGlosses } from "./2001-passage-2-question-knowledge";
 import { getPassage2001P1SourceKnowledge } from "./2001-passage-1-contexts";
 import { passage2001P1QuestionPhraseGuides, passage2001P1QuestionPhraseAliases, passage2001P1QuestionCollocationGlosses } from "./2001-passage-1-question-knowledge";
+import { getPassage5WordKnowledge } from "./passage-5-word-knowledge";
 import { getPassage4WordKnowledge } from "./passage-4-word-knowledge";
 import { getPassage3WordKnowledge } from "./passage-3-word-knowledge";
 import { getPassage2000P2WordKnowledge } from "./2000-passage-2-contexts";
@@ -1109,6 +1110,10 @@ export function getWordKnowledge(headword: string, context?: { articleId?: strin
   if (context?.articleId === "2001-p1") {
     const knowledge = getPassage2001P1SourceKnowledge(normalized(headword), context.sourceId ?? context.sentenceId);
     if (knowledge) return knowledge;
+  }
+  if (context?.articleId === "p5") {
+    const contextualKnowledge = getPassage5WordKnowledge(normalized(headword), context.sourceId ?? context.sentenceId);
+    if (contextualKnowledge) return contextualKnowledge;
   }
   if (context?.articleId === "p4") {
     const contextualKnowledge = getPassage4WordKnowledge(normalized(headword), context.sourceId ?? context.sentenceId);

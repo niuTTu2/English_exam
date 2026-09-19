@@ -453,7 +453,7 @@ export const passage5Lexicon: Record<string, PassageLexiconEntry> = {
     examSynonyms: ["previously（以前）", "in the past（过去；短语）"],
     collocations: ["than formerly", "formerly known as"],
   }),
-  two: word("num.", "二；两个", "a decade or two years ago 中 two 修饰复数 years，表示第二种时间估计。", {
+  two: word("num.", "二；两个", "two直接修饰years，字面为两年；原卷此处时间措辞有疑点，不能确定为二十年。", {
     specialForms: ["two（基数词）", "second（序数词）"],
     examSynonyms: ["a pair of（两个；成对）", "both（两者都；限定范围不同）"],
   }),

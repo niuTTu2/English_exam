@@ -38,10 +38,10 @@ test("curated senses have distinct IDs, parts of speech, Chinese usage and bilin
 
 test("note exposes all twelve reviewed senses from every inflected form without replacing the source meaning", () => {
   const expected = [
-    ["notes", "p3-s10", "n.", /说明性注释/],
-    ["note", "p5-s5", "n.", /浓重的虚伪意味/],
-    ["noted", "2010-cloze-s5", "v.", /注意到并记录/],
-    ["note", "2010-p1-s1", "n.", /基调.*情绪色彩/],
+    ["notes", "p3-s10", "n.（复数）", /注释/],
+    ["note", "p5-s5", "n.", /意味；色彩/],
+    ["noted", "2010-cloze-s5", "v.", /注意到；记录/],
+    ["note", "2010-p1-s1", "n.", /基调；意味/],
   ];
   for (const [form, sourceId, partOfSpeech, meaning] of expected) {
     const entry = study.resolveEntry(form, false, sourceId);
@@ -168,8 +168,8 @@ test("year rows render Chinese meanings and inflected forms inside their existin
   assert.match(html, /出现次数与年份/);
   assert.equal((html.match(/本处义：/g) ?? []).length, 4);
   assert.match(html, /<b>noted<\/b>/);
-  assert.match(html, /浓重的虚伪意味/);
-  assert.match(html, /说明性注释/);
+  assert.match(html, /意味；色彩/);
+  assert.match(html, /注释/);
   assert.match(html, /回到出处：2000/);
   assert.match(html, /回到出处：2010/);
 });

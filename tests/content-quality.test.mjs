@@ -283,9 +283,9 @@ test("零基础句法能识别词组作用、时间地点状语和从句内部�
   const complexGuide = syntaxGuide.buildBeginnerSyntaxGuide(complexSentence);
   assert.equal(complexSentence.trunk, "we are treated to fine hypocritical spectacles", "复杂句主干必须保留原文，不能改写释义");
   assert.deepEqual(complexGuide.clauses.map((clause) => clause.marker.split("（")[0]), ["which", "who", "whose"], "p5-s9 必须完整拆出三个定语从句");
-  assert.equal(complexGuide.clauses[0].subject, "which（= fine hypocritical spectacles）");
-  assert.equal(complexGuide.clauses[1].objectOrComplement, "his meals（宾语）；in three-star restaurants（地点状语）");
-  assert.equal(complexGuide.clauses[2].subject, "whose own children（= the journalist's own children）");
+  assert.equal(complexGuide.clauses[0].subject, "which");
+  assert.deepEqual(complexGuide.clauses[1].predicateDetails, [{ function: "宾语", text: "his meals" }]);
+  assert.equal(complexGuide.clauses[2].subject, "whose own children");
 });
 
 test("2010 Text 1 配色与精确语法分离，第一层与人工成分使用同一份数据", () => {
@@ -361,7 +361,7 @@ test("2000 年全部复杂句的从句数量与人工审计基线一致", () => 
     "p3-q20-prompt": 1, "p3-q20-answer": 1,
     "p3-q21-prompt": 1, "p3-q21-answer": 1,
     "p3-q22-prompt": 1, "p3-q22-answer": 1,
-    "p4-q26-answer": 1, "p5-q27-answer": 1, "p5-q28-prompt": 1,
+    "p4-q26-answer": 1, "p5-q27-prompt": 1, "p5-q27-answer": 1, "p5-q28-prompt": 1, "p5-q28-option-b": 1,
     "p5-q29-prompt": 1, "p5-q30-prompt": 1,
   };
   const articles2000 = Object.values(data.articleContents).filter((article) => article.year === 2000);
@@ -381,7 +381,7 @@ test("2000 年全部复杂句的从句数量与人工审计基线一致", () => 
       .filter(([, count]) => count > 0),
   );
   assert.deepEqual(actual, expected, "复杂句的从句有遗漏、误增或边界审计未同步");
-  assert.equal(Object.values(actual).reduce((sum, count) => sum + count, 0), 101, "旧98条加Text3的till与第14、17题题干从句，共101条");
+  assert.equal(Object.values(actual).reduce((sum, count) => sum + count, 0), 103, "旧98条加Text3的till、第14/17/27题题干与第28题B选项从句，共103条");
 });
 
 test("自测空格、题号和答案严格对应", () => {

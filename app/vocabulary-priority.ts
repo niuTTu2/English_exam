@@ -51,6 +51,15 @@ export function vocabularyPriority(entry: Pick<VocabEntry, "headword" | "display
   if (articleId === "2011-writing-a") return writing2011APriority(entry);
   if (articleId === "p2") return passage2000P2Priority(entry);
   if (articleId === "p1") return passage2000P1Priority(entry, sourceId);
+  if (articleId === "p5") {
+    const head = entry.headword.toLowerCase();
+    if (entry.kind === "phrase") return { id: "structure", label: "本句结构", reason: "结合本句辨认否定范围、补足关系与反讽语气。", recommendedReview: true };
+    if (new Set("american united states european southampton bmw".split(" ")).has(head)) return { id: "name", label: "背景名称 · 识别即可", reason: "识别品牌、地名和国别在例子中的作用。", recommendedReview: false };
+    if (new Set("note reward return claim treat fine proper stand check".split(" ")).has(head)) return { id: "sense", label: "熟词语境义", reason: "区分当前出处的词性和义项，并读回句子。", recommendedReview: true };
+    if (new Set([...functions, "whose", "lest", "where", "once", "less", "least", "such"]).has(head)) return { id: "function", label: "功能词 · 看句法作用", reason: "结合句法确认指代、连接与否定比较的范围。", recommendedReview: false };
+    if (new Set("ambition distinction destiny sacrifice vitality hypocrisy confess acquisitive vulgar spectacle materialism democracy defender impulse profess earnest compensate contemptible maintain".split(" ")).has(head)) return { id: "core", label: "核心迁移词", reason: "建议结合当前含义与搭配复习，帮助理解社会价值评论。", recommendedReview: true };
+    return { id: "recognition", label: "本句识别 · 按需记忆", reason: "先理解当前句意，再选择是否单独复习。", recommendedReview: false };
+  }
   if (articleId === "p4") {
     const head = entry.headword.toLowerCase();
     if (entry.kind === "phrase") return { id: "structure", label: "本句结构", reason: "记住本句完整关系，特别是介词补足、比较、倒装和取舍方向。", recommendedReview: true };

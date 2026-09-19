@@ -1,0 +1,159 @@
+{
+  "source": "2000.pdf page 5, visually checked",
+  "sentences": [
+    {
+      "id": "p5-s1",
+      "text": "If ambition is to be well regarded, the rewards of ambition—wealth, distinction, control over one's destiny—must be deemed worthy of the sacrifices made on ambition's behalf."
+    },
+    {
+      "id": "p5-s2",
+      "text": "If the tradition of ambition is to have vitality, it must be widely shared; and it especially must be highly regarded by people who are themselves admired, the educated not least among them."
+    },
+    {
+      "id": "p5-s3",
+      "text": "In an odd way, however, it is the educated who have claimed to have given up on ambition as an ideal."
+    },
+    {
+      "id": "p5-s4",
+      "text": "What is odd is that they have perhaps most benefited from ambition—if not always their own then that of their parents and grandparents."
+    },
+    {
+      "id": "p5-s5",
+      "text": "There is a heavy note of hypocrisy in this, a case of closing the barn door after the horses have escaped—with the educated themselves riding on them."
+    },
+    {
+      "id": "p5-s6",
+      "text": "Certainly people do not seem less interested in success and its signs now than formerly."
+    },
+    {
+      "id": "p5-s7",
+      "text": "Summer homes, European travel, BMWs—the locations, place names and name brands may change, but such items do not seem less in demand today than a decade or two years ago."
+    },
+    {
+      "id": "p5-s8",
+      "text": "What has happened is that people cannot confess fully to their dreams, as easily and openly as once they could, lest they be thought pushing, acquisitive and vulgar."
+    },
+    {
+      "id": "p5-s9",
+      "text": "Instead, we are treated to fine hypocritical spectacles, which now more than ever seem in ample supply: the critic of American materialism with a Southampton summer home; the publisher of radical books who takes his meals in three-star restaurants; the journalist advocating participatory democracy in all phases of life, whose own children are enrolled in private schools."
+    },
+    {
+      "id": "p5-s10",
+      "text": "For such people and many more perhaps not so exceptional, the proper formulation is, “Succeed at all costs but avoid appearing ambitious.”"
+    },
+    {
+      "id": "p5-s11",
+      "text": "The attacks on ambition are many and come from various angles; its public defenders are few and unimpressive, where they are not extremely unattractive."
+    },
+    {
+      "id": "p5-s12",
+      "text": "As a result, the support for ambition as a healthy impulse, a quality to be admired and fixed in the mind of the young, is probably lower than it has ever been in the United States."
+    },
+    {
+      "id": "p5-s13",
+      "text": "This does not mean that ambition is at an end, that people no longer feel its stirrings and promptings, but only that, no longer openly honored, it is less openly professed."
+    },
+    {
+      "id": "p5-s14",
+      "text": "Consequences follow from this, of course, some of which are that ambition is driven underground, or made sly."
+    },
+    {
+      "id": "p5-s15",
+      "text": "Such, then, is the way things stand: on the left angry critics, on the right stupid supporters, and in the middle, as usual, the majority of earnest people trying to get on in life."
+    }
+  ],
+  "questions": [
+    {
+      "id": 27,
+      "prompt": "It is generally believed that ambition may be well regarded if.",
+      "options": [
+        {
+          "key": "A",
+          "text": "its returns well compensate for the sacrifices"
+        },
+        {
+          "key": "B",
+          "text": "it is rewarded with money, fame and power"
+        },
+        {
+          "key": "C",
+          "text": "its goals are spiritual rather than material"
+        },
+        {
+          "key": "D",
+          "text": "it is shared by the rich and the famous"
+        }
+      ],
+      "answer": "A"
+    },
+    {
+      "id": 28,
+      "prompt": "The last sentence of the first paragraph most probably implies that it is.",
+      "options": [
+        {
+          "key": "A",
+          "text": "customary of the educated to discard ambition in words"
+        },
+        {
+          "key": "B",
+          "text": "too late to check ambition once it has been let out"
+        },
+        {
+          "key": "C",
+          "text": "dishonest to deny ambition after the fulfillment of the goal"
+        },
+        {
+          "key": "D",
+          "text": "impractical for the educated to enjoy benefits from ambition"
+        }
+      ],
+      "answer": "C"
+    },
+    {
+      "id": 29,
+      "prompt": "Some people do not openly admit they have ambition because.",
+      "options": [
+        {
+          "key": "A",
+          "text": "they think of it as immoral"
+        },
+        {
+          "key": "B",
+          "text": "their pursuits are not fame or wealth"
+        },
+        {
+          "key": "C",
+          "text": "ambition is not closely related to material benefits"
+        },
+        {
+          "key": "D",
+          "text": "they do not want to appear greedy and contemptible"
+        }
+      ],
+      "answer": "D"
+    },
+    {
+      "id": 30,
+      "prompt": "From the last paragraph the conclusion can be drawn that ambition should be maintained.",
+      "options": [
+        {
+          "key": "A",
+          "text": "secretly and vigorously"
+        },
+        {
+          "key": "B",
+          "text": "openly and enthusiastically"
+        },
+        {
+          "key": "C",
+          "text": "easily and momentarily"
+        },
+        {
+          "key": "D",
+          "text": "verbally and spiritually"
+        }
+      ],
+      "answer": "B"
+    }
+  ]
+}

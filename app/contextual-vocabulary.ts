@@ -9,6 +9,7 @@ import { passage2010P3ReviewedContexts } from "./2010-passage-3-contexts";
 import { cloze2001SourceContexts } from "./2001-cloze-contexts";
 import { passage2001P2SourceContexts } from "./2001-passage-2-contexts";
 import { passage2001P1SourceContexts } from "./2001-passage-1-contexts";
+import { passage5Contexts } from "./passage-5-contexts";
 import { passage4Contexts } from "./passage-4-contexts";
 import { passage3Contexts } from "./passage-3-contexts";
 import { passage2000P2Contexts } from "./2000-passage-2-contexts";
@@ -1102,7 +1103,7 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
 for (const [sourceId, contexts] of Object.entries({...passage2011P1SourceContexts, ...passage2011P2SourceContexts})) {
   sentenceWordContexts[sourceId] = { ...sentenceWordContexts[sourceId], ...contexts };
 }
-for (const [sourceId, contexts] of Object.entries({ ...passage3Contexts, ...passage4Contexts })) {
+for (const [sourceId, contexts] of Object.entries({ ...passage3Contexts, ...passage4Contexts, ...passage5Contexts })) {
   const target = sentenceWordContexts[sourceId] ??= {};
   for (const [headword, context] of Object.entries(contexts)) target[headword] = { ...target[headword], ...context };
 }

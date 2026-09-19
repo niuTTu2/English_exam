@@ -1,4 +1,5 @@
 export const grammarConcepts = {
+  "nonfinite-gerund": "动名词结构",
   "nonfinite-infinitive": "不定式结构", "clause-condition": "条件从句", "clause-purpose": "目的从句", "parallel-structure": "并列结构", "passive-voice": "被动语态", "lexical-context": "语境词义",
   "finite-predicate": "找有限谓语", "subject-head": "主语范围与中心", "basic-svc": "主系表", "basic-svo": "主谓宾", "object-complement": "宾语补足语",
   "modifier-prepositional": "介词短语修饰", "modifier-adverb": "副词修饰", "clause-relative": "定语从句", "clause-object": "宾语从句",
