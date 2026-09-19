@@ -4,6 +4,7 @@ import { passage2012P1Guide, passage2012P1Paragraphs } from "./2012-passage-1-gu
 import { passage2000P2Guide, passage2000P2Paragraphs } from "./2000-passage-2-guide";
 import { reviewPassage2000P2 } from "./2000-passage-2-teaching";
 import { passage2000P1Guide, passage2000P1Paragraphs } from "./2000-passage-1-guide";
+import { passage2010P5Guide, passage2010P5Paragraphs } from "./2010-passage-5-guide";
 import { passage2010P4Guide, passage2010P4Paragraphs } from "./2010-passage-4-guide";
 import { writing2012BSentences, writing2012BTasks } from "./2012-writing-b-data";
 import { writing2012ASentences, writing2012ATasks } from "./2012-writing-a-data";
@@ -1598,6 +1599,8 @@ export const articleContents: Record<string, ArticleContent> = {
     title: "Copying Birds May Save Aircraft Fuel",
     description: "模仿鸟类可能节省飞机燃油：从上洗气流、模型节能效果到安全、天气与调度约束，辨别可能性、确定性与未经证实的报道。原卷41—45题为T/F判断题。",
     kind: "reading", sentences: passage2010P5Sentences, questions: passage2010P5Questions,
+    guide: passage2010P5Guide, paragraphs: passage2010P5Paragraphs,
+    teachingStatus: { syntax: true, vocabulary: true, evidence: true, practice: true },
   },
   "2010-translation": {
     id: "2010-translation", year: 2010, sectionId: "translation", label: "英译汉", badge: "2010 · 英译汉",

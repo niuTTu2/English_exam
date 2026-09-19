@@ -1,5 +1,7 @@
 import { passage2011P2SourceContexts } from "./2011-passage-2-contexts";
 import { passage2011P1SourceContexts } from "./2011-passage-1-contexts";
+import { passage2010P5ReviewedContexts } from "./2010-passage-5-contexts";
+import { passage2010P5PreferredContexts } from "./2010-passage-5-collocations";
 import { passage2010P4PreferredContexts } from "./2010-passage-4-collocations";
 import { passage2010P4ReviewedContexts } from "./2010-passage-4-contexts";
 import { passage2010P3PreferredContexts } from "./2010-passage-3-collocations";
@@ -97,7 +99,11 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
       ...passage2010P4PreferredContexts[id]?.[head], ...passage2010P4SentenceContexts[id]?.[head], ...passage2010P4ReviewedContexts[id]?.[head],
     }])),
   ])),
-  ...passage2010P5SentenceContexts,
+  ...Object.fromEntries([...new Set([...Object.keys(passage2010P5SentenceContexts), ...Object.keys(passage2010P5ReviewedContexts), ...Object.keys(passage2010P5PreferredContexts)])].map(id => [id,
+    Object.fromEntries([...new Set([...Object.keys(passage2010P5SentenceContexts[id] ?? {}), ...Object.keys(passage2010P5ReviewedContexts[id] ?? {}), ...Object.keys(passage2010P5PreferredContexts[id] ?? {})])].map(head => [head, {
+      ...passage2010P5PreferredContexts[id]?.[head], ...passage2010P5SentenceContexts[id]?.[head], ...passage2010P5ReviewedContexts[id]?.[head],
+    }])),
+  ])),
   "p3-s10": { note: { partOfSpeech: "n.", contextualMeaning: "注释；说明性注释", use: "in the explanatory notes 中 notes 是 note 的复数，指解释译文的说明性注释；不是音符，也不是动词‘注意’。" } },
   "p5-s5": { note: { partOfSpeech: "n.", contextualMeaning: "意味；色彩", use: "a heavy note of hypocrisy 中 note 表态度或表达的意味，heavy 强调程度，of hypocrisy 说明这种意味是虚伪；不是笔记或注释。" } },
   "p2-s5": { mean: { contextualMeaning: "意味着", use: "This means that... 中 means 为第三人称单数，that从句解释男女数量差异会导致择偶年龄段的男性过剩。" } },

@@ -1113,9 +1113,10 @@ test("2010 Part B 原卷哈希、真实T/F与全部从句一致", () => {
   assert.match(article.sentences[8].beginnerSyntax.clauses[0].predicate, /省略are/);
   assert.equal(article.sentences[9].beginnerSyntax.clauses[1].predicate, "were to assemble / assume / change / proceed");
   assert.match(article.sentences[17].beginnerSyntax.clauses[0].type, /主语从句/);
-  assert.match(article.sentences[22].beginnerSyntax.clauses[0].objectOrComplement, /省略easier to reschedule/);
+  assert.deepEqual(article.sentences[22].beginnerSyntax.clauses[0].predicateDetails, [{ function: "省略的表语", text: "easier to reschedule" }]);
   assert.match(article.sentences[25].beginnerSyntax.clauses[0].type, /同位语/);
-  assert.match(article.sentences[26].beginnerSyntax.components.find(component => component.text.includes("lost over Berlin")).modifies, /Lancaster/);
+  const flattenComponents = components => components.flatMap(component => [component, ...flattenComponents(component.children ?? [])]);
+  assert.equal(flattenComponents(article.sentences[26].beginnerSyntax.components).find(component => component.text === "lost over Berlin").modifies, "Lancaster");
   assert.match(article.questions[2].explanations.T, /因果|might/);
   assert.match(article.questions[4].explanations.T, /未经证实/);
   const reading = Object.values(data.articleContents).filter(item => item.year === 2010 && item.kind === "reading");
@@ -1126,6 +1127,7 @@ test("2010 Part B 原卷哈希、真实T/F与全部从句一致", () => {
 test("2010 Part B 全词形、搭配、语境隔离与关联目标可用", async () => {
   const article = data.articleContents["2010-p5"];
   const imported = await vite.ssrLoadModule("/app/2010-passage-5-lexicon.ts");
+  const { passage2010P5ReviewedContexts } = await vite.ssrLoadModule("/app/2010-passage-5-contexts.ts");
   const sources = [...article.sentences.map(sentence => ({ text: sentence.text, sentenceId: sentence.id })), ...article.questions.flatMap(question => [{ text: question.prompt, sourceId: `question-${question.id}-prompt` }, ...question.options.map(option => ({ text: option.text, sourceId: `question-${question.id}-option-${option.key}` }))])];
   const forms = new Set();
   for (const source of sources) for (const token of englishTokens(source.text)) {
@@ -1141,7 +1143,7 @@ test("2010 Part B 全词形、搭配、语境隔离与关联目标可用", async
     const lemmas = englishTokens(sentence.text).map(token => lexicon.canonicalLemma(token, context));
     for (const [headword, entry] of Object.entries(imported.passage2010P5SentenceContexts[sentence.id])) {
       assert.ok(lemmas.includes(headword), `${sentence.id} 不包含语境词 ${headword}`);
-      assert.equal(lexicon.getLexicalGuide(headword, context).use, entry.use);
+      assert.equal(lexicon.getLexicalGuide(headword, context).use, passage2010P5ReviewedContexts[sentence.id]?.[headword]?.use ?? entry.use);
       for (const substitution of entry.contextualSubstitutions ?? []) {
         const target = lexicon.getLexicalGuide(substitution.target.slice(5), { articleId: article.id });
         requireText(target.contextualMeaning, `${substitution.target}.meaning`);

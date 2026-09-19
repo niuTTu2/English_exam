@@ -1,3 +1,5 @@
+import { getPassage2010P5WordKnowledge } from "./2010-passage-5-contexts";
+import { passage2010P5SourcePhraseGuides, passage2010P5SourcePhraseAliases, passage2010P5SourceCollocationGlosses } from "./2010-passage-5-collocations";
 import { getPassage2010P4WordKnowledge } from "./2010-passage-4-contexts";
 import { passage2010P4SourcePhraseGuides, passage2010P4SourcePhraseAliases, passage2010P4SourceCollocationGlosses } from "./2010-passage-4-collocations";
 import { passage2010P3SourcePhraseGuides, passage2010P3SourcePhraseAliases, passage2010P3SourceCollocationGlosses } from "./2010-passage-3-collocations";
@@ -901,6 +903,10 @@ Object.assign(phraseAliases, passage2010P5PhraseAliases);
 for (const [key, value] of Object.entries(passage2010P5CollocationGlosses)) {
   if (!collocationGlosses[key]) collocationGlosses[key] = value;
 }
+for(const[expression,key]of Object.entries(passage2010P5SourcePhraseAliases)){
+ if(!phraseAliases[expression]){const guide=passage2010P5SourcePhraseGuides[key];const existing=Object.values(phraseGuides).find(value=>value.canonical.toLowerCase()===guide.canonical.toLowerCase());if(existing)phraseAliases[expression]=existing.key;else{phraseGuides[key]=guide;phraseAliases[expression]=key;}}
+ if(!collocationGlosses[expression])collocationGlosses[expression]=passage2010P5SourceCollocationGlosses[expression];
+}
 phraseGuides["almost-no-difference"].canonical = "make a/no difference";
 for (const [key, value] of Object.entries(translation2010PhraseGuides)) {
   if (!phraseGuides[key] || key === "2010-p1-a-lack-of-demand") phraseGuides[key] = value;
@@ -1082,6 +1088,7 @@ export function getPhraseKnowledge(source: string): PhraseKnowledge | undefined 
 }
 
 export function getWordKnowledge(headword: string, context?: { articleId?: string; sentenceId?: string; sourceId?: string }) {
+  if(context?.articleId === "2010-p5"){const knowledge=getPassage2010P5WordKnowledge(normalized(headword),context.sourceId??context.sentenceId);if(knowledge)return knowledge;}
   if (context?.articleId === "2010-p4") {
     const knowledge=getPassage2010P4WordKnowledge(normalized(headword),context.sourceId??context.sentenceId);
     if(knowledge) return knowledge;
