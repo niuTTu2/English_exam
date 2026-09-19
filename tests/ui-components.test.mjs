@@ -197,7 +197,19 @@ test("精读无需提交即可查看原题、逐项依据和语言讲解，兼�
   for (const question of legacy) {
     const html = renderToStaticMarkup(React.createElement(QuestionStudyCard, { question, onTerm() {}, onSentence() {} }));
     for (const option of question.options) assert.ok(html.includes(`${option.key}项 · 为什么选／不选`));
-    assert.match(html, /回原文核对/);
+    for (const option of question.options) {
+      const judgment = question.reasoning?.options[option.key];
+      if (!judgment) {
+        assert.match(html, /回原文核对/);
+        continue;
+      }
+      assert.ok(judgment.evidenceIds.length > 0, "已精审选项必须保留可回到原句的证据");
+      for (const id of judgment.evidenceIds) {
+        const evidence = question.reasoning.evidence.find(item => item.id === id);
+        assert.ok(evidence?.sentenceId, `${option.key}项的${id}须定位真实句子`);
+        assert.ok(html.includes(`${evidence.role} · 回原文</button>`), `${option.key}项保留${id}的回原文按钮`);
+      }
+    }
   }
   const initialTest = renderToStaticMarkup(React.createElement(StudyApp));
   assert.match(initialTest, /直接查看题目/);

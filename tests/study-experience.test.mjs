@@ -88,7 +88,8 @@ test("2010 Part B uses real T/F sources and annual indexes", () => {
   assert.ok(words.find(word => word.headword === "find")?.forms.includes("finding"));
   assert.match(study.resolveEntry("company", false, "2010-p5-s15").contextualMeaning, /结伴/);
   assert.match(study.resolveEntry("peering", false, "2010-p5-s17").contextualMeaning, /张望/);
-  assert.match(study.resolveEntry("True", false, "question-201042-option-T").contextualMeaning, /正确/);
+  assert.equal(study.resolveEntry("True", false, "question-201042-option-T").contextualMeaning, "符合原文的");
+  assert.equal(study.resolveEntry("False", false, "question-201042-option-F").contextualMeaning, "不符合原文的");
   const phrase = study.buildYearPhraseItems(2010).find(item => item.source === "remains to be seen");
   assert.ok(phrase);
   assert.equal(phrase.sentenceId, "2010-p5-s19");

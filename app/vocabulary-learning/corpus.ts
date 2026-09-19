@@ -201,7 +201,10 @@ export function createVocabularyCorpus(bridge: VocabularyCorpusBridge) {
     // Preserve the legacy stable key; the current surface is never copied from a seed.
     const entry = isPhrase ? { ...resolved, sourceExpression: expression, display: expression } : resolved;
     const context: VocabularyContext = {
-      id: `${sourceId}:${entry.kind}:${encodeURIComponent(entry.key)}`,
+      // Several annotated expressions may share a structural key in one sentence
+      // (e.g. agricultural implements / chemical fertilizers). Keep each real
+      // expression addressable so an existing memory cannot absorb another sense.
+      id: `${sourceId}:${entry.kind}:${encodeURIComponent(entry.key)}${isPhrase ? `:${encodeURIComponent(normalize(expression))}` : ""}`,
       sourceId, articleId: source.articleId, year: source.year, sourceType: source.sourceType,
       ...(source.sentenceId ? { sentenceId: source.sentenceId } : {}),
       ...(source.questionId === undefined ? {} : { questionId: source.questionId }),

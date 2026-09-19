@@ -1990,10 +1990,10 @@ export default function StudyApp() {
           <div className="review-summary">
             <div className="review-summary-title">
               <Brain />
-              <span>今日待复习</span>
+              <span>阅读复盘与旧计划</span>
               <strong>{reviewCount}</strong>
             </div>
-            <p>标记后会自动进入间隔复习，也可以加入自定义清单。</p>
+            <p>保留原有标记与复盘记录。词汇的当前到期安排，请进入下方“词汇学习”。</p>
           </div>
 
           <button type="button" className={`year-vocabulary-link ${view === "vocabulary-learning" ? "is-active" : ""}`}
@@ -2341,16 +2341,16 @@ export default function StudyApp() {
               <section className="review-board">
                 <div className="review-board-heading">
                   <div>
-                    <Badge className="paper-badge">个人复习库</Badge>
+                    <Badge className="paper-badge">原有标记与复盘记录</Badge>
                     <h3>把今天暴露的问题留到明天解决</h3>
-                    <p>按实际到期时间安排复习；整句与错题未设间隔，列入已到期。同一词可保留多个语境。</p>
+                    <p>这里保留旧词汇计划供核对；按义项的当前学习与复习请进入“词汇学习”。整句与错题未设间隔，仍列入本页到期项。</p>
                   </div>
-                  <div className="review-stat"><span>今日待复习</span><strong>{reviewCount}</strong></div>
+                  <div className="review-stat"><span>旧计划及阅读待办</span><strong>{reviewCount}</strong></div>
                 </div>
 
                 <div className="review-columns">
                   <div className="review-panel">
-                    <div className="panel-heading"><ListChecks /><strong>自动复习队列</strong></div>
+                    <div className="panel-heading"><ListChecks /><strong>旧计划与阅读待办</strong></div>
                     <div className="review-filters" aria-label="选择复习时间">
                       {([
                         ["due", `已到期 ${reviewCount}`],

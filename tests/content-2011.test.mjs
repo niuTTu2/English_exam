@@ -52,7 +52,16 @@ test("2011图表作文48保留四句原题、原图字节、近似精度与最�
   assert.ok(task.pitfalls.some(item => /绝对销量/.test(item)));
   assert.ok(task.pitfalls.some(item => /100%/.test(item)));
   assert.ok(!data.allSentences.some(sentence => task.sample.english.includes(sentence.text)));
-  for (const [token, number, meaning] of [["based", 1, /依据/], ["on", 1, /依据/], ["following", 1, /下面|下列/], ["writing", 2, /作文|写作/], ["comments", 2, /评论/], ["least", 3, /至少/], ["on", 4, /在/], ["points", 4, /分/]]) assert.match(study.resolveEntry(token, false, `2011-writing-b-s${number}`).contextualMeaning, meaning);
+  for (const [token, number, meaning] of [["based", 1, /依据/], ["on", 1, /依据/], ["following", 1, /下面|下列/], ["writing", 2, /作文|写作/], ["comments", 2, /评论/], ["on", 4, /在/], ["points", 4, /分/]]) assert.match(study.resolveEntry(token, false, `2011-writing-b-s${number}`).contextualMeaning, meaning);
+  // The reviewed word sense and the complete minimum-quantity phrase are separate objects.
+  const least = study.resolveEntry("least", false, "2011-writing-b-s3");
+  assert.equal(least.kind, "word");
+  assert.equal(least.contextualMeaning, "最少；最低限度");
+  const minimum = study.resolveEntry("at least 150 words", true, "2011-writing-b-s3");
+  assert.equal(minimum.kind, "phrase");
+  assert.equal(minimum.sourceExpression, "at least 150 words");
+  assert.equal(minimum.contextualMeaning, "至少150词");
+  assert.match(minimum.contextualMeaning, /至少/);
   assert.equal(lexicon.canonicalLemma("writing", { articleId: article.id }), "writing");
   assert.equal(lexicon.canonicalLemma("Write", { articleId: article.id }), "write");
   assert.equal(knowledge.getPhraseKnowledge("based on the following chart").key, knowledge.getPhraseKnowledge("be based on").key);
@@ -133,7 +142,9 @@ test("2011英译汉46为三段七句整篇，保留约数、单位和指代", ()
   assert.match(article.sentences[0].natural, /约.*2%/);
   assert.match(article.sentences[2].natural, /0\.2至7\.0克/);
   assert.match(article.sentences[4].natural, /同时/);
-  assert.match(article.sentences[6].natural, /不应只是大企业/);
+  assert.equal(article.sentences[6].natural, "监测是迈向减排的第一步，但还有许多工作要做，而且不应只由大企业来做。");
+  assert.match(article.sentences[6].text, /not just by big companies/);
+  assert.match(study.resolveEntry("not just by big companies", true, "2011-translation-s7").contextualMeaning, /不.*只.*大公司/);
   for (const [token, number, meaning] of [["IT", 1, /信息技术/], ["volume", 1, /总量|数量/], ["do", 1, /代替|排放/], ["toll", 2, /损害|代价/], ["then", 4, /因此/], ["While", 5, /同时/], ["which", 5, /制冷/], ["done", 7, /完成/]]) assert.match(study.resolveEntry(token, false, `2011-translation-s${number}`).contextualMeaning, meaning);
   assert.equal(lexicon.canonicalLemma("CO2", { articleId: article.id }), "co2");
   assert.equal(knowledge.getPhraseKnowledge("a great deal of heat").key, knowledge.getPhraseKnowledge("A great deal of attention").key);

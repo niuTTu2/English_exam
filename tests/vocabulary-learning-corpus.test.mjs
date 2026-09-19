@@ -113,6 +113,33 @@ test("all but two remains a quantity expression with an exclusion rule", () => {
   assert.match(candidate.text.toLowerCase(), /all but two/);
 });
 
+test("two real phrases with the same structural key in one sentence retain independent contexts and progress", () => {
+  const farmingTools = phrase("agricultural implements", "cloze-s4");
+  const fertilizers = phrase("chemical fertilizers", "cloze-s4");
+  assert.equal(farmingTools.entry.key, "pattern:simple-noun-phrase");
+  assert.equal(fertilizers.entry.key, farmingTools.entry.key, "the existing structural key is unchanged");
+  assert.notEqual(farmingTools.context.id, fertilizers.context.id);
+  const learned = { ...createMemory(farmingTools, 1000), intervalDays: 30, consecutiveKnown: 5, dueAt: 9_000_000, status: "mastered" };
+  const second = mergeCandidate({ [learned.id]: learned }, fertilizers, 2000);
+  assert.notEqual(second.id, learned.id);
+  assert.equal(second.intervalDays, 0);
+  assert.equal(second.status, "unseen");
+  assert.equal(second.contexts.length, 1);
+  assert.equal(second.contexts[0].expression, "chemical fertilizers");
+  assert.equal(learned.contexts[0].expression, "agricultural implements");
+  assert.equal(learned.intervalDays, 30);
+  assert.equal(corpus.getCandidate(second.contexts[0], second.kind).entry.contextualMeaning, "化肥");
+});
+
+test("multiple original halves of the same either-or structure keep distinct source references", () => {
+  const first = phrase("either sell", "cloze-s7");
+  const second = phrase("or seek", "cloze-s7");
+  assert.equal(first.entry.key, second.entry.key);
+  assert.notEqual(first.context.id, second.context.id);
+  assert.equal(corpus.getCandidate(first.context).context.expression, "either sell");
+  assert.equal(corpus.getCandidate(second.context).context.expression, "or seek");
+});
+
 test("Damien and Hirst keep their reviewed name cards and source but are never automatic candidates", () => {
   for (const label of ["Damien", "Hirst"]) {
     const candidate = word(label, "2010-p1-s1");
