@@ -1,0 +1,273 @@
+{
+  "articleId": "p1",
+  "year": 2000,
+  "source": {
+    "file": "2000.pdf",
+    "sha256": "6de345bdc851e924ea3033a7ad7b1af7f8c3f68ecaf649e5a6ecb2d58ffd6212",
+    "pages": [
+      1,
+      2
+    ],
+    "note": "按用户PDF第1—2页核对。去教学圈号与题号插注，保留既有正文文本、题干空格格式和稳定ID；第3段跨页。PDF元数据标题误记1986，正文题头为2000。"
+  },
+  "sentences": [
+    {
+      "id": "p1-s1",
+      "number": 1,
+      "text": "A history of long and effortless success can be a dreadful handicap, but, if properly handled, it may become a driving force."
+    },
+    {
+      "id": "p1-s2",
+      "number": 2,
+      "text": "When the United States entered just such a glowing period after the end of the Second World War, it had a market eight times larger than any competitor, giving its industries unparalleled economies of scale."
+    },
+    {
+      "id": "p1-s3",
+      "number": 3,
+      "text": "Its scientists were the world's best; its workers the most skilled."
+    },
+    {
+      "id": "p1-s4",
+      "number": 4,
+      "text": "America and Americans were prosperous beyond the dreams of the Europeans and Asians whose economies the war had destroyed."
+    },
+    {
+      "id": "p1-s5",
+      "number": 5,
+      "text": "It was inevitable that this primacy should have narrowed as other countries grew richer."
+    },
+    {
+      "id": "p1-s6",
+      "number": 6,
+      "text": "Just as inevitably, the retreat from predominance proved painful."
+    },
+    {
+      "id": "p1-s7",
+      "number": 7,
+      "text": "By the mid-1980s Americans had found themselves at a loss over their fading industrial competitiveness."
+    },
+    {
+      "id": "p1-s8",
+      "number": 8,
+      "text": "Some huge American industries, such as consumer electronics, had shrunk or vanished in the face of foreign competition."
+    },
+    {
+      "id": "p1-s9",
+      "number": 9,
+      "text": "By 1987 there was only one American television maker left, Zenith."
+    },
+    {
+      "id": "p1-s10",
+      "number": 10,
+      "text": "(Now there is none: Zenith was bought by South Korea's LG Electronics in July.)"
+    },
+    {
+      "id": "p1-s11",
+      "number": 11,
+      "text": "Foreign-made cars and textiles were sweeping into the domestic market."
+    },
+    {
+      "id": "p1-s12",
+      "number": 12,
+      "text": "America's machine-tool industry was on the ropes."
+    },
+    {
+      "id": "p1-s13",
+      "number": 13,
+      "text": "For a while it looked as though the making of semiconductors, which America had invented and which sat at the heart of the new computer age, was going to be the next casualty."
+    },
+    {
+      "id": "p1-s14",
+      "number": 14,
+      "text": "All of this caused a crisis of confidence."
+    },
+    {
+      "id": "p1-s15",
+      "number": 15,
+      "text": "Americans stopped taking prosperity for granted."
+    },
+    {
+      "id": "p1-s16",
+      "number": 16,
+      "text": "They began to believe that their way of doing business was failing, and that their incomes would therefore shortly begin to fall as well."
+    },
+    {
+      "id": "p1-s17",
+      "number": 17,
+      "text": "The mid-1980s brought one inquiry after another into the causes of America's industrial decline."
+    },
+    {
+      "id": "p1-s18",
+      "number": 18,
+      "text": "Their sometimes sensational findings were filled with warnings about the growing competition from overseas."
+    },
+    {
+      "id": "p1-s19",
+      "number": 19,
+      "text": "How things have changed!"
+    },
+    {
+      "id": "p1-s20",
+      "number": 20,
+      "text": "In 1995 the United States can look back on five years of solid growth while Japan has been struggling."
+    },
+    {
+      "id": "p1-s21",
+      "number": 21,
+      "text": "Few Americans attribute this solely to such obvious causes as a devalued dollar or the turning of the business cycle."
+    },
+    {
+      "id": "p1-s22",
+      "number": 22,
+      "text": "Self-doubt has yielded to blind pride."
+    },
+    {
+      "id": "p1-s23",
+      "number": 23,
+      "text": "\"American industry has changed its structure, has gone on a diet, has learnt to be more quick-witted,\" according to Richard Cavanaugh, executive dean of Harvard's Kennedy School of Government."
+    },
+    {
+      "id": "p1-s24",
+      "number": 24,
+      "text": "\"It makes me proud to be an American just to see how our businesses are improving their productivity,\" says Stephen Moore of the Cato Institute, a think-tank in Washington, DC."
+    },
+    {
+      "id": "p1-s25",
+      "number": 25,
+      "text": "And William Sahlman of the Harvard Business School believes that people will look back on this period as \"a golden age of business management in the United States.\""
+    }
+  ],
+  "paragraphs": [
+    [
+      "p1-s1",
+      "p1-s2",
+      "p1-s3",
+      "p1-s4"
+    ],
+    [
+      "p1-s5",
+      "p1-s6",
+      "p1-s7",
+      "p1-s8",
+      "p1-s9",
+      "p1-s10",
+      "p1-s11",
+      "p1-s12",
+      "p1-s13"
+    ],
+    [
+      "p1-s14",
+      "p1-s15",
+      "p1-s16",
+      "p1-s17",
+      "p1-s18"
+    ],
+    [
+      "p1-s19",
+      "p1-s20",
+      "p1-s21",
+      "p1-s22",
+      "p1-s23",
+      "p1-s24",
+      "p1-s25"
+    ]
+  ],
+  "questions": [
+    {
+      "id": 11,
+      "sentenceId": "p1-s4",
+      "prompt": "The U.S. achieved its predominance after World War II because ____.",
+      "options": [
+        {
+          "key": "A",
+          "text": "it had made painstaking efforts towards this goal"
+        },
+        {
+          "key": "B",
+          "text": "its domestic market was eight times larger than before"
+        },
+        {
+          "key": "C",
+          "text": "the war had destroyed the economies of most potential competitors"
+        },
+        {
+          "key": "D",
+          "text": "the unparalleled size of its workforce had given an impetus to its economy"
+        }
+      ],
+      "answer": "C"
+    },
+    {
+      "id": 12,
+      "sentenceId": "p1-s11",
+      "prompt": "The loss of U.S. predominance in the world economy in the 1980s is manifested in the fact that the American ____.",
+      "options": [
+        {
+          "key": "A",
+          "text": "TV industry had withdrawn to its domestic market"
+        },
+        {
+          "key": "B",
+          "text": "semiconductor industry had been taken over by foreign enterprises"
+        },
+        {
+          "key": "C",
+          "text": "machine-tool industry had collapsed after suicidal actions"
+        },
+        {
+          "key": "D",
+          "text": "auto industry had lost part of its domestic market"
+        }
+      ],
+      "answer": "D"
+    },
+    {
+      "id": 13,
+      "sentenceId": "p1-s18",
+      "prompt": "What can be inferred from the passage?",
+      "options": [
+        {
+          "key": "A",
+          "text": "It is human nature to shift between self-doubt and blind pride"
+        },
+        {
+          "key": "B",
+          "text": "Intense competition may contribute to economic progress"
+        },
+        {
+          "key": "C",
+          "text": "The revival of the economy depends on international cooperation"
+        },
+        {
+          "key": "D",
+          "text": "A long history of success may pave the way for further development"
+        }
+      ],
+      "answer": "B"
+    },
+    {
+      "id": 14,
+      "sentenceId": "p1-s21",
+      "prompt": "The author seems to believe the revival of the U.S. economy in the 1990s can be attributed to the ____.",
+      "options": [
+        {
+          "key": "A",
+          "text": "turning of the business cycle"
+        },
+        {
+          "key": "B",
+          "text": "restructuring of industry"
+        },
+        {
+          "key": "C",
+          "text": "improved business management"
+        },
+        {
+          "key": "D",
+          "text": "success in education"
+        }
+      ],
+      "answer": "A"
+    }
+  ]
+}

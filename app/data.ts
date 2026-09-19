@@ -1,4 +1,5 @@
 import { passage2012P1Guide, passage2012P1Paragraphs } from "./2012-passage-1-guide";
+import { passage2000P1Guide, passage2000P1Paragraphs } from "./2000-passage-1-guide";
 import { writing2012BSentences, writing2012BTasks } from "./2012-writing-b-data";
 import { writing2012ASentences, writing2012ATasks } from "./2012-writing-a-data";
 import { translation2012Sentences, translation2012Tasks } from "./2012-translation-data";
@@ -1405,6 +1406,9 @@ export const articleContents: Record<string, ArticleContent> = {
     kind: "reading",
     sentences: verifiedPassage1Sentences,
     questions: verifiedPassage1Questions,
+    guide: passage2000P1Guide,
+    paragraphs: passage2000P1Paragraphs,
+    teachingStatus: { syntax: true, vocabulary: true, evidence: true, practice: true },
   },
   p2: {
     id: "p2",

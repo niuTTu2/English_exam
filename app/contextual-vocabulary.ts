@@ -3,6 +3,7 @@ import { passage2010P3PreferredContexts } from "./2010-passage-3-collocations";
 import { passage2010P3ReviewedContexts } from "./2010-passage-3-contexts";
 import { passage2001P1SourceContexts } from "./2001-passage-1-contexts";
 import { passage3Contexts } from "./passage-3-contexts";
+import { passage2000P1Contexts } from "./2000-passage-1-contexts";
 import { writing2012BSentenceContexts } from "./2012-writing-b-lexicon";
 import { writing2012ASentenceContexts } from "./2012-writing-a-lexicon";
 import { translation2012SentenceContexts } from "./2012-translation-lexicon";
@@ -1086,6 +1087,10 @@ for (const [sourceId, contexts] of Object.entries(passage2011P1SourceContexts)) 
 for (const [sourceId, contexts] of Object.entries(passage3Contexts)) {
   const target = sentenceWordContexts[sourceId] ??= {};
   for (const [headword, context] of Object.entries(contexts)) target[headword] = { ...target[headword], ...context };
+}
+for (const [sourceId, words] of Object.entries(passage2000P1Contexts)) {
+  const existing = sentenceWordContexts[sourceId] ?? {};
+  sentenceWordContexts[sourceId] = { ...existing, ...Object.fromEntries(Object.entries(words).map(([headword, context]) => [headword, { ...existing[headword], ...context }])) };
 }
 
 export function getSentenceWordContext(sentenceId: string | undefined, headword: string) {

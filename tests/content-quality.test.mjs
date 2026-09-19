@@ -345,6 +345,7 @@ test("2000 年全部复杂句的从句数量与人工审计基线一致", () => 
     "cloze-s1": 1, "cloze-s3": 1, "cloze-s4": 1, "cloze-s6": 1,
     "p1-s1": 1, "p1-s2": 1, "p1-s4": 1, "p1-s5": 2, "p1-s13": 3,
     "p1-s16": 2, "p1-s20": 1, "p1-s24": 1, "p1-s25": 1,
+    "14-prompt-analysis": 1, // Text1完整题目语言层：believe后的省略that宾语从句。
     "p2-s4": 1, "p2-s5": 2, "p2-s10": 1, "p2-s17": 1, "p2-s19": 1,
     "p2-s20": 1, "p2-s24": 1, "p2-s25": 1, "p2-s27": 2,
     "p3-s1": 4, "p3-s2": 3, "p3-s3": 2, "p3-s6": 1, "p3-s8": 1,
@@ -379,7 +380,7 @@ test("2000 年全部复杂句的从句数量与人工审计基线一致", () => 
       .filter(([, count]) => count > 0),
   );
   assert.deepEqual(actual, expected, "复杂句的从句有遗漏、误增或边界审计未同步");
-  assert.equal(Object.values(actual).reduce((sum, count) => sum + count, 0), 99, "人工审计从句总数应保持为 99");
+  assert.equal(Object.values(actual).reduce((sum, count) => sum + count, 0), 100, "旧98条加Text3的till与第14题题干从句，共100条");
 });
 
 test("自测空格、题号和答案严格对应", () => {

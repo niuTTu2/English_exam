@@ -1,4 +1,5 @@
 import { passage2011P1Priority } from "./2011-passage-1-priority";
+import { passage2000P1Priority } from "./2000-passage-1-priority";
 import type { VocabEntry } from "./data";
 export type VocabularyPriority = { id: "core" | "sense" | "structure" | "function" | "recognition" | "name"; label: string; reason: string; recommendedReview: boolean };
 const core = new Set("momentum bankruptcy controversy downturn demand fluctuate guarantee sector confidence debt decline lack wealth greed passion supply price peak average interview promote circulation surpass appropriate".split(" "));
@@ -28,6 +29,7 @@ const text3Names = new Set("dr curtis london procter gamble colgate-palmolive un
 const text3Structures = new Set(["figure out", "turn to somebody for help", "help somebody (to) do something", "help (to) do something", "in response to something", "invest money (in) doing something", "between A and B", "be essential to doing something", "tie A to B", "be used to do something", "so as to do something", "due to + cause", "belong to a category"].map(value => value.toLowerCase()));
 /** 编辑建议按本篇语境给出；不是官方考试词频排名，也不改变词义。 */
 export function vocabularyPriority(entry: Pick<VocabEntry, "headword" | "display" | "kind" | "canonicalForm">, sourceId: string, articleId?: string): VocabularyPriority | undefined {
+  if (articleId === "p1") return passage2000P1Priority(entry, sourceId);
   if (articleId === "p3") {
     const head = entry.headword.toLowerCase();
     if (entry.kind === "phrase") return { id: "structure", label: "本句结构", reason: "结合本句确认搭配的范围、修饰对象及可接成分。", recommendedReview: true };

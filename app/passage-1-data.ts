@@ -1,6 +1,9 @@
+import { reviewPassage2000P1 } from "./2000-passage-1-teaching";
+import { passage2000P1QuestionAnalysis } from "./2000-passage-1-question-analysis";
+import { passage2000P1Reasoning } from "./2000-passage-1-evidence";
 import type { Question, SentenceAnalysis } from "./data";
 
-export const passage1Sentences: SentenceAnalysis[] = [
+const passage1SentenceDrafts: SentenceAnalysis[] = [
   {
     id: "p1-s1",
     number: 1,
@@ -666,7 +669,7 @@ export const passage1Sentences: SentenceAnalysis[] = [
   },
 ];
 
-export const passage1Questions: Question[] = [
+const passage1QuestionDrafts: Question[] = [
   {
     id: 11,
     sentenceId: "p1-s4",
@@ -744,3 +747,6 @@ export const passage1Questions: Question[] = [
     },
   },
 ];
+
+export const passage1Sentences = passage1SentenceDrafts.map(reviewPassage2000P1);
+export const passage1Questions: Question[] = passage1QuestionDrafts.map(question => ({ ...question, analysis: passage2000P1QuestionAnalysis[question.id], reasoning: passage2000P1Reasoning[question.id] }));
