@@ -11,12 +11,14 @@ const rows: PhraseRow[] = [
 const reviewed = reviewedPhrases(rows);
 export const writing2011APhraseGuides = reviewed.guides;
 export const writing2011APhraseAliases: Record<string, string> = { ...reviewed.aliases, "at the end of the letter": "2010-p1-at-the-end-of" };
-export const writing2011APhraseGlosses = { ...writing2011ACollocationGlosses, ...reviewed.glosses, "at the end of the letter": { meaning: "在信的末尾", note: "空间/篇章位置，不是最终结果的in the end；复用既有at the end of结构。" } };
+export const writing2011APhraseGlosses: Record<string, { meaning: string; note: string }> = { ...writing2011ACollocationGlosses, ...reviewed.glosses, "at the end of the letter": { meaning: "在信的末尾", note: "空间/篇章位置，不是最终结果的in the end；复用既有at the end of结构。" } };
 export function getWriting2011AWordKnowledge(headword: string, sentenceId?: string): WordKnowledge | undefined {
   const entry = writing2011ALexicon[headword];
-  if (!entry) return undefined;
   const context = sentenceId ? writing2011ASentenceContexts[sentenceId]?.[headword] : undefined;
-  const pattern = entry.collocations[0];
-  const rule = context?.use ?? entry.use;
-  return { grammarRole: context?.partOfSpeech ?? entry.partOfSpeech, grammarSummary: rule, structures: [{ pattern, meaning: writing2011ACollocationGlosses[pattern.toLowerCase()].meaning, rule }], pitfalls: entry.examSynonyms };
+  const patterns = context?.preferredCollocations ?? entry?.collocations;
+  if (!patterns?.length) return undefined;
+  const rule = context?.use ?? entry?.use;
+  const grammarRole = context?.partOfSpeech ?? entry?.partOfSpeech;
+  if (!rule || !grammarRole) throw new Error(`Missing writing word context: ${sentenceId}/${headword}`);
+  return { grammarRole, grammarSummary: rule, structures: patterns.map(pattern => ({ pattern, meaning: writing2011APhraseGlosses[pattern.toLowerCase()].meaning, rule })), pitfalls: entry?.examSynonyms ?? [] };
 }

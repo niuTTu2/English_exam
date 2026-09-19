@@ -1632,7 +1632,8 @@ export const articleContents: Record<string, ArticleContent> = {
   },
   "2011-writing-a": {
     id: "2011-writing-a", year: 2011, sectionId: "writing-a", label: "写作 Part A", badge: "2011 · 英语二 · 第47题", title: "祝贺大学录取与入学准备建议",
-    description: "约100词书信，10分。原题六句指令逐句精读；独立写作、草稿保存、字数提示、参考范文与逐段说明，不作自动评分。", kind: "writing", sentences: writing2011ASentences, questions: [], writingTasks: writing2011ATasks,
+    description: "约100词书信，10分。六句指令训练只计审题与语言理解；作文独立作答、保存草稿并参考范文自查，不自动评分。", kind: "writing", sentences: writing2011ASentences, questions: [], writingTasks: writing2011ATasks,
+    teachingStatus: { syntax: true, vocabulary: true, evidence: true, practice: true },
   },
   "2011-writing-b": {
     id: "2011-writing-b", year: 2011, sectionId: "writing-b", label: "写作 Part B", badge: "2011 · 英语二 · 第48题", title: "轿车市场份额：图表解读与谨慎评论",

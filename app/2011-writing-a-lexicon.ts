@@ -35,7 +35,7 @@ const rows: LexiconRow[] = [
   ["just", "", "adv.", "刚刚", "has just been admitted指新近完成录取，不取仅仅义。", "have just done（刚做完某事）", "just也可表仅仅、恰好或公正的；本句为时间副词。"],
   ["have", "has had having", "aux.", "完成时助动词", "has与been admitted构成现在完成时被动，has与单数Li Ming一致。", "has been admitted（已经被录取）", "have也可表拥有或have to必须；此处不是实义拥有。"],
   ["be", "am is are was were been being", "aux.", "被动助动词", "been是be的过去分词，has been admitted中连接完成时和被动语态。", "have been admitted（已经被录取）", "be—was/were—been不规则；此处不能将been独立译为存在。"],
-  ["do", "does did done doing", "aux.", "否定祈使助动词", "Do not引出禁止指令，后面sign/write仍用动词原形。", "do not write（不要写）", "不同于翻译46中代替produce的do，本句帮助构成否定。"],
+  ["do", "does did done doing", "aux.", "否定祈使助动词", "Do not引出禁止指令，后面sign/write仍用动词原形。", "do not write（不要写）", "do在此没有独立的‘做’义，帮助构成否定祈使句；后面的实义动词保持原形。"],
   ["should", "", "modal v.", "应当", "You should write规定写作要求，后接动词原形。", "should write（应当写）", "此处不是表猜测的应该已经；should不随主语变为单三。"],
   ["you", "", "pron.", "你；考生", "You是对考生的指令主语，不是收信人李明。", "you should write（你应当写）", "you为主格/宾格同形，your为形容词性物主代词。"],
   ["your", "", "possessive determiner", "你的；考生的", "your修饰cousin/name/address，将写作情境交给考生。", "your own name（你自己的名字）", "your后接名词，yours可独立使用，不写your's。"],
@@ -52,8 +52,53 @@ writing2011ALexicon.letter.otherMeanings = ["字母：a capital letter大写字�
 writing2011ALexicon.address.otherMeanings = ["v. 处理：address a problem处理问题；向……讲话：address an audience向听众讲话；n. 演说：give an address发表演说。"];
 writing2011ALexicon.point.otherMeanings = ["要点或观点：the main point主要论点；意义：the point of doing做某事的意义；v. 指向：point to指向；指出：point out。"];
 export const writing2011ASentenceContexts: Record<string, Record<string, SentenceWordContext>> = {
-  "2011-writing-a-s1": { to: { contextualMeaning: "进入；被……录取", use: "admitted to中to为介词，引录取院校，不是不定式标记。" }, suppose: { contextualSubstitutions: [{ label: "assume", chinese: "假定", fit: "direct", rewrittenSentence: "Assume your cousin Li Ming has just been admitted to a university.", nuance: "assume语气略正式，更突出把录取设为写作前提；不改变时间、收信人或录取事件。", target: "word:assume" }] } },
-  "2011-writing-a-s2": { to: { contextualMeaning: "为了；不定式标记", use: "letter to congratulate/give说明写信目的；how to get说明准备方法。" }, on: { contextualMeaning: "关于", use: "suggestions on说明建议主题，不表示在表面上。" }, for: { contextualMeaning: "为……作准备", use: "prepared for后接将要适应的大学生活。" } },
-  "2011-writing-a-s3": { on: { contextualMeaning: "在……上", use: "on ANSWER SHEET 2指定原纸笔试卷的答题位置。" } },
-  "2011-writing-a-s4": { at: { contextualMeaning: "在……位置", use: "at the end of定位到信件结尾。" }, of: { contextualMeaning: "……的", use: "连接末尾end与所属信件letter。" } },
+  "2011-writing-a-s1": {
+    to: { partOfSpeech: "prep.", contextualMeaning: "引出录取的机构", use: "admitted to中to为介词，后接a university，说明被哪类机构录取。", preferredCollocations: ["be admitted to a university"] },
+    your: { partOfSpeech: "possessive determiner", contextualMeaning: "你的", use: "your限定cousin，指考生在题设情境中的表亲。", preferredCollocations: ["your cousin"] },
+    a: { partOfSpeech: "art.", contextualMeaning: "一所（不特指）", use: "a限定单数可数名词university，未指定具体院校；university以辅音音素/j/开头，所以用a。", preferredCollocations: ["a university"] },
+    university: { partOfSpeech: "n.", contextualMeaning: "大学", use: "a university是to的宾语，说明录取院校；不是要求写明大学名称。", preferredCollocations: ["be admitted to a university"] },
+    suppose: { contextualSubstitutions: [{ label: "assume", chinese: "假定", fit: "direct", rewrittenSentence: "Assume your cousin Li Ming has just been admitted to a university.", nuance: "assume语气略正式，更突出把录取设为写作前提；不改变时间、收信人或录取事件。", target: "word:assume" }] }
+  },
+  "2011-writing-a-s2": {
+    a: { partOfSpeech: "art.", contextualMeaning: "一封", use: "a限定单数可数名词letter；a letter是Write的直接宾语。", preferredCollocations: ["a letter"] },
+    to: { partOfSpeech: "不定式标记", contextualMeaning: "引出不定式动作", use: "第一处to由congratulate与give两个目的动作共用；how to get中的to引出准备这一动作，整体说明建议主题。", preferredCollocations: ["to congratulate somebody", "how to do something"] },
+    and: { partOfSpeech: "conj.", contextualMeaning: "并且", use: "连接congratulate与give，两个动作同属写信目的，共用前面的to；不是让考生二选一。", preferredCollocations: ["congratulate and give"] },
+    on: { partOfSpeech: "prep.", contextualMeaning: "关于", use: "suggestions on how to get prepared...中on引出建议主题，宾语是疑问词加不定式。", preferredCollocations: ["suggestions on how to prepare"] },
+    for: { partOfSpeech: "prep.", contextualMeaning: "为；针对", use: "prepared for中的for后接university life，说明准备应对什么。", preferredCollocations: ["get prepared for university life"] },
+    prepare: { partOfSpeech: "adj.（过去分词形容词化）", contextualMeaning: "准备好的", use: "原文prepared在get后作表语，表示准备好的状态；for说明准备对象。", preferredCollocations: ["get prepared for university life"] },
+    university: { partOfSpeech: "n.（作定语）", contextualMeaning: "大学", use: "university修饰life，说明大学阶段的生活，不单指某所院校。", preferredCollocations: ["university life"] }
+  },
+  "2011-writing-a-s3": {
+    write: { partOfSpeech: "v.", contextualMeaning: "写；撰写", use: "should后的write用原形；about 100 words为宾语，on短语说明作答位置。", preferredCollocations: ["write about 100 words"] },
+    on: { partOfSpeech: "prep.", contextualMeaning: "在……上", use: "on ANSWER SHEET 2指定原纸笔试卷的答题位置。", preferredCollocations: ["on ANSWER SHEET 2"] }
+  },
+  "2011-writing-a-s4": {
+    do: { partOfSpeech: "aux.", contextualMeaning: "构成否定祈使句", use: "Do与not配合，禁止用考生真名署名；sign仍用原形。", preferredCollocations: ["Do not sign your own name"] },
+    not: { partOfSpeech: "adv.", contextualMeaning: "不；不要", use: "Do not sign给出禁止要求，禁止的是以考生自己的真名署名。", preferredCollocations: ["Do not sign your own name"] },
+    your: { partOfSpeech: "possessive determiner", contextualMeaning: "你的", use: "your限定name，own进一步强调是考生本人的姓名。", preferredCollocations: ["your own name"] },
+    at: { partOfSpeech: "prep.", contextualMeaning: "在（某一位置）", use: "at the end of定位到信件结尾，整个短语修饰sign。", preferredCollocations: ["at the end of the letter"] },
+    the: { partOfSpeech: "art.", contextualMeaning: "特指已知对象", use: "the letter回指题目要求写的信；the end表示这封信确定的末尾。两处the都不表示数量。", preferredCollocations: ["the end of the letter"] },
+    of: { partOfSpeech: "prep.", contextualMeaning: "……的", use: "of the letter修饰end，限定是这封信的末尾。", preferredCollocations: ["at the end of the letter"] },
+    letter: { partOfSpeech: "n.", contextualMeaning: "信；书信", use: "the letter回指本题所写信件，作of的宾语，限定end。", preferredCollocations: ["at the end of the letter"] }
+  },
+  "2011-writing-a-s6": {
+    do: { partOfSpeech: "aux.", contextualMeaning: "构成否定祈使句", use: "Do与not配合构成禁止要求，后面的write保持原形。", preferredCollocations: ["Do not write your address"] },
+    not: { partOfSpeech: "adv.", contextualMeaning: "不；不要", use: "Do not write禁止填写地址；not否定整个write your address动作。", preferredCollocations: ["Do not write your address"] },
+    write: { partOfSpeech: "v.", contextualMeaning: "写下；填写", use: "write以your address为宾语，Do not说明不要填写这一内容。", preferredCollocations: ["Do not write your address"] },
+    your: { partOfSpeech: "possessive determiner", contextualMeaning: "你的", use: "your限定address，指考生自己的地址。", preferredCollocations: ["your address"] }
+  }
 };
+
+Object.assign(writing2011ACollocationGlosses, {
+  "your cousin": { meaning: "你的表亲或堂亲", note: "your为所有格限定词；cousin本身不区分性别。" },
+  "a university": { meaning: "一所大学", note: "单数可数名词前用不定冠词；university以辅音音素/j/开头，选a。" },
+  "a letter": { meaning: "一封信", note: "letter为单数可数名词；在Write him/her a letter中，整组作直接宾语。" },
+  "to congratulate somebody": { meaning: "去祝贺某人；为了祝贺某人", note: "to加动词原形；在本题中表示写信目的，并由后面的give共用to。" },
+  "congratulate and give": { meaning: "祝贺并给出（建议）", note: "两个动词形式平行，共用目的不定式标记to；各有自己的宾语。" },
+  "write about 100 words": { meaning: "写约100词", note: "about修饰数量100，未规定精确上下限；words是英文单词数。" },
+  "on answer sheet 2": { meaning: "在答题卡2上", note: "on引出书写位置，ANSWER SHEET是答题卡，不在此表示建议的主题。" },
+  "do not sign your own name": { meaning: "不要署你自己的姓名", note: "Do not + 动词原形构成否定祈使句；禁止对象是真名，不是全部署名。" },
+  "the end of the letter": { meaning: "这封信的末尾", note: "end是中心名词，of短语说明所属文本；the letter回指前文要求写的信。" },
+  "do not write your address": { meaning: "不要填写你的地址", note: "Do not构成禁止要求；write为动词原形，your address作宾语。" },
+  "your address": { meaning: "你的地址", note: "your限定名词address，本题要求不要填写这一信息。" }
+});

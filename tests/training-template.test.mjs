@@ -181,11 +181,11 @@ test("声明完成的训练层必须具备可核对的结构，不能只更改�
           for (const target of task.leaksToTasks ?? []) assert.ok(sources.some(s => s.id === target.sentenceId && s.practice?.some(t => t.id === target.taskId)), `${source.id}/${task.id}跨来源反馈目标不存在`);
         }
       }
-      for (const ref of item.guide.references) {
+      for (const ref of item.guide?.references ?? []) {
         evidence({ sentenceId: ref.sentenceId, quote: ref.expression });
         assert.ok(ref.targetSentenceIds.length && ref.targetSentenceIds.every(id => sentences.has(id)));
       }
-      for (const entry of [...item.guide.timeline, ...item.guide.voices]) {
+      for (const entry of [...(item.guide?.timeline ?? []), ...(item.guide?.voices ?? [])]) {
         assert.ok(entry.evidence.length); entry.evidence.forEach(evidence);
       }
     }

@@ -1,7 +1,8 @@
+import { withWriting2011ATeaching } from "./2011-writing-a-teaching";
 import type { SentenceAnalysis, WritingTask } from "./data";
 import { clause, segment, sentenceFactory } from "./2011-content-helpers";
 const sentence = sentenceFactory("2011-writing-a");
-export const writing2011ASentences: SentenceAnalysis[] = [
+const originalWriting2011ASentences: SentenceAnalysis[] = [
   sentence(1, [
     segment("Suppose ", "predicate", "祈使动词原形", "题设指令", "省略考生you为主语", "suppose引入假定写信情境，不是要求讨论真假。"),
     segment("your cousin Li Ming ", "subject", "所有格名词与姓名同位语", "宾语从句主语", "说明收信人身份", "cousin可为表/堂兄弟姐妹，姓名Li Ming不强行指定性别。"),
@@ -35,6 +36,7 @@ export const writing2011ASentences: SentenceAnalysis[] = [
     segment("(10 points)", "modifier", "括号分值说明", "题目信息", "说明第47题总分", "分值不是自动评分承诺。"),
   ], "Do not write your address.", "不要写你的地址。（10分）", "不要写地址。本题10分。", "保留原卷分值与格式限制。", []),
 ];
+export const writing2011ASentences = originalWriting2011ASentences.map(withWriting2011ATeaching);
 export const writing2011ATasks: WritingTask[] = [{
   id: 201147, number: 47, genre: "letter", points: 10, wordLimit: { mode: "about", count: 100 }, instructions: writing2011ASentences,
   requirements: ["收信人：表亲Li Ming；写信人署名：Zhang Wei。", "两个任务：祝贺被大学录取；给出大学生活准备建议。", "篇幅约100词，语气自然亲切；不写地址，不使用真实姓名。"],
