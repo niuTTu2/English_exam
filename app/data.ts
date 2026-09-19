@@ -18,7 +18,7 @@ import { passage2012P1Sentences, passage2012P1Questions } from "./2012-passage-1
 import { cloze2012Sentences, cloze2012Questions } from "./2012-cloze-data";
 import { writing2011BSentences, writing2011BTasks } from "./2011-writing-b-data";
 import { writing2011ASentences, writing2011ATasks } from "./2011-writing-a-data";
-import { translation2011Sentences, translation2011Tasks } from "./2011-translation-data";
+import { translation2011Sentences, translation2011Tasks, translation2011ArticleParagraphs } from "./2011-translation-data";
 import { passage2011P5Sentences, passage2011P5Questions } from "./2011-passage-5-data";
 import { passage2011P4Sentences, passage2011P4Questions } from "./2011-passage-4-data";
 import { passage2011P3Guide, passage2011P3Paragraphs } from "./2011-passage-3-guide";
@@ -1657,6 +1657,8 @@ export const articleContents: Record<string, ArticleContent> = {
     description: "第41—45题，21句。保留共享A—G七选项与两项多余；区分发言人、批评者和被批评者的观点，不重复统计共用选项。", kind: "reading", sentences: passage2011P5Sentences, questions: passage2011P5Questions,
   },
   "2011-translation": {
+    teachingStatus: { syntax: true, vocabulary: true, evidence: true, practice: true },
+    paragraphs: translation2011ArticleParagraphs,
     id: "2011-translation", year: 2011, sectionId: "translation", label: "英译汉", badge: "2011 · 英语二 · 第46题", title: "数字生活的碳排放与减排责任",
     description: "三段七句，整篇一次作答，15分。辨析约数比较、数据单位、制冷耗能因果与不只是企业的责任；参考译文不作自动评分。", kind: "translation", sentences: translation2011Sentences, questions: [], translationTasks: translation2011Tasks,
   },

@@ -1,6 +1,7 @@
 import type { SentenceWordContext } from "./contextual-vocabulary";
 import { reviewedLexicon, type LexiconRow } from "./2011-content-helpers";
 const rows: LexiconRow[] = [
+  ["think", "thinks thought thinking", "v.", "想到；预料", "thought在would have thought中是过去分词，后接that内容从句；不能沿用名词thought思想的词位。", "would have thought（本来会想到）", "expect偏预期某结果；本句think用反问表达出乎意料，不是名词思想。"],
   ["user", "users", "n.", "用户；使用者", "its users指使用谷歌搜索服务的人，to引结果接收方。", "deliver results to users（向用户返回结果）", "user为使用服务者，不必同时是付费客户customer。"],
   ["correct", "", "adj.", "正确的", "可在第3句替换right修饰answer，强调答案符合事实或要求。", "a correct answer（正确答案）", "correct偏客观无误，right也可强调恰当合需要。"],
   ["globally", "", "adv.", "在全球范围内", "限定IT行业与航空业排放比较的统计范围。", "globally comparable（全球范围内可比较的）", "global为形容词，globally副词独立词位。"],

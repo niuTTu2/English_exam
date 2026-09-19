@@ -1,7 +1,8 @@
 import type { SentenceAnalysis, TranslationTask } from "./data";
 import { clause, segment, sentenceFactory } from "./2011-content-helpers";
+import { reviewTranslation2011 } from "./2011-translation-syntax";
 const sentence = sentenceFactory("2011-translation");
-export const translation2011Sentences: SentenceAnalysis[] = [
+const translation2011Drafts: SentenceAnalysis[] = [
   sentence(1, [
     segment("Who would have thought ", "predicate", "疑问代词与情态完成式", "反问主干", "Who为thought主语", "反问表示出乎意料，不是在索取某个思考者姓名。"),
     segment("that, globally, the IT industry produces ", "predicate", "宾语从句与范围副词", "所想到命题的主谓", "IT industry为信息技术行业", "globally限定统计为全球，不是仅Google某家企业。"),
@@ -28,7 +29,7 @@ export const translation2011Sentences: SentenceAnalysis[] = [
     segment("Google has to maintain ", "predicate", "主语与义务情态结构", "主句主谓", "has to整体表示必须", "不是完成时助动词have+过去分词。"),
     segment("vast data centres around the world, ", "object", "名词宾语与地点范围", "maintain的对象", "为全球多处庞大数据中心", "around the world限定设施分布，不是绕地球转动。"),
     segment("packed with powerful computers.", "modifier", "过去分词后置定语", "修饰data centres", "中心内装满高性能计算机", "packed为状态被动，非另一个主句谓语。"),
-  ], "Google has to maintain vast data centres.", "因此，为了迅速把结果传递给用户，谷歌必须在全球维持庞大的数据中心，里面装满强大的计算机。", "为了迅速向用户返回搜索结果，谷歌必须在世界各地维护庞大的数据中心，部署大量高性能计算机。", "从搜索需求解释大规模基础设施及其能源负担。", ["deliver results to its users", "packed with powerful computers"]),
+  ], "Google has to maintain vast data centres.", "因此，为了迅速把结果传递给用户，谷歌必须在全球维持庞大的数据中心，里面装满强大的计算机。", "因此，为了迅速向用户返回搜索结果，谷歌必须在世界各地维护庞大的数据中心，其中密集装有高性能计算机。", "从搜索需求解释大规模基础设施及其能源负担。", ["deliver results to its users", "packed with powerful computers"]),
   sentence(5, [
     segment("While producing large quantities of CO2, ", "modifier", "while引省略主语的分词结构", "同时发生的时间伴随状语", "逻辑主语为these computers", "完整理解为while these computers are producing，不是转折尽管。"),
     segment("these computers emit a great deal of heat, ", "predicate", "主谓宾", "第一主句", "计算机同时排放与发热", "heat是不可数名词，a great deal of表大量。"),
@@ -47,11 +48,13 @@ export const translation2011Sentences: SentenceAnalysis[] = [
     segment("Monitoring is the first step on the road to reduction, ", "predicate", "动名词主语与系表", "第一分句", "monitoring为监测行动", "to reduction为介词宾语，road比喻减排进程。"),
     segment("but there is much more to be done, ", "predicate", "转折连词与存在句", "第二分句", "much more为待做事情", "to be done被动不定式修饰more，表示仍有大量工作。"),
     segment("and not just by big companies.", "modifier", "并列省略与部分排除", "补充工作执行者范围", "by big companies依附前面的be done", "不只是大公司，暗示其他主体也须行动，不是大公司不用行动。"),
-  ], "Monitoring is the first step, but there is much more to be done.", "监测是通往减排之路的第一步，但还有更多工作需要完成，而且不只是由大公司来完成。", "监测只是迈向减排的第一步。我们还有许多工作要做，而承担这些工作的也不应只是大企业。", "从企业改进扩大到更广泛的行动责任，not just不能译成完全排除。", ["the first step on the road to reduction", "much more to be done", "not just by big companies"], [
+  ], "Monitoring is the first step, but there is much more to be done.", "监测是通往减排之路的第一步，但还有更多工作需要完成，而且不只是由大公司来完成。", "监测是迈向减排的第一步，但还有许多工作要做，而且不应只由大企业来做。", "从企业改进扩大到更广泛的行动责任，not just不能译成完全排除。", ["the first step on the road to reduction", "much more to be done", "not just by big companies"], [
     clause("and not just by big companies", "并列省略结构", "and", "补足被动动作的执行者范围", "省略前文much more工作", "省略is to be done", "not just by big companies（被动施事）", "译为不应仅由大企业承担，保留也需要其他人而非排除企业。"),
   ]),
 ];
+export const translation2011Sentences = translation2011Drafts.map(reviewTranslation2011);
 export const translation2011Paragraphs = [translation2011Sentences.slice(0, 1), translation2011Sentences.slice(1, 5), translation2011Sentences.slice(5)];
+export const translation2011ArticleParagraphs = translation2011Paragraphs.map((paragraph, index) => ({ id: `2011-translation-p${index + 1}`, sentenceIds: paragraph.map(sentence => sentence.id) }));
 export const translation2011Tasks: TranslationTask[] = [{
   id: 201146, number: 46, format: "passage", points: 15, sentenceId: "2011-translation-s1",
   prompt: "第46题：将以下三段英文完整译成中文，一次提交全文。本题15分；参考译文用于自行对照，不作自动评分。",
