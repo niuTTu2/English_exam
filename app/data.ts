@@ -1619,6 +1619,7 @@ export const articleContents: Record<string, ArticleContent> = {
     title: "可持续的生活与个人选择",
     description: "第46题，15分。保留原卷三段整篇作答，提交后对照参考译文，并逐句理解动名词主语、形式宾语、结果从句和习语。参考译文用于学习，不作自动评分。",
     kind: "translation", sentences: translation2010Sentences, questions: [], translationTasks: translation2010Tasks,
+    teachingStatus: { syntax: true, vocabulary: true, evidence: true, practice: true },
   },
   "2011-cloze": {
     id: "2011-cloze", year: 2011, sectionId: "cloze", label: "完形填空", badge: "2011 · 英语二 · 完形填空",

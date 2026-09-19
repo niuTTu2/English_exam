@@ -44,6 +44,10 @@ const text5Senses = new Set("trumpet company peer wake assume range knot case tu
 const text5Names = new Set("boeing airbus a350 stanford ilan kroo dr peter lissaman caltech southern california los angeles san francisco las vegas utah london america raf lancaster berlin".split(" "));
 const text5SourceNames:Record<string,string[]>={"2010-p5-s16":["red","arrow"],"2010-p5-s18":["international","civil","aviation","organisation"],"2010-p5-s25":["defence","advanced","research","project","agency"]};
 const text5Structures = new Set(["both A and B","make a difference","an approach to doing something","the answer lies with somebody","fly in formation","spend energy doing something","an increase of a percentage","apply something to something","have a turn","proceed to a destination","as much as an amount","be coupled with something","fall by an amount","work out a problem","travel in company","be separated by a distance","it remains to be seen how ...","allow somebody to do something","be easier to do something","as it happens","be on the case","have yet to do something","be low on something"].map(x=>x.toLowerCase()));
+const translationCore = new Set("sustainability unsustainability concept endure desperate agency dilemma passion anxiety miserable recall express value".split(" "));
+const translationSenses = new Set("translate move meaning burst turn corner sign through go".split(" "));
+const translationNames = new Set(["ted", "ning", "boulder"]);
+const translationStructures = new Set(["make it clear (to somebody) that + clause", "having done something（动名词完成式）", "recall doing something", "spend time doing something", "in the late + decade", "be through something", "be desperate for something", "sign on with an organization", "go well", "translate into something", "a lack of + noun", "so much + uncountable noun + that + clause", "would do（过去习惯）", "turn the corner", "give somebody/something (some) time"].map(x=>x.toLowerCase()));
 /** 编辑建议按本篇语境给出；不是官方考试词频排名，也不改变词义。 */
 export function vocabularyPriority(entry: Pick<VocabEntry, "headword" | "display" | "kind" | "canonicalForm">, sourceId: string, articleId?: string): VocabularyPriority | undefined {
   if (articleId === "2012-writing-b") return writing2012BPriority(entry);
@@ -136,20 +140,21 @@ export function vocabularyPriority(entry: Pick<VocabEntry, "headword" | "display
   if (articleId === "2011-p3") return passage2011P3Priority(entry);
   if (articleId === "2011-p2") return passage2011P2Priority(entry);
   if (articleId === "2011-p1") return passage2011P1Priority(entry);
-  if (articleId !== "2010-p1" && articleId !== "2010-p2" && articleId !== "2010-p3" && articleId !== "2010-p4" && articleId !== "2010-p5") return undefined;
+  if (articleId !== "2010-p1" && articleId !== "2010-p2" && articleId !== "2010-p3" && articleId !== "2010-p4" && articleId !== "2010-p5" && articleId !== "2010-translation") return undefined;
+  const translation = articleId === "2010-translation";
   const text2 = articleId === "2010-p2", text3 = articleId === "2010-p3", text4 = articleId === "2010-p4", text5 = articleId === "2010-p5";
-  const articleNames = text5 ? text5Names : text4 ? text4Names : text3 ? text3Names : text2 ? text2Names : names;
-  const articleSourceNames: Record<string, string[]> = text5 ? text5SourceNames : text4 ? text4SourceNames : text3 ? {} : text2 ? text2SourceNames : sourceNames;
-  const articleStructures = text5 ? text5Structures : text4 ? text4Structures : text3 ? text3Structures : text2 ? text2Structures : structures;
-  const articleSenses = text5 ? text5Senses : text4 ? text4Senses : text3 ? text3Senses : text2 ? text2Senses : familiar;
-  const articleCore = text5 ? text5Core : text4 ? text4Core : text3 ? text3Core : text2 ? text2Core : core;
+  const articleNames = translation ? translationNames : text5 ? text5Names : text4 ? text4Names : text3 ? text3Names : text2 ? text2Names : names;
+  const articleSourceNames: Record<string, string[]> = translation ? {} : text5 ? text5SourceNames : text4 ? text4SourceNames : text3 ? {} : text2 ? text2SourceNames : sourceNames;
+  const articleStructures = translation ? translationStructures : text5 ? text5Structures : text4 ? text4Structures : text3 ? text3Structures : text2 ? text2Structures : structures;
+  const articleSenses = translation ? translationSenses : text5 ? text5Senses : text4 ? text4Senses : text3 ? text3Senses : text2 ? text2Senses : familiar;
+  const articleCore = translation ? translationCore : text5 ? text5Core : text4 ? text4Core : text3 ? text3Core : text2 ? text2Core : core;
   const head = entry.headword.toLowerCase(), surface = entry.display.toLowerCase();
-  if (articleNames.has(head) || articleSourceNames[sourceId]?.includes(head)) return { id: "name", label: "背景专名 · 识别即可", reason: text5 ? "此处用于公司、机型、专家、地名或机构名称；先识别角色与对应关系，不必单独背专名。" : text4 ? "此处是国名、州名或案件名称的组成；识别历史节点即可，仍可自行标记。" : text3 ? "此处用于研究者、院校、公司或品牌名称；先分清文中的层级，不必单独背专名。" : text2 ? "此处用于人名、地名或书名；识别出处即可，仍可自愿标记。" : "此处用于人名、地名、机构名或拍卖名称；建议不加入单独背词复习，仍可自行标记。", recommendedReview: false };
+  if (articleNames.has(head) || articleSourceNames[sourceId]?.includes(head)) return { id: "name", label: "背景专名 · 识别即可", reason: translation ? "此处为人名或机构所在地，先识别谁在回忆及签约地点，不必单独背专名。" : text5 ? "此处用于公司、机型、专家、地名或机构名称；先识别角色与对应关系，不必单独背专名。" : text4 ? "此处是国名、州名或案件名称的组成；识别历史节点即可，仍可自行标记。" : text3 ? "此处用于研究者、院校、公司或品牌名称；先分清文中的层级，不必单独背专名。" : text2 ? "此处用于人名、地名或书名；识别出处即可，仍可自愿标记。" : "此处用于人名、地名、机构名或拍卖名称；建议不加入单独背词复习，仍可自行标记。", recommendedReview: false };
   if (entry.kind === "phrase") return articleStructures.has(surface) || articleStructures.has((entry.canonicalForm ?? head).toLowerCase())
     ? { id: "structure", label: "必会结构", reason: "重点记完整关系和可接成分，再回到本句确认修饰对象。", recommendedReview: true }
     : { id: "recognition", label: "本句表达 · 按需记忆", reason: "先理解本句组合；是否加入复习由你选择。", recommendedReview: false };
   if (articleSenses.has(head)) return { id: "sense", label: "熟词语境义", reason: "重点区分本句义与最熟悉的基本义，不能把整个词组的意思塞给这个单词。", recommendedReview: true };
-  if ((text2 || text3 || text4 || text5 ? text2Functions : functions).has(head)) return { id: "function", label: "功能词 · 看句法作用", reason: "建议在句法任务中复习它连接或引出的成分，不脱离句子单独背词。", recommendedReview: false };
+  if ((translation || text2 || text3 || text4 || text5 ? text2Functions : functions).has(head)) return { id: "function", label: "功能词 · 看句法作用", reason: "建议在句法任务中复习它连接或引出的成分，不脱离句子单独背词。", recommendedReview: false };
   if (articleCore.has(head)) return { id: "core", label: "核心迁移词", reason: "适合结合本句用法与关键搭配复习，能帮助理解同类议论文章。", recommendedReview: true };
   return { id: "recognition", label: "本句识别 · 按需记忆", reason: "先保证读懂当前语境，不必把每张词卡的所有扩展都背下来。", recommendedReview: false };
 }

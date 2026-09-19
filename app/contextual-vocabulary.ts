@@ -1,6 +1,8 @@
 import { passage2011P3SourceContexts } from "./2011-passage-3-contexts";
 import { passage2011P2SourceContexts } from "./2011-passage-2-contexts";
 import { passage2011P1SourceContexts } from "./2011-passage-1-contexts";
+import { translation2010ReviewedContexts } from "./2010-translation-contexts";
+import { translation2010PreferredContexts } from "./2010-translation-collocations";
 import { passage2010P5ReviewedContexts } from "./2010-passage-5-contexts";
 import { passage2010P5PreferredContexts } from "./2010-passage-5-collocations";
 import { passage2010P4PreferredContexts } from "./2010-passage-4-collocations";
@@ -90,7 +92,11 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
   ...writing2012ASentenceContexts,
   ...writing2012BSentenceContexts,
   ...cloze2011SentenceContexts,
-  ...translation2010SentenceContexts,
+  ...Object.fromEntries([...new Set([...Object.keys(translation2010SentenceContexts), ...Object.keys(translation2010ReviewedContexts), ...Object.keys(translation2010PreferredContexts)])].map(id => [id,
+    Object.fromEntries([...new Set([...Object.keys(translation2010SentenceContexts[id] ?? {}), ...Object.keys(translation2010ReviewedContexts[id] ?? {}), ...Object.keys(translation2010PreferredContexts[id] ?? {})])].map(head => [head, {
+      ...translation2010PreferredContexts[id]?.[head], ...translation2010SentenceContexts[id]?.[head], ...translation2010ReviewedContexts[id]?.[head],
+    }])),
+  ])),
   ...passage2010P2SentenceContexts,
   ...Object.fromEntries([...new Set([...Object.keys(passage2010P3SentenceContexts), ...Object.keys(passage2010P3ReviewedContexts), ...Object.keys(passage2010P3PreferredContexts)])].map(id => [id,
     Object.fromEntries([...new Set([...Object.keys(passage2010P3SentenceContexts[id] ?? {}), ...Object.keys(passage2010P3ReviewedContexts[id] ?? {}), ...Object.keys(passage2010P3PreferredContexts[id] ?? {})])].map(head => [head, {

@@ -1,6 +1,7 @@
 import type { SentenceAnalysis, TranslationTask } from "./data";
+import { reviewTranslation2010 } from "./2010-translation-syntax";
 
-export const translation2010Sentences: SentenceAnalysis[] = [
+const translation2010Drafts: SentenceAnalysis[] = [
   {
     id: "2010-translation-s1", number: 1,
     text: '"Sustainability" has become a popular word these days, but to Ted Ning, the concept will always have personal meaning.',
@@ -252,6 +253,8 @@ export const translation2010Sentences: SentenceAnalysis[] = [
     phrases: ["Just wait", "turn the corner", "give it some time"],
   },
 ];
+
+export const translation2010Sentences = translation2010Drafts.map(reviewTranslation2010);
 
 export const translation2010Paragraphs = [
   translation2010Sentences.slice(0, 2),

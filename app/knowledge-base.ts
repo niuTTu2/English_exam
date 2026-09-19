@@ -1,3 +1,5 @@
+import { getTranslation2010ReviewedKnowledge } from "./2010-translation-contexts";
+import { translation2010SourcePhraseGuides, translation2010SourcePhraseAliases, translation2010SourceCollocationGlosses } from "./2010-translation-collocations";
 import { getPassage2010P5WordKnowledge } from "./2010-passage-5-contexts";
 import { passage2010P5SourcePhraseGuides, passage2010P5SourcePhraseAliases, passage2010P5SourceCollocationGlosses } from "./2010-passage-5-collocations";
 import { getPassage2010P4WordKnowledge } from "./2010-passage-4-contexts";
@@ -917,6 +919,10 @@ Object.assign(phraseAliases, translation2010PhraseAliases);
 for (const [key, value] of Object.entries(translation2010CollocationGlosses)) {
   if (!collocationGlosses[key]) collocationGlosses[key] = value;
 }
+for(const[expression,key]of Object.entries(translation2010SourcePhraseAliases)){
+ if(!phraseAliases[expression]){const guide=translation2010SourcePhraseGuides[key];const existing=Object.values(phraseGuides).find(value=>value.canonical.toLowerCase()===guide.canonical.toLowerCase());if(existing)phraseAliases[expression]=existing.key;else{phraseGuides[key]=guide;phraseAliases[expression]=key;}}
+ if(!collocationGlosses[expression])collocationGlosses[expression]=translation2010SourceCollocationGlosses[expression];
+}
 phraseGuides["almost-no-difference"].meaning = "产生影响；不产生影响（取决于a/no）";
 phraseGuides["entitled-to-privacy"].meaning = "有权享有某项权利或利益";
 phraseGuides["entitled-to-privacy"].summary = "be entitled to + 权利或利益；既可表示有权享有隐私，也可表示有权接受同侪审判。";
@@ -1208,6 +1214,8 @@ export function getWordKnowledge(headword: string, context?: { articleId?: strin
     if (contextualKnowledge) return contextualKnowledge;
   }
   if (context?.articleId === "2010-translation") {
+    const reviewed = getTranslation2010ReviewedKnowledge(normalized(headword), context.sentenceId);
+    if (reviewed) return reviewed;
     const contextualKnowledge = getTranslation2010WordKnowledge(normalized(headword), context.sentenceId);
     if (contextualKnowledge) return contextualKnowledge;
   }

@@ -1,0 +1,30 @@
+import assert from "node:assert/strict";
+import test,{after} from "node:test";
+import {readFileSync} from "node:fs";
+import {fileURLToPath} from "node:url";
+import {createServer} from "vite";
+const root=fileURLToPath(new URL("..",import.meta.url));const vite=await createServer({configFile:false,root,resolve:{alias:{"@":root}},server:{middlewareMode:true,hmr:false}});after(()=>vite.close());
+const{articleContents,translationTaskSentences}=await vite.ssrLoadModule("/app/data.ts");const a=articleContents["2010-translation"],sentence=n=>a.sentences[n-1];
+const tokens=text=>text.match(/[A-Za-z]+(?:\d+[A-Za-z]*)+\b|\d+(?:st|nd|rd|th)\b|\d{4}s\b|(?:[A-Za-z]\.){2,}|(?<![A-Za-z0-9])[A-Za-z]+(?:-[A-Za-z]+)?(?:['’][A-Za-z]+)?/g)??[];
+test("2010翻译保留原卷三段整篇、嵌套引号与关键非谓语和结果范围",()=>{
+ const f=JSON.parse(readFileSync(new URL("./fixtures/2010-translation-source.json",import.meta.url),"utf8"));assert.equal(a.translationTasks.length,1);const task=a.translationTasks[0];assert.equal(task.id,201046);assert.equal(task.points,15);assert.equal(task.format,"passage");
+ assert.deepEqual(task.paragraphs.map(p=>p.map(s=>s.text).join(" ")),f.paragraphs);assert.equal(task.source,f.paragraphs.join("\n\n"));assert.deepEqual(translationTaskSentences(task),a.sentences);assert.equal(task.answer.split("\n\n").length,3);assert.equal(a.guide,undefined);assert.equal(a.questions.length,0);
+ assert.deepEqual(a.sentences.map(s=>s.beginnerSyntax.clauses.length),[0,1,0,0,0,2,0,1,0,0]);
+ const s2=sentence(2);assert.equal(s2.beginnerSyntax.components[0].function,"主语");assert.equal(s2.beginnerSyntax.components[0].text,"Having endured a painful period of unsustainability in his own life");assert.equal(s2.practice[0].answer,s2.beginnerSyntax.components[0].text);assert.equal(s2.beginnerSyntax.components.find(c=>c.text==="clear").function,"宾语补足语");assert.equal(s2.beginnerSyntax.clauses[0].predicate,"must be expressed");
+ const s6=sentence(6);assert.equal(s6.beginnerSyntax.clauses[0].text,"because that's not my passion");assert.equal(s6.practice[0].answer,s6.beginnerSyntax.clauses[1].text);assert.ok(s6.beginnerSyntax.clauses[1].text.endsWith("into a lack of sales"));assert.equal(s6.beginnerSyntax.components[0].children.find(c=>c.text.startsWith("because")).children[0].text,"that's");
+ const s8=sentence(8);assert.equal(s8.practice[0].answer,s8.beginnerSyntax.clauses[0].text);assert.ok(s8.beginnerSyntax.clauses[0].text.endsWith("and stare at the ceiling"));assert.match(s8.beginnerSyntax.clauses[0].predicate,/would.*stare/);
+ assert.equal(sentence(7).text,'"I was miserable.');assert.ok(sentence(10).text.endsWith(".'\""));assert.equal(sentence(10).beginnerSyntax.components.at(-1).children[1].function,"间接宾语");assert.equal(sentence(10).beginnerSyntax.components.at(-1).children[2].function,"直接宾语");
+ assert.equal(a.sentences.reduce((n,s)=>n+s.practice.length,0),16);for(const s of a.sentences){assert.equal(s.translationAlignment.map(b=>b.english).join(""),s.text);assert.ok(s.beginnerSyntax.reading.questions.every(q=>s.text.includes(q.evidence)));}
+});
+test("2010翻译真实词卡、全部主动提示入口与当前句优先词块精确对应",async()=>{
+ const{resolveEntry}=await vite.ssrLoadModule("/app/study-app.tsx");const{canonicalLemma}=await vite.ssrLoadModule("/app/lexicon.ts");const{hintAffectsTask}=await vite.ssrLoadModule("/app/learning-model.ts");const{translation2010ReviewedContexts:contexts}=await vite.ssrLoadModule("/app/2010-translation-contexts.ts");const{translation2010PreferredContexts:preferred}=await vite.ssrLoadModule("/app/2010-translation-collocations.ts");const sources=new Map(a.sentences.map(s=>[s.id,s.text]));
+ assert.equal(Object.keys(contexts).length,10);assert.equal(Object.keys(preferred).length,10);
+ for(const s of a.sentences){const labels=new Set([...tokens(s.text),...s.phrases].map(x=>x.toLowerCase()));for(const task of s.practice)for(const label of task.hintWords??[]){assert.ok(labels.has(label.toLowerCase()),`${s.id}/${task.id}/${label}`);assert.ok(hintAffectsTask(task,"word",label));}}
+ for(const[source,words]of Object.entries(contexts))for(const[head,entry]of Object.entries(words)){const token=tokens(sources.get(source)).find(w=>canonicalLemma(w,{articleId:a.id,sourceId:source})===head);assert.ok(token,`${source}/${head}`);const card=resolveEntry(token,false,source);assert.equal(card.contextualMeaning,entry.contextualMeaning,`${source}/${head}`);assert.equal(card.partOfSpeech,entry.partOfSpeech);assert.equal(card.grammarSummary,entry.use);}
+ for(const[source,words]of Object.entries(preferred))for(const[head,entry]of Object.entries(words)){const token=tokens(sources.get(source)).find(w=>canonicalLemma(w,{articleId:a.id,sourceId:source})===head);assert.ok(token,`${source}/${head}`);const card=resolveEntry(token,false,source);for(const phrase of entry.preferredCollocations){assert.ok(sources.get(source).includes(phrase));assert.equal(card.collocations[0],phrase);assert.ok(card.collocationDetails[0].target);}}
+ const card=(w,n)=>resolveEntry(w,false,`2010-translation-s${n}`);
+ assert.match(card("Having",2).partOfSpeech,/助|aux/);assert.match(card("Having",2).grammarSummary,/主语/);assert.match(card("had",9).grammarSummary,/实义/);assert.match(card("been",4).grammarSummary,/过去完成/);
+ assert.match(card("that's",6).grammarSummary,/that回指卖保险/);assert.match(card("that",2).use,/真正宾语/);assert.match(card("that",8).use,/结果/);assert.match(card("it",10).grammarSummary,/间接宾语/);assert.match(card("1990s",3).grammarSummary,/后期/);
+ assert.ok(card("recalls",3).contextualSubstitutions.length);assert.ok(card("miserable",7).contextualSubstitutions.length);assert.equal(card("sales",6).headword,"sale");assert.equal(card("selling",3).headword,"sell");
+ const{vocabularyPriority}=await vite.ssrLoadModule("/app/vocabulary-priority.ts");assert.equal(vocabularyPriority(card("Boulder",4),"2010-translation-s4",a.id).id,"name");assert.equal(vocabularyPriority(card("translated",6),"2010-translation-s6",a.id).id,"sense");assert.equal(vocabularyPriority(card("anxiety",8),"2010-translation-s8",a.id).id,"core");
+});
