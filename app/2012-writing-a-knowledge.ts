@@ -15,12 +15,13 @@ const rows: PhraseRow[] = [
 const reviewed = reviewedPhrases(rows);
 export const writing2012APhraseGuides = reviewed.guides;
 export const writing2012APhraseAliases = reviewed.aliases;
-export const writing2012APhraseGlosses = { ...writing2012ACollocationGlosses, ...reviewed.glosses };
+export const writing2012APhraseGlosses: Record<string, { meaning: string; note: string }> = { ...writing2012ACollocationGlosses, ...reviewed.glosses };
 export function getWriting2012AWordKnowledge(headword: string, sentenceId?: string): WordKnowledge | undefined {
   const entry = writing2012ALexicon[headword];
-  if (!entry) return undefined;
   const context = sentenceId ? writing2012ASentenceContexts[sentenceId]?.[headword] : undefined;
-  const pattern = entry.collocations[0];
-  const rule = context?.use ?? entry.use;
-  return { grammarRole: context?.partOfSpeech ?? entry.partOfSpeech, grammarSummary: rule, structures: [{ pattern, meaning: writing2012ACollocationGlosses[pattern.toLowerCase()].meaning, rule }], pitfalls: entry.examSynonyms };
+  const patterns = context?.preferredCollocations ?? entry?.collocations;
+  if (!patterns?.length) return undefined;
+  const rule = context?.use ?? entry?.use, grammarRole = context?.partOfSpeech ?? entry?.partOfSpeech;
+  if (!rule || !grammarRole) throw new Error(`Missing complaint writing context: ${sentenceId}/${headword}`);
+  return { grammarRole, grammarSummary: rule, structures: patterns.map(pattern => ({ pattern, meaning: writing2012APhraseGlosses[pattern.toLowerCase()].meaning, rule })), pitfalls: entry?.examSynonyms ?? [] };
 }

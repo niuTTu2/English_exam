@@ -1,7 +1,8 @@
+import { withWriting2012ATeaching } from "./2012-writing-a-teaching";
 import type { SentenceAnalysis, WritingTask } from "./data";
 import { clause, segment, sentenceFactory } from "./2011-content-helpers";
 const sentence = sentenceFactory("2012-writing-a");
-export const writing2012ASentences: SentenceAnalysis[] = [
+const originalWriting2012ASentences: SentenceAnalysis[] = [
   sentence(1, [
     segment("Suppose ", "predicate", "祈使假设动词", "设定写作情境", "省略主语you，后接假设内容", "Suppose相当于设想，不表示该故障已经真实发生在考生身上。"),
     segment("you have found something wrong with the electronic dictionary ", "object", "宾语从句及后置形容词", "设定发现问题", "something为found宾语，wrong with说明有何问题", "不定代词something后置wrong，with引发生故障的物品。"),
@@ -32,6 +33,8 @@ export const writing2012ASentences: SentenceAnalysis[] = [
     segment("(10 points)", "modifier", "括号评分说明", "整题分值", "修饰第47题整体", "10为整封邮件分值，不是只要10个要点，也不是范文自动得分。"),
   ], "Do not write your address.", "不要写你的地址。（10分）", "请勿填写地址，本题10分。", "保持原卷作答边界；线上不收集邮寄地址。", ["Do not write your address"]),
 ];
+export const writing2012ASentences = originalWriting2012ASentences.map(withWriting2012ATeaching);
+
 export const writing2012ATasks: WritingTask[] = [{
   id: 201247, number: 47, genre: "letter", points: 10, wordLimit: { mode: "about", count: 100 }, instructions: writing2012ASentences,
   requirements: ["收件人：网店客服中心；商品：前几天购买的电子词典。", "两个必写任务：投诉问题；要求及时解决。可合理具体化故障及换货或退款方案，但不能说这些细节是原卷给定。", "约100词，态度明确且礼貌；署名Zhang Wei，不写真实姓名或地址。"],

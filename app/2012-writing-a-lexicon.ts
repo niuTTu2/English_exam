@@ -15,7 +15,7 @@ const rows: LexiconRow[] = [
   ["address", "addresses", "n.", "地址", "Do not write your address是格式限制，不需邮寄地址。", "write one's address（写下地址）", "address作动词可指向某人讲话、处理问题；address an issue为处理问题。"],
   ["point", "points", "n.", "分；分值", "10 points表本题总分，不是给定十条要点。", "ten points（十分）", "point另指观点、要点、地点；point out为指出，百分点用percentage point。"],
   ["about", "", "adv.", "大约", "about 100 words限定近似词数，不是至少。", "about one hundred（大约一百）", "about作介词可表关于；at least表示至少，不可混同。"],
-  ["do", "does did done doing", "aux.", "否定祈使助动词", "Do not引出禁止指令，后面sign/write仍用动词原形。", "do not write（不要写）", "不同于翻译46中代替produce的do，本句帮助构成否定。"],
+  ["do", "does did done doing", "aux.", "否定祈使助动词", "Do not引出禁止指令，后面sign/write仍用动词原形。", "do not write（不要写）", "do此处帮助构成禁止要求，not后面的主要动词仍用原形。"],
   ["should", "", "modal v.", "应当", "You should write规定写作要求，后接动词原形。", "should write（应当写）", "此处不是表猜测的应该已经；should不随主语变为单三。"],
   ["electronic", "", "adj.", "电子的", "修饰dictionary，限定投诉的产品类型。", "an electronic dictionary（电子词典）", "electric多与电力有关，electronic指电子技术，不把本题改成纸质词典。"],
   ["dictionary", "dictionaries", "n.", "词典", "前面electronic限定为网购电子词典。", "an electronic dictionary（电子词典）", "复数y变ies；不是diary日记。"],
@@ -55,3 +55,59 @@ export const writing2012ASentenceContexts: Record<string, Record<string, Sentenc
   "2012-writing-a-s3": { on: { contextualMeaning: "在……上", use: "on ANSWER SHEET 2给出纸笔考试书写位置。" } },
   "2012-writing-a-s4": { at: { contextualMeaning: "在……位置", use: "at the end of指邮件结尾。" } },
 };
+
+Object.assign(writing2012ASentenceContexts["2012-writing-a-s1"], {
+  you: { partOfSpeech: "pron.", contextualMeaning: "你；题设中的考生", use: "两处you分别作have found与bought的主语，发现问题的人也是购买者。", preferredCollocations: ["you have found", "you bought"] },
+  find: { partOfSpeech: "v.-ed（过去分词）", contextualMeaning: "发现", use: "found是find的过去分词，与have构成现在完成时；后接something及其后置限定作宾语。", preferredCollocations: ["have found something wrong"] },
+  something: { partOfSpeech: "pron.", contextualMeaning: "某些事情；某些问题", use: "something是不定代词，wrong后置修饰它；整个宾语说明发现电子词典有问题，未指定故障细节。", preferredCollocations: ["something wrong with the electronic dictionary"] },
+  with: { partOfSpeech: "prep.", contextualMeaning: "引出有问题的对象", use: "wrong with中的with后接电子词典，说明问题涉及的物品，不是伴随独立结构。", preferredCollocations: ["something wrong with the electronic dictionary"] },
+  the: { partOfSpeech: "art.", contextualMeaning: "特指或构成时间习语", use: "the electronic dictionary特指题设购买的电子词典；the other day为前几天的固定时间表达。", preferredCollocations: ["the electronic dictionary", "the other day"] },
+  that: { partOfSpeech: "relative pron.", contextualMeaning: "关系代词，回指电子词典", use: "that引定语从句限定dictionary，并作bought的宾语；从句主语是you。", preferredCollocations: ["the dictionary that you bought"] },
+  from: { partOfSpeech: "prep.", contextualMeaning: "从；由……处", use: "from an online store修饰bought，说明购买来源为网店。", preferredCollocations: ["buy from an online store"] },
+  an: { partOfSpeech: "art.", contextualMeaning: "一家", use: "an限定online store，未指定具体网店；online以元音音素开头。", preferredCollocations: ["an online store"] },
+  store: { partOfSpeech: "n.", contextualMeaning: "商店", use: "store在an online后是名词，作from的宾语；不是储存的动作。", preferredCollocations: ["an online store"] },
+  other: { partOfSpeech: "det.", contextualMeaning: "另一个（用于固定时间表达）", use: "other在the other day中限定day，整组表前几天或最近某天，不自行确定日期。", preferredCollocations: ["the other day"] }
+});
+Object.assign(writing2012ASentenceContexts["2012-writing-a-s2"], {
+  an: { partOfSpeech: "art.", contextualMeaning: "一封", use: "an限定单数可数名词email；email以元音音素开头。", preferredCollocations: ["write an email"] },
+  to: { partOfSpeech: "prep. / 不定式标记（本句两处）", contextualMeaning: "给；引出目的动作", use: "第一个to后接客服中心，作收件对象介词；第二个to后接make，demand与make共用它，表示两个邮件目的。", preferredCollocations: ["write an email to customer service", "to make a complaint"] },
+  the: { partOfSpeech: "art.", contextualMeaning: "特指该", use: "the限定customer service center，指处理所购商品问题的客服中心。", preferredCollocations: ["the customer service center"] },
+  customer: { partOfSpeech: "n.（作前置修饰）", contextualMeaning: "顾客；客户", use: "customer与service组合说明客户服务，整体进一步限定center。", preferredCollocations: ["customer service center"] },
+  service: { partOfSpeech: "n.（作前置修饰）", contextualMeaning: "服务", use: "customer service整体限定center，指客户服务机构；service在此不是独立谓语。", preferredCollocations: ["customer service center"] },
+  make: { partOfSpeech: "v.", contextualMeaning: "提出", use: "make处于目的不定式中，以a complaint为宾语，整组表示投诉。", preferredCollocations: ["make a complaint"] },
+  a: { partOfSpeech: "art.", contextualMeaning: "一次；一个", use: "两处a分别限定可数名词complaint和solution，说明一次投诉与一个解决办法。", preferredCollocations: ["make a complaint", "a prompt solution"] },
+  and: { partOfSpeech: "conj.", contextualMeaning: "并且", use: "and连接make与demand，两个目的共用to，不能只完成投诉而遗漏解决要求。", preferredCollocations: ["make a complaint and demand a solution"] }
+});
+Object.assign(writing2012ASentenceContexts["2012-writing-a-s3"], {
+  you: { partOfSpeech: "pron.", contextualMeaning: "你；写作考生", use: "You作should write的主语，此句规定考生需要写的篇幅。", preferredCollocations: ["you should write"] },
+  write: { partOfSpeech: "v.", contextualMeaning: "写；撰写", use: "write在should后用原形，about 100 words为宾语，on说明位置。", preferredCollocations: ["write about 100 words"] },
+  on: { partOfSpeech: "prep.", contextualMeaning: "在……上", use: "on ANSWER SHEET 2给出原纸笔试卷的作答位置，整个短语修饰write。", preferredCollocations: ["on ANSWER SHEET 2"] }
+});
+Object.assign(writing2012ASentenceContexts["2012-writing-a-s4"], {
+  do: { partOfSpeech: "aux.", contextualMeaning: "构成否定祈使", use: "Do与not合用表示禁止，以sign为主要动词，不能改成signs。", preferredCollocations: ["Do not sign your own name"] },
+  not: { partOfSpeech: "adv.", contextualMeaning: "不；不要", use: "not否定sign your own name，禁止用考生本人真名署名。", preferredCollocations: ["Do not sign your own name"] },
+  your: { partOfSpeech: "possessive determiner", contextualMeaning: "你的", use: "your限定name，own进一步强调本人真实姓名。", preferredCollocations: ["your own name"] },
+  at: { partOfSpeech: "prep.", contextualMeaning: "在（某一位置）", use: "at the end of the letter说明署名位置是邮件末尾，letter仍指同一封email。", preferredCollocations: ["at the end of the letter"] },
+  the: { partOfSpeech: "art.", contextualMeaning: "特指已知对象", use: "the end指该文本的末尾；the letter回指所写电子邮件，未另设纸质信。", preferredCollocations: ["the end of the letter"] },
+  of: { partOfSpeech: "prep.", contextualMeaning: "……的", use: "of the letter限定end，说明是哪一文本的末尾。", preferredCollocations: ["at the end of the letter"] }
+});
+writing2012ASentenceContexts["2012-writing-a-s6"] = {
+  do: { partOfSpeech: "aux.", contextualMeaning: "构成否定祈使", use: "Do与not构成禁止要求，write仍用原形。", preferredCollocations: ["Do not write your address"] },
+  not: { partOfSpeech: "adv.", contextualMeaning: "不；不要", use: "not否定填写地址这一动作，后面的宾语是your address。", preferredCollocations: ["Do not write your address"] },
+  write: { partOfSpeech: "v.", contextualMeaning: "写下；填写", use: "write以your address为宾语；Do not表明不要填写。", preferredCollocations: ["Do not write your address"] },
+  your: { partOfSpeech: "possessive determiner", contextualMeaning: "你的", use: "your限定address，指考生本人通信地址。", preferredCollocations: ["your address"] }
+};
+Object.assign(writing2012ACollocationGlosses, {
+  "you have found": { meaning: "你已经发现", note: "you为主语，have found为现在完成时谓语。" },
+  "you bought": { meaning: "你购买了", note: "you作主语，bought为buy的一般过去式。" },
+  "have found something wrong": { meaning: "已经发现有些问题", note: "found为find的过去分词，something wrong是带后置形容词的不定代词短语。" },
+  "the electronic dictionary": { meaning: "这部电子词典", note: "electronic修饰dictionary，后续关系从句进一步限定是哪一部词典。" },
+  "the dictionary that you bought": { meaning: "你买的那部词典", note: "that引定语从句并作bought的宾语；规范搭配省略了原句其他修饰。" },
+  "to make a complaint": { meaning: "为了提出投诉", note: "to为不定式标记，make接a complaint名词宾语，整体表目的。" },
+  "the customer service center": { meaning: "该客服中心", note: "center为名词中心，customer service为前置限定。" },
+  "make a complaint and demand a solution": { meaning: "提出投诉并要求解决", note: "两个动作并列，共用前面的目的不定式标记to。" },
+  "write about 100 words": { meaning: "写约100词", note: "about限定近似数量，原题未给固定容差。" },
+  "do not sign your own name": { meaning: "不要署自己的真实姓名", note: "否定祈使；禁止对象为your own name，不是一概取消署名。" },
+  "your own name": { meaning: "你自己的名字", note: "your为物主限定词，own进一步强调本人姓名。" },
+  "your address": { meaning: "你的地址", note: "your限定名词address，作write的宾语。" }
+});

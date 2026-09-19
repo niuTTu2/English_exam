@@ -1689,8 +1689,9 @@ export const articleContents: Record<string, ArticleContent> = {
     kind: "translation", sentences: translation2012Sentences, questions: [], translationTasks: translation2012Tasks,
   },
   "2012-writing-a": {
+    teachingStatus: { syntax: true, vocabulary: true, evidence: true, practice: true },
     id: "2012-writing-a", year: 2012, sectionId: "writing-a", label: "写作 Part A", badge: "2012 · 英语二 · 写作 Part A",
-    title: "电子词典投诉：说清问题与补救要求", description: "第47题，约100词，10分。原题六句指令精读，练习正式投诉邮件；写作思路、教学范文和核对清单，不自动评分。",
+    title: "电子词典投诉：说清问题与补救要求", description: "第47题，约100词，10分。六句指令训练只计审题与语言理解；邮件独立写作，配有思路、教学范文和自查清单，不自动评分。",
     kind: "writing", sentences: writing2012ASentences, questions: [], writingTasks: writing2012ATasks,
   },
   "2012-writing-b": {
