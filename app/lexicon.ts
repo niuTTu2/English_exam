@@ -734,6 +734,7 @@ export function canonicalLemma(token: string, context?: LexicalContext) {
   if (context?.articleId === "2011-translation" && translation2011LemmaAliases[normalized]) return translation2011LemmaAliases[normalized];
   if (context?.articleId === "2011-p5" && passage2011P5LemmaAliases[normalized]) return passage2011P5LemmaAliases[normalized];
   if (context?.articleId === "2011-p4" && passage2011P4LemmaAliases[normalized]) return passage2011P4LemmaAliases[normalized];
+  if (context?.articleId === "2011-p3" && normalized === "building") return (context.sourceId ?? context.sentenceId) === "2011-p3-s14" ? "build" : "building";
   if (context?.articleId === "2011-p3" && passage2011P3LemmaAliases[normalized]) return passage2011P3LemmaAliases[normalized];
   if (context?.articleId === "2011-p2" && passage2011P2LemmaAliases[normalized]) return passage2011P2LemmaAliases[normalized];
   if (context?.articleId === "2011-p1" && passage2011P1LemmaAliases[normalized]) return passage2011P1LemmaAliases[normalized];

@@ -1,8 +1,13 @@
+import { withReviewedSyntax } from "./reviewed-syntax";
+import { passage2011P3Reviewed } from "./2011-passage-3-reading";
+import { passage2011P3Practice } from "./2011-passage-3-practice";
+import { passage2011P3Reasoning } from "./2011-passage-3-evidence";
+import { passage2011P3QuestionAnalysis } from "./2011-passage-3-question-analysis";
 import type { Question, SentenceAnalysis } from "./data";
 import { clause, segment, sentenceFactory } from "./2011-content-helpers";
 
 const sentence = sentenceFactory("2011-p3");
-export const passage2011P3Sentences: SentenceAnalysis[] = [
+const originalSentences: SentenceAnalysis[] = [
   sentence(1, [
     segment("We ", "subject", "第一人称复数代词", "主语", "think的主体", "包含作者与一般读者，提出通常的历史印象。"),
     segment("tend to think of ", "predicate", "倾向动词加认知搭配", "谓语", "说明惯常理解方式", "think of A as B把A看作B；tend保留倾向而非绝对断言。"),
@@ -89,7 +94,7 @@ export const passage2011P3Sentences: SentenceAnalysis[] = [
   ]),
 ];
 
-passage2011P3Sentences.push(
+originalSentences.push(
   sentence(11, [
     segment("The apartments in the elegant towers ", "subject", "名词加地点后置定语", "主语中心及位置", "were的主语", "apartments为主语，in the elegant towers说明所在建筑。"),
     segment("Mies built on Chicago's Lake Shore Drive, ", "modifier", "省略宾语关系词的定语从句", "后置定语", "修饰towers", "Mies主语，built谓语，省略宾语that/which指towers，on引建造位置。"),
@@ -156,10 +161,18 @@ passage2011P3Sentences.push(
 function question(number: number, sentenceNumber: number, prompt: string, options: [string, string, string, string], answer: Question["answer"], locating: string, explanations: Question["explanations"]): Question {
   return { id: 201100 + number, number, sentenceId: `2011-p3-s${sentenceNumber}`, prompt, options: options.map((text, index) => ({ key: (["A", "B", "C", "D"] as const)[index], text })), answer, locating, explanations };
 }
-export const passage2011P3Questions: Question[] = [
+const originalQuestions: Question[] = [
   question(31, 3, "The postwar American housing style largely reflected the Americans'____.", ["prosperity and growth", "efficiency and practicality", "restraint and confidence", "pride and faithfulness"], "C", "第二段that restraint与postwar confidence共同使small, efficient housing变得时髦。", { A: "第一段的繁荣发展是总体时代印象，But后转入住宅，不能跨过转折取答案。", B: "效率实用是住宅特征，不是题干所问美国人的两种心理取向。", C: "直接对应原文restraint与confidence这对共同原因。", D: "原文没有自豪与忠诚共同塑造住宅风格的说法。" }),
   question(32, 6, "Which of the following can be inferred from Paragraph 3 about the Bauhaus?", ["It was founded by Ludwig Mies van der Rohe.", "Its designing concept was affected by World War II.", "Most American architects used to be associated with it.", "It had a great influence upon American architecture."], "D", "第三段包豪斯相关设计师移居美国并任教，随后说These designers产生enormous influence。", { A: "first popularized说明推广格言，不是创立包豪斯，文中无该校创办者信息。", B: "before World War II限定移居时间，不是说设计理念由二战改变。", C: "some相关设计师赴美不等于大多数美国建筑师都有包豪斯背景。", D: "理念通过相关设计师传入美国并产生巨大影响，属于有依据的概括。" }),
   question(33, 8, "Mies held that elegance of architectural design____.", ["was related to large space", "was identified with emptiness", "was not reliant on abundant decoration", "was not associated with efficiency"], "C", "第四段less decoration properly organized效果更强，Elegance did not derive from abundance。", { A: "他的小而高效空间依然优雅，并非优雅依靠大空间。", B: "rather than big and often empty否定宽大空洞，不能把空无当作优雅本身。", C: "较少装饰经过合理组织即可产生优雅，不依赖大量堆砌。", D: "small and efficient与优雅同时成立，否认效率关联与文意相反。" }),
   question(34, 12, "What is true about the apartments Mies built on Chicago's Lake Shore Drive?", ["They ignored details and proportions.", "They were built with materials popular at that time.", "They were more spacious than neighboring buildings.", "They shared some characteristics of abstract art."], "D", "第五段细部与比例优雅，是当时流行的abstract art在建筑中的equivalent。", { A: "原文强调细部和比例的优雅，不是忽略。", B: "当时popular修饰抽象艺术；材料是今天司空见惯、当年象征未来，不能偷换时间和修饰对象。", C: "原文明确公寓smaller，比邻近老楼公寓小；也须用公寓对公寓比较。", D: "architectural equivalent说明与抽象艺术有相应的形式特征。" }),
   question(35, 16, 'What can we learn about the design of the "Case Study Houses"?', ["Mechanical devices were widely used.", "Natural scenes were taken into consideration.", "Details were sacrificed for the overall effect.", "Eco-friendly materials were employed."], "B", "末段Aesthetic effect came from the landscape，明确景观是审美来源。", { A: "末句谈对机械革命的预测并举直升机未普及，不能概括所有机械设备广泛应用于这些住宅。", B: "landscape表明设计将自然景观纳入审美考虑。", C: "forthright detailing是效果来源之一，不是牺牲细节。", D: "new materials只表示新材料，没有提供其环保属性的证据。" }),
 ];
+
+export const passage2011P3Sentences: SentenceAnalysis[] = originalSentences.map((sentence) => {
+  const reviewed = passage2011P3Reviewed[sentence.number];
+  const result = withReviewedSyntax({ ...sentence, textKind: reviewed.textKind ?? sentence.textKind, beginnerSyntax: { components: reviewed.components, clauses: reviewed.clauses, reading: reviewed.reading }, layers: reviewed.components.map(c => ({label:c.function,text:c.explanation})), grammar: reviewed.components.map(c => `${c.text}：${c.form}；${c.explanation}`), translationNotes: reviewed.translationNotes, practice: passage2011P3Practice[sentence.id] }, reviewed.colors);
+  if (result.chunks.length !== reviewed.chinese.length) throw new Error(`${sentence.id}: 词块译文数量不匹配`);
+  return { ...result, translationAlignment: result.chunks.map((chunk, i) => ({ english: chunk.text, chinese: reviewed.chinese[i] })) };
+});
+export const passage2011P3Questions: Question[] = originalQuestions.map(question => ({ ...question, reasoning: passage2011P3Reasoning[question.number!], analysis: passage2011P3QuestionAnalysis[question.number!] }));

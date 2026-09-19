@@ -189,7 +189,7 @@ test("2011Text3七段17句及31—35原题完整，比较与否定准确", () =>
   checkReadingSource("2011-p3", 31, 17, answers.verifiedAnswerKey2011Passage3);
   const article = data.articleContents["2011-p3"];
   assert.equal(article.sentences[8].beginnerSyntax.clauses.length, 2);
-  assert.match(article.sentences[8].beginnerSyntax.clauses[0].objectOrComplement, /材料|that/);
+  assert.ok(article.sentences[8].beginnerSyntax.clauses[0].predicateDetails.some(detail => detail.function === "宾语" && detail.text === "that"));
   assert.match(article.sentences[8].beginnerSyntax.clauses[1].subject, /that/);
   assert.match(article.sentences[10].natural, /公寓更小/);
   assert.match(article.sentences[12].text, /not entirely foreign/);

@@ -1,3 +1,4 @@
+import { passage2011P3ContextGlosses, getPassage2011P3SourceKnowledge } from "./2011-passage-3-contexts";
 import type { WordKnowledge } from "./knowledge-base";
 import { reviewedPhrases, type PhraseRow } from "./2011-content-helpers";
 import { passage2011P3Lexicon, passage2011P3CollocationGlosses, passage2011P3SentenceContexts } from "./2011-passage-3-lexicon";
@@ -5,14 +6,14 @@ import { passage2011P3Lexicon, passage2011P3CollocationGlosses, passage2011P3Sen
 const rows: PhraseRow[] = [
   ["think-of-it-as", "think of the decades immediately following World War II as a time of prosperity and growth", "think of A as B", "认知搭配", "把战后几十年看作繁荣发展时期", "of后为被评价对象，as后为评价身份，不能只取think思考。", "We think of the period as a time of growth.", "我们把这一时期看作发展阶段。", "复用think of A as B规范词组，不与think about考虑混淆。"],
   ["by-the-millions", "by the millions", "by the + plural number", "数量方式状语", "数以百万计地", "by引成群出现的数量规模，修饰士兵返乡。", "People returned by the millions.", "数以百万计的人返回。", "不是返乡者的具体精确人数。"],
-  ["line-up-at", "lining up at the marriage bureaus", "line up at + place", "动词短语", "在婚姻登记处排队", "line up作排队，at引地点；lining与returning、going平行。", "They lined up at the office.", "他们在办公室外排队。", "line此处是动词，不是报纸文本行。"],
+  ["line-up-at", "lining up at the marriage bureaus", "line up at + place", "动词短语", "在婚姻登记处排队", "line up作排队，at引地点；lining与returning、going平行。", "They lined up at the office.", "他们在办公室外排队。", "line在此为与up连用的动词，表示排队。"],
   ["when-it-comes-to", "when it came to their houses", "when it comes to + noun/doing", "话题习语", "说到他们的住宅", "to为介词，引要讨论的方面，came保留原文过去时。", "When it comes to design, space matters.", "谈到设计，空间很重要。", "不是‘当它来到房屋’，不把to后接原形动词。"],
   ["less-is-more", "less could truly be more", "less is more", "设计理念", "少即是多；少而精", "less指较少装饰，more指更强审美效果，二者并非同一数量。", "In good design, less can be more.", "在优秀设计中，少可以胜过多。", "不等于否认住宅实用功能。"],
   ["in-combination-with", "in combination with the postwar confidence in the future", "in combination with + noun", "共同因素状语", "与战后对未来的信心结合", "此短语补充restraint共同起作用的因素。", "Restraint, in combination with confidence, shaped the style.", "节制与信心共同塑造了这种风格。", "with中的名词不是独立并列的主句主语。"],
   ["make-object-adjective", "made small, efficient housing positively stylish", "make + object + adjective", "使役宾补结构", "使小而高效的住宅十分时髦", "housing为宾语，stylish为宾补，positively修饰stylish。", "Good proportions make small rooms elegant.", "恰当比例使小房间显得优雅。", "不能将stylish误认为修饰made的副词。"],
   ["trend-toward", "the trend toward efficient living", "a trend toward + noun/doing", "名词介词搭配", "高效生活的趋势", "toward引发展方向，living为动名词。", "There is a trend toward simpler living.", "生活有趋向简朴的趋势。", "不将趋势说成已普遍完成的事实。"],
-  ["associated-with", "associated with the Bauhaus", "be associated with + noun", "联系搭配", "与包豪斯有关", "过去分词短语修饰designers，省略关系代词与be。", "The designers were associated with the school.", "这些设计师与该学派有关联。", "有关联不等于创办该学校。"],
-  ["take-up-posts", "took up posts", "take up a post", "任职搭配", "开始任职", "took up的宾语是posts岗位，随后at限定教学机构。", "She took up a post at a university.", "她开始在一所大学任职。", "与take up time占用时间分清。"],
+  ["associated-with", "associated with the Bauhaus", "be associated with + noun", "联系搭配", "与包豪斯有关", "过去分词短语修饰people，省略关系代词与be。", "The designers were associated with the school.", "这些设计师与该学派有关联。", "有关联不等于创办该学校。"],
+  ["take-up-posts", "took up posts", "take up a post", "任职搭配", "开始任职", "took up的宾语是posts岗位，随后at限定教学机构。", "She took up a post at a university.", "她开始在一所大学任职。", "take up的任职义由宾语posts确定。"],
   ["exert-influence", "exert enormous influence", "exert influence on + noun", "影响搭配", "产生巨大影响", "exert后接不可数影响名词，on引受影响对象。", "The school exerted influence on architecture.", "这个学派对建筑产生了影响。", "不是施加体力，也不意味着每位建筑师均属该校。"],
   ["none-more-so-than", "none more so than Mies", "none more so than + noun", "比较省略", "没有谁比密斯的影响更大", "none指前述设计师，so代替产生影响，省略重复谓语。", "Many helped, none more so than her.", "许多人出了力，没有谁比她贡献更大。", "none的否定与比较合起来突出最大程度，而非说无人有影响。"],
   ["properly-organized", "properly organized", "adverb + past participle", "分词修饰", "经过恰当组织安排的", "过去分词补充decoration的安排方式；不是新的有限谓语。", "Simple elements, properly organized, create elegance.", "简单元素经过合理安排也能创造优雅。", "少装饰仍须组织得当，不能漏掉条件。"],
@@ -37,8 +38,10 @@ const rows: PhraseRow[] = [
 const reviewed = reviewedPhrases(rows);
 export const passage2011P3PhraseGuides = reviewed.guides;
 export const passage2011P3PhraseAliases = reviewed.aliases;
-export const passage2011P3PhraseGlosses = { ...passage2011P3CollocationGlosses, ...reviewed.glosses };
+export const passage2011P3PhraseGlosses = { ...passage2011P3CollocationGlosses, ...reviewed.glosses, ...passage2011P3ContextGlosses };
 export function getPassage2011P3WordKnowledge(headword: string, sentenceId?: string): WordKnowledge | undefined {
+  const source = getPassage2011P3SourceKnowledge(headword, sentenceId);
+  if (source) return source;
   const entry = passage2011P3Lexicon[headword];
   if (!entry) return undefined;
   const context = sentenceId ? passage2011P3SentenceContexts[sentenceId]?.[headword] : undefined;

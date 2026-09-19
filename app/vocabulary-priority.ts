@@ -1,6 +1,7 @@
 import { writing2012BPriority } from "./2012-writing-b-priority";
 import { writing2012APriority } from "./2012-writing-a-priority";
 import { writing2011BPriority } from "./2011-writing-b-priority";
+import { passage2011P3Priority } from "./2011-passage-3-priority";
 import { passage2011P2Priority } from "./2011-passage-2-priority";
 import { writing2011APriority } from "./2011-writing-a-priority";
 import { passage2011P1Priority } from "./2011-passage-1-priority";
@@ -132,6 +133,7 @@ export function vocabularyPriority(entry: Pick<VocabEntry, "headword" | "display
     if (homeworkCore.has(head)) return { id: "core", label: "核心迁移词", reason: "这些词有助于理解政策评价、教育价值与措施，适合结合本句搭配复习。", recommendedReview: true };
     return { id: "recognition", label: "本句识别 · 按需记忆", reason: "先读懂当前语境，是否标记由你决定。", recommendedReview: false };
   }
+  if (articleId === "2011-p3") return passage2011P3Priority(entry);
   if (articleId === "2011-p2") return passage2011P2Priority(entry);
   if (articleId === "2011-p1") return passage2011P1Priority(entry);
   if (articleId !== "2010-p1" && articleId !== "2010-p2" && articleId !== "2010-p3" && articleId !== "2010-p4" && articleId !== "2010-p5") return undefined;

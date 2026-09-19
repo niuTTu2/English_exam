@@ -21,6 +21,7 @@ import { writing2011ASentences, writing2011ATasks } from "./2011-writing-a-data"
 import { translation2011Sentences, translation2011Tasks } from "./2011-translation-data";
 import { passage2011P5Sentences, passage2011P5Questions } from "./2011-passage-5-data";
 import { passage2011P4Sentences, passage2011P4Questions } from "./2011-passage-4-data";
+import { passage2011P3Guide, passage2011P3Paragraphs } from "./2011-passage-3-guide";
 import { passage2011P3Sentences, passage2011P3Questions } from "./2011-passage-3-data";
 import { passage2011P2Guide, passage2011P2Paragraphs } from "./2011-passage-2-guide";
 import { passage2011P2Sentences, passage2011P2Questions } from "./2011-passage-2-data";
@@ -1640,6 +1641,8 @@ export const articleContents: Record<string, ArticleContent> = {
   },
   "2011-p3": {
     id: "2011-p3", year: 2011, sectionId: "p3", label: "阅读 Text 3", badge: "2011 · 英语二 · Text 3", title: "少即是多：战后住宅的节制与优雅",
+    paragraphs: passage2011P3Paragraphs, guide: passage2011P3Guide,
+    teachingStatus: { syntax: true, vocabulary: true, evidence: true, practice: true },
     description: "第31—35题，七段17句。理解住宅设计理念、比较省略、部分否定、材料与抽象艺术的关系。", kind: "reading", sentences: passage2011P3Sentences, questions: passage2011P3Questions,
   },
   "2011-p4": {
