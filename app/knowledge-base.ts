@@ -1,5 +1,7 @@
 import { passage2010P3SourcePhraseGuides, passage2010P3SourcePhraseAliases, passage2010P3SourceCollocationGlosses } from "./2010-passage-3-collocations";
 import { getPassage2010P3WordKnowledge } from "./2010-passage-3-contexts";
+import { getPassage2001P1SourceKnowledge } from "./2001-passage-1-contexts";
+import { passage2001P1QuestionPhraseGuides, passage2001P1QuestionPhraseAliases, passage2001P1QuestionCollocationGlosses } from "./2001-passage-1-question-knowledge";
 import { writing2012BPhraseGuides, writing2012BPhraseAliases, writing2012BPhraseGlosses, getWriting2012BWordKnowledge } from "./2012-writing-b-knowledge";
 import { writing2012APhraseGuides, writing2012APhraseAliases, writing2012APhraseGlosses, getWriting2012AWordKnowledge } from "./2012-writing-a-knowledge";
 import { translation2012PhraseGuides, translation2012PhraseAliases, translation2012PhraseGlosses, getTranslation2012WordKnowledge } from "./2012-translation-knowledge";
@@ -792,6 +794,9 @@ for (const [key, value] of Object.entries(cloze2001WordKnowledge)) {
 
 // 2001 Passage 1 reuses prior entries but adds the scientific-community,
 // publication-standard and professionalisation contexts required by the text.
+Object.assign(phraseGuides, passage2001P1QuestionPhraseGuides);
+Object.assign(phraseAliases, passage2001P1QuestionPhraseAliases);
+Object.assign(collocationGlosses, passage2001P1QuestionCollocationGlosses);
 for (const [key, value] of Object.entries(passage2001P1PhraseGuides)) {
   phraseGuides[key] = mergePhrase(phraseGuides[key], value);
 }
@@ -1055,6 +1060,10 @@ export function getPhraseKnowledge(source: string): PhraseKnowledge | undefined 
 export function getWordKnowledge(headword: string, context?: { articleId?: string; sentenceId?: string; sourceId?: string }) {
   if (context?.articleId === "2010-p3") {
     const knowledge = getPassage2010P3WordKnowledge(normalized(headword), context.sourceId ?? context.sentenceId);
+    if (knowledge) return knowledge;
+  }
+  if (context?.articleId === "2001-p1") {
+    const knowledge = getPassage2001P1SourceKnowledge(normalized(headword), context.sourceId ?? context.sentenceId);
     if (knowledge) return knowledge;
   }
   if (context?.articleId === "2010-p2") {

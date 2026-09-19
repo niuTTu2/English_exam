@@ -1,6 +1,9 @@
+import { upgradePassage2001P1 } from "./2001-passage-1-teaching";
+import { passage2001P1QuestionAnalysis } from "./2001-passage-1-question-analysis";
+import { passage2001P1Reasoning } from "./2001-passage-1-evidence";
 import type { Question, SentenceAnalysis } from "./data";
 
-export const passage2001P1Sentences: SentenceAnalysis[] = [
+const passage2001P1Drafts: SentenceAnalysis[] = [
   {
     id: "2001-p1-s1",
     number: 1,
@@ -169,7 +172,7 @@ export const passage2001P1Sentences: SentenceAnalysis[] = [
     ],
     grammar: [
       "draw a distinction between A and B 表‘区分 A 与 B’；本句使用被动语态。",
-      "No + 名词放句首已构成完全否定，不再另加 not。",
+      "No否定clear-cut distinction这一整体，不再加not；它否定绝对界线，不是否认任何差别。",
       "冒号后的独立分句解释为什么不能作绝对区分；exception to a rule 中介词固定用 to。",
     ],
     beginnerSyntax: {
@@ -594,7 +597,7 @@ export const passage2001P1Sentences: SentenceAnalysis[] = [
     ],
     grammar: [
       "although 引导让步状语从句，主句不再搭配 but。",
-      "be well under way 是固定表达，表示过程已经顺利/充分展开。",
+      "be well under way表示过程已充分展开；well强调进展程度，不保证进展顺利。",
       "its 回指 the process of professionalisation and specialisation。",
       "be delayed until 表‘被推迟到……才发生/显现’，thus 概括前文论证所得结果。",
     ],
@@ -662,7 +665,9 @@ export const passage2001P1Sentences: SentenceAnalysis[] = [
   },
 ];
 
-export const passage2001P1Questions: Question[] = [
+export const passage2001P1Sentences = passage2001P1Drafts.map(upgradePassage2001P1);
+
+const passage2001P1QuestionDrafts: Question[] = [
   {
     id: 200121,
     number: 21,
@@ -744,3 +749,10 @@ export const passage2001P1Questions: Question[] = [
     },
   },
 ];
+
+export const passage2001P1Questions: Question[] = passage2001P1QuestionDrafts.map(question => {
+  if (question.number === undefined) throw new Error("2001 Text1题目缺少原卷题号");
+  const reasoning = passage2001P1Reasoning[question.number];
+  return { ...question, analysis: passage2001P1QuestionAnalysis[question.number], reasoning,
+    explanations: Object.fromEntries(Object.entries(reasoning.options).map(([key, value]) => [key, value.reasoning])) as Question["explanations"] };
+});

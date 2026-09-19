@@ -1,0 +1,214 @@
+{
+  "articleId": "2001-p1",
+  "sourceSha256": "ed26be7b9d1c64262e9241105aab2b5d89da6bac51ff91e666dab656076a4e44",
+  "paragraphs": [
+    [
+      1,
+      2,
+      3,
+      4
+    ],
+    [
+      5,
+      6,
+      7,
+      8
+    ],
+    [
+      9,
+      10,
+      11,
+      12,
+      13,
+      14
+    ],
+    [
+      15,
+      16
+    ]
+  ],
+  "sentences": [
+    {
+      "id": "2001-p1-s1",
+      "text": "Specialisation can be seen as a response to the problem of an increasing accumulation of scientific knowledge.",
+      "number": 1
+    },
+    {
+      "id": "2001-p1-s2",
+      "text": "By splitting up the subject matter into smaller units, one man could continue to handle the information and use it as the basis for further research.",
+      "number": 2
+    },
+    {
+      "id": "2001-p1-s3",
+      "text": "But specialisation was only one of a series of related developments in science affecting the process of communication.",
+      "number": 3
+    },
+    {
+      "id": "2001-p1-s4",
+      "text": "Another was the growing professionalisation of scientific activity.",
+      "number": 4
+    },
+    {
+      "id": "2001-p1-s5",
+      "text": "No clear-cut distinction can be drawn between professionals and amateurs in science: exceptions can be found to any rule.",
+      "number": 5
+    },
+    {
+      "id": "2001-p1-s6",
+      "text": "Nevertheless, the word “amateur” does carry a connotation that the person concerned is not fully integrated into the scientific community and, in particular, may not fully share its values.",
+      "number": 6
+    },
+    {
+      "id": "2001-p1-s7",
+      "text": "The growth of specialisation in the nineteenth century, with its consequent requirement of a longer, more complex training, implied greater problems for amateur participation in science.",
+      "number": 7
+    },
+    {
+      "id": "2001-p1-s8",
+      "text": "The trend was naturally most obvious in those areas of science based especially on a mathematical or laboratory training, and can be illustrated in terms of the development of geology in the United Kingdom.",
+      "number": 8
+    },
+    {
+      "id": "2001-p1-s9",
+      "text": "A comparison of British geological publications over the last century and a half reveals not simply an increasing emphasis on the primacy of research, but also a changing definition of what constitutes an acceptable research paper.",
+      "number": 9
+    },
+    {
+      "id": "2001-p1-s10",
+      "text": "Thus, in the nineteenth century, local geological studies represented worthwhile research in their own right; but, in the twentieth century, local studies have increasingly become acceptable to professionals only if they incorporate, and reflect on, the wider geological picture.",
+      "number": 10
+    },
+    {
+      "id": "2001-p1-s11",
+      "text": "Amateurs, on the other hand, have continued to pursue local studies in the old way.",
+      "number": 11
+    },
+    {
+      "id": "2001-p1-s12",
+      "text": "The overall result has been to make entrance to professional geological journals harder for amateurs, a result that has been reinforced by the widespread introduction of refereeing, first by national journals in the nineteenth century and then by several local geological journals in the twentieth century.",
+      "number": 12
+    },
+    {
+      "id": "2001-p1-s13",
+      "text": "As a logical consequence of this development, separate journals have now appeared aimed mainly towards either professional or amateur readership.",
+      "number": 13
+    },
+    {
+      "id": "2001-p1-s14",
+      "text": "A rather similar process of differentiation has led to professional geologists coming together nationally within one or two specific societies, whereas the amateurs have tended either to remain in local societies or to come together nationally in a different way.",
+      "number": 14
+    },
+    {
+      "id": "2001-p1-s15",
+      "text": "Although the process of professionalisation and specialisation was already well under way in British geology during the nineteenth century, its full consequences were thus delayed until the twentieth century.",
+      "number": 15
+    },
+    {
+      "id": "2001-p1-s16",
+      "text": "In science generally, however, the nineteenth century must be reckoned as the crucial period for this change in the structure of science.",
+      "number": 16
+    }
+  ],
+  "questions": [
+    {
+      "id": 200121,
+      "number": 21,
+      "prompt": "The growth of specialisation in the 19th century might be more clearly seen in sciences such as _______.",
+      "options": [
+        {
+          "key": "A",
+          "text": "sociology and chemistry"
+        },
+        {
+          "key": "B",
+          "text": "physics and psychology"
+        },
+        {
+          "key": "C",
+          "text": "sociology and psychology"
+        },
+        {
+          "key": "D",
+          "text": "physics and chemistry"
+        }
+      ],
+      "answer": "D",
+      "sentenceId": "2001-p1-s8"
+    },
+    {
+      "id": 200122,
+      "number": 22,
+      "prompt": "We can infer from the passage that _______.",
+      "options": [
+        {
+          "key": "A",
+          "text": "there is little distinction between specialisation and professionalisation"
+        },
+        {
+          "key": "B",
+          "text": "amateurs can compete with professionals in some areas of science"
+        },
+        {
+          "key": "C",
+          "text": "professionals tend to welcome amateurs into the scientific community"
+        },
+        {
+          "key": "D",
+          "text": "amateurs have national academic societies but no local ones"
+        }
+      ],
+      "answer": "B",
+      "sentenceId": "2001-p1-s5"
+    },
+    {
+      "id": 200123,
+      "number": 23,
+      "prompt": "The author writes of the development of geology to demonstrate ______.",
+      "options": [
+        {
+          "key": "A",
+          "text": "the process of specialisation and professionalisation"
+        },
+        {
+          "key": "B",
+          "text": "the hardship of amateurs in scientific study"
+        },
+        {
+          "key": "C",
+          "text": "the change of policies in scientific publications"
+        },
+        {
+          "key": "D",
+          "text": "the discrimination of professionals against amateurs"
+        }
+      ],
+      "answer": "A",
+      "sentenceId": "2001-p1-s8"
+    },
+    {
+      "id": 200124,
+      "number": 24,
+      "prompt": "The direct reason for specialisation is _______.",
+      "options": [
+        {
+          "key": "A",
+          "text": "the development in communication"
+        },
+        {
+          "key": "B",
+          "text": "the growth of professionalisation"
+        },
+        {
+          "key": "C",
+          "text": "the expansion of scientific knowledge"
+        },
+        {
+          "key": "D",
+          "text": "the splitting up of academic societies"
+        }
+      ],
+      "answer": "C",
+      "sentenceId": "2001-p1-s1"
+    }
+  ]
+}

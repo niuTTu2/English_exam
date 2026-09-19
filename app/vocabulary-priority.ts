@@ -28,6 +28,15 @@ const text3Names = new Set("dr curtis london procter gamble colgate-palmolive un
 const text3Structures = new Set(["figure out", "turn to somebody for help", "help somebody (to) do something", "help (to) do something", "in response to something", "invest money (in) doing something", "between A and B", "be essential to doing something", "tie A to B", "be used to do something", "so as to do something", "due to + cause", "belong to a category"].map(value => value.toLowerCase()));
 /** 编辑建议按本篇语境给出；不是官方考试词频排名，也不改变词义。 */
 export function vocabularyPriority(entry: Pick<VocabEntry, "headword" | "display" | "kind" | "canonicalForm">, sourceId: string, articleId?: string): VocabularyPriority | undefined {
+  if (articleId === "2001-p1") {
+    const head = entry.headword.toLowerCase(), form = (entry.canonicalForm ?? entry.display).toLowerCase();
+    if (["british", "united", "kingdom"].includes(head)) return { id: "name", label: "背景专名 · 识别即可", reason: "本篇限定英国地质学的历史案例，识别地域即可。", recommendedReview: false };
+    if (entry.kind === "phrase") return /^(?:only if|use a as b|lead to|be reckoned as|draw a distinction|by doing|one of|not simply|in .*own right|tend to|infer from|discrimination by|a direct reason)/.test(form) ? { id: "structure", label: "必会结构", reason: "在本篇中承担因果、限制、补足或指代关系，适合连同完整表达复习。", recommendedReview: true } : { id: "recognition", label: "本句表达 · 按需记忆", reason: "先读清当前学术讨论的对象，再按需要加入复习。", recommendedReview: false };
+    if (new Set(["draw", "concern", "share", "value", "right", "represent", "constitute", "referee", "reckon"]).has(head)) return { id: "sense", label: "熟词语境义", reason: "本篇用法易与基本义混淆，结合科学研究语境复习。", recommendedReview: true };
+    if (new Set([...functions, "whereas", "although", "only", "another", "one", "little", "must", "have", "be"]).has(head)) return { id: "function", label: "功能词 · 看句法作用", reason: "辨明它在当前来源中的比较、从句、介词或时态关系。", recommendedReview: false };
+    if (new Set(["specialisation", "professionalisation", "accumulation", "distinction", "connotation", "integrate", "consequent", "requirement", "participation", "primacy", "acceptable", "incorporate", "reinforce", "differentiate", "differentiation", "crucial", "infer", "discrimination"]).has(head)) return { id: "core", label: "核心迁移词", reason: "有助于理解知识发展、制度分化与学术参与类议论。", recommendedReview: true };
+    return { id: "recognition", label: "本句识别 · 按需记忆", reason: "先保证读懂当前句子，无需把所有扩展一并背诵。", recommendedReview: false };
+  }
   if (articleId === "2012-p1") {
     const head = entry.headword.toLowerCase(), surface = entry.display.toLowerCase();
     if (homeworkNames.has(head)) return { id: "name", label: "背景专名 · 识别即可", reason: "这里是洛杉矶联合学区的名称或组成部分；识别本文政策制定者即可。", recommendedReview: false };

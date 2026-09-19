@@ -1,6 +1,7 @@
 import { passage2011P1SourceContexts } from "./2011-passage-1-contexts";
 import { passage2010P3PreferredContexts } from "./2010-passage-3-collocations";
 import { passage2010P3ReviewedContexts } from "./2010-passage-3-contexts";
+import { passage2001P1SourceContexts } from "./2001-passage-1-contexts";
 import { writing2012BSentenceContexts } from "./2012-writing-b-lexicon";
 import { writing2012ASentenceContexts } from "./2012-writing-a-lexicon";
 import { translation2012SentenceContexts } from "./2012-translation-lexicon";
@@ -1084,7 +1085,9 @@ for (const [sourceId, contexts] of Object.entries(passage2011P1SourceContexts)) 
 
 export function getSentenceWordContext(sentenceId: string | undefined, headword: string) {
   if (!sentenceId) return undefined;
-  const context = sentenceWordContexts[sentenceId]?.[headword];
+  const base = sentenceWordContexts[sentenceId]?.[headword];
+  const override = passage2001P1SourceContexts[sentenceId]?.[headword];
+  const context = override ? { ...base, ...override } : base;
   const preferredCollocations = passage2010P2PreferredCollocations[sentenceId]?.[headword];
   return preferredCollocations ? { ...context, preferredCollocations } : context;
 }

@@ -30,6 +30,7 @@ import { passage4Questions, passage4Sentences } from "./passage-4-data";
 import { passage5Questions, passage5Sentences } from "./passage-5-data";
 import { translationSentences, translationTasks } from "./translation-data";
 import { cloze2001Questions, cloze2001Sentences } from "./2001-cloze-data";
+import { passage2001P1Guide } from "./2001-passage-1-guide";
 import { passage2001P1Questions, passage2001P1Sentences } from "./2001-passage-1-data";
 import { passage2001P2Questions, passage2001P2Sentences } from "./2001-passage-2-data";
 import { cloze2010Questions, cloze2010Sentences } from "./2010-cloze-data";
@@ -1485,6 +1486,9 @@ export const articleContents: Record<string, ArticleContent> = {
     kind: "reading",
     sentences: passage2001P1Sentences,
     questions: passage2001P1Questions,
+    guide: passage2001P1Guide,
+    teachingStatus: { syntax: true, vocabulary: true, evidence: true, practice: true },
+    paragraphs: [[1,2,3,4], [5,6,7,8], [9,10,11,12,13,14], [15,16]].map((numbers, i) => ({ id: `2001-p1-paragraph-${i + 1}`, sentenceIds: numbers.map(n => `2001-p1-s${n}`) })),
   },
   "2001-p2": {
     id: "2001-p2",
