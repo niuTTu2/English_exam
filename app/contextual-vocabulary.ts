@@ -6,6 +6,7 @@ import { passage2010P4PreferredContexts } from "./2010-passage-4-collocations";
 import { passage2010P4ReviewedContexts } from "./2010-passage-4-contexts";
 import { passage2010P3PreferredContexts } from "./2010-passage-3-collocations";
 import { passage2010P3ReviewedContexts } from "./2010-passage-3-contexts";
+import { cloze2001SourceContexts } from "./2001-cloze-contexts";
 import { passage2001P2SourceContexts } from "./2001-passage-2-contexts";
 import { passage2001P1SourceContexts } from "./2001-passage-1-contexts";
 import { passage4Contexts } from "./passage-4-contexts";
@@ -1118,7 +1119,7 @@ for (const [sourceId, words] of Object.entries(passage2000P2Contexts)) {
 export function getSentenceWordContext(sentenceId: string | undefined, headword: string) {
   if (!sentenceId) return undefined;
   const base = sentenceWordContexts[sentenceId]?.[headword];
-  const override = passage2001P1SourceContexts[sentenceId]?.[headword] ?? passage2001P2SourceContexts[sentenceId]?.[headword];
+  const override = passage2001P1SourceContexts[sentenceId]?.[headword] ?? passage2001P2SourceContexts[sentenceId]?.[headword] ?? cloze2001SourceContexts[sentenceId]?.[headword];
   const context = override ? { ...base, ...override } : base;
   const preferredCollocations = passage2010P2PreferredCollocations[sentenceId]?.[headword];
   return preferredCollocations ? { ...context, preferredCollocations } : context;

@@ -6,6 +6,7 @@ import { reviewPassage2000P2 } from "./2000-passage-2-teaching";
 import { passage2000P1Guide, passage2000P1Paragraphs } from "./2000-passage-1-guide";
 import { passage2010P5Guide, passage2010P5Paragraphs } from "./2010-passage-5-guide";
 import { passage2010P4Guide, passage2010P4Paragraphs } from "./2010-passage-4-guide";
+import { cloze2001Guide } from "./2001-cloze-guide";
 import { writing2012BSentences, writing2012BTasks } from "./2012-writing-b-data";
 import { writing2012ASentences, writing2012ATasks } from "./2012-writing-a-data";
 import { translation2012Sentences, translation2012Tasks } from "./2012-translation-data";
@@ -1503,6 +1504,9 @@ export const articleContents: Record<string, ArticleContent> = {
     kind: "cloze",
     sentences: cloze2001Sentences,
     questions: cloze2001Questions,
+    guide: cloze2001Guide,
+    teachingStatus: { syntax: true, vocabulary: true, evidence: true, practice: true },
+    paragraphs: [[1],[2],[3],[4],[5],[6],[7,8,9]].map((ns,i)=>({id:`2001-cloze-paragraph-${i+1}`,sentenceIds:ns.map(n=>`2001-cloze-s${n}`)})),
   },
   "2001-p1": {
     id: "2001-p1",

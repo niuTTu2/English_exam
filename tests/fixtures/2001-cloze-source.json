@@ -1,0 +1,625 @@
+{
+  "articleId": "2001-cloze",
+  "sourceSha256": "ed26be7b9d1c64262e9241105aab2b5d89da6bac51ff91e666dab656076a4e44",
+  "paragraphs": [
+    [
+      1
+    ],
+    [
+      2
+    ],
+    [
+      3
+    ],
+    [
+      4
+    ],
+    [
+      5
+    ],
+    [
+      6
+    ],
+    [
+      7,
+      8,
+      9
+    ]
+  ],
+  "sentences": [
+    {
+      "id": "2001-cloze-s1",
+      "number": 1,
+      "text": "The government is to ban payments to witnesses by newspapers seeking to buy up people involved in prominent cases such as the trial of Rosemary West.",
+      "testText": "The government is to ban payments to witnesses by newspapers seeking to buy up people involved in prominent cases ___(1) the trial of Rosemary West.",
+      "answerWords": [
+        "such as"
+      ]
+    },
+    {
+      "id": "2001-cloze-s2",
+      "number": 2,
+      "text": "In a significant tightening of legal controls over the press, Lord Irvine, the Lord Chancellor, will introduce a draft bill that will propose making payments to witnesses illegal and will strictly control the amount of publicity that can be given to a case before a trial begins.",
+      "testText": "In a significant ___(2) of legal controls over the press, Lord Irvine, the Lord Chancellor, will introduce a ___(3) bill that will propose making payments to witnesses ___(4) and will strictly control the amount of ___(5) that can be given to a case ___(6) a trial begins.",
+      "answerWords": [
+        "tightening",
+        "draft",
+        "illegal",
+        "publicity",
+        "before"
+      ]
+    },
+    {
+      "id": "2001-cloze-s3",
+      "number": 3,
+      "text": "In a letter to Gerald Kaufman, chairman of the House of Commons media select committee, Lord Irvine said he agreed with a committee report this year which said that self regulation did not offer sufficient control.",
+      "testText": "In a letter to Gerald Kaufman, chairman of the House of Commons media select committee, Lord Irvine said he ___(7) with a committee report this year which said that self regulation did not ___(8) sufficient control.",
+      "answerWords": [
+        "agreed",
+        "offer"
+      ]
+    },
+    {
+      "id": "2001-cloze-s4",
+      "number": 4,
+      "text": "Publication of the letter came two days after Lord Irvine caused a storm of media protest when he said the interpretation of privacy controls contained in European legislation would be left to judges rather than to Parliament.",
+      "testText": "___(9) of the letter came two days after Lord Irvine caused a ___(10) of media protest when he said the ___(11) of privacy controls contained in European legislation would be left to judges ___(12) to Parliament.",
+      "answerWords": [
+        "Publication",
+        "storm",
+        "interpretation",
+        "rather than"
+      ]
+    },
+    {
+      "id": "2001-cloze-s5",
+      "number": 5,
+      "text": "The Lord Chancellor said introduction of the Human Rights Bill, which makes the European Convention on Human Rights legally binding in Britain, laid down that everybody was entitled to privacy and that public figures could go to court to protect themselves and their families.",
+      "testText": "The Lord Chancellor said introduction of the Human Rights Bill, which ___(13) the European Convention on Human Rights legally ___(14) in Britain, laid down that everybody was ___(15) to privacy and that public figures could go to court to protect themselves and their families.",
+      "answerWords": [
+        "makes",
+        "binding",
+        "entitled"
+      ]
+    },
+    {
+      "id": "2001-cloze-s6",
+      "number": 6,
+      "text": "“Press freedoms will be in safe hands with our British judges,” he said.",
+      "testText": "“Press freedoms will be in safe hands ___(16) our British judges,” he said.",
+      "answerWords": [
+        "with"
+      ]
+    },
+    {
+      "id": "2001-cloze-s7",
+      "number": 7,
+      "text": "Witness payments became an issue after West was sentenced to 10 life sentences in 1995.",
+      "testText": "Witness payments became an ___(17) after West was sentenced to 10 life sentences in 1995.",
+      "answerWords": [
+        "issue"
+      ]
+    },
+    {
+      "id": "2001-cloze-s8",
+      "number": 8,
+      "text": "Up to 19 witnesses were said to have received payments for telling their stories to newspapers.",
+      "testText": "Up to 19 witnesses were ___(18) to have received payments for telling their stories to newspapers.",
+      "answerWords": [
+        "said"
+      ]
+    },
+    {
+      "id": "2001-cloze-s9",
+      "number": 9,
+      "text": "Concerns were raised that witnesses might be encouraged exaggerate their stories in court to ensure guilty verdicts.",
+      "testText": "Concerns were raised ___(19) witnesses might be encouraged exaggerate their stories in court to ___(20) guilty verdicts.",
+      "answerWords": [
+        "that",
+        "ensure"
+      ]
+    }
+  ],
+  "questions": [
+    {
+      "id": 200101,
+      "number": 1,
+      "prompt": "prominent cases ___ the trial of Rosemary West",
+      "options": [
+        {
+          "key": "A",
+          "text": "as to"
+        },
+        {
+          "key": "B",
+          "text": "for instance"
+        },
+        {
+          "key": "C",
+          "text": "in particular"
+        },
+        {
+          "key": "D",
+          "text": "such as"
+        }
+      ],
+      "answer": "D",
+      "sentenceId": "2001-cloze-s1"
+    },
+    {
+      "id": 200102,
+      "number": 2,
+      "prompt": "a significant ___ of legal controls over the press",
+      "options": [
+        {
+          "key": "A",
+          "text": "tightening"
+        },
+        {
+          "key": "B",
+          "text": "intensifying"
+        },
+        {
+          "key": "C",
+          "text": "focusing"
+        },
+        {
+          "key": "D",
+          "text": "fastening"
+        }
+      ],
+      "answer": "A",
+      "sentenceId": "2001-cloze-s2"
+    },
+    {
+      "id": 200103,
+      "number": 3,
+      "prompt": "will introduce a ___ bill",
+      "options": [
+        {
+          "key": "A",
+          "text": "sketch"
+        },
+        {
+          "key": "B",
+          "text": "rough"
+        },
+        {
+          "key": "C",
+          "text": "preliminary"
+        },
+        {
+          "key": "D",
+          "text": "draft"
+        }
+      ],
+      "answer": "D",
+      "sentenceId": "2001-cloze-s2"
+    },
+    {
+      "id": 200104,
+      "number": 4,
+      "prompt": "propose making payments to witnesses ___",
+      "options": [
+        {
+          "key": "A",
+          "text": "illogical"
+        },
+        {
+          "key": "B",
+          "text": "illegal"
+        },
+        {
+          "key": "C",
+          "text": "improbable"
+        },
+        {
+          "key": "D",
+          "text": "improper"
+        }
+      ],
+      "answer": "B",
+      "sentenceId": "2001-cloze-s2"
+    },
+    {
+      "id": 200105,
+      "number": 5,
+      "prompt": "control the amount of ___ that can be given to a case",
+      "options": [
+        {
+          "key": "A",
+          "text": "publicity"
+        },
+        {
+          "key": "B",
+          "text": "penalty"
+        },
+        {
+          "key": "C",
+          "text": "popularity"
+        },
+        {
+          "key": "D",
+          "text": "peculiarity"
+        }
+      ],
+      "answer": "A",
+      "sentenceId": "2001-cloze-s2"
+    },
+    {
+      "id": 200106,
+      "number": 6,
+      "prompt": "publicity that can be given to a case ___ a trial begins",
+      "options": [
+        {
+          "key": "A",
+          "text": "since"
+        },
+        {
+          "key": "B",
+          "text": "if"
+        },
+        {
+          "key": "C",
+          "text": "before"
+        },
+        {
+          "key": "D",
+          "text": "as"
+        }
+      ],
+      "answer": "C",
+      "sentenceId": "2001-cloze-s2"
+    },
+    {
+      "id": 200107,
+      "number": 7,
+      "prompt": "Lord Irvine said he ___ with a committee report",
+      "options": [
+        {
+          "key": "A",
+          "text": "sided"
+        },
+        {
+          "key": "B",
+          "text": "shared"
+        },
+        {
+          "key": "C",
+          "text": "complied"
+        },
+        {
+          "key": "D",
+          "text": "agreed"
+        }
+      ],
+      "answer": "D",
+      "sentenceId": "2001-cloze-s3"
+    },
+    {
+      "id": 200108,
+      "number": 8,
+      "prompt": "self regulation did not ___ sufficient control",
+      "options": [
+        {
+          "key": "A",
+          "text": "present"
+        },
+        {
+          "key": "B",
+          "text": "offer"
+        },
+        {
+          "key": "C",
+          "text": "manifest"
+        },
+        {
+          "key": "D",
+          "text": "indicate"
+        }
+      ],
+      "answer": "B",
+      "sentenceId": "2001-cloze-s3"
+    },
+    {
+      "id": 200109,
+      "number": 9,
+      "prompt": "___ of the letter came two days after...",
+      "options": [
+        {
+          "key": "A",
+          "text": "Release"
+        },
+        {
+          "key": "B",
+          "text": "Publication"
+        },
+        {
+          "key": "C",
+          "text": "Printing"
+        },
+        {
+          "key": "D",
+          "text": "Exposure"
+        }
+      ],
+      "answer": "B",
+      "sentenceId": "2001-cloze-s4"
+    },
+    {
+      "id": 200110,
+      "number": 10,
+      "prompt": "caused a ___ of media protest",
+      "options": [
+        {
+          "key": "A",
+          "text": "storm"
+        },
+        {
+          "key": "B",
+          "text": "rage"
+        },
+        {
+          "key": "C",
+          "text": "flare"
+        },
+        {
+          "key": "D",
+          "text": "flash"
+        }
+      ],
+      "answer": "A",
+      "sentenceId": "2001-cloze-s4"
+    },
+    {
+      "id": 200111,
+      "number": 11,
+      "prompt": "the ___ of privacy controls contained in European legislation",
+      "options": [
+        {
+          "key": "A",
+          "text": "translation"
+        },
+        {
+          "key": "B",
+          "text": "interpretation"
+        },
+        {
+          "key": "C",
+          "text": "exhibition"
+        },
+        {
+          "key": "D",
+          "text": "demonstration"
+        }
+      ],
+      "answer": "B",
+      "sentenceId": "2001-cloze-s4"
+    },
+    {
+      "id": 200112,
+      "number": 12,
+      "prompt": "would be left to judges ___ to Parliament",
+      "options": [
+        {
+          "key": "A",
+          "text": "better than"
+        },
+        {
+          "key": "B",
+          "text": "other than"
+        },
+        {
+          "key": "C",
+          "text": "rather than"
+        },
+        {
+          "key": "D",
+          "text": "sooner than"
+        }
+      ],
+      "answer": "C",
+      "sentenceId": "2001-cloze-s4"
+    },
+    {
+      "id": 200113,
+      "number": 13,
+      "prompt": "which ___ the European Convention on Human Rights legally...",
+      "options": [
+        {
+          "key": "A",
+          "text": "changes"
+        },
+        {
+          "key": "B",
+          "text": "makes"
+        },
+        {
+          "key": "C",
+          "text": "sets"
+        },
+        {
+          "key": "D",
+          "text": "turns"
+        }
+      ],
+      "answer": "B",
+      "sentenceId": "2001-cloze-s5"
+    },
+    {
+      "id": 200114,
+      "number": 14,
+      "prompt": "makes the European Convention... legally ___ in Britain",
+      "options": [
+        {
+          "key": "A",
+          "text": "binding"
+        },
+        {
+          "key": "B",
+          "text": "convincing"
+        },
+        {
+          "key": "C",
+          "text": "restraining"
+        },
+        {
+          "key": "D",
+          "text": "sustaining"
+        }
+      ],
+      "answer": "A",
+      "sentenceId": "2001-cloze-s5"
+    },
+    {
+      "id": 200115,
+      "number": 15,
+      "prompt": "everybody was ___ to privacy",
+      "options": [
+        {
+          "key": "A",
+          "text": "authorized"
+        },
+        {
+          "key": "B",
+          "text": "credited"
+        },
+        {
+          "key": "C",
+          "text": "entitled"
+        },
+        {
+          "key": "D",
+          "text": "qualified"
+        }
+      ],
+      "answer": "C",
+      "sentenceId": "2001-cloze-s5"
+    },
+    {
+      "id": 200116,
+      "number": 16,
+      "prompt": "Press freedoms will be in safe hands ___ our British judges",
+      "options": [
+        {
+          "key": "A",
+          "text": "with"
+        },
+        {
+          "key": "B",
+          "text": "to"
+        },
+        {
+          "key": "C",
+          "text": "from"
+        },
+        {
+          "key": "D",
+          "text": "by"
+        }
+      ],
+      "answer": "A",
+      "sentenceId": "2001-cloze-s6"
+    },
+    {
+      "id": 200117,
+      "number": 17,
+      "prompt": "Witness payments became an ___",
+      "options": [
+        {
+          "key": "A",
+          "text": "impact"
+        },
+        {
+          "key": "B",
+          "text": "incident"
+        },
+        {
+          "key": "C",
+          "text": "inference"
+        },
+        {
+          "key": "D",
+          "text": "issue"
+        }
+      ],
+      "answer": "D",
+      "sentenceId": "2001-cloze-s7"
+    },
+    {
+      "id": 200118,
+      "number": 18,
+      "prompt": "Up to 19 witnesses were ___ to have received payments",
+      "options": [
+        {
+          "key": "A",
+          "text": "stated"
+        },
+        {
+          "key": "B",
+          "text": "remarked"
+        },
+        {
+          "key": "C",
+          "text": "said"
+        },
+        {
+          "key": "D",
+          "text": "told"
+        }
+      ],
+      "answer": "C",
+      "sentenceId": "2001-cloze-s8"
+    },
+    {
+      "id": 200119,
+      "number": 19,
+      "prompt": "Concerns were raised ___ witnesses might be encouraged...",
+      "options": [
+        {
+          "key": "A",
+          "text": "what"
+        },
+        {
+          "key": "B",
+          "text": "when"
+        },
+        {
+          "key": "C",
+          "text": "which"
+        },
+        {
+          "key": "D",
+          "text": "that"
+        }
+      ],
+      "answer": "D",
+      "sentenceId": "2001-cloze-s9"
+    },
+    {
+      "id": 200120,
+      "number": 20,
+      "prompt": "exaggerate their stories in court to ___ guilty verdicts",
+      "options": [
+        {
+          "key": "A",
+          "text": "assure"
+        },
+        {
+          "key": "B",
+          "text": "confide"
+        },
+        {
+          "key": "C",
+          "text": "ensure"
+        },
+        {
+          "key": "D",
+          "text": "guarantee"
+        }
+      ],
+      "answer": "C",
+      "sentenceId": "2001-cloze-s9"
+    }
+  ]
+}

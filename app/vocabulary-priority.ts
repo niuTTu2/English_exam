@@ -69,6 +69,15 @@ export function vocabularyPriority(entry: Pick<VocabEntry, "headword" | "display
     if (new Set("advocate advisable principle unreasonable corresponding require interpret stress essential qualify finite imitate confuse explanatory fulfill proposition expression indicative transient phenomenon".split(" ")).has(head)) return { id: "core", label: "核心迁移词", reason: "建议结合本句义和常用结构复习，帮助阅读观点评论类文章。", recommendedReview: true };
     return { id: "recognition", label: "本句识别 · 按需记忆", reason: "先理解当前句意，再选择是否单独复习。", recommendedReview: false };
   }
+  if (articleId === "2001-cloze") {
+    const head = entry.headword.toLowerCase();
+    if (["rosemary","west","lord","irvine","gerald","kaufman","british","britain","european","parliament"].includes(head)) return { id:"name",label:"背景专名 · 识别即可",reason:"识别案件、人物和机构；判断观点归属时仍需分清其角色。",recommendedReview:false };
+    if (entry.kind === "phrase") return {id:"structure",label:"完形搭配与结构",reason:"复习当前空格的连接、动词补足及报道用法，并保留可替换表达的限制。",recommendedReview:true};
+    if (["press","control","make","lay","hand","sentence","issue","figure","come"].includes(head)) return {id:"sense",label:"熟词语境义",reason:"新闻司法语境中的词性和意义会影响空格判断。",recommendedReview:true};
+    if (new Set([...functions,"whether","before","after","when","be","have","do","may","rather"]).has(head)) return {id:"function",label:"功能词 · 看关系",reason:"区分当前片段的介词对象、内容连接、时间与补足关系。",recommendedReview:false};
+    if (["ban","witness","tighten","draft","illegal","publicity","regulation","privacy","interpretation","legislation","binding","entitle","exaggerate","ensure","verdict","sufficient"].includes(head)) return {id:"core",label:"核心迁移词",reason:"有助于理解法律新闻、监管和结果保证类议论；不等同于官方词频。",recommendedReview:true};
+    return {id:"recognition",label:"本题识别 · 按需记忆",reason:"先分清本题候选词的实际意义和搭配，再决定是否复习。",recommendedReview:false};
+  }
   if (articleId === "2001-p2") {
     const head = entry.headword.toLowerCase();
     if (["united", "states", "america", "american", "brazil", "india", "britain", "english", "german", "dutch", "french"].includes(head)) return { id: "name", label: "背景专名 · 识别即可", reason: "识别美国历史案例与其他国家例证，重点区分投资、建设及拥有者。", recommendedReview: false };

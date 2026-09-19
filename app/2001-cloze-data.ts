@@ -1,6 +1,8 @@
+import { upgradeCloze2001 } from "./2001-cloze-teaching";
+import { attachCloze2001Reasoning } from "./2001-cloze-evidence";
 import type { Question, SentenceAnalysis } from "./data";
 
-export const cloze2001Sentences: SentenceAnalysis[] = [
+const cloze2001Drafts: SentenceAnalysis[] = [
   {
     id: "2001-cloze-s1",
     number: 1,
@@ -70,7 +72,7 @@ export const cloze2001Sentences: SentenceAnalysis[] = [
       { label: "法案内容二", text: "strictly control the amount of publicity... before a trial begins：严格限制开庭前案件可获得的公开报道量" },
     ],
     grammar: [
-      "a tightening of controls 表‘管制的收紧’；tightening 是名词，intensifying 不能直接放在冠词 a 后作同样的中心名词。",
+      "a tightening of controls 表‘管制的收紧’；tightening在此为名词化中心；自然搭配为a tightening of controls，intensify通常用名词intensification；不能概括为冠词后都不能用动名词。",
       "draft bill 是固定法律表达，指尚未正式通过的法案草案。",
       "propose doing 表‘建议做某事’；make A illegal 是‘使 A 成为违法行为’的宾语补足语结构。",
       "that can be given to a case 是定语从句，修饰 publicity；before 引导时间状语从句，限定公开报道发生在开庭前。",
@@ -398,7 +400,7 @@ export const cloze2001Sentences: SentenceAnalysis[] = [
       "raise concerns / concerns are raised 表‘提出担忧’；that 引导同位语从句，具体解释 concerns 的内容。",
       "用户 PDF 原文在 encouraged 与 exaggerate 之间未印 to；规范英语应为 be encouraged to do。学习时按规范结构理解，但自测与原文展示保留试卷字样。",
       "in court 是地点/场合状语，修饰 exaggerate；to ensure... 是目的状语。",
-      "ensure + 结果表示‘确保某结果发生’；assure 通常接人，guarantee 语气更绝对且搭配重点不同。",
+      "ensure + 结果表示‘确保某结果发生’；assure 通常接人，guarantee也可接结果名词，本题突出通过手段促成结果，ensure更贴切。",
     ],
     beginnerSyntax: {
       components: [
@@ -422,6 +424,8 @@ export const cloze2001Sentences: SentenceAnalysis[] = [
   },
 ];
 
+export const cloze2001Sentences = cloze2001Drafts.map(upgradeCloze2001);
+
 const q = (
   number: number,
   sentenceId: string,
@@ -441,7 +445,7 @@ const q = (
   explanations,
 });
 
-export const cloze2001Questions: Question[] = [
+const cloze2001QuestionDrafts: Question[] = [
   q(1, "2001-cloze-s1", "prominent cases ___ the trial of Rosemary West", ["as to", "for instance", "in particular", "such as"], "D", "cases 后要直接接一个具体例子；such as + 名词正好把 Rosemary West 的审判列为 prominent cases 的实例。", {
     A: "as to 表‘关于；至于’，会把 trial 变成讨论对象，不能表示举例。",
     B: "for instance 可作插入语‘例如’，通常需用逗号隔开，不能像介词一样直接连接 cases 与名词例子。",
@@ -563,3 +567,5 @@ export const cloze2001Questions: Question[] = [
     D: "guarantee 也可表保证，但语气更绝对，常涉及承诺或担保；此处命题搭配以 ensure + outcome 最准确。",
   }),
 ];
+
+export const cloze2001Questions = cloze2001QuestionDrafts.map(attachCloze2001Reasoning);
