@@ -5,6 +5,7 @@ import { passage2010P4ReviewedContexts } from "./2010-passage-4-contexts";
 import { passage2010P3PreferredContexts } from "./2010-passage-3-collocations";
 import { passage2010P3ReviewedContexts } from "./2010-passage-3-contexts";
 import { passage2001P1SourceContexts } from "./2001-passage-1-contexts";
+import { passage4Contexts } from "./passage-4-contexts";
 import { passage3Contexts } from "./passage-3-contexts";
 import { passage2000P1Contexts } from "./2000-passage-1-contexts";
 import { writing2012BSentenceContexts } from "./2012-writing-b-lexicon";
@@ -1091,7 +1092,7 @@ export const sentenceWordContexts: Record<string, Record<string, SentenceWordCon
 for (const [sourceId, contexts] of Object.entries({...passage2011P1SourceContexts, ...passage2011P2SourceContexts})) {
   sentenceWordContexts[sourceId] = { ...sentenceWordContexts[sourceId], ...contexts };
 }
-for (const [sourceId, contexts] of Object.entries(passage3Contexts)) {
+for (const [sourceId, contexts] of Object.entries({ ...passage3Contexts, ...passage4Contexts })) {
   const target = sentenceWordContexts[sourceId] ??= {};
   for (const [headword, context] of Object.entries(contexts)) target[headword] = { ...target[headword], ...context };
 }

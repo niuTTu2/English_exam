@@ -35,6 +35,10 @@ import { passage3Guide, passage3Paragraphs } from "./passage-3-guide";
 import { passage3Reasoning } from "./passage-3-evidence";
 import { passage3QuestionAnalysis } from "./passage-3-question-analysis";
 import { passage4Questions, passage4Sentences } from "./passage-4-data";
+import { withPassage4Teaching } from "./passage-4-reviewed";
+import { passage4Guide, passage4Paragraphs } from "./passage-4-guide";
+import { passage4Reasoning } from "./passage-4-evidence";
+import { passage4QuestionAnalysis } from "./passage-4-question-analysis";
 import { passage5Questions, passage5Sentences } from "./passage-5-data";
 import { translationSentences, translationTasks } from "./translation-data";
 import { cloze2001Questions, cloze2001Sentences } from "./2001-cloze-data";
@@ -1372,14 +1376,14 @@ const verifiedClozeSentences = sentences.map(applyVerifiedSyntax);
 const verifiedPassage1Sentences = passage1Sentences.map(applyVerifiedSyntax);
 const verifiedPassage2Sentences = passage2Sentences.map(applyVerifiedSyntax);
 const verifiedPassage3Sentences = passage3Sentences.map(sentence => withPassage3Teaching(applyVerifiedSyntax(sentence)));
-const verifiedPassage4Sentences = passage4Sentences.map(applyVerifiedSyntax);
+const verifiedPassage4Sentences = passage4Sentences.map(sentence => withPassage4Teaching(applyVerifiedSyntax(sentence)));
 const verifiedPassage5Sentences = passage5Sentences.map(applyVerifiedSyntax);
 const verifiedTranslationSentences = translationSentences.map(applyVerifiedSyntax);
 const verifiedClozeQuestions = questions.map(applyVerifiedQuestion);
 const verifiedPassage1Questions = passage1Questions.map(applyVerifiedQuestion);
 const verifiedPassage2Questions = passage2Questions.map(applyVerifiedQuestion);
 const verifiedPassage3Questions = passage3Questions.map(question => ({ ...applyVerifiedQuestion(question), analysis: passage3QuestionAnalysis(question), reasoning: passage3Reasoning[question.id] }));
-const verifiedPassage4Questions = passage4Questions.map(applyVerifiedQuestion);
+const verifiedPassage4Questions: Question[] = passage4Questions.map(question => ({ ...applyVerifiedQuestion(question), analysis: passage4QuestionAnalysis(question), reasoning: passage4Reasoning[question.id], explanations: { A: passage4Reasoning[question.id].options.A.reasoning, B: passage4Reasoning[question.id].options.B.reasoning, C: passage4Reasoning[question.id].options.C.reasoning, D: passage4Reasoning[question.id].options.D.reasoning }, locating: passage4Reasoning[question.id].keyInstruction }));
 const verifiedPassage5Questions = passage5Questions.map(applyVerifiedQuestion);
 const verifiedTranslationTasks = translationTasks.map((task) => task.format === "passage"
   ? { ...task, paragraphs: task.paragraphs.map((paragraph) => paragraph.map(applyVerifiedSyntax)) }
@@ -1451,6 +1455,9 @@ export const articleContents: Record<string, ArticleContent> = {
     kind: "reading",
     sentences: verifiedPassage4Sentences,
     questions: verifiedPassage4Questions,
+    paragraphs: passage4Paragraphs,
+    guide: passage4Guide,
+    teachingStatus: { syntax: true, vocabulary: true, evidence: true, practice: true },
   },
   p5: {
     id: "p5",

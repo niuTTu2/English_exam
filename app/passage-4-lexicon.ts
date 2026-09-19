@@ -31,6 +31,7 @@ const entry = (
 });
 
 export const passage4LemmaAliases: Record<string, string> = {
+  abandoned: "abandon",
   aimless: "aimless",
   are: "be",
   argued: "argue",
@@ -232,6 +233,9 @@ export const passage4FormPartOfSpeech: Record<string, string> = {
 };
 
 export const passage4Lexicon: Record<string, PassageLexiconEntry> = {
+  abandon: entry("v.", "舍弃；放弃", "abandon带被放弃对象；本句have been abandoned为现在完成时被动。", { specialForms: ["abandon—abandons—abandoned—abandoning"], examSynonyms: ["discard（丢弃）", "give up（放弃）"] }),
+  somebody: entry("indefinite pron.", "某人", "结构示例中的人称占位，help somebody do表示帮助某人做某事。"),
+  participate: entry("v.", "参与", "participate in后接参与的活动；participation是其派生名词，不能按屈折变化合并。", { specialForms: ["participate—participates—participated—participating"], examSynonyms: ["take part in（参加）"] }),
   a: entry("art.", "一个；泛指一类事物", "不定冠词置于辅音音素开头的单数可数名词前。"),
   an: entry("art.", "一个；用于元音音素前", "不定冠词依据发音选择 an，而不是只看首字母。"),
   and: entry("conj.", "和；并且", "连接语法上平行的词、短语或分句；并列谓语常共用主语。"),

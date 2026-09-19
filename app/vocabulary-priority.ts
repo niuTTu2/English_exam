@@ -36,6 +36,15 @@ const text4Structures = new Set(["regard A as B","serve on a jury","on account o
 /** 编辑建议按本篇语境给出；不是官方考试词频排名，也不改变词义。 */
 export function vocabularyPriority(entry: Pick<VocabEntry, "headword" | "display" | "kind" | "canonicalForm">, sourceId: string, articleId?: string): VocabularyPriority | undefined {
   if (articleId === "p1") return passage2000P1Priority(entry, sourceId);
+  if (articleId === "p4") {
+    const head = entry.headword.toLowerCase();
+    if (entry.kind === "phrase") return { id: "structure", label: "本句结构", reason: "记住本句完整关系，特别是介词补足、比较、倒装和取舍方向。", recommendedReview: true };
+    if (new Set("japan japanese europe american toshiki kaifu mitsuo setoyama yoko muro liberal democratic party".split(" ")).has(head)) return { id: "name", label: "背景名称 · 识别即可", reason: "识别国别、人物和机构背景，并把说法接回对应人物。", recommendedReview: false };
+    if (new Set("see question stress tell return come basic present envy experience".split(" ")).has(head)) return { id: "sense", label: "熟词语境义", reason: "重点区分本来源的词性和义项，再读回当前句子。", recommendedReview: true };
+    if (new Set([...functions, "whose", "whether", "while", "more", "less", "how"]).has(head)) return { id: "function", label: "功能词 · 看句法作用", reason: "结合当前句法辨认指代、比较、连接和省略。", recommendedReview: false };
+    if (new Set("productivity harmony decline fulfill opportunity sacrifice rigid satisfaction dissatisfaction creativity frustration violence conservative reform morality centralization abandon discomfort endure tolerant cultivation emphasis".split(" ")).has(head)) return { id: "core", label: "核心迁移词", reason: "结合本句意义与常用结构复习，帮助阅读教育及社会变化类文章。", recommendedReview: true };
+    return { id: "recognition", label: "本句识别 · 按需记忆", reason: "先读懂本句，再决定是否加入复习。", recommendedReview: false };
+  }
   if (articleId === "p3") {
     const head = entry.headword.toLowerCase();
     if (entry.kind === "phrase") return { id: "structure", label: "本句结构", reason: "结合本句确认搭配的范围、修饰对象及可接成分。", recommendedReview: true };
