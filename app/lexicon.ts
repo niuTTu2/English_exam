@@ -716,6 +716,7 @@ function inferPartOfSpeech(headword: string) {
 
 const sourceLemmaAliases: Record<string, Record<string, string>> = {
   "p4-s16": { beginning: "begin" },
+  "p2-s18": { peoples: "people", people: "people" }, // 多民族义保持原形幂等，避免people再被归成person。
   "question-201025-option-A": { fluctuation: "fluctuation" },
   "2012-p3-s7": { ruling: "rule" },
   "p2-s5": { means: "mean" },

@@ -1,0 +1,283 @@
+{
+  "articleId": "p2",
+  "year": 2000,
+  "source": {
+    "file": "2000.pdf",
+    "sha256": "6de345bdc851e924ea3033a7ad7b1af7f8c3f68ecaf649e5a6ecb2d58ffd6212",
+    "pages": [
+      2,
+      3
+    ],
+    "note": "按用户PDF第2—3页核对。去教学圈号和题号插注，保留既有正文、100, 000排印、题干标点与稳定ID；第3段跨页。PDF元数据标题误记1986，正文题头2000。"
+  },
+  "sentences": [
+    {
+      "id": "p2-s1",
+      "number": 1,
+      "text": "Being a man has always been dangerous."
+    },
+    {
+      "id": "p2-s2",
+      "number": 2,
+      "text": "There are about 105 males born for every 100 females, but this ratio drops to near balance at the age of maturity, and among 70-year-olds there are twice as many women as men."
+    },
+    {
+      "id": "p2-s3",
+      "number": 3,
+      "text": "But the great universal of male mortality is being changed."
+    },
+    {
+      "id": "p2-s4",
+      "number": 4,
+      "text": "Now, boy babies survive almost as well as girls do."
+    },
+    {
+      "id": "p2-s5",
+      "number": 5,
+      "text": "This means that, for the first time, there will be an excess of boys in those crucial years when they are searching for a mate."
+    },
+    {
+      "id": "p2-s6",
+      "number": 6,
+      "text": "More important, another chance for natural selection has been removed."
+    },
+    {
+      "id": "p2-s7",
+      "number": 7,
+      "text": "Fifty years ago, the chance of a baby (particularly a boy baby) surviving depended on its weight."
+    },
+    {
+      "id": "p2-s8",
+      "number": 8,
+      "text": "A kilogram too light or too heavy meant almost certain death."
+    },
+    {
+      "id": "p2-s9",
+      "number": 9,
+      "text": "Today it makes almost no difference."
+    },
+    {
+      "id": "p2-s10",
+      "number": 10,
+      "text": "Since much of the variation is due to genes, one more agent of evolution has gone."
+    },
+    {
+      "id": "p2-s11",
+      "number": 11,
+      "text": "There is another way to commit evolutionary suicide: stay alive, but have fewer children."
+    },
+    {
+      "id": "p2-s12",
+      "number": 12,
+      "text": "Few people are as fertile as in the past."
+    },
+    {
+      "id": "p2-s13",
+      "number": 13,
+      "text": "Except in some religious communities, very few women have 15 children."
+    },
+    {
+      "id": "p2-s14",
+      "number": 14,
+      "text": "Nowadays the number of births, like the age of death, has become average."
+    },
+    {
+      "id": "p2-s15",
+      "number": 15,
+      "text": "Most of us have roughly the same number of offspring."
+    },
+    {
+      "id": "p2-s16",
+      "number": 16,
+      "text": "Again, differences between people and the opportunity for natural selection to take advantage of it have diminished."
+    },
+    {
+      "id": "p2-s17",
+      "number": 17,
+      "text": "India shows what is happening."
+    },
+    {
+      "id": "p2-s18",
+      "number": 18,
+      "text": "The country offers wealth for a few in the great cities and poverty for the remaining tribal peoples."
+    },
+    {
+      "id": "p2-s19",
+      "number": 19,
+      "text": "The grand mediocrity of today—everyone being the same in survival and number of offspring—means that natural selection has lost 80% of its power in upper-middle-class India compared to the tribes."
+    },
+    {
+      "id": "p2-s20",
+      "number": 20,
+      "text": "For us, this means that evolution is over; the biological Utopia has arrived."
+    },
+    {
+      "id": "p2-s21",
+      "number": 21,
+      "text": "Strangely, it has involved little physical change."
+    },
+    {
+      "id": "p2-s22",
+      "number": 22,
+      "text": "No other species fills so many places in nature."
+    },
+    {
+      "id": "p2-s23",
+      "number": 23,
+      "text": "But in the past 100, 000 years—even the past 100 years—our lives have been transformed but our bodies have not."
+    },
+    {
+      "id": "p2-s24",
+      "number": 24,
+      "text": "We did not evolve, because machines and society did it for us."
+    },
+    {
+      "id": "p2-s25",
+      "number": 25,
+      "text": "Darwin had a phrase to describe those ignorant of evolution: they “look at an organic being as a savage looks at a ship, as at something wholly beyond his comprehension.”"
+    },
+    {
+      "id": "p2-s26",
+      "number": 26,
+      "text": "No doubt we will remember a 20th century way of life beyond comprehension for its ugliness."
+    },
+    {
+      "id": "p2-s27",
+      "number": 27,
+      "text": "But however amazed our descendants may be at how far from Utopia we were, they will look just like us."
+    }
+  ],
+  "paragraphs": [
+    [
+      "p2-s1",
+      "p2-s2",
+      "p2-s3",
+      "p2-s4",
+      "p2-s5",
+      "p2-s6",
+      "p2-s7",
+      "p2-s8",
+      "p2-s9",
+      "p2-s10"
+    ],
+    [
+      "p2-s11",
+      "p2-s12",
+      "p2-s13",
+      "p2-s14",
+      "p2-s15",
+      "p2-s16",
+      "p2-s17",
+      "p2-s18",
+      "p2-s19"
+    ],
+    [
+      "p2-s20",
+      "p2-s21",
+      "p2-s22",
+      "p2-s23",
+      "p2-s24",
+      "p2-s25",
+      "p2-s26",
+      "p2-s27"
+    ]
+  ],
+  "questions": [
+    {
+      "id": 15,
+      "sentenceId": "p2-s7",
+      "prompt": "What used to be the danger in being a man according to the first paragraph?",
+      "options": [
+        {
+          "key": "A",
+          "text": "A lack of mates."
+        },
+        {
+          "key": "B",
+          "text": "A fierce competition."
+        },
+        {
+          "key": "C",
+          "text": "A lower survival rate."
+        },
+        {
+          "key": "D",
+          "text": "A defective gene."
+        }
+      ],
+      "answer": "C"
+    },
+    {
+      "id": 16,
+      "sentenceId": "p2-s19",
+      "prompt": "What does the example of India illustrate?",
+      "options": [
+        {
+          "key": "A",
+          "text": "Wealthy people tend to have fewer children than poor people."
+        },
+        {
+          "key": "B",
+          "text": "Natural selection hardly works among the rich and the poor."
+        },
+        {
+          "key": "C",
+          "text": "The middle class population is 80% smaller than that of the tribes."
+        },
+        {
+          "key": "D",
+          "text": "India is one of the countries with a very high birth rate."
+        }
+      ],
+      "answer": "B"
+    },
+    {
+      "id": 17,
+      "sentenceId": "p2-s24",
+      "prompt": "The author argues that our bodies have stopped evolving because.",
+      "options": [
+        {
+          "key": "A",
+          "text": "life has been improved by technological advance"
+        },
+        {
+          "key": "B",
+          "text": "the number of female babies has been declining"
+        },
+        {
+          "key": "C",
+          "text": "our species has reached the highest stage of evolution"
+        },
+        {
+          "key": "D",
+          "text": "the difference between wealth and poverty is disappearing"
+        }
+      ],
+      "answer": "A"
+    },
+    {
+      "id": 18,
+      "sentenceId": "p2-s27",
+      "prompt": "Which of the following would be the best title for the passage?",
+      "options": [
+        {
+          "key": "A",
+          "text": "Sex Ratio Changes in Human Evolution."
+        },
+        {
+          "key": "B",
+          "text": "Ways of Continuing Man’s Evolution."
+        },
+        {
+          "key": "C",
+          "text": "The Evolutionary Future of Nature."
+        },
+        {
+          "key": "D",
+          "text": "Human Evolution Going Nowhere."
+        }
+      ],
+      "answer": "D"
+    }
+  ]
+}

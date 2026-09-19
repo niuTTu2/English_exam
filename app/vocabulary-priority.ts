@@ -2,6 +2,7 @@ import { writing2011BPriority } from "./2011-writing-b-priority";
 import { passage2011P2Priority } from "./2011-passage-2-priority";
 import { writing2011APriority } from "./2011-writing-a-priority";
 import { passage2011P1Priority } from "./2011-passage-1-priority";
+import { passage2000P2Priority } from "./2000-passage-2-priority";
 import { passage2000P1Priority } from "./2000-passage-1-priority";
 import type { VocabEntry } from "./data";
 export type VocabularyPriority = { id: "core" | "sense" | "structure" | "function" | "recognition" | "name"; label: string; reason: string; recommendedReview: boolean };
@@ -39,6 +40,7 @@ const text4Structures = new Set(["regard A as B","serve on a jury","on account o
 export function vocabularyPriority(entry: Pick<VocabEntry, "headword" | "display" | "kind" | "canonicalForm">, sourceId: string, articleId?: string): VocabularyPriority | undefined {
   if (articleId === "2011-writing-b") return writing2011BPriority(entry);
   if (articleId === "2011-writing-a") return writing2011APriority(entry);
+  if (articleId === "p2") return passage2000P2Priority(entry);
   if (articleId === "p1") return passage2000P1Priority(entry, sourceId);
   if (articleId === "p4") {
     const head = entry.headword.toLowerCase();

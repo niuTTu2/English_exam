@@ -346,6 +346,7 @@ test("2000 年全部复杂句的从句数量与人工审计基线一致", () => 
     "p1-s1": 1, "p1-s2": 1, "p1-s4": 1, "p1-s5": 2, "p1-s13": 3,
     "p1-s16": 2, "p1-s20": 1, "p1-s24": 1, "p1-s25": 1,
     "14-prompt-analysis": 1, // Text1完整题目语言层：believe后的省略that宾语从句。
+    "17-prompt-analysis": 1, // Text2第17题题干that宾语从句，because接口保留原题。
     "p2-s4": 1, "p2-s5": 2, "p2-s10": 1, "p2-s17": 1, "p2-s19": 1,
     "p2-s20": 1, "p2-s24": 1, "p2-s25": 1, "p2-s27": 2,
     "p3-s1": 4, "p3-s2": 3, "p3-s3": 2, "p3-s6": 1, "p3-s8": 1,
@@ -380,7 +381,7 @@ test("2000 年全部复杂句的从句数量与人工审计基线一致", () => 
       .filter(([, count]) => count > 0),
   );
   assert.deepEqual(actual, expected, "复杂句的从句有遗漏、误增或边界审计未同步");
-  assert.equal(Object.values(actual).reduce((sum, count) => sum + count, 0), 100, "旧98条加Text3的till与第14题题干从句，共100条");
+  assert.equal(Object.values(actual).reduce((sum, count) => sum + count, 0), 101, "旧98条加Text3的till与第14、17题题干从句，共101条");
 });
 
 test("自测空格、题号和答案严格对应", () => {
@@ -1333,7 +1334,10 @@ test("means 的语境原形贯通词卡、题干出处和年度次数且不误�
       assert.equal(entry.grammarRole, "第三人称单数谓语");
       assert.match(entry.grammarSummary, /the phrase/);
       assert.equal(entry.structures[0].pattern, "an expression means + meaning");
-    } else assert.match(entry.grammarRole, /名词、动名词或内容从句/);
+    } else {
+      assert.equal(entry.grammarRole, "第三人称单数谓语；本句后接宾语内容从句");
+      assert.match(entry.grammarSummary, /宾语/);
+    }
     assert.doesNotMatch(entry.grammarSummary, /本文用 doesn't\/does mean/);
     assert.equal(entry.counts.lemma, study.currentCounts("mean", false).lemma);
     assert.ok(entry.occurrences.some((occurrence) => /第 27 题题干/.test(occurrence.section)));

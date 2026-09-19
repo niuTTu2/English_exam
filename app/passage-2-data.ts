@@ -1,3 +1,5 @@
+import { passage2000P2QuestionAnalysis } from "./2000-passage-2-question-analysis";
+import { passage2000P2Reasoning } from "./2000-passage-2-evidence";
 import type { Question, SentenceAnalysis } from "./data";
 
 export const passage2Sentences: SentenceAnalysis[] = [
@@ -12,7 +14,7 @@ export const passage2Sentences: SentenceAnalysis[] = [
     ],
     trunk: "Being a man has been dangerous",
     layers: [
-      { label: "动名词短语主语", text: "Being a man：成为男性这件事" },
+      { label: "动名词短语主语", text: "Being a man：作为男性这一身份" },
       { label: "谓语与表语", text: "has always been dangerous：一直处于危险状态" },
     ],
     grammar: [
@@ -20,7 +22,7 @@ export const passage2Sentences: SentenceAnalysis[] = [
       "has always been 是现在完成时，always 强调这种情况持续至今。",
       "be dangerous 是系表结构，dangerous 描述主语所处的状态。",
     ],
-    literal: "成为男性一直是危险的。",
+    literal: "作为男性一直是危险的。",
     natural: "当男性一直伴随着更高的生存风险。",
     logic: "开篇提出全文起点：男性过去更容易在生存竞争中受损。",
     phrases: [],
@@ -47,7 +49,7 @@ export const passage2Sentences: SentenceAnalysis[] = [
     ],
     literal: "每100名女性出生时约有105名男性，但这一比例在成熟年龄降至接近平衡；在70岁人群中，女性数量是男性的两倍。",
     natural: "出生时男孩略多于女孩，但到成年男女数量已近乎相等；到了70岁，女性人数约为男性的两倍。",
-    logic: "用人口比例的年龄变化说明男性从出生到老年始终承受更高的死亡风险。",
+    logic: "用出生、成年与70岁的人口比例变化说明男性累计存活的劣势。",
     phrases: ["for every", "drops to near balance", "at the age of maturity", "twice as many women as men"],
   },
   {
@@ -70,7 +72,7 @@ export const passage2Sentences: SentenceAnalysis[] = [
       "of male mortality 中 of 引出 universal 所涉及的领域。",
       "But 放在句首承接前句数据，提示下文将说明男性生存状况改善。",
     ],
-    literal: "男性死亡率这一伟大普遍规律正在被改变。",
+    literal: "男性死亡率这一普遍规律正在被改变。",
     natural: "男性死亡率长期高于女性这一普遍规律正在发生变化。",
     logic: "从历史规律转向现代变化，提出自然选择压力减弱的第一个证据。",
     phrases: ["male mortality"],
@@ -176,7 +178,7 @@ export const passage2Sentences: SentenceAnalysis[] = [
       "depend on 是不及物动词短语，on 后接决定因素。",
     ],
     literal: "五十年前，婴儿（尤其是男婴）能否存活取决于它的体重。",
-    natural: "五十年前，婴儿能不能活下来，尤其是男婴，很大程度取决于出生体重。",
+    natural: "五十年前，婴儿尤其是男婴能否存活，取决于其体重。",
     logic: "给出过去自然选择筛选婴儿的具体标准，为下一句的极端后果作铺垫。",
     phrases: ["the chance of a baby (particularly a boy baby) surviving", "depended on"],
   },
@@ -227,7 +229,7 @@ export const passage2Sentences: SentenceAnalysis[] = [
     ],
     literal: "如今它几乎不造成任何差别。",
     natural: "如今体重差一公斤几乎不会影响存活。",
-    logic: "用极短的句子对比过去与现在，明确说明筛选标准已失效。",
+    logic: "用极短的句子对比过去与现在，说明体重偏差的筛选影响已很小。",
     phrases: ["makes almost no difference"],
   },
   {
@@ -278,7 +280,7 @@ export const passage2Sentences: SentenceAnalysis[] = [
     ],
     literal: "还有另一种实施进化自杀的方式：活下来，但生更少的孩子。",
     natural: "还有一种进化意义上的“自杀”：人虽然活着，却生育更少。",
-    logic: "论证从死亡筛选转向繁殖筛选，提出自然选择减弱的第三个途径。",
+    logic: "论证从存活差异转向后代数量差异，增加繁殖这一自然选择维度。",
     phrases: ["commit evolutionary suicide", "stay alive", "have fewer children"],
   },
   {
@@ -328,7 +330,7 @@ export const passage2Sentences: SentenceAnalysis[] = [
     ],
     literal: "除了一些宗教社群之外，极少有女性生育15个孩子。",
     natural: "除了一些宗教团体外，如今几乎没有女性会生育15个孩子。",
-    logic: "用具体数字证明高生育率已不再普遍，只有少数特殊群体例外。",
+    logic: "用15个孩子这一数量说明多子女情况少见，并保留宗教群体例外及very few的数量限制。",
     phrases: ["except in", "very few women"],
   },
   {
@@ -345,16 +347,16 @@ export const passage2Sentences: SentenceAnalysis[] = [
     trunk: "the number of births has become average",
     layers: [
       { label: "时间状语", text: "Nowadays：如今" },
-      { label: "主语", text: "the number of births：出生数量" },
+      { label: "主语", text: "the number of births：生育数量" },
       { label: "插入比较", text: "like the age of death：像死亡年龄一样" },
       { label: "系表结构", text: "has become average：已经趋于平均" },
     ],
     grammar: [
       "the number of + 复数名词作主语时谓语用单数。",
-      "like the age of death 是插入的介词短语，比较出生数量与死亡年龄的平均化。",
+      "like the age of death 是插入的介词短语，比较生育数量与死亡年龄的平均化。",
       "become 后接形容词 average 作表语，说明状态变化。",
     ],
-    literal: "如今出生的数量，像死亡的年龄一样，已经变得平均。",
+    literal: "如今生育的数量，像死亡年龄一样，已变得平均。",
     natural: "如今出生人数和死亡年龄一样，都趋于平均化。",
     logic: "概括前两句，指出生育和死亡这两个进化筛选指标都不再有明显分化。",
     phrases: ["the number of", "like the age of death", "become average"],
@@ -396,12 +398,12 @@ export const passage2Sentences: SentenceAnalysis[] = [
     layers: [
       { label: "递进连接", text: "Again：再次回到自然选择机会减少的结论" },
       { label: "并列主语", text: "differences between people and the opportunity ...：人与人之间的差异以及自然选择利用这些差异的机会" },
-      { label: "不定式结构", text: "to take advantage of it：去利用这些差异，it 指 differences" },
+      { label: "不定式结构", text: "to take advantage of it：去利用这种差异情形，it为原文单数概括指代" },
     ],
     grammar: [
       "and 连接两个并列主语中心，谓语使用复数 have。",
       "opportunity for sb to do 是“某人做某事的机会”结构。",
-      "take advantage of 后接代词 it，指前面的 differences，而非 opportunity。",
+      "take advantage of 后接原文单数 it，概括人与人存在差异这一情况；不擅改为them。",
     ],
     literal: "人与人之间的差异以及自然选择利用这些差异的机会再次减少了。",
     natural: "同样，人与人之间的差异变小了，自然选择利用这些差异的机会也随之减少。",
@@ -455,7 +457,7 @@ export const passage2Sentences: SentenceAnalysis[] = [
     ],
     literal: "这个国家给大城市中的少数人财富，却给剩余的部落民族贫困。",
     natural: "印度的大城市让少数人富裕，而广大部落民族仍然贫困。",
-    logic: "具体呈现印度内部的阶层和群体差异，支撑“贫富群体生育差异”的例证。",
+    logic: "交代印度内部城市少数人与部落群体的贫富对照，为下一句自然选择效力比较提供人群背景；不直接推论两组生育数量。",
     phrases: [],
   },
   {
@@ -478,11 +480,11 @@ export const passage2Sentences: SentenceAnalysis[] = [
     grammar: [
       "破折号内是独立主格式的补充说明，everyone being the same 概括 mediocrity 的内容。",
       "means that 引导宾语从句，说明平均化带来的后果。",
-      "compared to the tribes 是过去分词短语作比较状语，省略了与谁相比的完整结构。",
+      "compared to the tribes 作比较状语，以部落群体中的选择效力为比较基准。",
     ],
     literal: "当今这种人人在生存和后代数量上都相同的巨大平均化，意味着在印度中上阶层，自然选择相对于部落群体已失去80%的力量。",
     natural: "如今人人的生存机会和后代数量都趋于相同，因此在印度中上阶层，自然选择的作用比部落群体中弱了80%。",
-    logic: "把印度案例上升为量化结论，说明社会条件如何替代自然选择并抹平差异。",
+    logic: "用量化比较展示自然选择效力减弱；80%只限定中上阶层相对部落群体，不是人口规模。",
     phrases: ["the same in", "compared to"],
   },
   {
@@ -497,7 +499,7 @@ export const passage2Sentences: SentenceAnalysis[] = [
     ],
     trunk: "this means evolution is over; biological Utopia has arrived",
     layers: [
-      { label: "观点范围", text: "For us：对人类而言" },
+      { label: "观点范围", text: "For us：对我们而言" },
       { label: "指代总结", text: "this means：this 指前文自然选择作用减弱的整体事实" },
       { label: "并列结论", text: "evolution is over; the biological Utopia has arrived：进化结束，生物学乌托邦到来" },
     ],
@@ -577,7 +579,7 @@ export const passage2Sentences: SentenceAnalysis[] = [
     layers: [
       { label: "时间范围", text: "in the past 100, 000 years—even the past 100 years：在过去十万年，甚至过去一百年里" },
       { label: "对比前半", text: "our lives have been transformed：我们的生活已经发生巨变" },
-      { label: "对比后半", text: "our bodies have not：我们的身体却没有改变，not 后省略 transformed" },
+      { label: "对比后半", text: "our bodies have not：我们的身体却没有改变，not 后省略 been transformed" },
     ],
     grammar: [
       "破折号内插入 even the past 100 years，进一步缩短时间范围以加强对比。",
@@ -586,7 +588,7 @@ export const passage2Sentences: SentenceAnalysis[] = [
     ],
     literal: "但是在过去100, 000年，甚至过去100年中，我们的生活已被改变，而身体没有。",
     natural: "然而，无论是过去十万年还是仅仅过去一百年，我们的生活已被彻底改变，身体却没有随之变化。",
-    logic: "用时间跨度证明生活变化与生物变化脱钩，为下一句“机器和社会替我们进化”作引出。",
+    logic: "用时间跨度证明生活变化与生物变化脱钩，为下一句“机器和社会替我们承担适应功能”作引出。",
     phrases: ["in the past 100, 000 years", "have been transformed"],
   },
   {
@@ -602,12 +604,12 @@ export const passage2Sentences: SentenceAnalysis[] = [
     layers: [
       { label: "主句", text: "We did not evolve：我们没有发生生物进化" },
       { label: "原因从句", text: "because machines and society did it for us：因为机器和社会替我们完成了这件事" },
-      { label: "代词指代", text: "it：指 evolve / 适应环境这一过程" },
+      { label: "代词指代", text: "it：概括进化本可承担的适应环境功能" },
     ],
     grammar: [
       "did not evolve 使用一般过去时否定，陈述作者关于过去过程的判断。",
       "because 引导原因状语从句，machines and society 是并列主语。",
-      "do it for us 是代动词结构，it 代替 evolve，for us 表替代受益关系。",
+      "do it for us 中did是实义代动词，it概括进化本可承担的适应功能，for us表受益者。",
     ],
     literal: "我们没有进化，因为机器和社会替我们做了这件事。",
     natural: "我们之所以没有发生身体进化，是因为机器和社会替我们完成了适应环境的工作。",
@@ -635,13 +637,13 @@ export const passage2Sentences: SentenceAnalysis[] = [
     grammar: [
       "to describe ... 是不定式作后置定语，说明 phrase 的用途。",
       "those ignorant of evolution 中 ignorant 是形容词，of 短语补充无知的对象。",
-      "引语内部 look at A as B 表示把 A 看作 B；第二个 as 引出补充说明。",
+      "第一处as引出a savage looks at a ship比较从句；第二处as at省去重复的看待动作。",
       "引用中的一般现在时表达一种概括性的认识方式。",
     ],
     literal: "达尔文有一句话来描述那些不了解进化的人：他们“看待一个有机体，就像野蛮人看待一艘船，把它当成完全超出自己理解力的东西”。",
     natural: "达尔文曾用一句话形容不懂进化的人：他们看待有机体，就像野蛮人看待船一样，觉得那完全是自己无法理解的东西。",
     logic: "借达尔文的比喻说明后人可能同样难以理解我们这个时代的生活方式。",
-    phrases: ["ignorant of", "look at an organic being as", "beyond his comprehension"],
+    phrases: ["ignorant of", "look at an organic being as a savage looks at a ship", "beyond his comprehension"],
   },
   {
     id: "p2-s26",
@@ -657,15 +659,15 @@ export const passage2Sentences: SentenceAnalysis[] = [
     trunk: "we will remember a way of life for its ugliness",
     layers: [
       { label: "确定语气", text: "No doubt：毫无疑问" },
-      { label: "将来回顾", text: "we will remember：后人将会记得" },
+      { label: "将来回顾", text: "we will remember：我们将会记住" },
       { label: "评价对象", text: "a 20th century way of life beyond comprehension for its ugliness：因丑陋而难以理解的20世纪生活方式" },
     ],
     grammar: [
       "No doubt 是句子副词，表示作者对判断的高度确信。",
       "beyond comprehension 后置修饰 way of life，说明其难以理解的程度。",
-      "for its ugliness 表示记忆或评价的原因，its 指 way of life。",
+      "for its ugliness说明这种生活方式为何难以理解，its指way of life。",
     ],
-    literal: "毫无疑问，我们会因其丑陋而记住一种超出理解的20世纪生活方式。",
+    literal: "毫无疑问，我们会记住一种因丑陋而难以理解的20世纪生活方式。",
     natural: "毫无疑问，后人会因为20世纪生活方式的丑陋而记住它，甚至觉得难以理解。",
     logic: "把达尔文的比喻转回当代，暗示作者并不把所谓“乌托邦”视为真正美好。",
     phrases: ["no doubt", "way of life", "beyond comprehension"],
@@ -699,7 +701,7 @@ export const passage2Sentences: SentenceAnalysis[] = [
   },
 ];
 
-export const passage2Questions: Question[] = [
+const passage2QuestionDrafts: Question[] = [
   {
     id: 15,
     sentenceId: "p2-s7",
@@ -777,3 +779,5 @@ export const passage2Questions: Question[] = [
     },
   },
 ];
+
+export const passage2Questions: Question[] = passage2QuestionDrafts.map(question => ({ ...question, analysis: passage2000P2QuestionAnalysis[question.id], reasoning: passage2000P2Reasoning[question.id], ...(question.id === 16 ? { locating: "第16句提出自然选择机会减少，第18—19句用印度贫富群体作比较；80%明确指中上阶层相对部落群体的选择效力损失，B是四项中最贴近这一主旨的概括。", explanations: { ...question.explanations, B: "B最贴近自然选择显著减弱的例证作用；原文数字只限定中上阶层相对部落，不能反推贫富两组都完全不起作用。" } } : {}) }));

@@ -1,5 +1,7 @@
 import { passage2012P2Guide, passage2012P2Paragraphs } from "./2012-passage-2-guide";
 import { passage2012P1Guide, passage2012P1Paragraphs } from "./2012-passage-1-guide";
+import { passage2000P2Guide, passage2000P2Paragraphs } from "./2000-passage-2-guide";
+import { reviewPassage2000P2 } from "./2000-passage-2-teaching";
 import { passage2000P1Guide, passage2000P1Paragraphs } from "./2000-passage-1-guide";
 import { passage2010P4Guide, passage2010P4Paragraphs } from "./2010-passage-4-guide";
 import { writing2012BSentences, writing2012BTasks } from "./2012-writing-b-data";
@@ -1375,7 +1377,7 @@ function applyVerifiedQuestion(question: Question): Question {
 
 const verifiedClozeSentences = sentences.map(applyVerifiedSyntax);
 const verifiedPassage1Sentences = passage1Sentences.map(applyVerifiedSyntax);
-const verifiedPassage2Sentences = passage2Sentences.map(applyVerifiedSyntax);
+const verifiedPassage2Sentences = passage2Sentences.map(applyVerifiedSyntax).map(reviewPassage2000P2);
 const verifiedPassage3Sentences = passage3Sentences.map(sentence => withPassage3Teaching(applyVerifiedSyntax(sentence)));
 const verifiedPassage4Sentences = passage4Sentences.map(sentence => withPassage4Teaching(applyVerifiedSyntax(sentence)));
 const verifiedPassage5Sentences = passage5Sentences.map(applyVerifiedSyntax);
@@ -1429,6 +1431,9 @@ export const articleContents: Record<string, ArticleContent> = {
     kind: "reading",
     sentences: verifiedPassage2Sentences,
     questions: verifiedPassage2Questions,
+    guide: passage2000P2Guide,
+    paragraphs: passage2000P2Paragraphs,
+    teachingStatus: { syntax: true, vocabulary: true, evidence: true, practice: true },
   },
   p3: {
     id: "p3",

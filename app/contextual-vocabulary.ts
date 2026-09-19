@@ -8,6 +8,7 @@ import { passage2001P2SourceContexts } from "./2001-passage-2-contexts";
 import { passage2001P1SourceContexts } from "./2001-passage-1-contexts";
 import { passage4Contexts } from "./passage-4-contexts";
 import { passage3Contexts } from "./passage-3-contexts";
+import { passage2000P2Contexts } from "./2000-passage-2-contexts";
 import { passage2000P1Contexts } from "./2000-passage-1-contexts";
 import { writing2012BSentenceContexts } from "./2012-writing-b-lexicon";
 import { writing2012ASentenceContexts } from "./2012-writing-a-lexicon";
@@ -1099,6 +1100,11 @@ for (const [sourceId, contexts] of Object.entries({ ...passage3Contexts, ...pass
   for (const [headword, context] of Object.entries(contexts)) target[headword] = { ...target[headword], ...context };
 }
 for (const [sourceId, words] of Object.entries(passage2000P1Contexts)) {
+  const existing = sentenceWordContexts[sourceId] ?? {};
+  sentenceWordContexts[sourceId] = { ...existing, ...Object.fromEntries(Object.entries(words).map(([headword, context]) => [headword, { ...existing[headword], ...context }])) };
+}
+
+for (const [sourceId, words] of Object.entries(passage2000P2Contexts)) {
   const existing = sentenceWordContexts[sourceId] ?? {};
   sentenceWordContexts[sourceId] = { ...existing, ...Object.fromEntries(Object.entries(words).map(([headword, context]) => [headword, { ...existing[headword], ...context }])) };
 }

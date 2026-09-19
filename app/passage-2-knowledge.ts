@@ -47,7 +47,7 @@ const p = (
 });
 
 const definitions: PhraseDefinition[] = [
-  p("being-a-man", "being a man", "being + noun", "动名词主语", "成为男性这一事实", "动名词短语作主语", "being 后接名词或形容词，整体把一个状态名词化。", { english: "Being a parent requires patience.", chinese: "成为父母需要耐心。" }, ["being a man 不是进行时；being 在这里是动名词。"]),
+  p("being-a-man", "being a man", "being + noun", "动名词主语", "作为男性这一身份", "动名词短语作主语", "being 后接名词或形容词，整体把一个状态名词化。", { english: "Being a parent requires patience.", chinese: "成为父母需要耐心。" }, ["being a man 不是进行时；being 在这里是动名词。"]),
   p("has-always-been", "has always been", "have/has always been + complement", "完成时系表结构", "一直处于某种状态", "现在完成时谓语", "主语为第三人称单数时用 has，其他人称用 have；always 放在助动词后。", { english: "The rule has always been important.", chinese: "这条规律一直很重要。" }),
   p("for-every", "for every", "for every A, B", "数量对应结构", "每一个 A 对应一个 B", "介词短语；建立数量基准", "for every 后接单数可数名词或数词，常用于比例、交换和对应关系。", { english: "There is one nurse for every ten patients.", chinese: "每十名病人配一名护士。" }, ["不要把 for every 误读成“为了每一个”；比例语境中是“每……对应”。"]),
   p("drop-to-near-balance", "drops to near balance", "drop to + result", "变化动词搭配", "降至接近平衡的状态", "谓语 + 结果补语", "drop to 后接数值、水平或状态，to 表示变化后的终点。", { english: "The rate dropped to near balance after a decade.", chinese: "十年后该比例降至接近平衡。" }, ["drop to 表示降到某终点；drop by 表示下降幅度。"]),
@@ -88,7 +88,7 @@ const definitions: PhraseDefinition[] = [
   p("same-in", "the same in", "be the same in + aspect", "比较系表结构", "在某方面相同", "be + 表语 + 介词补足语", "in 后接比较维度，如 size、survival 或 quality。", { english: "The two methods are the same in cost.", chinese: "这两种方法在成本上相同。" }, ["same in 后接比较维度；same as 后接比较对象，不能省略介词或把两种结构混为一谈。"]),
   p("compared-to", "compared to", "compared to/with + noun", "比较介词结构", "与……相比", "过去分词短语作比较状语", "compared to 后接比较对象，常置于句末或句首。", { english: "The new model is light compared to the old one.", chinese: "与旧型号相比，新型号很轻。" }, ["compared to/with 后必须有明确的比较对象；放在句首时要确保逻辑主语就是被比较的对象。"]),
   p("for-us", "for us", "for + pronoun", "介词对象结构", "对我们而言；替我们", "介词短语", "for 的含义由动词决定，可表示受益对象、评价对象或替代关系。", { english: "This decision matters for us.", chinese: "这个决定对我们很重要。" }, ["for us 既可表示“对我们而言”，也可表示“替我们”；要根据前面的动词判断，不能一律翻成“为了我们”。"]),
-  p("evolution-over", "evolution is over", "be over", "状态系表结构", "进化已经结束", "be + 表语形容词", "over 作表语表示某过程终止；此处是作者的概括性判断。", { english: "The experiment is over.", chinese: "实验结束了。" }, ["be over 在此表示“结束”，不是空间上的“在……上方”；over 作表语时指过程终止。"]),
+  p("evolution-over", "evolution is over", "be over", "状态系表结构", "进化已经结束", "be + 表语性副词", "over 作表语表示某过程终止；此处是作者的概括性判断。", { english: "The experiment is over.", chinese: "实验结束了。" }, ["be over 在此表示“结束”，不是空间上的“在……上方”；over 作表语时指过程终止。"]),
   p("little-physical-change", "involved little physical change", "involve little + uncountable noun", "动词 + 数量结构", "只涉及很少的身体变化", "及物动词 + 不可数名词宾语", "little 修饰不可数名词，表示数量少；involve 表包含或牵涉。", { english: "The treatment involved little physical discomfort.", chinese: "这种治疗几乎没有身体不适。" }),
   p("fill-places-in-nature", "fill so many places in nature", "fill + places in + domain", "动词搭配", "占据自然界如此多的生态位置", "及物动词 + 宾语 + 介词补足语", "fill 可指占据空间、职位或生态位；so many 修饰可数名词复数。", { english: "One species cannot fill every place in nature.", chinese: "一个物种不可能占据自然界的每个位置。" }),
   p("past-years", "in the past 100, 000 years", "in the past + period", "时间介词结构", "在过去……年中", "时间状语", "in the past + 时间段常与现在完成时连用；原卷保留数字中的空格写法。", { english: "In the past ten years, the city has changed.", chinese: "过去十年里，这座城市发生了变化。" }, ["in the past + 时间段常与现在完成时连用；和 fifty years ago 这种以现在为参照的点状表达不要混用。"]),
@@ -97,12 +97,12 @@ const definitions: PhraseDefinition[] = [
   p("did-it-for-us", "did it for us", "do it for sb", "代动词替代结构", "替某人完成某事", "do + it + for 短语", "it 代替前文动作，for us 表示替代对象或受益者。", { english: "Automation did the routine work for us.", chinese: "自动化替我们完成了日常工作。" }, ["do it for sb 中 it 必须有明确的前文指代；for us 表示替我们完成，而不是单纯的目的“为了我们”。"]),
   p("phrase-to-describe", "a phrase to describe", "a noun + to do", "不定式后置定语", "用来描述……的一句话 / 表达", "名词 + 不定式定语", "to describe 修饰 phrase，说明该表达的用途。", { english: "She found a phrase to describe the feeling.", chinese: "她找到了一句话来描述这种感受。" }),
   p("ignorant-of", "ignorant of", "be ignorant of + noun", "形容词介词搭配", "不了解；对……无知", "形容词 + 介词补足语", "ignorant 后用 of 引出不了解的对象。", { english: "He was ignorant of the risks.", chinese: "他不了解这些风险。" }, ["ignorant of 表示缺乏知识，不等于 insulting 地称人为“愚蠢”。"]),
-  p("look-at-as", "look at an organic being as", "look at A as B", "看待结构", "把 A 看作 B", "动词短语 + as 补足语", "look at 引出观察对象，as 后说明把对象理解成什么。", { english: "They look at the device as a useful tool.", chinese: "他们把这个装置看作有用工具。" }, ["结构是 look at A as B，不能省略 at；as 后接把 A 理解成的身份或性质，不等同于 look like。"]),
+  p("look-at-as", "look at an organic being as a savage looks at a ship", "look at A as + subject + looks at B", "动作比较结构", "看待A如同另一人看待B", "动词短语 + as比较状语从句", "as后有独立主语a savage及谓语looks，比较两种看待行为；不是look at A as B中的身份宾补。", { english: "They look at the problem as a child looks at a puzzle.", chinese: "他们看待这个问题，就像孩子看待谜题。" }, ["保留as后完整主谓；原句第二个as at省略重复的看待动作。"]),
   p("beyond-his-comprehension", "beyond his comprehension", "beyond one's comprehension", "介词评价结构", "超出某人的理解力", "介词短语作后置修饰", "beyond 表示超出范围，comprehension 是理解能力。", { english: "The result was beyond her comprehension.", chinese: "这个结果超出了她的理解力。" }, ["beyond one's comprehension 中 one's 要随所属者变化（his、her、my 等）；comprehension 是名词，不能换成动词 comprehend。"]),
   p("no-doubt", "no doubt", "no doubt + clause", "句子副词", "毫无疑问", "句子层面的确定语气", "no doubt 可置于句首或句中，表示说话者高度确信。", { english: "No doubt the policy will change.", chinese: "毫无疑问，这项政策会改变。" }, ["句首 no doubt 是句子副词，通常与后面的完整分句连用；不要把它误写成一个词 nodoubt。"]),
   p("way-of-life", "way of life", "way of life", "名词短语", "生活方式", "名词 + of 后置修饰", "way 表方式，of life 说明这种方式涉及生活整体。", { english: "Technology has changed our way of life.", chinese: "技术改变了我们的生活方式。" }, ["way of life 是固定名词短语，of 不能随意省略；它指整体生活方式，不只是某一次生活活动。"]),
   p("beyond-comprehension", "beyond comprehension", "beyond + abstract noun", "介词短语", "难以理解；超出理解范围", "后置介词短语", "省略物主限定词时表示一般人的理解范围；具体所属关系可用 beyond one's comprehension。", { english: "The scale of the disaster was beyond comprehension.", chinese: "灾难的规模令人难以理解。" }, ["省略物主词时表示一般意义的“超出理解范围”；若强调具体某人的理解力，应写 beyond his/her comprehension。"]),
-  p("for-its-ugliness", "for its ugliness", "for + reason noun", "原因介词结构", "因为它的丑陋", "原因状语", "for 后接名词说明记忆、评价或行动的原因；its 指前面的 way of life。", { english: "The building is remembered for its ugliness.", chinese: "这座建筑因丑陋而被人记住。" }),
+  p("for-its-ugliness", "for its ugliness", "for + reason noun", "原因介词结构", "因为它的丑陋", "原因状语", "本句for短语解释生活方式为何令人难以理解；its指前面的way of life。", { english: "The building is remembered for its ugliness.", chinese: "这座建筑因丑陋而被人记住。" }),
   p("amazed-at", "however amazed our descendants may be at", "however + adjective + subject + may be", "让步结构", "无论后代对……多么惊讶", "让步状语从句", "however 修饰形容词，may be 保持情态语气；at 后接惊讶的对象。", { english: "However surprised she may be at the news, she will stay calm.", chinese: "无论她对消息多么惊讶，她都会保持冷静。" }, ["however amazed 不是 however + 副词；amazed 在这里是形容词。"]),
   p("far-from", "far from", "be far from + noun/adjective", "介词评价结构", "远离；远非", "系表结构中的介词短语", "far from 可表示空间距离，也可表示与某状态相差很远。", { english: "The result is far from perfect.", chinese: "结果远非完美。" }, ["far from 后可接名词或形容词；far from perfect 是抽象评价“远非完美”，不一定表示空间距离。"]),
   p("look-just-like", "look just like", "look like + noun", "系动词比较结构", "看起来和……一模一样", "look + 表语介词短语", "look like 后接名词或代词；just 加强相似程度。", { english: "The child looks just like her mother.", chinese: "这个孩子看起来和她母亲一模一样。" }, ["look like 后接名词或代词作表语；just 只加强相似程度，不要把 like 换成 as 而破坏结构。"]),
@@ -130,7 +130,7 @@ const extraDefinitions: PhraseDefinition[] = [
   p("highest-stage-evolution", "highest stage of evolution", "the highest stage of + noun", "评价性名词短语", "进化的最高阶段", "名词 + of 结构", "最高级 highest 修饰 stage，of 后说明所属过程。", { english: "No species has reached the highest stage of evolution.", chinese: "没有物种达到进化的最高阶段。" }),
   p("difference-wealth-poverty", "difference between wealth and poverty", "the difference between A and B", "比较名词结构", "财富与贫困之间的差异", "名词 + between 结构", "between 连接两个平行抽象名词。", { english: "The difference between wealth and poverty remains visible.", chinese: "财富与贫困之间的差异仍然明显。" }),
   p("evolutionary-future", "evolutionary future", "adjective + noun", "生物学名词短语", "进化的未来", "名词短语", "evolutionary 作前置定语限定 future 的领域。", { english: "The evolutionary future of the species is uncertain.", chinese: "该物种的进化未来并不确定。" }),
-  p("going-nowhere", "going nowhere", "go nowhere", "习语 / 结果结构", "没有进展；走向停滞", "进行时或习语谓语", "nowhere 作副词表示没有任何进展方向。", { english: "The debate is going nowhere.", chinese: "这场争论没有进展。" }),
+  p("going-nowhere", "going nowhere", "go nowhere", "习语 / 结果结构", "没有进展；走向停滞", "标题中的分词后置修饰", "原标题没有be，Going Nowhere修饰Human Evolution；完整句可用be going nowhere。", { english: "The debate is going nowhere.", chinese: "这场争论没有进展。" }),
   p("look-at", "look at", "look at + object", "动词短语", "看；看待", "及物动词短语", "look at 后接观察对象；与 look for（寻找）不同。", { english: "Look at the evidence carefully.", chinese: "仔细看看证据。" }),
 ];
 
@@ -241,3 +241,8 @@ export const passage2WordKnowledge: Record<string, WordKnowledge> = {
   author: { grammarRole: "名词", grammarSummary: "author 指文章作者；题目中的 The author argues that 引出作者明确论点。", structures: ws("the author argues that + clause", "作者主张……", "that 从句是 argue 的宾语。", "The author argues that tools shape behavior.", "作者主张工具会塑造行为。") },
   according: { grammarRole: "介词短语组成成分", grammarSummary: "according to 引出信息来源；本篇题干的 according to the first paragraph 要求回到原文定位。", structures: ws("according to + source", "根据……", "according to 后接人、资料或段落。", "According to the report, risks fell.", "根据报告，风险下降了。") },
 };
+
+// 保留旧搭配入口的规范身份，新句法解释按完整as比较从句呈现。
+passage2PhraseAliases["look at an organic being as"] = "look-at-as";
+passage2PhraseAliases["tend to have"] = "tend-to-do";
+passage2CollocationGlosses["tend to have"] = { meaning: "往往会生育或拥有", note: "tend to表示一般倾向，have后的children给出生育义。" };
