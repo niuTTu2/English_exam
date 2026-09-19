@@ -11,6 +11,7 @@ const scheduler = await vite.ssrLoadModule("/app/vocabulary-learning/scheduler.t
 const queue = await vite.ssrLoadModule("/app/vocabulary-learning/queue.ts");
 const sessions = await vite.ssrLoadModule("/app/vocabulary-learning/session.ts");
 const spelling = await vite.ssrLoadModule("/app/vocabulary-learning/spelling.ts");
+const bridge = await vite.ssrLoadModule("/app/vocabulary-learning/study-bridge.ts");
 const study = await vite.ssrLoadModule("/app/study-app.tsx");
 const { vocabularyPriority } = await vite.ssrLoadModule("/app/vocabulary-priority.ts");
 const { getVocabularySenseGuide } = await vite.ssrLoadModule("/app/vocabulary-senses.ts");
@@ -145,6 +146,48 @@ test("known interval advances only when due on a new day, and early repeated kno
   assert.equal(early.dueAt, second.dueAt); assert.equal(early.intervalDays, 3);
   const third = scheduler.scheduleReview(second, "known", second.dueAt);
   assert.equal(third.intervalDays, 7);
+});
+
+test("same-day re-marked items clear on successful recall without advancing or manufacturing attempts", () => {
+  const item = candidate("momentum", "2010-p1-s5");
+  const initial = model.createMemory(item, now);
+  const originalSession = sessions.createSession([{ id: "initial", memoryId: initial.id, kind: "new-word", contextId: initial.primaryContextId }], now, { id: "remark-initial" });
+  const first = sessions.rateSession(sessions.revealSession(originalSession, now), { [initial.id]: initial }, "known", now);
+  const original = { vocabularyMemories: { [initial.id]: first.memory }, vocabularyAttempts: { [first.attempt.id]: first.attempt } };
+  for (const rating of ["known", "easy"]) {
+    const early = scheduler.scheduleReview(first.memory, rating, now + 30_000);
+    assert.equal(early.dueAt, first.memory.dueAt, "unmarked future review must not move");
+    assert.equal(early.consecutiveKnown, first.memory.consecutiveKnown);
+    const marked = bridge.enrollVocabulary(original, item, now + 60_000, "有些陌生");
+    assert.deepEqual(marked.vocabularyAttempts, original.vocabularyAttempts, "marking is not a recall attempt");
+    assert.equal(scheduler.dueMemories(marked.vocabularyMemories, now + 60_000).length, 1);
+    const reopened = marked.vocabularyMemories[initial.id];
+    const reviewSession = sessions.createSession([{ id: "reopened", memoryId: initial.id, kind: "review", contextId: reopened.primaryContextId }], now + 120_000, { id: `remark-${rating}` });
+    const recalled = sessions.rateSession(sessions.revealSession(reviewSession, now + 120_000), marked.vocabularyMemories, rating, now + 120_000);
+    const nextDay = new Date(now); nextDay.setDate(nextDay.getDate() + 1); nextDay.setHours(0, 0, 0, 0);
+    assert.equal(recalled.memory.dueAt, nextDay.getTime());
+    assert.equal(recalled.memory.intervalDays, 1);
+    assert.equal(recalled.memory.consecutiveKnown, first.memory.consecutiveKnown);
+    assert.equal(recalled.memory.lastAdvancedDay, first.memory.lastAdvancedDay);
+    assert.equal(scheduler.dueMemories({ [initial.id]: recalled.memory }, now + 120_000).length, 0);
+    assert.equal(recalled.attempt.rating, rating, "only the actual recall creates its own attempt");
+    assert.equal(Object.keys({ ...marked.vocabularyAttempts, [recalled.attempt.id]: recalled.attempt }).length, 2);
+    let repeated = recalled.memory;
+    for (let i = 0; i < 20; i++) repeated = scheduler.scheduleReview(repeated, i % 2 ? "known" : "easy", now + 180_000 + i);
+    assert.equal(repeated.dueAt, recalled.memory.dueAt, "repeated successful clicks cannot postpone the short review");
+    assert.equal(repeated.consecutiveKnown, first.memory.consecutiveKnown);
+    assert.equal(repeated.lastAdvancedDay, first.memory.lastAdvancedDay);
+    let mature = model.createMemory(item, now - 25 * day);
+    for (let i = 0; i < 5; i++) mature = scheduler.scheduleReview(mature, "known", i === 0 ? now - 25 * day : mature.dueAt);
+    assert.equal(mature.intervalDays, 30);
+    assert.equal(mature.lastAdvancedDay, scheduler.localDay(now));
+    const longPlan = bridge.enrollVocabulary({ vocabularyMemories: { [mature.id]: mature } }, item, now + 60_000, "有些陌生");
+    const shortPlan = scheduler.scheduleReview(longPlan.vocabularyMemories[mature.id], rating, now + 120_000);
+    assert.equal(shortPlan.dueAt, nextDay.getTime());
+    assert.equal(shortPlan.intervalDays, 1);
+    assert.equal(shortPlan.consecutiveKnown, mature.consecutiveKnown, "reopened 30-day memory must not gain another streak step");
+    assert.equal(shortPlan.lastAdvancedDay, mature.lastAdvancedDay);
+  }
 });
 
 test("forgot repeats after four intervening cards and at tail; failing a retry gets another recall", () => {

@@ -23,7 +23,15 @@ export function scheduleReview(memory: VocabularyMemory, rating: VocabularyRatin
       dueAt: afterDays(now, 1), lastAdvancedDay: localDay(now) };
   }
   const canAdvance = memory.lastAdvancedDay !== localDay(now) && (memory.status === "unseen" || memory.dueAt <= now);
-  if (!canAdvance) return updated;
+  if (!canAdvance) {
+    // A deliberate new mark may reopen today's item after it already advanced.
+    // Successful recall clears that due item without advancing the streak again;
+    // ordinary early practice keeps its future due time completely unchanged.
+    if (memory.lastAdvancedDay === localDay(now) && memory.dueAt <= now) {
+      return { ...updated, status: "review", intervalDays: 1, dueAt: afterDays(startOfDay(now), 1) };
+    }
+    return updated;
+  }
   const nextCount = Math.min(REVIEW_INTERVALS.length, memory.consecutiveKnown + (rating === "easy" ? 2 : 1));
   const intervalDays = REVIEW_INTERVALS[nextCount - 1];
   return { ...updated, status: nextCount >= 5 ? "mastered" : "review", consecutiveKnown: nextCount,
