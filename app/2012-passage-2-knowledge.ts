@@ -1,3 +1,4 @@
+import { passage2012P2ReviewedContexts, passage2012P2ContextGlosses } from "./2012-passage-2-contexts";
 import type { WordKnowledge } from "./knowledge-base";
 import { reviewedPhrases, type PhraseRow } from "./2011-content-helpers";
 import { passage2012P2Lexicon, passage2012P2CollocationGlosses, passage2012P2SentenceContexts } from "./2012-passage-2-lexicon";
@@ -33,7 +34,7 @@ const rows: PhraseRow[] = [
   ["core-beliefs", "core beliefs", "core + noun", "名词定语搭配", "核心信念", "包括我们对儿童心理发展的基本看法。", "Core beliefs shape decisions.", "核心信念塑造决定。", "core 在此不是核心部件的物理意义。"],
   ["psychological-development", "psychological development", "psychological development", "名词搭配", "心理发展", "作者说这一看法受营销趋势影响。", "Children's psychological development changes over time.", "儿童心理发展随时间变化。", "不是 physical development 的身体成长。"],
   ["take-toddler-example", "Take the toddler", "take + noun as an example", "祈使举例结构", "以……为例", "Take 后直接接所举的对象，句中省略主语 you；这里不是要求读者带走幼儿。", "Take the toddler as an example.", "就以幼儿为例。", "take 在本文不是普通的“拿走”，要整体识别为引出例子。"],
-  ["assumed-phase", "assumed that phase was something", "assume that + clause", "宾语从句", "假定……", "assumed 的内容随后被 wrong 推翻，须保留其未证实性。", "I assumed that the phase was natural.", "我假定那个阶段是自然形成的。", "assume 不是 prove，不能把作者原先假设当结论。"],
+  ["assumed-phase", "assumed that phase was something", "assume (that) + clause", "宾语从句（连接词省略）", "假定……", "本句that修饰phase，是指示限定词；assumed后真正的从句连接词省略。原先假设随后被wrong推翻。", "I assumed that the phase was natural.", "我假定那个阶段是自然形成的。", "assume 不是 prove，不能把作者原先假设当结论。"],
   ["research-behaviour", "research into children's behaviour", "research into + topic", "名词介词搭配", "对……的研究", "作者原以为 toddler 概念来自这类研究，随后被修正。", "Research into behaviour takes time.", "对行为的研究需要时间。", "research 常不可数；into 说明研究对象。"],
   ["turns-out", "Turns out", "turn out (that) + clause", "省略引出结构", "结果发现……", "省略 that，连接前面的错误假设与实际历史。", "Turns out, the label was commercial.", "结果发现，这个标签是商业性的。", "turn out 不是“转身出去”，在此为结果揭示。"],
   ["according-cook", "according to Daniel Cook", "according to + source", "信息来源结构", "按……的说法", "Daniel Cook 的身份是儿童消费主义历史学家，语法上是插入来源。", "According to Cook, the label spread through marketing.", "按库克所说，这个标签靠营销传播。", "来源归属不等于作者把所有细节绝对化。"],
@@ -45,18 +46,20 @@ const rows: PhraseRow[] = [
   ["evolved-stage", "evolved into a broadly accepted developmental stage", "evolve into + result", "动词结果结构", "逐渐演变成……", "it 回指 toddler 术语，broadly accepted 说明社会认可而非自然实证。", "The label evolved into a formal stage.", "这个标签逐渐演变为正式阶段。", "evolve 强调渐变，不能误作一次专家命名。"],
   ["ever-tinier-categories", "into ever-tinier categories", "into + comparative categories", "分类结果结构", "分成越来越细的类别", "ever 加比较级，说明细分持续强化。", "The market was split into ever-smaller groups.", "市场被分成越来越小的群体。", "categories 是分类，不是消费者天然不变的本质。"],
   ["sure-fire-profits", "a sure-fire way to boost profits", "a sure-fire way to do", "评价不定式结构", "几乎必定奏效的做法", "to boost profits 说明这种分类的商业目的。", "It is a sure-fire way to boost profits.", "这是提高利润的万全办法。", "sales 是销售额，profits 是利润；两者不要混淆。"],
-  ["segment-market", "one of the easiest ways to segment a market", "segment a market", "市场营销动宾搭配", "细分市场", "one of 后面最高级 eaiest ways 为复数，谓语仍由 one 决定。", "Brands segment a market by age.", "品牌按年龄细分市场。", "segment 在本文不是几何线段，而是市场分类动作。"],
+  ["segment-market", "one of the easiest ways to segment a market", "segment a market", "市场营销动宾搭配", "细分市场", "one of 后面最高级 easiest ways 为复数，谓语仍由 one 决定。", "Brands segment a market by age.", "品牌按年龄细分市场。", "segment 在本文不是几何线段，而是市场分类动作。"],
   ["magnify-gender", "magnify gender differences", "magnify + differences", "动宾搭配", "夸大性别差异", "作者把它写作最容易的市场细分方法之一。", "Advertising may magnify gender differences.", "广告可能夸大性别差异。", "magnify 不表示客观测量变大，而是有意强化。"],
-  ["where-differences", "where they did not previously exist", "where + clause", "情形性定语从句", "在原先并不存在的情形中", "they 回指 gender differences；where 不一定是地理地点。", "The campaign invented divisions where none existed.", "这场宣传在原本没有分界的地方制造了分界。", "invent 与 discover 相反，强调人为制造。"],
+  ["where-differences", "where they did not previously exist", "where + clause", "地点/情形状语从句", "在原先并不存在的情形中", "where直接限定invent的情形，前面没有名词先行词；they回指gender differences。", "The campaign invented divisions where none existed.", "这场宣传在原本没有分界的地方制造了分界。", "invent 与 discover 相反，强调人为制造。"],
 ];
 
 const reviewed = reviewedPhrases(rows);
 
 export const passage2012P2PhraseGuides = reviewed.guides;
 export const passage2012P2PhraseAliases = reviewed.aliases;
-export const passage2012P2PhraseGlosses = { ...passage2012P2CollocationGlosses, ...reviewed.glosses };
+export const passage2012P2PhraseGlosses = { ...passage2012P2CollocationGlosses, ...reviewed.glosses, ...passage2012P2ContextGlosses };
 
 export function getPassage2012P2WordKnowledge(headword: string, sentenceId?: string): WordKnowledge | undefined {
+  const sourceContext = sentenceId ? passage2012P2ReviewedContexts[sentenceId]?.[headword] : undefined;
+  if (sourceContext) return { grammarRole: sourceContext.partOfSpeech!, grammarSummary: sourceContext.use!, structures: [{ pattern: sourceContext.pattern, meaning: sourceContext.patternMeaning, rule: sourceContext.use! }], pitfalls: [] };
   const entry = passage2012P2Lexicon[headword];
   if (!entry) return undefined;
   const context = sentenceId ? passage2012P2SentenceContexts[sentenceId]?.[headword] : undefined;

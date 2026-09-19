@@ -1,3 +1,4 @@
+import { passage2012P2ReviewedContexts } from "./2012-passage-2-contexts";
 import type { SentenceWordContext } from "./contextual-vocabulary";
 import { reviewedLexicon, type LexiconRow } from "./2011-content-helpers";
 
@@ -182,3 +183,7 @@ export const passage2012P2SentenceContexts: Record<string, Record<string, Senten
   "2012-p2-s17": { split: { contextualMeaning: "把人群分开分类", use: "动名词 Splitting kids, or adults 作整句主语。" }, "ever-tinier": { contextualMeaning: "越来越细小的", use: "ever 加比较级 tinier 表不断细分。" }, prove: { contextualMeaning: "已经证明是", use: "has proved 表经验上显示为有效做法。" }, "sure-fire": { contextualMeaning: "几乎必定奏效的", use: "sure-fire way 是提高利润的万全办法的比喻说法。" } },
   "2012-p2-s18": { segment: { contextualMeaning: "细分", use: "segment a market 指按特征切分消费者市场。" }, magnify: { contextualMeaning: "夸大；强化", use: "magnify gender differences 指有意放大性别差异。" }, they: { contextualMeaning: "性别差异", use: "invent them 的 them 回指 gender differences。" }, where: { contextualMeaning: "在原先不存在这些差异的情形中", use: "where 引出情形性定语从句，不是具体地理地点。" } },
 };
+
+for (const [sourceId, contexts] of Object.entries(passage2012P2ReviewedContexts)) {
+  passage2012P2SentenceContexts[sourceId] = { ...passage2012P2SentenceContexts[sourceId], ...contexts };
+}

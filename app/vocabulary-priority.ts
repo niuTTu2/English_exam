@@ -53,6 +53,15 @@ export function vocabularyPriority(entry: Pick<VocabEntry, "headword" | "display
     if (new Set(["specialisation", "professionalisation", "accumulation", "distinction", "connotation", "integrate", "consequent", "requirement", "participation", "primacy", "acceptable", "incorporate", "reinforce", "differentiate", "differentiation", "crucial", "infer", "discrimination"]).has(head)) return { id: "core", label: "核心迁移词", reason: "有助于理解知识发展、制度分化与学术参与类议论。", recommendedReview: true };
     return { id: "recognition", label: "本句识别 · 按需记忆", reason: "先保证读懂当前句子，无需把所有扩展一并背诵。", recommendedReview: false };
   }
+  if (articleId === "2012-p2") {
+    const head=entry.headword.toLowerCase();
+    if (["jo","paoletti","daniel","cook","virgin","mary"].includes(head)) return {id:"name",label:"背景专名 · 识别即可",reason:"识别研究者姓名或文化象征出处，辅助分清观点来源。",recommendedReview:false};
+    if (entry.kind === "phrase") return {id:"structure",label:"本篇关键表达",reason:"结合颜色历史、营销机制及当前句法关系复习。",recommendedReview:true};
+    if (["present","associate","matter","take","turn","trade","wear","term","prove","mean","means","consumption"].includes(head)) return {id:"sense",label:"熟词语境义",reason:"当前词义或词性与常见用法不同，应连同所在句辨认。",recommendedReview:true};
+    if (functions.has(head) || ["only","one","when","where","until"].includes(head)) return {id:"function",label:"功能词 · 看句法作用",reason:"重点辨明真实指代、时间、让步、原因与范围。",recommendedReview:false};
+    if (["pervasive","intrinsically","identity","unavoidable","masculine","femininity","amplify","dictate","perception","assume","counsel","evolve","segment","magnify","invent","impose"].includes(head)) return {id:"core",label:"核心迁移词",reason:"适合结合社会认知与营销影响的议论语境复习。",recommendedReview:true};
+    return {id:"recognition",label:"本句识别 · 按需记忆",reason:"先理解当前句，再决定是否加入复习。",recommendedReview:false};
+  }
   if (articleId === "2012-p1") {
     const head = entry.headword.toLowerCase(), surface = entry.display.toLowerCase();
     if (homeworkNames.has(head)) return { id: "name", label: "背景专名 · 识别即可", reason: "这里是洛杉矶联合学区的名称或组成部分；识别本文政策制定者即可。", recommendedReview: false };

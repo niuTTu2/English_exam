@@ -2,7 +2,7 @@ export const grammarConcepts = {
   "nonfinite-infinitive": "不定式结构", "clause-condition": "条件从句", "clause-concession": "让步从句", "passive-voice": "被动语态", "lexical-context": "语境词义",
   "finite-predicate": "找有限谓语", "subject-head": "主语范围与中心", "basic-svc": "主系表", "basic-svo": "主谓宾", "object-complement": "宾语补足语",
   "modifier-prepositional": "介词短语修饰", "modifier-adverb": "副词修饰", "clause-relative": "定语从句", "clause-object": "宾语从句",
-  "clause-subject": "主语从句", "clause-predicative": "表语从句", "clause-time": "时间从句", "complement-content": "内容补足从句",
+  "clause-subject": "主语从句", "clause-predicative": "表语从句", "clause-time": "时间从句", "clause-concession": "让步状语从句", "clause-cause": "原因状语从句", "clause-place": "地点/情形状语从句", "complement-content": "内容补足从句",
   "nonfinite-participle": "分词结构", "nonfinite-subject": "非谓语逻辑主语", "reference-pronoun": "指代",
   "tense-past-perfect-progressive": "过去完成进行时", "modal-obligation": "情态与义务", "comparison-scope": "比较与数量范围",
   "time-reference": "时间参照", "negation-contrast": "否定与对比", "apposition": "同位说明", "author-voice": "观点归属", "paragraph-role": "段落作用", "passage-route": "全文发展路线",

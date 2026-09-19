@@ -1,3 +1,6 @@
+import { upgradePassage2012P2Sentence } from "./2012-passage-2-reading";
+import { passage2012P2QuestionAnalysis } from "./2012-passage-2-question-analysis";
+import { passage2012P2Reasoning } from "./2012-passage-2-evidence";
 import type { Question } from "./data";
 import { sentenceFactory, segment, clause } from "./2011-content-helpers";
 
@@ -143,7 +146,7 @@ export const passage2012P2Sentences = [
   ], "Splitting kids or adults into ever-tinier categories has proved a sure-fire way to boost profits.", "把儿童或成人划分为越来越细小的类别，已经证明是提高利润的万全办法。", "无论孩子还是成人，越细地分组越好卖货、越能增加利润。", "直接定位 29 题 A，说明商店建议的市场逻辑是细分群体。", ["into ever-tinier categories", "a sure-fire way to boost profits"]),
   sentence(18, [
     segment("And ", "connector", "并列连接词", "补充一个容易细分的维度", "承接按年龄细分的盈利逻辑", "And 不仅连接句子，也把性别分化列为一种市场办法。"),
-    segment("one of the easiest ways ", "subject", "one of + 最高级复数名词", "主语", "is 的主语", "表示最容易的办法之一", "one of 后名词用复数 ways；easiest 不是唯一最容易。"),
+    segment("one of the easiest ways ", "subject", "one of + 最高级复数名词", "主语", "is 的主语", "表示最容易的办法之一；one of 后名词用复数 ways，easiest 不是唯一最容易。"),
     segment("to segment a market ", "modifier", "不定式后置定语", "说明 ways 的具体内容", "按群体切分市场", "segment 作动词为细分，market 为消费者市场，不是市场地点。"),
     segment("is ", "predicate", "系动词", "主句谓语", "连接方法与具体做法", "主语中心为 one，不受 ways 复数影响。"),
     segment("to magnify gender differences ", "object", "不定式表语", "说明一种做法", "夸大性别差异", "magnify 不只是放大图像，此处是夸张、强化差异。"),
@@ -153,7 +156,7 @@ export const passage2012P2Sentences = [
     clause("to segment a market", "不定式短语", "to", "修饰 ways，说明何种办法", "省略逻辑主语", "segment", "a market", "译为“细分市场的办法”，不把 to 译成方向。"),
     clause("where they did not previously exist", "地点/情形定语从句", "where", "修饰原先不存在差异的情形", "they", "did not exist", "previously", "them 指 gender differences；译为“原先并不存在这些差异的地方/情形”。"),
   ]),
-];
+].map(upgradePassage2012P2Sentence);
 
 const question = (number: number, sentenceNumber: number, prompt: string, options: string[], answer: Question["answer"], locating: string, explanations: Question["explanations"]): Question => ({
   id: 201200 + number,
@@ -164,6 +167,8 @@ const question = (number: number, sentenceNumber: number, prompt: string, option
   answer,
   locating,
   explanations,
+  analysis: passage2012P2QuestionAnalysis[number],
+  reasoning: passage2012P2Reasoning[number],
 });
 
 export const passage2012P2Questions = [

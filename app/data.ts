@@ -1,3 +1,4 @@
+import { passage2012P2Guide, passage2012P2Paragraphs } from "./2012-passage-2-guide";
 import { passage2012P1Guide, passage2012P1Paragraphs } from "./2012-passage-1-guide";
 import { passage2000P1Guide, passage2000P1Paragraphs } from "./2000-passage-1-guide";
 import { passage2010P4Guide, passage2010P4Paragraphs } from "./2010-passage-4-guide";
@@ -1642,6 +1643,7 @@ export const articleContents: Record<string, ArticleContent> = {
     id: "2012-p2", year: 2012, sectionId: "p2", label: "阅读 Text 2", badge: "2012 · 英语二 · 阅读 Text 2",
     title: "粉色文化：被营销塑造的女孩身份", description: "18句、26—30题。核对粉色的历史性别含义、儿童营销与市场细分；保留原卷异常并列形式、四项解析、双层翻译、句法和多义词语境。",
     kind: "reading", sentences: passage2012P2Sentences, questions: passage2012P2Questions,
+    paragraphs: passage2012P2Paragraphs, guide: passage2012P2Guide, teachingStatus: { syntax: true, vocabulary: true, evidence: true, practice: true },
   },
   "2012-p3": {
     id: "2012-p3", year: 2012, sectionId: "p3", label: "阅读 Text 3", badge: "2012 · 英语二 · 阅读 Text 3",
