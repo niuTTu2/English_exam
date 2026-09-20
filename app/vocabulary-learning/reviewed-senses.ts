@@ -1,3 +1,4 @@
+import { reviewedSenses2013, reviewedAnnotations2013 } from "./reviewed-senses-2013";
 import type { ReviewedSenseAnnotation, ReviewedSenseAnnotations, ReviewedSenseGroup, ReviewedSenseTable } from "./reviewed-sense-types";
 import { normalizeMeaning, normalizePartOfSpeech } from "./semantic-normalization";
 import { reviewedSensesAF, reviewedAnnotationsAF } from "./reviewed-senses-a-f";
@@ -6,8 +7,8 @@ import { reviewedSensesNS, reviewedAnnotationsNS } from "./reviewed-senses-n-s";
 import { reviewedSensesTZ, reviewedAnnotationsTZ } from "./reviewed-senses-t-z";
 import { reviewedSensesFunction, reviewedAnnotationsFunction } from "./reviewed-senses-function";
 
-export const reviewedSenseTables: readonly ReviewedSenseTable[] = [reviewedSensesAF, reviewedSensesGM, reviewedSensesNS, reviewedSensesTZ, reviewedSensesFunction];
-export const reviewedAnnotationTables: readonly ReviewedSenseAnnotations[] = [reviewedAnnotationsAF, reviewedAnnotationsGM, reviewedAnnotationsNS, reviewedAnnotationsTZ, reviewedAnnotationsFunction];
+export const reviewedSenseTables: readonly ReviewedSenseTable[] = [reviewedSenses2013, reviewedSensesAF, reviewedSensesGM, reviewedSensesNS, reviewedSensesTZ, reviewedSensesFunction];
+export const reviewedAnnotationTables: readonly ReviewedSenseAnnotations[] = [reviewedAnnotations2013, reviewedAnnotationsAF, reviewedAnnotationsGM, reviewedAnnotationsNS, reviewedAnnotationsTZ, reviewedAnnotationsFunction];
 
 const formKey = (pos: string, meaning: string) => JSON.stringify([normalizePartOfSpeech(pos), normalizeMeaning(meaning)]);
 const sourceKey = (sourceId: string, pos: string, meaning: string, expression?: string) => JSON.stringify([sourceId, formKey(pos, meaning), expression?.normalize("NFKC").toLowerCase().replace(/\s+/g, " ").trim() ?? null]);

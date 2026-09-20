@@ -20,6 +20,7 @@ import { selectLegacyVocabularyCandidates } from "./vocabulary-learning/legacy-s
 import { type VocabularyLearningData, type VocabularyMark } from "./vocabulary-learning/model";
 import { migrateLegacyVocabulary } from "./vocabulary-learning/migration";
 import { enrollSavedReadingMarks } from "./vocabulary-learning/reading-marks";
+import { createAnalysisPhraseResolver } from "./legacy-analysis-phrases";
 import { vocabularyTitle, WordForms } from "./vocabulary-learning/word-forms";
 import { vocabularyDataFrom, enrollVocabulary } from "./vocabulary-learning/study-bridge";
 import { unknownStudyFields } from "./vocabulary-learning/persistence";
@@ -3006,18 +3007,7 @@ function YearVocabularyPanel({
   );
 }
 
-const knownAnalysisPhrases = Array.from(new Set([
-  ...allSentences.flatMap((sentence) => sentence.phrases),
-  ...allQuestions.flatMap((question) => question.options
-    .map((option) => option.text)
-    .filter((text) => text.includes(" ") && Boolean(getPhraseKnowledge(text)))),
-]));
-
-function analysisPhrases(analysis: SentenceAnalysis) {
-  const candidates = [...analysis.phrases, ...knownAnalysisPhrases];
-  const lower = analysis.text.toLowerCase();
-  return Array.from(new Set(candidates.filter((phrase) => lower.includes(phrase.toLowerCase()))));
-}
+const analysisPhrases = createAnalysisPhraseResolver(articleContents, text => Boolean(getPhraseKnowledge(text)));
 
 export function MatchingOptionBank({ question, onTerm }: { question: Question; onTerm: (label: string, sentenceId: string, isPhrase?: boolean) => void }) {
   if (question.format !== "matching") return null;

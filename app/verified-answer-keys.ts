@@ -1,3 +1,5 @@
+export const verifiedAnswerKey2013Passage2: Record<number, "A" | "B" | "C" | "D"> = { 26: "A", 27: "C", 28: "C", 29: "B", 30: "D" };
+export const verifiedAnswerSources2013Passage2 = [{ range: "26—30；A/C/C/B/D，证据按用户原卷逐题复核", label: "2013英语二答案速查（教学参考，非官方）", url: "https://zemengzhou.com/kaoyan/english/past-papers/ying-yu-er/2013/10-da-an-su-cha" }];
 export const verifiedAnswerKey2013Passage1: Record<number, "A" | "B" | "C" | "D"> = { 21: "A", 22: "D", 23: "B", 24: "B", 25: "C" };
 export const verifiedAnswerSources2013Passage1 = [
   { range: "Text 1 原文、21—25题干与选项；仓库仅导入本篇试点", label: "用户提供的《考研英语二2013年真题（整卷）》DOCX", sha256: "7f00fcff824e1a0c21261d1f4d13e742b8f173748f56ec50abf275b143e75131" },

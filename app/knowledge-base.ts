@@ -1,3 +1,4 @@
+import { passage2013P2PhraseGuides, passage2013P2PhraseAliases, passage2013P2PhraseGlosses } from "./2013-passage-2-vocabulary";
 import { passage2013P1PhraseGuides, passage2013P1PhraseAliases, passage2013P1PhraseGlosses } from "./2013-passage-1-vocabulary";
 import { getTranslation2010ReviewedKnowledge } from "./2010-translation-contexts";
 import { getTranslation2000ReviewedKnowledge } from "./2000-translation-contexts";
@@ -1096,6 +1097,21 @@ export function getPhraseKnowledge(source: string, context?: { articleId?: strin
     const scopedGloss = passage2013P1PhraseGlosses[clean];
     if (scopedGloss) return {
       key: `2013-p1-collocation:${clean}`,
+      sourceExpression: source.trim(),
+      canonical: source.trim(),
+      type: "常用搭配",
+      meaning: scopedGloss.meaning,
+      summary: scopedGloss.note ?? "结合本篇原句整体识别这个搭配。",
+      grammarRole: "固定或高频词语搭配",
+      structures: [s(source.trim(), scopedGloss.meaning, scopedGloss.note ?? "按本篇语境整体记忆。")],
+    };
+  }  if (context?.articleId === "2013-p2") {
+    const scopedAlias = passage2013P2PhraseAliases[clean];
+    const scopedGuide = passage2013P2PhraseGuides[scopedAlias ?? clean];
+    if (scopedGuide) return { ...scopedGuide, sourceExpression: source.trim() };
+    const scopedGloss = passage2013P2PhraseGlosses[clean];
+    if (scopedGloss) return {
+      key: `2013-p2-collocation:${clean}`,
       sourceExpression: source.trim(),
       canonical: source.trim(),
       type: "常用搭配",
