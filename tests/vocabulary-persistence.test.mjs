@@ -9,6 +9,7 @@ after(() => vite.close());
 const model = await vite.ssrLoadModule("/app/vocabulary-learning/model.ts");
 const persistence = await vite.ssrLoadModule("/app/vocabulary-learning/persistence.ts");
 const { migrateLegacyVocabulary, resolveLegacyVocabularySource } = await vite.ssrLoadModule("/app/vocabulary-learning/migration.ts");
+const { selectLegacyVocabularyCandidates } = await vite.ssrLoadModule("/app/vocabulary-learning/legacy-selection.ts");
 const sync = await vite.ssrLoadModule("/app/study-sync.ts");
 
 const candidate = (key = "note", meaning = "基调；意味", sourceId = "2010-p1-s1") => ({
@@ -64,17 +65,121 @@ test("legacy migration keeps every old field, future and overdue schedules, and 
   assert.equal(Object.values(overdue.state.vocabularyMemories)[0].dueAt, 50, "migration must not silently postpone overdue items");
 });
 
-test("ambiguous old terms wait for an explicit source; selecting one leaves other senses untouched", () => {
+test("old terms automatically use their most frequent real sense without duplicating historical progress", () => {
   const record = candidate("note", "笔记；记录", "other");
-  const legacy = { ...empty, termRatings: { note: "正确" }, reviewSchedule: { note: { dueAt: 9000, intervalDays: 7, repetitions: 3 } }, marks: { note: ["完全不会"] } };
-  const result = migrateLegacyVocabulary(legacy, () => [note, record], 200);
-  assert.deepEqual(result.unresolvedKeys, ["note"]);
-  assert.deepEqual(result.state.vocabularyMemories, {});
+  const otherTone = candidate("note", "意味；色彩", "p5-s5");
+  const legacy = { ...empty, termRatings: { note: "正确" }, reviewSchedule: { note: { dueAt: 9000, intervalDays: 7, repetitions: 3 } }, marks: { note: ["完全不会"] },
+    termNotes: { note: "原笔记" }, notes: { note: "早期笔记" }, lists: ["重点"], listItems: { 重点: ["note"] }, termContexts: {}, futureField: { untouched: true } };
+  const original = structuredClone(legacy);
+  const result = migrateLegacyVocabulary(legacy, () => [record, otherTone, note, record], 200);
+  assert.deepEqual(legacy, original);
+  for (const [key, value] of Object.entries(legacy)) assert.deepEqual(result.state[key], value, key);
+  assert.deepEqual(result.unresolvedKeys, []);
+  assert.equal(result.added, 1);
+  assert.equal(Object.keys(result.state.vocabularyMemories).length, 1);
+  const migrated = Object.values(result.state.vocabularyMemories)[0];
+  assert.equal(migrated.senseId, "reviewed:tone");
+  assert.equal(migrated.contexts.length, 2);
+  assert.equal(migrated.primaryContextId, note.context.id);
+  assert.equal(migrated.dueAt, 9000);
+  assert.equal(migrated.intervalDays, 7);
+  assert.equal(migrated.consecutiveKnown, 0);
+  assert.equal(migrated.contexts[0].mark, "完全不会");
+  assert.equal(result.state.vocabularyAttempts, undefined, "migration does not fabricate a practice event");
+  assert.deepEqual(result.state.vocabularyMigration.migratedKeys.note, [migrated.id]);
+  assert.equal(migrateLegacyVocabulary(result.state, () => { throw new Error("already migrated"); }, 300).changed, false);
+});
+
+test("valid old sources outrank frequency while obsolete sources fall back automatically", () => {
+  const record = candidate("note", "笔记；记录", "other");
+  const secondRecord = candidate("note", "笔记；记录", "other-two");
+  const saved = { articleId: note.context.articleId, sourceId: note.context.sourceId, headword: "note", label: "note", kind: "word" };
+  const legacy = { ...empty, reviewSchedule: { note: { dueAt: 50, intervalDays: 14, repetitions: 4 } }, termContexts: { '["review","note"]': [saved] } };
+  const available = [secondRecord, record, note];
+  const preserved = Object.values(migrateLegacyVocabulary(legacy, () => available, 200).state.vocabularyMemories)[0];
+  assert.equal(preserved.senseId, "reviewed:tone");
+  assert.equal(preserved.primaryContextId, note.context.id);
+  assert.equal(preserved.dueAt, 50, "overdue plans are never silently postponed");
+  const obsolete = { ...legacy, termContexts: { '["review","note"]': [{ ...saved, sourceId: "removed-source" }] } };
+  const result = migrateLegacyVocabulary(obsolete, () => available, 200);
+  const replaced = Object.values(result.state.vocabularyMemories)[0];
+  assert.equal(replaced.senseId, "reviewed:record");
+  assert.equal(replaced.contexts.length, 2);
+  assert.equal(replaced.dueAt, 50);
+  assert.deepEqual(result.state.termContexts, obsolete.termContexts, "a new practice example is not written as historical source metadata");
+});
+
+test("automatic legacy selection deduplicates sources, uses a stable tie, and distinguishes same-source phrases", () => {
+  const record = candidate("note", "笔记；记录", "other");
+  const duplicateTone = { ...note, context: { ...note.context, id: `${note.context.id}:duplicate` } };
+  const forward = selectLegacyVocabularyCandidates([note, record, duplicateTone]);
+  const reverse = selectLegacyVocabularyCandidates([duplicateTone, record, note]);
+  assert.deepEqual(forward, reverse);
+  assert.equal(forward[0].entry.contextualMeaning, "笔记；记录", "one source counted twice cannot beat the stable sense tie");
+  const tools = candidate("pattern:simple-noun-phrase", "农具", "shared-source");
+  const chemicals = candidate("pattern:simple-noun-phrase", "化肥", "shared-source");
+  tools.entry.kind = chemicals.entry.kind = "phrase";
+  tools.context = { ...tools.context, id: "tools", expression: "agricultural implements" };
+  chemicals.context = { ...chemicals.context, id: "chemicals", expression: "chemical fertilizers" };
+  const selected = selectLegacyVocabularyCandidates([tools, chemicals], [{ articleId: tools.context.articleId, sourceId: tools.context.sourceId, label: "chemical fertilizers", kind: "phrase" }]);
+  assert.deepEqual(selected, [chemicals]);
+});
+
+test("migration never overwrites existing sense progress, even without stored attempts", () => {
+  const record = candidate("note", "笔记；记录", "other");
+  const tone = { ...model.createMemory(note, 100), status: "mastered", dueAt: 90_000, intervalDays: 30, consecutiveKnown: 5, lapses: 2 };
+  const other = { ...model.createMemory(record, 100), status: "review", dueAt: 40_000, intervalDays: 14, consecutiveKnown: 3 };
+  const legacy = { ...empty, vocabularyMemories: { [tone.id]: tone, [other.id]: other }, reviewSchedule: { note: { dueAt: 10, intervalDays: 1, repetitions: 0 } },
+    marks: { note: ["完全不会"] }, termContexts: { '["review","note"]': [{ articleId: note.context.articleId, sourceId: note.context.sourceId, headword: "note", label: "note", kind: "word" }] } };
+  const result = migrateLegacyVocabulary(legacy, () => [record, note], 200);
+  assert.equal(result.added, 0);
+  assert.deepEqual(result.state.vocabularyMemories, legacy.vocabularyMemories);
+  assert.equal(result.state.vocabularyAttempts, undefined);
+  const unresolved = { ...legacy, vocabularyMigration: { version: 1, migratedKeys: {}, unresolvedKeys: ["note"], completedAt: 100 } };
+  const explicitlySelected = resolveLegacyVocabularySource(unresolved, "note", note, 200).vocabularyMemories[tone.id];
+  for (const key of ["status", "dueAt", "intervalDays", "consecutiveKnown", "lapses", "lastRating", "lastReviewedAt"]) assert.equal(explicitlySelected[key], tone[key], key);
+});
+
+test("automatic context enrichment keeps an existing primary source, spelling and attempts intact", () => {
+  const oldTone = candidate("note", "意味；色彩", "p5-s5");
+  const learned = { ...model.createMemory(oldTone, 100), status: "paused", paused: true, dueAt: 90_000,
+    intervalDays: 30, consecutiveKnown: 5, lapses: 2, lastRating: "known", lastReviewedAt: 180, lastAdvancedDay: "1970-01-01",
+    spelling: { enabled: true, attempts: 3, correct: 2, lastAttemptAt: 190 } };
+  const attempt = { id: "session:old-note", sessionId: "session", queueItemId: "old-note", memoryId: learned.id,
+    contextId: oldTone.context.id, kind: "spelling", correct: false, createdAt: 190, wasNew: false };
+  const legacy = { ...empty, vocabularyMemories: { [learned.id]: learned }, vocabularyAttempts: { [attempt.id]: attempt },
+    reviewSchedule: { note: { dueAt: 10, intervalDays: 1, repetitions: 0 } }, marks: { note: ["完全不会"] }, termContexts: {} };
+  const original = structuredClone(legacy);
+  const selected = selectLegacyVocabularyCandidates([note, oldTone], [], legacy.vocabularyMemories);
+  assert.deepEqual(legacy, original, "temporary grouping cannot change a saved timestamp or memory");
+  assert.deepEqual(selected, [note, oldTone], "only original real corpus candidates leave selection");
+  const result = migrateLegacyVocabulary(legacy, () => [note, oldTone], 200);
+  const enriched = result.state.vocabularyMemories[learned.id];
+  assert.equal(result.added, 0);
+  assert.equal(enriched.primaryContextId, oldTone.context.id, "automatic selection cannot replace an existing primary source");
+  assert.deepEqual(enriched.contexts, [oldTone.context, note.context]);
+  for (const key of ["status", "paused", "dueAt", "intervalDays", "consecutiveKnown", "lapses", "lastRating", "lastReviewedAt", "lastAdvancedDay", "createdAt", "spelling"]) {
+    assert.deepEqual(enriched[key], learned[key], key);
+  }
+  assert.deepEqual(result.state.vocabularyAttempts, legacy.vocabularyAttempts);
+  assert.deepEqual(result.state.termContexts, {});
+  assert.deepEqual(legacy, original);
+});
+
+test("previously unresolved terms retry automatically; unavailable terms retain records without blocking others", () => {
+  const legacy = { ...empty, reviewSchedule: { note: { dueAt: 50, intervalDays: 3, repetitions: 2 }, missing: { dueAt: 70, intervalDays: 1, repetitions: 0 } },
+    marks: { note: ["容易混淆"], missing: ["完全不会"] }, termNotes: { missing: "保留这个旧词" },
+    vocabularyMigration: { version: 1, migratedKeys: {}, unresolvedKeys: ["note", "missing"], completedAt: 100 } };
+  const result = migrateLegacyVocabulary(legacy, key => key === "note" ? [note, candidate("note", "意味；色彩", "p5-s5")] : [], 200);
+  assert.equal(result.added, 1);
+  assert.deepEqual(result.unresolvedKeys, ["missing"]);
   assert.deepEqual(result.state.reviewSchedule, legacy.reviewSchedule);
-  const resolved = resolveLegacyVocabularySource(result.state, "note", note, 300);
-  assert.equal(Object.keys(resolved.vocabularyMemories).length, 1);
-  assert.equal(Object.values(resolved.vocabularyMemories)[0].dueAt, 9000);
-  assert.deepEqual(resolved.vocabularyMigration.unresolvedKeys, []);
+  assert.deepEqual(result.state.termNotes, legacy.termNotes);
+  assert.deepEqual(result.state.marks, legacy.marks);
+  assert.equal(Object.values(result.state.vocabularyMemories)[0].dueAt, 50);
+  const again = migrateLegacyVocabulary(result.state, key => { assert.equal(key, "missing"); return []; }, 300);
+  assert.equal(again.changed, false);
+  assert.deepEqual(again.state, result.state);
 });
 
 test("migration failures are pure and cannot overwrite original local records", () => {
@@ -82,6 +187,10 @@ test("migration failures are pure and cannot overwrite original local records", 
   const original = structuredClone(legacy);
   assert.throws(() => migrateLegacyVocabulary(legacy, () => { throw new Error("bad corpus"); }, 200), /bad corpus/);
   assert.deepEqual(legacy, original);
+  const partlyResolvable = { ...legacy, marks: { note: ["完全不会"], missing: ["完全不会"] } };
+  const before = structuredClone(partlyResolvable);
+  assert.throws(() => migrateLegacyVocabulary(partlyResolvable, key => { if (key === "note") return [note]; throw new Error("later failure"); }, 200), /later failure/);
+  assert.deepEqual(partlyResolvable, before, "no partially migrated state leaks after a later failure");
   const local = storage();
   const key = sync.studyStorageKey(null);
   local.entries.set(key, "broken-json-original");

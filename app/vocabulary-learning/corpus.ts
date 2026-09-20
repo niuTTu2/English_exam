@@ -3,7 +3,7 @@ import { getPhraseKnowledge } from "../knowledge-base";
 import { canonicalLemma, getLexicalGuide, type LexicalContext } from "../lexicon";
 import { vocabularyPriority, type VocabularyPriority } from "../vocabulary-priority";
 import type { VocabularyCandidate, VocabularyContext, VocabularyMemory } from "./model";
-import { resolveMemorySense } from "./sense-registry";
+import { selectLegacyVocabularyCandidates } from "./legacy-selection";
 
 /** Existing corpus references are injected by StudyApp; no second lexicon is created. */
 export type CorpusSourceReference = {
@@ -266,18 +266,7 @@ export function createVocabularyCorpus(bridge: VocabularyCorpusBridge) {
       for (const key of new Set(scope.keys ?? [])) {
         // Deliberately selected list/mark membership overrides editorial defaults.
         const saved = scope.savedContexts?.[key] ?? [];
-        let selected = resolveLegacyCandidates(key, saved);
-        if (saved.length) {
-          selected = selected.filter(candidate => saved.some(context => context.sourceId === candidate.context.sourceId && context.articleId === candidate.context.articleId));
-        } else {
-          const senses = new Set(selected.map(candidate => {
-            const sense = resolveMemorySense(candidate);
-            return `${sense.partOfSpeech}:${sense.senseId}`;
-          }));
-          // An old mark with several possible meanings does not authorize selecting one
-          // (or all). Migration preserves it for explicit context selection.
-          if (senses.size > 1) continue;
-        }
+        const selected = selectLegacyVocabularyCandidates(resolveLegacyCandidates(key, saved), saved);
         for (const item of selected) {
           const candidate = { ...item, manual: true };
           if (options.accept && !options.accept(candidate)) continue;

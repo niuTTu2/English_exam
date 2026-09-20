@@ -77,6 +77,7 @@
 .vl-context-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 12px; margin-top: 8px; }
 .vl-context-controls label { display: grid; gap: 5px; width: 100%; }
 .vl-extras { padding: 0 clamp(18px, 4vw, 30px) 15px; }
+.vl-learning-card > .vl-sense-overview { padding: 0 clamp(18px, 4vw, 30px) 15px; }
 .vl-extras details { border-top: 1px solid #e2e8dd; }
 .vl-extras p, .vl-extras blockquote { font-size: 13px; margin: 7px 0; }
 .vl-reference-list { margin: 0; padding: 0 0 12px; list-style: none; }

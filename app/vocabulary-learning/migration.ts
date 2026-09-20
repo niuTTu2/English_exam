@@ -1,5 +1,6 @@
 import { mergeCandidate, type VocabularyCandidate, type VocabularyMemory } from "./model";
 import { isVocabularySnapshotFields, type VocabularyMigrationState, type VocabularySnapshotFields } from "./persistence";
+import { selectLegacyVocabularyCandidates } from "./legacy-selection";
 
 export type LegacyVocabularyContext = { articleId: string; sourceId: string; headword: string; label: string; kind: "word" | "phrase" };
 export type LegacyVocabularyState = VocabularySnapshotFields & {
@@ -34,6 +35,7 @@ export function migrateLegacyVocabulary<Snapshot extends LegacyVocabularyState>(
     ...Object.keys(snapshot.termRatings ?? {}), ...Object.keys(snapshot.reviewSchedule ?? {}),
     ...Object.entries(snapshot.marks ?? {}).filter(([, marks]) => marks.length > 0).map(([key]) => key),
     ...Object.values(snapshot.listItems ?? {}).flat(),
+    ...(previous?.unresolvedKeys ?? []),
   ]);
   const memories = { ...(snapshot.vocabularyMemories ?? {}) };
   const migratedKeys = { ...(previous?.migratedKeys ?? {}) };
@@ -43,38 +45,30 @@ export function migrateLegacyVocabulary<Snapshot extends LegacyVocabularyState>(
   for (const key of keys) {
     if (Object.hasOwn(migratedKeys, key)) continue;
     const contexts = savedContexts(snapshot, key);
-    const candidates = resolve(key, contexts);
+    const candidates = selectLegacyVocabularyCandidates(resolve(key, contexts), contexts, memories);
     if (!candidates.length) {
       if (!unresolved.has(key)) changed = true;
       unresolved.add(key);
       continue;
     }
-    const grouped: Record<string, VocabularyMemory> = { ...memories };
-    const ids: string[] = [];
-    const selectedIds: string[] = [];
     const mark = snapshot.marks?.[key]?.find(item => ["完全不会", "有些陌生", "不会搭配", "容易混淆"].includes(item)) as VocabularyCandidate["context"]["mark"];
+    let selected: VocabularyMemory | undefined;
     for (const candidate of candidates) {
-      const saved = contexts.some(context => context.articleId === candidate.context.articleId && context.sourceId === candidate.context.sourceId);
-      const memory = mergeCandidate(grouped, { ...candidate, context: { ...candidate.context, ...(saved && mark ? { mark } : {}) }, manual: true }, now);
-      grouped[memory.id] = memory;
-      if (!ids.includes(memory.id)) ids.push(memory.id);
-      if (saved && !selectedIds.includes(memory.id)) selectedIds.push(memory.id);
+      selected = mergeCandidate(memories, { ...candidate, manual: true }, now);
+      if (!memories[selected.id]) added += 1;
+      memories[selected.id] = selected;
     }
-    const migrateIds = selectedIds.length ? selectedIds : ids.length === 1 ? ids : [];
-    if (!migrateIds.length) {
-      if (!unresolved.has(key)) changed = true;
-      unresolved.add(key);
-      continue;
-    }
-    for (const id of migrateIds) {
-      if (!memories[id]) added += 1;
-      memories[id] = grouped[id];
-    }
-    const selectedId = migrateIds[0];
+    const selectedId = selected!.id;
     // Existing sense progress always wins; legacy word-level progress never overwrites it.
-    if (!snapshot.vocabularyMemories?.[selectedId]) memories[selectedId] = applyLegacyProgress(memories[selectedId], snapshot, key, now);
+    if (!snapshot.vocabularyMemories?.[selectedId]) {
+      const primaryContextId = candidates[0].context.id;
+      const memory = memories[selectedId];
+      memories[selectedId] = applyLegacyProgress({ ...memory, primaryContextId,
+        contexts: memory.contexts.map(context => context.id === primaryContextId && mark ? { ...context, mark } : context),
+      }, snapshot, key, now);
+    }
     unresolved.delete(key);
-    migratedKeys[key] = migrateIds;
+    migratedKeys[key] = [selectedId];
     changed = true;
   }
   if (!changed) return { state: snapshot, added: 0, unresolvedKeys: [...unresolved], changed: false };
@@ -93,8 +87,7 @@ export function resolveLegacyVocabularySource<Snapshot extends LegacyVocabularyS
   const mark = snapshot.marks?.[key]?.find(item => ["完全不会", "有些陌生", "不会搭配", "容易混淆"].includes(item)) as VocabularyCandidate["context"]["mark"];
   const memory = mergeCandidate(snapshot.vocabularyMemories ?? {}, { ...candidate, context: { ...candidate.context, ...(mark ? { mark } : {}) }, manual: true }, now);
   const contextId = candidate.context.id;
-  const hasAttempts = Object.values(snapshot.vocabularyAttempts ?? {}).some(attempt => attempt.memoryId === memory.id);
-  const nextMemory = hasAttempts ? { ...memory, primaryContextId: contextId, updatedAt: now }
+  const nextMemory = snapshot.vocabularyMemories?.[memory.id] ? { ...memory, primaryContextId: contextId, updatedAt: now }
     : applyLegacyProgress({ ...memory, primaryContextId: contextId }, snapshot, key, now);
   const state = { ...snapshot, vocabularyMemories: { ...snapshot.vocabularyMemories, [memory.id]: nextMemory },
     vocabularyMigration: { ...migration, migratedKeys: { ...migration.migratedKeys, [key]: [memory.id] }, unresolvedKeys: migration.unresolvedKeys.filter(item => item !== key), completedAt: now } };

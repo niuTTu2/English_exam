@@ -8,6 +8,25 @@
 .vl-source-picker span { color: #60746a; font-size: 12px; }
 .vl-source-picker p { margin: 0; font-family: Georgia, serif; line-height: 1.7; }
 .is-vocabulary-learning .paper-nav .review-summary { display: none; }
+.vl-sense-overview { min-width: 0; margin-top: 16px; color: #315e58; overflow-wrap: anywhere; }
+.vl-sense-overview h3 { margin: 0 0 7px; font-size: 15px; }
+.vl-sense-scope { margin: 0 0 12px; color: #64716b; font-size: 12px; line-height: 1.7; }
+.vl-sense-rows { list-style: none; margin: 0; padding: 0; }
+.vl-sense-row { min-width: 0; padding: 12px 0; border-top: 1px solid #dce4da; }
+.vl-sense-heading { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 5px 12px; }
+.vl-sense-meaning { display: flex; flex-wrap: wrap; align-items: baseline; min-width: 0; gap: 5px 8px; margin: 0; line-height: 1.7; font-size: 14px; }
+.vl-sense-pos, .vl-sense-count { color: #65756b; font-size: 11px; }
+.vl-sense-current { padding: 1px 7px; border-radius: 12px; color: #28675d; background: #e4f1e7; font-size: 11px; white-space: nowrap; }
+.vl-sense-details { margin-top: 5px; }
+.vl-sense-details > summary { min-height: 44px; padding: 10px 0; color: #63796b; font-size: 12px; cursor: pointer; }
+.vl-sense-details > summary:focus-visible { outline: 2px solid #568a79; outline-offset: 2px; }
+.vl-sense-detail-body { min-width: 0; color: #546d5d; font-size: 13px; line-height: 1.7; }
+.vl-sense-detail-body p { margin: 7px 0; }
+.vl-sense-teaching-example { display: grid; gap: 5px; margin-top: 8px; }
+.vl-sense-teaching-example small { color: #788477; }
+.vl-sense-sources { max-height: 420px; overflow-y: auto; overscroll-behavior: contain; margin-top: 10px; }
+.vl-sense-sources > div { padding: 8px 0; border-top: 1px dashed #dfe1dc; }
+.vl-sense-source-caption { color: #788477; font-size: 11px; }
 @media (max-width: 600px) {
   .mode-list-with-vocabulary button { font-size: 11px; gap: 4px; padding-inline: 3px; }
   .mode-list-with-vocabulary svg { width: 14px; height: 14px; }

@@ -20,7 +20,6 @@ export type VocabularyLearningProps = {
   lists: string[]; listItems: Record<string, string[]>; marks: Record<string, string[]>; notes: Record<string, string>;
   onNote?: (termKey: string, note: string) => void;
   onSource: (sourceId: string) => void;
-  onLegacyContext?: (termKey: string) => void;
 };
 
 const emptyMemories: Record<string, VocabularyMemory> = {};
@@ -40,7 +39,7 @@ function resumeBatch(session: VocabularySession, memories: Record<string, Vocabu
   return resumeSession(extended, now);
 }
 
-export function VocabularyLearning({ data, onUpdate, corpus, articleId, articleLabel, year, lists, listItems, marks, notes, onNote, onSource, onLegacyContext }: VocabularyLearningProps) {
+export function VocabularyLearning({ data, onUpdate, corpus, articleId, articleLabel, year, lists, listItems, marks, notes, onNote, onSource }: VocabularyLearningProps) {
   const [scope, setScope] = useState<LearningScope>({ kind: "article" });
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
@@ -181,7 +180,7 @@ export function VocabularyLearning({ data, onUpdate, corpus, articleId, articleL
           if (!queued) return current;
           return withSession({ ...current, vocabularyMemories: result.memories }, createSession(result.queue, at, { id: sessionId, ...(limit === "ten-minutes" ? { timeLimitMinutes: 10 } : {}) }));
         });
-        if (saved && !queued) setMessage(mode === "review" ? "这个范围没有已到期项目；未来的复习会按原计划保留。" : remainingWords + remainingPhrases === 0 ? "今天的新词目标已经完成，可以复习到期项或调整每日计划。" : scope.kind === "list" ? "这份清单暂时没有可学习的已定位词汇。请从原句加入词汇，或在下方补选旧记录的语境。" : "本范围暂时没有符合当前计划的新词。可以从原句标记词汇，或在学习偏好中包含“本句识别即可”的词。");
+        if (saved && !queued) setMessage(mode === "review" ? "这个范围没有已到期项目；未来的复习会按原计划保留。" : remainingWords + remainingPhrases === 0 ? "今天的新词目标已经完成，可以复习到期项或调整每日计划。" : scope.kind === "list" ? "这份清单中能匹配真题的词汇已自动关联；当前没有符合计划的新词，可以调整每日目标或学习其他清单。" : "本范围暂时没有符合当前计划的新词。可以从原句标记词汇，或在学习偏好中包含“本句识别即可”的词。");
         setNow(at);
       } catch (error) { setMessage(error instanceof Error ? error.message : "学习队列暂时无法准备，原记录保持不变。"); }
       finally { setBusy(false); }
@@ -226,7 +225,7 @@ export function VocabularyLearning({ data, onUpdate, corpus, articleId, articleL
         }
         return { ...current, vocabularyMemories: next };
       });
-      setMessage(added ? `已补入 ${added} 个同义真题语境，可在卡片中切换。原复习出处保持保留。` : "已收录的相同义项语境均已加入。其他含义可在完整资料中按出处查看。");
+      setMessage(added ? `已补入 ${added} 个同义真题语境，可在卡片中切换。原复习出处保持保留。` : "已收录的相同义项语境均已加入。其他含义与用法可在下方资料中查看。");
     } catch { setMessage("语境暂时无法读取，当前学习记录保持不变。"); }
   }
   function submitSpelling(answer: string, expected: string) {
@@ -251,7 +250,7 @@ export function VocabularyLearning({ data, onUpdate, corpus, articleId, articleL
     {spellingFeedback && <section className="vl-spelling" aria-label="已保存的拼写结果"><h3>{spellingFeedback.correct ? "拼写一致" : "再看一次原文词形"}</h3><p lang="en">{spellingFeedback.expected}</p><p>{spellingFeedback.meaning}</p><p>拼写结果已保存。阅读识别记录保持不变。</p><button type="button" className="vl-primary" onClick={() => setSpellingFeedback(null)}>下一项</button></section>}
     {!spellingFeedback && !inSession && session?.status !== "completed" && <>
       <VocabularyHome metrics={metrics} settings={settings} scope={scope} articleLabel={articleLabel} year={year} lists={lists} busy={busy} message={busy ? "正在准备这一组真题词汇…" : message} resumable={resumable ? { completed: resumable.cursor, total: resumable.queue.length } : undefined} onScope={setScope} onSettings={value => { mutate(current => ({ ...current, vocabularySettings: value })); }} onStart={start} onResume={() => { if (resumable) mutate(current => withSession(current, resumeBatch(current.vocabularySessions?.[resumable.id] ?? resumable, current.vocabularyMemories ?? {}, Date.now()))); }} />
-      {unresolved.length > 0 && <details className="vl-legacy"><summary>旧记录需要补选语境 · {unresolved.length} 项</summary><p>标签、计划、笔记和清单都已保留。下列词存在多个义项，需要确认你当时要复习的原句。</p><ul>{unresolved.map(key => <li key={key}><button type="button" className="vl-text-button" onClick={() => onLegacyContext?.(key)}>{key} · 选择出处</button></li>)}</ul></details>}
+      {unresolved.length > 0 && <details className="vl-legacy"><summary>已保留的历史词条 · {unresolved.length} 项</summary><p>这些词条目前未匹配到本库真题例句。原标签、复习计划、笔记和清单仍然保留，无需补充语境，可以继续学习其他词汇。</p><ul>{unresolved.map(key => <li key={key}>{key}</li>)}</ul></details>}
     </>}
     {!spellingFeedback && session?.status === "completed" && <><LearningSummary summary={sessionSummary(session, attempts, memories)} memories={memories} onHome={goHome} onSpelling={spelling} spellingAvailable={session.queue.some(item => item.kind !== "spelling" && !session.queue.some(other => other.kind === "spelling" && other.memoryId === item.memoryId) && (memories[item.memoryId]?.spelling.enabled || memories[item.memoryId]?.consecutiveKnown >= 2))} />{message && <p className="vl-message" role="status">{message}</p>}</>}
     {!spellingFeedback && inSession && session && <section className="vl-session" aria-label="连续单卡学习">

@@ -3,6 +3,7 @@
 import { useState, type ReactNode } from "react";
 import type { VocabEntry } from "../data";
 import type { VocabularyCandidate, VocabularyRating } from "./model";
+import { SenseOverviewPanel } from "./sense-overview-panel";
 
 export const feedbackOptions: Array<{ value: VocabularyRating; label: string; hint: string }> = [
   { value: "forgot", label: "忘了", hint: "本轮再见" },
@@ -52,7 +53,7 @@ function ReferenceList({ entries }: { entries: NonNullable<VocabEntry["collocati
 function ExtraKnowledge({ entry, note, onNote, onSource }: Pick<LearningCardProps, "note" | "onNote" | "onSource"> & { entry: VocabEntry }) {
   const [showOccurrences, setShowOccurrences] = useState(false);
   return <div className="vl-extras" aria-label="按需查看完整资料">
-    {(entry.otherMeanings.length > 0 || entry.senseGuide) && <details><summary>其他义项</summary>
+    {entry.kind === "phrase" && (entry.otherMeanings.length > 0 || entry.senseGuide) && <details><summary>其他义项</summary>
       {entry.senseGuide?.senses.map(sense => <p key={sense.id}><b>{sense.partOfSpeech} · {sense.meaning}</b><br />{sense.use}</p>)}
       {entry.otherMeanings.map((meaning, index) => <p key={index}>{meaning}</p>)}
     </details>}
@@ -104,6 +105,7 @@ function LearningCard({ candidate, revealed, sourceLabel, note, onSource, onReve
       <div className="vl-context-controls">{canCloze && !revealed && <button type="button" className="vl-text-button" aria-pressed={cloze} onClick={() => setCloze(!cloze)}>{cloze ? "显示原文表达" : "试试原句挖空"}</button>}{contextControls}</div>
     </div>
     <footer className="vl-card-actions">{revealed ? <RatingButtons onRate={onRate} /> : <button type="button" className="vl-primary vl-reveal" onClick={onReveal}>显示释义 <kbd>空格</kbd></button>}</footer>
+    {revealed && !phrase && <SenseOverviewPanel entry={entry} currentSourceId={candidate.context.sourceId} onSource={onSource} />}
     {revealed && <ExtraKnowledge entry={entry} note={note} onNote={onNote} onSource={onSource} />}
     {revealed && memoryControls && <details className="vl-memory-controls"><summary>这个词的复习设置</summary>{memoryControls}</details>}
   </article>;

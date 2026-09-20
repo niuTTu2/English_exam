@@ -14,8 +14,10 @@ import { vocabularyPriority } from "./vocabulary-priority";
 import { AuthSessionError, readAuthSession } from "./auth-session";
 import { createVocabularyCorpus, type ResolvedVocabularyCandidate } from "./vocabulary-learning/corpus";
 import { VocabularyLearning } from "./vocabulary-learning/vocabulary-learning";
+import { SenseOverviewPanel } from "./vocabulary-learning/sense-overview-panel";
+import { selectLegacyVocabularyCandidates } from "./vocabulary-learning/legacy-selection";
 import { type VocabularyLearningData, type VocabularyMark } from "./vocabulary-learning/model";
-import { migrateLegacyVocabulary, resolveLegacyVocabularySource } from "./vocabulary-learning/migration";
+import { migrateLegacyVocabulary } from "./vocabulary-learning/migration";
 import { vocabularyDataFrom, enrollVocabulary } from "./vocabulary-learning/study-bridge";
 import { unknownStudyFields } from "./vocabulary-learning/persistence";
 import "./vocabulary-learning/integration.css";
@@ -800,6 +802,18 @@ function translationAnswerKey(articleId: ArticleId, taskId: number) {
 
 export const vocabularyCorpus = createVocabularyCorpus({ sources: corpusSources, phraseAnnotations, resolveEntry, findTermContexts, tokenizeWords });
 
+/** A default practice example does not rewrite a historical source selection. */
+export function resolveLearningTermContext(key: string, saved: SavedTermContext[] = []) {
+  const resolution = resolveSavedTermContext(key, saved);
+  if (resolution.selected) return { ...resolution, automatic: false };
+  const candidate = selectLegacyVocabularyCandidates(vocabularyCorpus.resolveLegacyCandidates(key, saved), saved)[0];
+  const selected: SavedTermContext | undefined = candidate ? {
+    articleId: candidate.context.articleId, sourceId: candidate.context.sourceId,
+    headword: candidate.entry.headword, label: candidate.context.expression, kind: candidate.entry.kind,
+  } : undefined;
+  return { ...resolution, selected, automatic: Boolean(selected) };
+}
+
 export default function StudyApp() {
   const [view, setViewState] = useState<AppView>("test");
   const [vocabularyData, setVocabularyData] = useState<VocabularyLearningData>({});
@@ -811,7 +825,7 @@ export default function StudyApp() {
   const vocabularyWriteBlocked = useRef(false);
   const [vocabularyError, setVocabularyError] = useState("");
   const [vocabularyNotice, setVocabularyNotice] = useState("");
-  const [vocabularyChoices, setVocabularyChoices] = useState<{ key?: string; originKey?: string; mark?: VocabularyMark; candidates: ResolvedVocabularyCandidate[] } | null>(null);
+  const [vocabularyChoices, setVocabularyChoices] = useState<{ originKey?: string; mark?: VocabularyMark; candidates: ResolvedVocabularyCandidate[] } | null>(null);
   const setView = useCallback((next: AppView) => {
     if (typeof window !== "undefined") {
       const learningHash = "#vocabulary-learning";
@@ -1468,14 +1482,11 @@ export default function StudyApp() {
   }
 
   function openSavedTerm(key: string, list?: string) {
-    const resolution = resolveSavedTermContext(key, termContexts[termContextKey(key, list)]);
+    const resolution = resolveLearningTermContext(key, termContexts[termContextKey(key, list)]);
     setTermHistory([]);
-    if (!resolution.selected && resolution.options.length > 1) {
-      setContextPicker({ key, list, options: resolution.options, remember: true });
-      return;
-    }
     const context = resolution.selected;
     openTerm(context?.label ?? vocab[key]?.headword ?? key, context?.sourceId ?? "", context?.kind === "phrase" || termKind(key) === "phrase");
+    setVocabularyNotice(resolution.automatic ? "已自动匹配真实学习例句，可以自由切换。原复习计划和笔记已保留。" : "");
     setReviewContextTarget({ key, list });
   }
 
@@ -1596,10 +1607,7 @@ export default function StudyApp() {
   function chooseVocabularyCandidate(candidate: ResolvedVocabularyCandidate) {
     if (!vocabularyChoices) return;
     try {
-      if (vocabularyChoices.key && snapshotRef.current) {
-        const resolved = resolveLegacyVocabularySource(snapshotRef.current, vocabularyChoices.key, candidate);
-        updateVocabulary(() => vocabularyDataFrom(resolved));
-      } else updateVocabulary(current => enrollVocabulary(current, candidate, Date.now(), vocabularyChoices.mark, vocabularyChoices.originKey));
+      updateVocabulary(current => enrollVocabulary(current, candidate, Date.now(), vocabularyChoices.mark, vocabularyChoices.originKey));
       setVocabularyNotice(`已保留“${candidate.context.expression}”的准确语境。`);
       setVocabularyChoices(null);
     } catch (error) { setVocabularyError(error instanceof Error ? error.message : "词汇保存失败，旧记录保留。"); }
@@ -2018,10 +2026,10 @@ export default function StudyApp() {
 
         <main className="study-main">
           {vocabularyError && <div className="vl-message" role="alert"><p>{vocabularyError}</p><Button variant="outline" onClick={exportLocalBackup}>导出本机备份</Button></div>}
-          {vocabularyChoices && <section className="vl-source-picker" aria-label="选择词汇学习语境"><h3>{vocabularyChoices.key ? "选择旧记录对应的真实语境" : "选择需要整体记忆的搭配"}</h3>
+          {vocabularyChoices && <section className="vl-source-picker" aria-label="选择词汇学习语境"><h3>选择需要整体记忆的搭配</h3>
             {vocabularyChoices.candidates.map(candidate => <button type="button" key={candidate.context.id} onClick={() => chooseVocabularyCandidate(candidate)}>
               <strong>{candidate.context.expression} · {candidate.entry.contextualMeaning}</strong><span>{candidate.context.year} · {candidate.sourceLabel}</span><p>{candidate.text}</p>
-            </button>)}<Button variant="outline" onClick={() => setVocabularyChoices(null)}>暂不选择，保留旧记录</Button>
+            </button>)}<Button variant="outline" onClick={() => setVocabularyChoices(null)}>取消选择</Button>
           </section>}
           {evidenceOrigin && view === "study" && evidenceOrigin.articleId === activeArticle.id && <aside className="evidence-return-bar" aria-label="返回原题"><span>正在核对：第{evidenceOrigin.number}题{evidenceOrigin.option ? ` ${evidenceOrigin.option}项` : ""}</span><button type="button" onClick={returnToQuestion}>返回第{evidenceOrigin.number}题</button><button type="button" aria-label="关闭返回条" onClick={() => setEvidenceOrigin(null)}>×</button></aside>}
           {view !== "vocabulary-learning" && <section className="paper-heading">
@@ -2076,8 +2084,7 @@ export default function StudyApp() {
             <TabsContent value="vocabulary-learning" className="mode-content">
               {hydrated && !vocabularyError ? <VocabularyLearning data={vocabularyData} onUpdate={updateVocabulary} corpus={vocabularyCorpus}
                 articleId={activeSection} articleLabel={activeArticle.label} year={selectedYear} lists={lists} listItems={listItems} marks={marks} notes={termNotes}
-                onNote={(key, value) => setTermNotes(current => ({ ...current, [key]: value }))} onSource={goToSource}
-                onLegacyContext={key => setVocabularyChoices({ key, candidates: vocabularyCorpus.resolveLegacyCandidates(key) })} />
+                onNote={(key, value) => setTermNotes(current => ({ ...current, [key]: value }))} onSource={goToSource} />
                 : <p role="status">{vocabularyError || "正在载入学习记录…"}</p>}
             </TabsContent>
 
@@ -2383,7 +2390,7 @@ export default function StudyApp() {
                           return (
                             <button key={key} type="button" onClick={() => openSavedTerm(key)}>
                               <span><strong>{context.selected?.headword ?? context.options[0]?.headword ?? key}</strong><small>{marks[key].join(" · ")}</small>
-                                <small>{context.selected ? sourceCaption(context.selected.sourceId) : context.options.length > 1 ? `${context.options.length} 个出处 · 点击选择复习语境` : "通用词条"}</small></span>
+                                <small>{context.selected ? sourceCaption(context.selected.sourceId) : context.options.length > 1 ? `${context.options.length} 个出处 · 自动匹配学习例句` : "通用词条"}</small></span>
                               <Badge variant="outline">{dueLabel}</Badge>
                             </button>
                           );
@@ -2524,7 +2531,9 @@ export default function StudyApp() {
                     ? "先标记问题；讲解会按你的自测设置解锁。"
                     : selectedTerm.entry.kind === "phrase"
                       ? "先看原文实例和规范结构，再按层展开语法。"
-                      : "先看本句义，再展开其他义项、用法和各年份的语境中文义。"}
+                      : selectedTerm.entry.kind === "word"
+                        ? "先看本句义；全部义项按已导入真题次数排列，用法与例句可展开查看。"
+                        : "先看本句义，再展开其他用法和各年份的语境中文义。"}
                 </SheetDescription>
               </SheetHeader>
 
@@ -2572,7 +2581,7 @@ export default function StudyApp() {
                     {selectedTermPriority && <section className="term-priority"><Badge variant="outline">{selectedTermPriority.label}</Badge><p>{selectedTermPriority.reason}</p><small>本篇学习建议，不是官方词频排名。</small></section>}
                     {selectedTerm.entry.collocationDetails?.[0] && <p className="term-key-collocation"><b>先记一个搭配：</b>{selectedTerm.entry.collocationDetails[0].label} · {selectedTerm.entry.collocationDetails[0].meaning}</p>}
 
-                    <TermSenses entry={selectedTerm.entry} onSource={goToSource} />
+                    <TermSenses entry={selectedTerm.entry} currentSourceId={selectedTerm.sentenceId} onSource={goToSource} />
 
                     {(selectedTerm.entry.contextualSubstitutions?.length ?? 0) > 0 && (<details className="term-extra"><summary>本句可替换表达</summary>
                       <ContextualSubstitutions
@@ -2616,7 +2625,7 @@ export default function StudyApp() {
                   <div className="vl-enroll-actions"><Button variant="outline" disabled={!hydrated || Boolean(vocabularyError)} onClick={() => addSelectedVocabulary()}>加入待学词汇（本句义）</Button>
                     <Button onClick={() => { setSelectedTerm(null); setContextPicker(null); setView("vocabulary-learning"); }}>进入词汇学习</Button></div>
                   {vocabularyNotice && <p role="status">{vocabularyNotice}</p>}
-                  {vocabularyChoices && !vocabularyChoices.key && <div className="vl-source-picker" aria-label="选择待学搭配">
+                  {vocabularyChoices && <div className="vl-source-picker" aria-label="选择待学搭配">
                     {vocabularyChoices.candidates.map(candidate => <button type="button" key={candidate.context.id} onClick={() => chooseVocabularyCandidate(candidate)}><strong>{candidate.context.expression}</strong><span>{candidate.entry.contextualMeaning}</span></button>)}
                     <Button variant="outline" onClick={() => setVocabularyChoices(null)}>取消选择</Button>
                   </div>}
@@ -3498,7 +3507,8 @@ function ContextualSubstitutions({
   );
 }
 
-export function TermSenses({ entry, onSource }: { entry: VocabEntry; onSource: (sourceId: string) => void }) {
+export function TermSenses({ entry, currentSourceId, onSource }: { entry: VocabEntry; currentSourceId?: string; onSource: (sourceId: string) => void }) {
+  if (entry.kind === "word") return <SenseOverviewPanel entry={entry} currentSourceId={currentSourceId} onSource={onSource} />;
   const guide = entry.senseGuide;
   const corpusSenses = groupOccurrenceSenses(entry.occurrences);
   if (!guide && !corpusSenses.length && !entry.otherMeanings.length) return null;

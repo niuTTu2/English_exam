@@ -149,16 +149,20 @@ test("grouping combines equal meanings without removing different forms or sourc
   assert.equal(grouped[1].examples[0].sourceId, "p5-s5");
 });
 
-test("sense panel is collapsed, distinguishes teaching examples and preserves legacy meanings", () => {
+test("all word meanings stay visible in frequency order while teaching examples remain distinct", () => {
   const entry = study.resolveEntry("note", false, "p5-s5");
-  const html = renderToStaticMarkup(React.createElement(study.TermSenses, { entry: { ...entry, otherMeanings: ["原有多义补充不丢失"] }, onSource: () => {} }));
-  assert.match(html, /其他义项与用法/);
-  assert.match(html, /音符；单音；音高/);
-  assert.match(html, /指出；提到；特别说明/);
-  assert.match(html, /教学例句（非真题）/);
-  assert.match(html, /原有多义补充不丢失/);
-  assert.match(html, /已导入真题用法/);
-  assert.match(html, /aria-label="回到出处：/);
+  const html = renderToStaticMarkup(React.createElement(study.TermSenses, { entry: { ...entry, otherMeanings: ["原有多义补充不丢失"] }, currentSourceId: "p5-s5", onSource: () => {} }));
+  const visibleMeanings = html.replace(/<details\b[\s\S]*?<\/details>/g, "");
+  assert.match(visibleMeanings, /全部义项/);
+  assert.match(visibleMeanings, /音符；单音；音高/);
+  assert.match(visibleMeanings, /指出；提到；特别说明/);
+  assert.match(visibleMeanings, /原有多义补充不丢失/);
+  assert.match(visibleMeanings, /本句义/);
+  assert.match(html, /教学例句（非真题，不计次数）/);
+  const counts = Array.from(html.matchAll(/data-sense-count="([^"]+)"/g), match => match[1]);
+  assert.deepEqual(counts.filter(value => value !== "unclassified").map(Number), [2, 1, 1]);
+  assert.ok(counts.slice(3).every(value => value === "unclassified"));
+  assert.ok(!visibleMeanings.includes("vl-sense-sources"), "full source lists stay lazy until their detail is opened");
   assert.doesNotMatch(html, /<details[^>]*\sopen(?:[\s=>])/);
 });
 

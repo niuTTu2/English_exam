@@ -10,6 +10,7 @@ const root = fileURLToPath(new URL("..", import.meta.url));
 const vite = await createServer({ appType: "custom", configFile: false, root, resolve: { alias: { "@": root } }, server: { middlewareMode: true, hmr: false } });
 after(() => vite.close());
 const cards = await vite.ssrLoadModule("/app/vocabulary-learning/learning-card.tsx");
+const { SenseOverviewPanel } = await vite.ssrLoadModule("/app/vocabulary-learning/sense-overview-panel.tsx");
 const spelling = await vite.ssrLoadModule("/app/vocabulary-learning/spelling-practice.tsx");
 const { VocabularyHome } = await vite.ssrLoadModule("/app/vocabulary-learning/vocabulary-home.tsx");
 const { VocabularyLearning } = await vite.ssrLoadModule("/app/vocabulary-learning/vocabulary-learning.tsx");
@@ -37,10 +38,10 @@ test("word front exposes a real highlighted source but never the Chinese answer,
   assert.match(html, /The world art market/);
   assert.match(html, /显示释义/);
   for (const answer of [props.candidate.entry.contextualMeaning, props.candidate.entry.use, props.candidate.translation, props.note]) if (answer) assert.ok(!html.includes(answer));
-  assert.doesNotMatch(html, /其他义项|我的笔记|回忆后自评/);
+  assert.doesNotMatch(html, /其他义项|全部义项|我的笔记|回忆后自评/);
 });
 
-test("answer gives contextual meaning, translation and four large self-ratings with all dictionary details folded", () => {
+test("answer gives contextual meaning, visible meaning overview and four large self-ratings before optional explanations", () => {
   const props = { ...cardProps("momentum", "2010-p1-s5"), revealed: true };
   const html = renderToStaticMarkup(React.createElement(cards.WordLearningCard, props));
   assert.ok(html.includes(props.candidate.entry.contextualMeaning));
@@ -48,9 +49,52 @@ test("answer gives contextual meaning, translation and four large self-ratings w
   for (const rating of ["忘了", "模糊", "认识", "太简单"]) assert.ok(html.includes(`<span>${rating}</span>`));
   assert.match(html, /aria-label="回忆后自评"/);
   assert.match(html, /回到原句/);
+  assert.match(html, /aria-label="全部义项与真题次数"/);
+  assert.ok(html.indexOf('class="vl-card-actions"') < html.indexOf('class="vl-sense-overview"'), "self-rating stays reachable before the longer meaning overview");
   assert.ok(html.indexOf('class="vl-card-actions"') < html.indexOf('class="vl-extras"'), "rating is reachable before dictionary extras");
   assert.doesNotMatch(html, /<details[^>]*\sopen(?:=|\s|>)/);
   assert.equal((html.match(/class="vl-rating vl-rating-/g) ?? []).length, 4);
+});
+
+test("all reviewed note meanings remain visible outside details, with teaching examples excluded from exam counts", () => {
+  const props = cardProps("note", "2010-p1-s1");
+  const front = renderToStaticMarkup(React.createElement(cards.WordLearningCard, props));
+  const answer = renderToStaticMarkup(React.createElement(cards.WordLearningCard, { ...props, revealed: true }));
+  const meaningHeadings = [...answer.matchAll(/<p class="vl-sense-meaning">([\s\S]*?)<\/p>/g)].map(match => match[1]);
+  assert.ok(meaningHeadings.length >= props.candidate.entry.senseGuide.senses.length);
+  for (const sense of props.candidate.entry.senseGuide.senses) {
+    assert.ok(meaningHeadings.some(heading => heading.includes(sense.meaning)), `visible meaning: ${sense.meaning}`);
+    assert.ok(!front.includes(sense.meaning), `front must not expose ${sense.meaning}`);
+    assert.ok(answer.includes(sense.example.english), `retained teaching example: ${sense.id}`);
+    assert.ok(answer.includes(sense.example.chinese));
+  }
+  for (const match of answer.matchAll(/<p class="vl-sense-meaning">/g)) {
+    const before = answer.slice(0, match.index);
+    assert.equal((before.match(/<details\b/g) ?? []).length, (before.match(/<\/details>/g) ?? []).length, "meaning heading must not be inside a closed details element");
+  }
+  assert.match(answer, /教学例句（非真题，不计次数）/);
+  assert.match(answer, /尚无已归类真题/);
+  assert.doesNotMatch(answer, /<details[^>]*\sopen(?:=|\s|>)/);
+});
+
+test("meaning overview ranks source counts ahead of the current sense and leaves unknown counts last", () => {
+  const { candidate } = cardProps("note", "2010-p1-s1");
+  const occurrences = ["fixture-record-one", "fixture-record-two", "fixture-record-three"].map(sourceId => ({ sourceId, year: 2000, section: "测试正文", excerpt: "She took notes.", contexts: [{ expression: "notes", partOfSpeech: "n.", meaning: "笔记；记录", use: "" }] }));
+  occurrences.push({ sourceId: "2010-p1-s1", year: 2010, section: "Text 1正文", excerpt: candidate.text, contexts: [{ expression: "note", partOfSpeech: "n.", meaning: "基调；意味", use: candidate.entry.use }] });
+  const entry = { ...candidate.entry, occurrences, counts: { form: 1, lemma: 4, family: 4 } };
+  const html = renderToStaticMarkup(React.createElement(SenseOverviewPanel, { entry, currentSourceId: "2010-p1-s1", onSource: noop }));
+  const items = [...html.matchAll(/<li class="vl-sense-row"([^>]*)>([\s\S]*?)<\/li>/g)];
+  assert.match(items[0][1], /data-sense-count="3"/);
+  assert.match(items[0][2], /笔记；记录/);
+  assert.doesNotMatch(items[0][1], /data-current-sense="true"/);
+  assert.match(items[1][1], /data-sense-count="1"/);
+  assert.match(items[1][1], /data-current-sense="true"/);
+  assert.match(items[1][2], /本句义/);
+  assert.ok(items.slice(2).every(item => item[1].includes('data-sense-count="unclassified"')));
+  assert.match(html, /真题 3 次/);
+  assert.match(html, /真题 1 次/);
+  assert.doesNotMatch(html, /真题 0 次/);
+  assert.doesNotMatch(html, /class="vl-sense-sources"/, "large source lists are rendered only when expanded");
 });
 
 test("filed for bankruptcy is a whole phrase card with canonical instance, variable structure and exact source cloze", () => {
@@ -65,6 +109,8 @@ test("filed for bankruptcy is a whole phrase card with canonical instance, varia
   assert.match(answer, /file for bankruptcy/);
   assert.match(answer, /规范形式|搭配规则/);
   assert.match(answer, /申请破产/);
+  assert.doesNotMatch(answer, /class="vl-sense-overview"/);
+  assert.equal(renderToStaticMarkup(React.createElement(SenseOverviewPanel, { entry: props.candidate.entry })), "", "phrase cards must not accidentally receive lemma-level word counts");
 });
 
 test("all but two remains one quantity structure, using the unchanged original source", () => {

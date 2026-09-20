@@ -179,6 +179,27 @@ test("legacy and stale records never guess a source when multiple contexts exist
   assert.ok(study.resolveSavedTermContext(word.headword).selected);
 });
 
+test("legacy cards open a frequent real example without requiring or rewriting historical context", () => {
+  const missing = [];
+  const automatic = study.resolveLearningTermContext("note", missing);
+  assert.equal(automatic.automatic, true);
+  assert.ok(["2010-p1-s1", "p5-s5"].includes(automatic.selected.sourceId));
+  assert.deepEqual(missing, []);
+  assert.equal(study.resolveSavedTermContext("note", missing).selected, undefined, "a default example is not invented historical metadata");
+  const annotation = study.findTermContexts("note").find(context => context.sourceId === "p3-s10");
+  const stored = [annotation];
+  const preserved = study.resolveLearningTermContext("note", stored);
+  assert.equal(preserved.automatic, false);
+  assert.equal(preserved.selected.sourceId, annotation.sourceId);
+  assert.deepEqual(stored, [annotation]);
+  const stale = [{ ...annotation, articleId: "no-longer-valid" }];
+  assert.equal(study.resolveLearningTermContext("note", stale).automatic, true);
+  assert.deepEqual(stale, [{ ...annotation, articleId: "no-longer-valid" }]);
+  const unavailable = study.resolveLearningTermContext("unknown-legacy-word");
+  assert.equal(unavailable.selected, undefined);
+  assert.equal(unavailable.automatic, false);
+});
+
 test("optional context metadata survives local persistence and cloud restoration without changing old keys", async () => {
   const context = study.findTermContexts("epidemic").find((entry) => entry.sourceId === "2010-p2-s14");
   const before = { version: 1, updatedAt: 123, marks: { epidemic: ["有些陌生"] }, termNotes: { epidemic: "保留笔记" }, listItems: { 本周重点: ["epidemic"] } };

@@ -158,8 +158,12 @@ test("manual marks select their actual source meaning instead of every homograph
   const exact = corpus.candidatesForScope({ kind: "marked", keys: ["note"], contexts: [candidate.context] });
   assert.deepEqual(exact.map(item => item.context.sourceId), ["2010-p1-s1"]);
   const saved = corpus.candidatesForScope({ kind: "list", keys: ["note"], savedContexts: { note: [{ articleId: "2010-p1", sourceId: "2010-p1-s1", headword: "note", label: "note", kind: "word" }] } });
-  assert.deepEqual(saved.map(item => item.context.sourceId), ["2010-p1-s1"]);
-  assert.deepEqual(corpus.candidatesForScope({ kind: "marked", keys: ["note"] }), [], "ambiguous legacy marks require selection; their records are retained by migration");
+  assert.deepEqual(saved.map(item => item.context.sourceId), ["2010-p1-s1", "p5-s5"]);
+  const automatic = corpus.candidatesForScope({ kind: "marked", keys: ["note"] });
+  assert.deepEqual(automatic.map(item => item.context.sourceId), ["2010-p1-s1", "p5-s5"], "legacy marks can immediately practice the most frequent sense");
+  assert.equal(new Set(automatic.map(item => createMemory(item, 1000).id)).size, 1, "word-level marks do not create progress for every meaning");
+  const obsolete = corpus.candidatesForScope({ kind: "list", keys: ["note"], savedContexts: { note: [{ articleId: "gone", sourceId: "removed", headword: "note", label: "note", kind: "word" }] } });
+  assert.deepEqual(obsolete.map(item => item.context.sourceId), automatic.map(item => item.context.sourceId));
 });
 
 test("legacy resolver preserves explicit primary source order and exposes other meanings for safe migration", () => {
@@ -169,6 +173,18 @@ test("legacy resolver preserves explicit primary source order and exposes other 
   assert.equal(new Set(candidates.map(candidate => candidate.context.id)).size, candidates.length);
   assert.ok(candidates.some(candidate => candidate.context.sourceId === "2010-cloze-s5"));
   assert.deepEqual(corpus.resolveLegacyCandidates("unknown-legacy-key", []), []);
+});
+
+test("old phrase list keeps its exact expression when multiple phrases share a source and stable key", () => {
+  const selected = corpus.candidatesForScope({ kind: "list", keys: ["pattern:simple-noun-phrase"], savedContexts: {
+    "pattern:simple-noun-phrase": [{ articleId: "cloze", sourceId: "cloze-s4", headword: "simple noun phrase", label: "chemical fertilizers", kind: "phrase" }],
+  } });
+  assert.ok(selected.length > 0);
+  assert.equal(selected[0].context.expression, "chemical fertilizers");
+  assert.equal(selected[0].entry.contextualMeaning, "化肥");
+  assert.ok(selected.every(item => item.entry.kind === "phrase" && item.manual));
+  assert.ok(selected.every(item => item.context.expression !== "agricultural implements"));
+  assert.equal(new Set(selected.map(item => createMemory(item, 1000).id)).size, 1);
 });
 
 test("question and option cards use their exact source and translation, never answer explanations", () => {
