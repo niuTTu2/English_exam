@@ -2,10 +2,12 @@
 
 import type { VocabularyMemory } from "./model";
 import type { sessionSummary } from "./session";
+import { memorySemanticKey } from "./memory-groups";
 
 export function DifficultMemories({ ids, memories }: { ids: string[]; memories: Record<string, VocabularyMemory> }) {
-  if (!ids.length) return null;
-  return <details className="vl-difficult"><summary>本轮困难词 · {ids.length} 项</summary><ul>{ids.map(id => memories[id] && <li key={id}><b lang="en">{memories[id].headword}</b> · {memories[id].meaning}<small>{memories[id].lastRating === "forgot" || memories[id].lastRating === "fuzzy" ? "仍需短间隔再认，不计为掌握" : "本轮曾遇到困难，继续按计划复习"}</small></li>)}</ul></details>;
+  const distinct = [...new Map(ids.flatMap(id => memories[id] ? [[memorySemanticKey(memories[id]), memories[id]] as const] : [])).values()];
+  if (!distinct.length) return null;
+  return <details className="vl-difficult"><summary>本轮困难词 · {distinct.length} 项</summary><ul>{distinct.map(memory => <li key={memory.id}><b lang="en">{memory.headword}</b> · {memory.meaning}<small>{memory.lastRating === "forgot" || memory.lastRating === "fuzzy" ? "仍需短间隔再认，不计为掌握" : "本轮曾遇到困难，继续按计划复习"}</small></li>)}</ul></details>;
 }
 
 export function LearningSummary({ summary, memories, onHome, onSpelling, spellingAvailable }: { summary: ReturnType<typeof sessionSummary>; memories: Record<string, VocabularyMemory>; onHome: () => void; onSpelling: () => void; spellingAvailable: boolean }) {

@@ -1,4 +1,5 @@
 import { mergeCandidate, type VocabularyCandidate, type VocabularyMemory } from "./model";
+import { memorySemanticKey } from "./memory-groups";
 
 type SavedContext = { articleId: string; sourceId: string; label: string; kind: "word" | "phrase" };
 const compare = (left: string, right: string) => left < right ? -1 : left > right ? 1 : 0;
@@ -23,11 +24,12 @@ export function selectLegacyVocabularyCandidates<Candidate extends VocabularyCan
   for (const candidate of ordered) {
     const memory = mergeCandidate(staged, candidate, 0);
     staged[memory.id] = memory;
-    const group = groups.get(memory.id) ?? { senseKey: `${memory.partOfSpeech}:${memory.senseId}`, candidates: [], sources: new Set<string>() };
+    const key = memorySemanticKey(memory);
+    const group = groups.get(key) ?? { senseKey: key, candidates: [], sources: new Set<string>() };
     group.candidates.push(candidate);
     group.sources.add(candidate.context.sourceId);
-    groups.set(memory.id, group);
-    memberships.set(candidate.context.id, memory.id);
+    groups.set(key, group);
+    memberships.set(candidate.context.id, key);
   }
   const saved = savedContexts.map(context => {
     const atSource = ordered.filter(candidate => candidate.context.articleId === context.articleId

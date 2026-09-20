@@ -1,4 +1,5 @@
 import type { VocabularyMemory, VocabularyRating } from "./model";
+import { memoryGroups, representativeMemory } from "./memory-groups";
 
 export const REVIEW_INTERVALS = [1, 3, 7, 14, 30, 60] as const;
 export function localDay(now: number) {
@@ -39,6 +40,6 @@ export function scheduleReview(memory: VocabularyMemory, rating: VocabularyRatin
 }
 
 export function dueMemories(memories: Record<string, VocabularyMemory>, now: number) {
-  return Object.values(memories).filter(memory => !memory.paused && memory.status !== "paused" && memory.status !== "unseen" && memory.dueAt <= now)
+  return memoryGroups(memories).groups.map(representativeMemory).filter((memory): memory is VocabularyMemory => Boolean(memory && memory.status !== "unseen" && memory.dueAt <= now))
     .sort((left, right) => left.dueAt - right.dueAt || left.id.localeCompare(right.id));
 }

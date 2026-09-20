@@ -1,4 +1,10 @@
 import type { VocabularyCandidate, VocabularyMemory } from "./model";
+import { normalizeMeaning, normalizePartOfSpeech } from "./semantic-normalization";
+import { getReviewedSemanticAlias } from "./semantic-aliases";
+import { getFunctionSemanticAlias } from "./function-semantic-aliases";
+import { getContentSemanticAlias } from "./content-semantic-aliases";
+
+export { normalizeMeaning, normalizePartOfSpeech } from "./semantic-normalization";
 
 /** Reviewed source mappings, not an inference from matching pieces of Chinese. */
 const sourceSenses: Record<string, Record<string, [string, string]>> = {
@@ -36,27 +42,41 @@ const meaningAliases: Record<string, Array<{ id: string; pos: string; meanings: 
   momentum: [{ id: "impetus", pos: "n", meanings: ["动力；势头", "势头；动能", "势头", "动力；发展势头"] }],
 };
 
-export function normalizeMeaning(meaning: string) {
-  return meaning.normalize("NFKC").replace(/\s/g, "").split(/[;；]/).filter(Boolean).sort().join(";");
-}
-
-export function normalizePartOfSpeech(pos: string) {
-  const matches = Array.from(pos.matchAll(/\b(n|v|vt|vi|adj|adv|prep|conj|pron|det|aux|num)\./g), match => match[1] === "vt" || match[1] === "vi" ? "v" : match[1]);
-  return matches.length ? Array.from(new Set(matches)).sort().join("/") : pos.replace(/[（(].*?[）)]/g, "").trim();
+/** Shared semantic identity for display, new cards and non-destructive legacy grouping. */
+export function resolveReviewedSense(termKey: string, kind: "word" | "phrase", partOfSpeech: string, meaning: string, sourceId?: string): { senseId: string; partOfSpeech: string; meaning?: string } | undefined {
+  if (kind !== "word") return undefined;
+  const pos = normalizePartOfSpeech(partOfSpeech);
+  const mapped = sourceId ? sourceSenses[termKey]?.[sourceId] : undefined;
+  const originalAlias = meaningAliases[termKey]?.find(item => item.meanings.some(alias => normalizeMeaning(alias) === normalizeMeaning(meaning)) && (pos.split("/").includes(item.pos) || mapped));
+  if (mapped || originalAlias) return { senseId: `reviewed:${mapped?.[0] ?? originalAlias!.id}`, partOfSpeech: mapped?.[1] ?? originalAlias!.pos };
+  const alias = getReviewedSemanticAlias(termKey, pos, meaning)
+    ?? getFunctionSemanticAlias(termKey, pos, meaning)
+    ?? getContentSemanticAlias(termKey, pos, meaning);
+  return alias ? { senseId: `reviewed:${alias.id}`, partOfSpeech: alias.pos, meaning: alias.meaning } : undefined;
 }
 
 export function resolveMemorySense(candidate: VocabularyCandidate, existing: VocabularyMemory[] = []) {
   const entry = candidate.entry;
   let pos = normalizePartOfSpeech(entry.partOfSpeech);
-  const mapped = entry.kind === "word" ? sourceSenses[entry.key]?.[candidate.context.sourceId] : undefined;
-  const alias = entry.kind === "word" ? meaningAliases[entry.key]?.find(item => item.meanings.some(meaning => normalizeMeaning(meaning) === normalizeMeaning(entry.contextualMeaning)) && (pos.split("/").includes(item.pos) || mapped)) : undefined;
-  if (mapped) pos = mapped[1];
-  else if (alias) pos = alias.pos;
+  const reviewed = resolveReviewedSense(entry.key, entry.kind, entry.partOfSpeech, entry.contextualMeaning, candidate.context.sourceId);
+  if (reviewed) pos = reviewed.partOfSpeech;
   // Once a source belongs to a saved sense, minor editorial wording changes cannot rename its key.
   const saved = existing.find(memory => memory.termKey === entry.key && memory.kind === entry.kind && memory.contexts.some(context => context.id === candidate.context.id));
   if (saved) return { senseId: saved.senseId, partOfSpeech: saved.partOfSpeech };
   if (candidate.senseId) return { senseId: candidate.senseId, partOfSpeech: pos };
-  if (mapped || alias) return { senseId: `reviewed:${mapped?.[0] ?? alias!.id}`, partOfSpeech: pos };
+  if (reviewed) {
+    // Reuse a saved identity for equivalent wording, without renaming or deleting old records.
+    const prior = existing.filter(memory => memory.termKey === entry.key && memory.kind === entry.kind && (
+      memory.senseId === reviewed.senseId && memory.partOfSpeech === pos ||
+      (() => {
+        const context = memory.contexts.find(item => item.id === memory.primaryContextId) ?? memory.contexts[0];
+        const resolved = resolveReviewedSense(memory.termKey, memory.kind, memory.partOfSpeech, memory.meaning, context?.sourceId);
+        return resolved?.senseId === reviewed.senseId && resolved?.partOfSpeech === pos;
+      })()
+    )).sort((left, right) => left.createdAt - right.createdAt || left.id.localeCompare(right.id))[0];
+    if (prior) return { senseId: prior.senseId, partOfSpeech: prior.partOfSpeech };
+    return reviewed;
+  }
   const same = existing.find(memory => memory.termKey === entry.key && memory.kind === entry.kind && memory.partOfSpeech === pos && normalizeMeaning(memory.meaning) === normalizeMeaning(entry.contextualMeaning));
   if (same) return { senseId: same.senseId, partOfSpeech: same.partOfSpeech };
   // Reuse a dictionary sense only for an unambiguous exact set of its reviewed synonyms.

@@ -18,7 +18,7 @@ function SenseDetails({ row, onSource }: { row: SenseOverviewRow; onSource?: (so
         <b lang="en">{row.example.english}</b>
         <span>{row.example.chinese}</span>
       </div>}
-      {showSources && row.sources.length > 0 && <div className="vl-sense-sources" aria-label="此义项的真题出处">{row.sources.map(source => <div key={`${source.sourceId}:${source.expression}:${source.meaning}`}>
+      {showSources && row.sources.length > 0 && <div className="vl-sense-sources" aria-label="此义项的真题出处">{row.sources.map(source => <div key={`${source.sourceId}:${source.expression}:${source.partOfSpeech}:${source.meaning}:${source.use}`}>
         <p className="vl-sense-source-caption">{source.year} · {source.section}</p>
         <p lang="en">{source.excerpt}</p>
         <p><b lang="en">{source.expression}</b>{source.partOfSpeech ? ` · ${source.partOfSpeech}` : ""} · {source.meaning}</p>
@@ -36,7 +36,7 @@ export function SenseOverviewPanel({ entry, currentSourceId, onSource }: { entry
   if (!rows.length) return null;
   return <section className="vl-sense-overview" aria-label="全部义项与真题次数">
     <h3>全部义项</h3>
-    <p className="vl-sense-scope">按已导入真题的已归类出现次数排序；没有已归类真题语境的义项列在后面。教学例句不计次数。</p>
+    <p className="vl-sense-scope">同一个核心意思合并显示，按已归类真题出处数排序；每句的具体解释保留在展开详情中。同一出处计一次，教学例句不计次数。</p>
     <ol className="vl-sense-rows">{rows.map(row => <li className="vl-sense-row" key={row.id} data-sense-id={row.id} data-sense-count={row.count ?? "unclassified"} data-current-sense={row.current || undefined}>
       <div className="vl-sense-heading">
         <p className="vl-sense-meaning">{row.partOfSpeech && <span className="vl-sense-pos">{row.partOfSpeech}</span>}<strong>{row.meaning}</strong>{row.current && <span className="vl-sense-current">本句义</span>}</p>

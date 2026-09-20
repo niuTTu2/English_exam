@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { DEFAULT_SETTINGS, createMemory, mergeCandidate, setMemoryPaused, type VocabularyCandidate, type VocabularyLearningData, type VocabularyMemory, type VocabularyRating, type VocabularySession } from "./model";
+import { DEFAULT_SETTINGS, createMemory, mergeCandidate, type VocabularyCandidate, type VocabularyLearningData, type VocabularyMemory, type VocabularyRating, type VocabularySession } from "./model";
+import { memoriesInSemanticScope, memoryGroup, memoryGroups, memorySemanticKey, representativeMemory, setMemoryGroupPaused, vocabularyMemoryView } from "./memory-groups";
 import type { VocabularyCorpus } from "./corpus";
 import { createLearningQueue, vocabularyTodayStats } from "./queue";
 import { appendSpelling, createSession, pauseSession, rateSession, recordSpellingResult, resumeSession, revealSession, sessionElapsedMs, sessionSummary, skipPausedSessionItems, skipSessionSpelling, switchSessionContext } from "./session";
@@ -53,16 +54,21 @@ export function VocabularyLearning({ data, onUpdate, corpus, articleId, articleL
   const resumable = session && session.status !== "completed" ? session : Object.values(sessions).filter(item => item.status !== "completed").sort((a, b) => b.updatedAt - a.updatedAt)[0];
   const inSession = session?.status === "active";
   const currentItem = session?.queue[session.cursor];
-  const currentMemory = currentItem ? memories[currentItem.memoryId] : undefined;
+  const currentMemory = useMemo(() => currentItem ? vocabularyMemoryView(memories, currentItem.memoryId) : undefined, [memories, currentItem]);
   const currentContext = currentMemory?.contexts.find(context => context.id === currentItem?.contextId) ?? currentMemory?.contexts[0];
   const candidate = currentMemory && currentContext ? corpus.getCandidate(currentContext, currentMemory.kind) : undefined;
   const stats = useMemo(() => vocabularyTodayStats(memories, attempts, now), [memories, attempts, now]);
+  const pausedMemories = useMemo(() => memoryGroups(memories).groups.flatMap(group => {
+    const paused = group.every(memory => memory.paused || memory.status === "paused") ? group[0] : undefined;
+    return paused ? [paused] : [];
+  }), [memories]);
   const scopedIds = useMemo(() => {
     const keys = scope.kind === "marked" ? Object.keys(marks).filter(key => marks[key]?.length) : scope.kind === "list" ? listItems[scope.list ?? lists[0]] ?? [] : undefined;
     const selected = keys ? new Set(keys) : undefined;
     return Object.values(memories).filter(memory => selected ? selected.has(memory.termKey) : scope.kind === "all" || memory.contexts.some(context => scope.kind === "year" ? context.year === year : context.articleId === articleId)).map(memory => memory.id);
   }, [memories, scope, marks, listItems, lists, year, articleId]);
-  const scopedStats = useMemo(() => vocabularyTodayStats(Object.fromEntries(scopedIds.map(id => [id, memories[id]])), attempts, now), [scopedIds, memories, attempts, now]);
+  const scopedStats = useMemo(() => vocabularyTodayStats(memoriesInSemanticScope(memories, scopedIds), attempts, now), [scopedIds, memories, attempts, now]);
+  const spellingAvailable = useMemo(() => Boolean(session?.status === "completed" && appendSpelling(session, memories, now).queue.length > session.queue.length), [session, memories, now]);
 
   const mutate = useCallback((update: (current: VocabularyLearningData) => VocabularyLearningData) => {
     try { onUpdate(update); return true; }
@@ -88,7 +94,7 @@ export function VocabularyLearning({ data, onUpdate, corpus, articleId, articleL
       if (!existing) return current;
       const result = rateSession(existing, current.vocabularyMemories ?? {}, rating, at);
       if (!result) return current;
-      const nextMemories = { ...current.vocabularyMemories, [result.memory.id]: result.memory };
+      const nextMemories = { ...current.vocabularyMemories, ...result.memories };
       const nextSession = result.session.status === "completed" && current.vocabularySettings?.spellingEnabled ? appendSpelling(result.session, nextMemories, at) : result.session;
       return withSession({ ...current, vocabularyMemories: nextMemories, vocabularyAttempts: { ...current.vocabularyAttempts, [result.attempt.id]: result.attempt } }, nextSession);
     });
@@ -154,13 +160,17 @@ export function VocabularyLearning({ data, onUpdate, corpus, articleId, articleL
         const remainingPhrases = Math.max(0, settings.dailyPhrases - stats.newPhrases);
         if (mode === "new" && !(settings.reviewFirst && scopedStats.dueWords + scopedStats.duePhrases >= (limit === "ten-cards" ? 10 : settings.sessionSize)) && scope.kind !== "marked" && scope.kind !== "list") {
           const original = Object.values(memories);
+          const existingGroups = new Map(memoryGroups(memories).groups.map(group => [memorySemanticKey(group[0]), group]));
           const seen = new Set<string>();
           let words = 0, phrases = 0;
           const options = { includeRecognition: settings.includeRecognition, includeFunctionWords: settings.includeFunctionWords, includeProperNames: settings.includeNames,
             accept: (item: VocabularyCandidate) => {
               const memory = createMemory(item, at, original);
-              if (seen.has(memory.id) || (memories[memory.id] && (memories[memory.id].paused || memories[memory.id].status !== "unseen"))) return false;
-              seen.add(memory.id);
+              const key = memorySemanticKey(memory);
+              const group = existingGroups.get(key);
+              const existing = group ? representativeMemory(group) : undefined;
+              if (seen.has(key) || (group && (!existing || existing.status !== "unseen"))) return false;
+              seen.add(key);
               if (memory.kind === "word") { if (words >= remainingWords) return false; words += 1; }
               else { if (phrases >= remainingPhrases) return false; phrases += 1; }
               return true;
@@ -195,7 +205,12 @@ export function VocabularyLearning({ data, onUpdate, corpus, articleId, articleL
   function spelling() { updateSession((current, state) => appendSpelling(current, state.vocabularyMemories ?? {}, Date.now())); }
   function changeMemory(change: (memory: VocabularyMemory) => VocabularyMemory) {
     if (!currentMemory) return;
-    mutate(current => { const memory = current.vocabularyMemories?.[currentMemory.id]; return memory ? { ...current, vocabularyMemories: { ...current.vocabularyMemories, [memory.id]: change(memory) } } : current; });
+    mutate(current => {
+      const original = current.vocabularyMemories ?? {};
+      const next = { ...original };
+      for (const memory of memoryGroup(original, currentMemory.id)) next[memory.id] = change(memory);
+      return { ...current, vocabularyMemories: next };
+    });
   }
   function pauseMemory() {
     if (!currentMemory || !session) return;
@@ -204,7 +219,7 @@ export function VocabularyLearning({ data, onUpdate, corpus, articleId, articleL
       const memory = current.vocabularyMemories?.[currentMemory.id];
       const active = current.vocabularySessions?.[session.id];
       if (!memory || !active) return current;
-      const next = { ...current.vocabularyMemories, [memory.id]: setMemoryPaused(memory, true, at) };
+      const next = setMemoryGroupPaused(current.vocabularyMemories ?? {}, memory.id, true, at);
       return withSession({ ...current, vocabularyMemories: next }, skipPausedSessionItems(active, next, at));
     });
   }
@@ -219,8 +234,8 @@ export function VocabularyLearning({ data, onUpdate, corpus, articleId, articleL
         if (!target) return current;
         for (const context of candidates) {
           const result = mergeCandidate(next, context, Date.now());
-          if (result.id !== target.id || result.contexts.length === next[target.id].contexts.length) continue;
-          added += result.contexts.length - next[target.id].contexts.length;
+          if (memorySemanticKey(result) !== memorySemanticKey(target) || result.contexts.length === (next[result.id]?.contexts.length ?? 0)) continue;
+          added += result.contexts.length - (next[result.id]?.contexts.length ?? 0);
           next = { ...next, [result.id]: result };
         }
         return { ...current, vocabularyMemories: next };
@@ -252,7 +267,7 @@ export function VocabularyLearning({ data, onUpdate, corpus, articleId, articleL
       <VocabularyHome metrics={metrics} settings={settings} scope={scope} articleLabel={articleLabel} year={year} lists={lists} busy={busy} message={busy ? "正在准备这一组真题词汇…" : message} resumable={resumable ? { completed: resumable.cursor, total: resumable.queue.length } : undefined} onScope={setScope} onSettings={value => { mutate(current => ({ ...current, vocabularySettings: value })); }} onStart={start} onResume={() => { if (resumable) mutate(current => withSession(current, resumeBatch(current.vocabularySessions?.[resumable.id] ?? resumable, current.vocabularyMemories ?? {}, Date.now()))); }} />
       {unresolved.length > 0 && <details className="vl-legacy"><summary>已保留的历史词条 · {unresolved.length} 项</summary><p>这些词条目前未匹配到本库真题例句。原标签、复习计划、笔记和清单仍然保留，无需补充语境，可以继续学习其他词汇。</p><ul>{unresolved.map(key => <li key={key}>{key}</li>)}</ul></details>}
     </>}
-    {!spellingFeedback && session?.status === "completed" && <><LearningSummary summary={sessionSummary(session, attempts, memories)} memories={memories} onHome={goHome} onSpelling={spelling} spellingAvailable={session.queue.some(item => item.kind !== "spelling" && !session.queue.some(other => other.kind === "spelling" && other.memoryId === item.memoryId) && (memories[item.memoryId]?.spelling.enabled || memories[item.memoryId]?.consecutiveKnown >= 2))} />{message && <p className="vl-message" role="status">{message}</p>}</>}
+    {!spellingFeedback && session?.status === "completed" && <><LearningSummary summary={sessionSummary(session, attempts, memories)} memories={memories} onHome={goHome} onSpelling={spelling} spellingAvailable={spellingAvailable} />{message && <p className="vl-message" role="status">{message}</p>}</>}
     {!spellingFeedback && inSession && session && <section className="vl-session" aria-label="连续单卡学习">
       <header className="vl-session-header" id="vl-session-top"><div><strong>第 {session.cursor + 1} 张 · {currentItem ? cardKinds[currentItem.kind] : "学习"}</strong><small>已完成 {session.cursor} 张 · 剩余 {session.queue.length - session.cursor} 张{session.timeLimitMinutes ? " · 本段 10 分钟" : ""}</small></div><button type="button" onClick={pause}>暂停并退出</button></header>
       <progress className="vl-session-progress" value={session.cursor} max={Math.max(1, session.queue.length)} aria-label="本轮学习进度" />
@@ -260,12 +275,12 @@ export function VocabularyLearning({ data, onUpdate, corpus, articleId, articleL
       {session.timeLimitMinutes && sessionElapsedMs(session, now) >= session.timeLimitMinutes * 60_000 && <p className="vl-message" role="status">10 分钟到了，可以暂停并保留当前卡。{session.queue.slice(session.cursor).some(item => item.kind === "retry") ? "本轮还有困难词需要再次回忆；可以继续，也可以下次恢复。" : "剩余项目会在恢复时继续。"}</p>}
       {candidate && currentMemory && currentItem ? currentItem.kind === "spelling" ? <SpellingPractice key={currentItem.id} candidate={candidate} sourceLabel={`${candidate.context.year} · ${candidate.sourceLabel}`} onSpeak={speak} onSubmit={submitSpelling} onSkip={() => updateSession(current => skipSessionSpelling(current, Date.now()))} />
         : (() => { const Card = currentMemory.kind === "phrase" ? PhraseLearningCard : WordLearningCard; return <Card key={currentItem.id} candidate={candidate} revealed={session.phase === "answer"} sourceLabel={`${candidate.context.year} · ${candidate.sourceLabel}`} note={notes[currentMemory.termKey]} onNote={onNote ? note => onNote(currentMemory.termKey, note) : undefined} onSource={visitSource} onSpeak={speak} onReveal={reveal} onRate={rate}
-          contextControls={<>{currentMemory.contexts.length > 1 && <label>切换同一义项的真题语境<select value={currentContext?.id} onChange={event => updateSession((current, state) => switchSessionContext(current, state.vocabularyMemories?.[currentMemory.id] ?? currentMemory, event.target.value, Date.now()))}>{currentMemory.contexts.map(context => <option key={context.id} value={context.id}>{context.year} · {corpus.getSource(context.sourceId)?.sourceLabel ?? context.sourceType} · {context.expression}</option>)}</select></label>}<button type="button" className="vl-text-button" onClick={findSameSenseContexts}>查找同义真题语境</button></>}
+          contextControls={<>{currentMemory.contexts.length > 1 && <label>切换同一义项的真题语境<select value={currentContext?.id} onChange={event => updateSession((current, state) => switchSessionContext(current, vocabularyMemoryView(state.vocabularyMemories ?? {}, currentMemory.id) ?? currentMemory, event.target.value, Date.now()))}>{currentMemory.contexts.map(context => <option key={context.id} value={context.id}>{context.year} · {corpus.getSource(context.sourceId)?.sourceLabel ?? context.sourceType} · {context.expression}</option>)}</select></label>}<button type="button" className="vl-text-button" onClick={findSameSenseContexts}>查找同义真题语境</button></>}
           memoryControls={<><label><input type="checkbox" checked={currentMemory.spelling.enabled} onChange={event => changeMemory(memory => ({ ...memory, spelling: { ...memory.spelling, enabled: event.target.checked }, updatedAt: Date.now() }))} />需要拼写巩固</label><button type="button" className="vl-text-button" onClick={pauseMemory}>暂停这个义项的复习</button><p>“太简单”会使用更长间隔。暂停后可在下方已暂停项目中恢复。</p></>}
         />; })() : <div className="vl-message" role="alert"><p>这张卡的原文出处暂时无法读取，学习记录已保留。</p><button type="button" onClick={pause}>保存并返回</button></div>}
       <DifficultMemories ids={session.difficultIds} memories={memories} />
       <p className="vl-keyboard-hint">空格显示释义 · 1 忘了 · 2 模糊 · 3 认识 · 4 太简单</p>
     </section>}
-    {!inSession && Object.values(memories).some(memory => memory.paused) && <details className="vl-plan"><summary>已暂停的记忆项</summary>{Object.values(memories).filter(memory => memory.paused).map(memory => <p key={memory.id}>{memory.headword} · {memory.meaning} <button type="button" className="vl-text-button" onClick={() => mutate(current => { const existing = current.vocabularyMemories?.[memory.id]; return existing ? { ...current, vocabularyMemories: { ...current.vocabularyMemories, [memory.id]: setMemoryPaused(existing, false, Date.now()) } } : current; })}>恢复复习</button></p>)}</details>}
+    {!inSession && pausedMemories.length > 0 && <details className="vl-plan"><summary>已暂停的记忆项</summary>{pausedMemories.map(memory => <p key={memory.id}>{memory.headword} · {memory.meaning} <button type="button" className="vl-text-button" onClick={() => mutate(current => { const existing = current.vocabularyMemories?.[memory.id]; return existing ? { ...current, vocabularyMemories: setMemoryGroupPaused(current.vocabularyMemories ?? {}, existing.id, false, Date.now()) } : current; })}>恢复复习</button></p>)}</details>}
   </div>;
 }

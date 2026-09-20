@@ -67,9 +67,9 @@ export function buildSenseOverview(entry: VocabEntry, currentSourceId?: string):
       normalizePartOfSpeech(item.partOfSpeech) === sense.partOfSpeech && normalizeMeaning(item.meaning) === normalizeMeaning(context.meaning)) : undefined);
     if (!row) {
       // Keep descriptive POS annotations when they agree with the resolved POS.
-      const partOfSpeech = normalizePartOfSpeech(context.partOfSpeech) === sense.partOfSpeech
+      const partOfSpeech = !sense.meaning && normalizePartOfSpeech(context.partOfSpeech) === sense.partOfSpeech
         ? context.partOfSpeech : sense.partOfSpeech.split("/").map(pos => /^[a-z]+$/.test(pos) ? `${pos}.` : pos).join(" / ");
-      row = { id, meaning: context.meaning, partOfSpeech, count: null, current: false, sources: [], ...(context.use ? { use: context.use } : {}) };
+      row = { id, meaning: sense.meaning ?? context.meaning, partOfSpeech, count: null, current: false, sources: [], ...(context.use ? { use: context.use } : {}) };
       rows.set(id, row);
     }
     return row;
@@ -87,9 +87,10 @@ export function buildSenseOverview(entry: VocabEntry, currentSourceId?: string):
     for (const context of occurrence.contexts ?? []) {
       if (!context.meaning.trim()) continue;
       const row = ensure(context, occurrence.sourceId ?? "unreferenced");
-      if (!occurrence.sourceId || row.sources.some(source => source.sourceId === occurrence.sourceId)) continue;
+      if (!occurrence.sourceId || row.sources.some(source => source.sourceId === occurrence.sourceId
+        && source.expression === context.expression && source.meaning === context.meaning && source.partOfSpeech === context.partOfSpeech && source.use === context.use)) continue;
       row.sources.push({ ...context, sourceId: occurrence.sourceId, year: occurrence.year, section: occurrence.section, excerpt: occurrence.excerpt });
-      row.count = row.sources.length;
+      row.count = new Set(row.sources.map(source => source.sourceId)).size;
     }
   }
 
@@ -107,6 +108,17 @@ export function buildSenseOverview(entry: VocabEntry, currentSourceId?: string):
     const exact = [...rows.values()].filter(row => normalizeMeaning(row.meaning) === normalized
       && (!extra.partOfSpeech || normalizePartOfSpeech(row.partOfSpeech) === normalizePartOfSpeech(extra.partOfSpeech)));
     if (exact.length === 1) continue;
+    if (!extra.partOfSpeech) {
+      // An untyped dictionary synonym may join one unambiguous existing sense.
+      // Trying each known POS does not borrow the current card's POS or guess
+      // between noun/verb homographs with the same Chinese wording.
+      const matches = [...rows.values()].filter(row => {
+        const context = { expression: entry.headword, meaning: extra.meaning, partOfSpeech: row.partOfSpeech, use: "" };
+        const sense = resolve(entry, context, `other:${index}`);
+        return !sense.senseId.startsWith("source:") && rowId(entry, sense, extra.meaning) === row.id;
+      });
+      if (matches.length === 1) continue;
+    }
     ensure({ expression: entry.headword, ...extra, use: "" }, `other:${index}`);
   }
 
