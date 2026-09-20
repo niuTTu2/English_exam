@@ -1,3 +1,4 @@
+import { passage2013P1SentenceContexts } from "./2013-passage-1-vocabulary";
 import { passage2011P3SourceContexts } from "./2011-passage-3-contexts";
 import { passage2011P2SourceContexts } from "./2011-passage-2-contexts";
 import { passage2011P1SourceContexts } from "./2011-passage-1-contexts";
@@ -47,7 +48,7 @@ import { passage2010P1QuestionContexts } from "./2010-passage-1-question-context
 import { passage2010P2QuestionContexts } from "./2010-passage-2-question-contexts";
 import { passage2010P2PreferredCollocations } from "./2010-passage-2-collocations";
 
-export type ArticleLexiconId = "cloze" | "p1" | "p2" | "p3" | "p4" | "p5" | "translation" | "2001-cloze" | "2001-p1" | "2001-p2" | "2010-cloze" | "2010-p1" | "2010-p2" | "2010-p3" | "2010-p4" | "2010-p5" | "2010-translation" | "2011-cloze" | "2011-p1" | "2011-p2" | "2011-p3" | "2011-p4" | "2011-p5" | "2011-translation" | "2011-writing-a" | "2011-writing-b" | "2012-cloze" | "2012-p1" | "2012-p2" | "2012-p3" | "2012-p4" | "2012-p5" | "2012-translation" | "2012-writing-a" | "2012-writing-b";
+export type ArticleLexiconId = "cloze" | "p1" | "p2" | "p3" | "p4" | "p5" | "translation" | "2001-cloze" | "2001-p1" | "2001-p2" | "2010-cloze" | "2010-p1" | "2010-p2" | "2010-p3" | "2010-p4" | "2010-p5" | "2010-translation" | "2011-cloze" | "2011-p1" | "2011-p2" | "2011-p3" | "2011-p4" | "2011-p5" | "2011-translation" | "2011-writing-a" | "2011-writing-b" | "2012-cloze" | "2012-p1" | "2012-p2" | "2012-p3" | "2012-p4" | "2012-p5" | "2012-translation" | "2012-writing-a" | "2012-writing-b" | "2013-p1";
 
 export type ContextualSubstitution = {
   label: string;
@@ -75,6 +76,7 @@ export type SentenceWordContext = {
  * a different sense, use and replacement set in every source sentence.
  */
 export const sentenceWordContexts: Record<string, Record<string, SentenceWordContext>> = {
+  ...passage2013P1SentenceContexts,
   ...passage2010P1QuestionContexts,
   ...passage2010P2QuestionContexts,
   ...writing2011BSentenceContexts,

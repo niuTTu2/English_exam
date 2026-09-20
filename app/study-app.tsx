@@ -261,6 +261,9 @@ const corpusSources = Object.values(articleContents).flatMap((article) => [
   ]),
 ]);
 const sourceById = new Map(corpusSources.map((source) => [source.id, source]));
+const phraseKnowledgeFor = (label: string, sourceId?: string) => getPhraseKnowledge(label, {
+  articleId: sourceId ? sourceById.get(sourceId)?.article.id : undefined,
+});
 const phraseAnnotations = Object.values(articleContents).flatMap((article) => [
   ...article.sentences.flatMap((sentence) => sentence.phrases.map((label) => ({ label, sourceId: sentence.id }))),
   ...article.questions.flatMap((question) => [
@@ -270,10 +273,10 @@ const phraseAnnotations = Object.values(articleContents).flatMap((article) => [
         .map(label => ({ label, sourceId: questionOptionSourceId(question, option.key) })))),
   ]),
   ...article.questions.filter(question => question.format !== "matching" || question.id === question.sharedOptionsId).flatMap((question) => question.options
-    .filter((option) => option.text.includes(" ") && getPhraseKnowledge(option.text))
+    .filter((option) => option.text.includes(" ") && getPhraseKnowledge(option.text, { articleId: article.id }))
     .map((option) => ({ label: option.text, sourceId: questionOptionSourceId(question, option.key) }))),
 ]).filter((annotation, index, all) => all.findIndex(item => item.sourceId === annotation.sourceId && item.label.toLowerCase() === annotation.label.toLowerCase()) === index)
-  .map((annotation) => ({ ...annotation, patternKey: getPhraseKnowledge(annotation.label)?.key }));
+  .map((annotation) => ({ ...annotation, patternKey: phraseKnowledgeFor(annotation.label, annotation.sourceId)?.key }));
 const phraseOccurrenceCache = new Map<string, Array<{ source: (typeof corpusSources)[number]; start: number; end: number; label: string }>>();
 const termContextCache = new Map<string, SavedTermContext[]>();
 const corpusTokens = corpusSources.flatMap((source) => tokenizeWords(source.text.toLowerCase()).map((form) => {
@@ -373,7 +376,7 @@ const contextualOccurrenceCache = new Map<string, ContextualOccurrence[]>();
 function phraseOccurrenceContext(expression: string, sourceId?: string): OccurrenceContext {
   const contextual = getSentencePhraseContext(sourceId, expression);
   const knowledgeExpression = contextual?.knowledgeExpression ?? expression;
-  const knowledge = getPhraseKnowledge(knowledgeExpression);
+  const knowledge = phraseKnowledgeFor(knowledgeExpression, sourceId);
   const detail = getCollocationDetails([knowledgeExpression])[0];
   return {
     expression,
@@ -385,7 +388,7 @@ function phraseOccurrenceContext(expression: string, sourceId?: string): Occurre
 
 export function currentOccurrences(label: string, isPhrase: boolean, sourceId?: string): ContextualOccurrence[] {
   const lemma = isPhrase ? undefined : lemmaOf(label.toLowerCase(), sourceId);
-  const cacheKey = isPhrase ? JSON.stringify(["phrase", normalizePhrase(label), getPhraseKnowledge(label)?.key]) : `word:${lemma}`;
+  const cacheKey = isPhrase ? JSON.stringify(["phrase", normalizePhrase(label), phraseKnowledgeFor(label, sourceId)?.key, sourceId]) : `word:${lemma}`;
   const cached = contextualOccurrenceCache.get(cacheKey);
   if (cached) return cached;
   const grouped = new Map<string, ContextualOccurrence>();
@@ -442,7 +445,7 @@ export function groupOccurrenceSenses(occurrences: VocabEntry["occurrences"]) {
 function makeFallbackEntry(label: string, isPhrase = false, sentenceId?: string): VocabEntry {
   const normalized = label.toLowerCase();
   const option = sentenceId ? optionLookup.get(`${sentenceId}:${normalized}`) : undefined;
-  const phraseKnowledge = isPhrase ? getPhraseKnowledge(normalized) : undefined;
+  const phraseKnowledge = isPhrase ? phraseKnowledgeFor(normalized, sentenceId) : undefined;
   const guide = isPhrase ? null : getLexicalGuide(normalized, lexicalContextFor(sentenceId));
   const wordKnowledge = guide ? getWordKnowledge(guide.headword, lexicalContextFor(sentenceId)) : undefined;
   const counts = currentCounts(label, isPhrase, sentenceId);
@@ -524,7 +527,7 @@ export function resolveEntry(label: string, isPhrase = false, sentenceId?: strin
     const exact = findTermContexts(normalized).find(context => context.headword === normalized);
     if (exact) return { ...resolveEntry(exact.label, false, exact.sourceId), display: label };
   }
-  const phraseKnowledge = isPhrase ? getPhraseKnowledge(normalized) : undefined;
+  const phraseKnowledge = isPhrase ? phraseKnowledgeFor(normalized, sentenceId) : undefined;
   const guide = isPhrase ? null : getLexicalGuide(normalized, lexicalContextFor(sentenceId));
   const wordKnowledge = guide ? getWordKnowledge(guide.headword, lexicalContextFor(sentenceId)) : undefined;
   const key = phraseKnowledge
@@ -539,7 +542,7 @@ export function resolveEntry(label: string, isPhrase = false, sentenceId?: strin
   if (phraseKnowledge) {
     const context = phraseOccurrenceContext(label, sentenceId);
     const knowledgeExpression = getSentencePhraseContext(sentenceId, label)?.knowledgeExpression;
-    const contextualKnowledge = knowledgeExpression ? getPhraseKnowledge(knowledgeExpression) : undefined;
+    const contextualKnowledge = knowledgeExpression ? phraseKnowledgeFor(knowledgeExpression, sentenceId) : undefined;
     return {
       ...entry,
       display: label,
@@ -698,7 +701,7 @@ export function findTermContexts(key: string): SavedTermContext[] {
     const annotation = phraseAnnotations.find((item) => key === `pattern:${item.patternKey}` || normalizePhrase(item.label) === normalizePhrase(key));
     for (const occurrence of findPhraseOccurrences(annotation?.label ?? key, Boolean(annotation?.patternKey))) {
       contexts.set(occurrence.source.id, { articleId: occurrence.source.article.id, sourceId: occurrence.source.id,
-        headword: getPhraseKnowledge(occurrence.label)?.canonical ?? occurrence.label, label: occurrence.label, kind: "phrase" });
+        headword: phraseKnowledgeFor(occurrence.label, occurrence.source.id)?.canonical ?? occurrence.label, label: occurrence.label, kind: "phrase" });
     }
   } else {
     for (const token of corpusTokens.filter((item) => item.lemma === key || aliasToVocab[item.form] === key)) {
@@ -3839,7 +3842,7 @@ function renderInteractiveText(
     if (match.start > cursor) {
       nodes.push(...renderWords(text.slice(cursor, match.start), sentenceId, onTerm, `before-${index}`));
     }
-    const phraseKnowledge = getPhraseKnowledge(match.label);
+    const phraseKnowledge = phraseKnowledgeFor(match.label, sentenceId);
     nodes.push(
       <span
         key={`phrase-${sentenceId}-${match.start}`}

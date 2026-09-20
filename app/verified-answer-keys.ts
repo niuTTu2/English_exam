@@ -1,3 +1,9 @@
+export const verifiedAnswerKey2013Passage1: Record<number, "A" | "B" | "C" | "D"> = { 21: "A", 22: "D", 23: "B", 24: "B", 25: "C" };
+export const verifiedAnswerSources2013Passage1 = [
+  { range: "Text 1 原文、21—25题干与选项；仓库仅导入本篇试点", label: "用户提供的《考研英语二2013年真题（整卷）》DOCX", sha256: "7f00fcff824e1a0c21261d1f4d13e742b8f173748f56ec50abf275b143e75131" },
+  { range: "21—25：A D B B C；逐题证据链另按用户原卷正文复核", label: "2013英语二答案速查（教学参考，非官方阅卷标准）", url: "https://zemengzhou.com/kaoyan/english/past-papers/ying-yu-er/2013/10-da-an-su-cha" },
+] as const;
+
 export const verifiedAnswerKey2012Passage2: Record<number, "A" | "B" | "C" | "D"> = { 26: "C", 27: "B", 28: "B", 29: "A", 30: "C" };
 export const verifiedAnswerSources2012Passage2 = [
   { range: "26—30：C B B A C；答案字母按用户原卷的 A—D 选项顺序核对。部分第三方转载重排选项，不能直接抄用其字母。", label: "哈尔滨工程大学网站所载《2012年英语（二）试题解析》Text 2解析（教学参考，非官方阅卷标准）", url: "https://zyxw.hrbeu.edu.cn/__local/B/D4/EA/811048CF9A6D978F3D55818782D_15D0DB51_FF24B.pdf" },

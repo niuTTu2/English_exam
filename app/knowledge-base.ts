@@ -1,3 +1,4 @@
+import { passage2013P1PhraseGuides, passage2013P1PhraseAliases, passage2013P1PhraseGlosses } from "./2013-passage-1-vocabulary";
 import { getTranslation2010ReviewedKnowledge } from "./2010-translation-contexts";
 import { getTranslation2000ReviewedKnowledge } from "./2000-translation-contexts";
 import { getTranslation2011ReviewedKnowledge } from "./2011-translation-contexts";
@@ -1086,8 +1087,24 @@ for (const [key, value] of Object.entries(passage2011P2PhraseGlosses)) {
   if (!collocationGlosses[key]) collocationGlosses[key] = value;
 }
 
-export function getPhraseKnowledge(source: string): PhraseKnowledge | undefined {
+export function getPhraseKnowledge(source: string, context?: { articleId?: string }): PhraseKnowledge | undefined {
   const clean = normalized(source);
+  if (context?.articleId === "2013-p1") {
+    const scopedAlias = passage2013P1PhraseAliases[clean];
+    const scopedGuide = passage2013P1PhraseGuides[scopedAlias ?? clean];
+    if (scopedGuide) return { ...scopedGuide, sourceExpression: source.trim() };
+    const scopedGloss = passage2013P1PhraseGlosses[clean];
+    if (scopedGloss) return {
+      key: `2013-p1-collocation:${clean}`,
+      sourceExpression: source.trim(),
+      canonical: source.trim(),
+      type: "常用搭配",
+      meaning: scopedGloss.meaning,
+      summary: scopedGloss.note ?? "结合本篇原句整体识别这个搭配。",
+      grammarRole: "固定或高频词语搭配",
+      structures: [s(source.trim(), scopedGloss.meaning, scopedGloss.note ?? "按本篇语境整体记忆。")],
+    };
+  }
   const alias = phraseAliases[clean];
   if (alias) {
     const guide = phraseGuides[alias];

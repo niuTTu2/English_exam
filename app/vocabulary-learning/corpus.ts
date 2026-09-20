@@ -197,7 +197,7 @@ export function createVocabularyCorpus(bridge: VocabularyCorpusBridge) {
     if (!source || !reference || !expression) return undefined;
     // Only existing annotated expressions or reviewed canonical structures are eligible.
     // A manual mark never manufactures phrases out of adjacent words.
-    if (isPhrase && !phrases().get(sourceId)?.some(item => normalize(item) === normalize(expression)) && !getPhraseKnowledge(expression)) {
+    if (isPhrase && !phrases().get(sourceId)?.some(item => normalize(item) === normalize(expression)) && !getPhraseKnowledge(expression, { articleId: source.articleId })) {
       candidateCache.set(cacheKey, null);
       return undefined;
     }
@@ -299,7 +299,7 @@ export function createVocabularyCorpus(bridge: VocabularyCorpusBridge) {
         if (++count >= limit) return;
       }
       for (const label of phrases().get(source.id) ?? []) {
-        const knowledge = getPhraseKnowledge(label);
+        const knowledge = getPhraseKnowledge(label, { articleId: source.article.id });
         const preliminary = priorityFor({ headword: knowledge?.canonical ?? label, display: label, canonicalForm: knowledge?.canonical, kind: "phrase", partOfSpeech: knowledge?.type ?? "固定搭配" }, source);
         if (!vocabularyCandidateAllowed(preliminary, options)) continue;
         const candidate = resolveCandidate(label, true, source.id);
