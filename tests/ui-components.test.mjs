@@ -78,7 +78,7 @@ test("2010初读按原卷五段连续呈现，读句和结构不混入查词按�
 test("2012满意度表支持三态度列、精确数据和原图尺寸", async () => {
   const { WritingPromptChart, WritingTestTask } = await vite.ssrLoadModule("/app/study-app.tsx");
   const { articleContents, availableYears, sectionsByYear } = await vite.ssrLoadModule("/app/data.ts");
-  assert.deepEqual(availableYears, [2000, 2001, 2010, 2011, 2012]);
+  assert.deepEqual(availableYears, [2000, 2001, 2010, 2011, 2012, 2013]);
   assert.deepEqual(sectionsByYear[2012].map(section => section.id), ["2012-cloze", "2012-p1", "2012-p2", "2012-p3", "2012-p4", "2012-p5", "2012-translation", "2012-writing-a", "2012-writing-b"]);
   const task = articleContents["2012-writing-b"].writingTasks[0];
   const chart = renderToStaticMarkup(React.createElement(WritingPromptChart, { task }));

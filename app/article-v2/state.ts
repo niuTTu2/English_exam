@@ -28,9 +28,19 @@ export function changePage(data: V2StudySnapshot, articleId: string, page: V2Pag
 export function markId(mark: Pick<ArticleV2Mark, "articleId" | "sourceId" | "kind" | "start" | "end">) {
   return [mark.articleId, mark.sourceId, mark.kind, mark.start, mark.end].map(v => encodeURIComponent(String(v))).join(":");
 }
-export function toggleSourceMark(data: V2StudySnapshot, input: Omit<ArticleV2Mark, "id" | "createdAt" | "updatedAt" | "active">, now: number): V2StudySnapshot {
+export type SourceMarkInput = Omit<ArticleV2Mark, "id" | "createdAt" | "updatedAt" | "active">;
+export function setSourceMark(data: V2StudySnapshot, input: SourceMarkInput, active: boolean, now: number): V2StudySnapshot {
   const id = markId(input), previous = data.articleV2Marks?.[id];
-  return { ...data, articleV2Marks: { ...data.articleV2Marks, [id]: { ...input, id, active: !previous?.active, createdAt: previous?.createdAt ?? now, updatedAt: now } } };
+  if (previous?.active === active) return data;
+  return { ...data, articleV2Marks: { ...data.articleV2Marks, [id]: { ...input, id, active, createdAt: previous?.createdAt ?? now, updatedAt: now } } };
+}
+export function toggleSourceMark(data: V2StudySnapshot, input: SourceMarkInput, now: number): V2StudySnapshot {
+  return setSourceMark(data, input, !data.articleV2Marks?.[markId(input)]?.active, now);
+}
+export function undoSourceMark(data: V2StudySnapshot, input: SourceMarkInput, expected: Pick<ArticleV2Mark, "updatedAt" | "active">, previousActive: boolean, now: number): V2StudySnapshot {
+  const saved = data.articleV2Marks?.[markId(input)];
+  if (saved?.updatedAt !== expected.updatedAt || saved.active !== expected.active) throw new Error("这处标记已发生其他修改，未撤销，请在已标记列表中核对。");
+  return setSourceMark(data, input, previousActive, Math.max(now, expected.updatedAt + 1));
 }
 /** V2 checks happen after explanation: preserve events, but never claim independent mastery. */
 export function recordV2Check(data: V2StudySnapshot, articleId: string, sourceId: string, task: PracticeTask, answer: string, id: string, now: number): V2StudySnapshot {

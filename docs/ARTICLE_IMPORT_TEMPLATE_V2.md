@@ -134,4 +134,6 @@ node tests/browser-v2/serve-pilot.mjs
 
 真实试点的完整操作路径见 `V2_BROWSER_ACCEPTANCE.md`。入口启动和HTTP响应通过，不代表手机触控、保存或离线已验收。
 
+标记交互使用独立预选与确认：正文点击不得直接切换已存标记；取消预选不写盘，移除已有标记保留active:false，撤销不能覆盖之后的其他修改。快速读懂的每个英文词须保留精确sourceId并打开共用词卡，关闭词卡不自动入队。
+
 测试目录不被生产入口引用，不是正式新文章。首个正式试点是用户提供的2013英语二Text 1；实现方式见 `app/2013-passage-1-*.ts`、原卷快照 `tests/fixtures/2013-passage-1-source.json` 和专项测试 `tests/2013-passage-1-v2.test.mjs`。它是示例，不是句数、深度句数或任务数模板；以后仍按真实难点决定。不能把旧 Text 1/2 或合成夹具标为试点。360/390、离线、真实原卷内容及正式站 V2 验证全部完成前不推 main。

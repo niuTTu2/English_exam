@@ -22,9 +22,16 @@
 .article-v2 .v2-original p { margin:0 0 22px; }
 .article-v2 .v2-inline-sentence, .article-v2 .v2-inline-word { display:inline; min-height:0; padding:2px 0; margin:0; border:0; border-radius:2px; font:inherit; line-height:inherit; color:inherit; background:transparent; }
 .article-v2 .v2-inline-word { padding-block:6px; }
-.article-v2 .v2-marked { background:#f8e8b9; box-decoration-break:clone; -webkit-box-decoration-break:clone; }
-.article-v2 .v2-range-start { outline:2px solid #7b602e; }
-.article-v2 .v2-selection-cancel { font:13px sans-serif; }
+.article-v2 .v2-marked, .article-v2 button.v2-marked { background:#f8e8b9; box-decoration-break:clone; -webkit-box-decoration-break:clone; }
+.article-v2 .v2-pending-mark, .article-v2 button.v2-pending-mark { background:#dcecf9; outline:1px dashed #326783; box-decoration-break:clone; -webkit-box-decoration-break:clone; }
+.article-v2 .v2-lookup-word:hover { text-decoration:underline; text-underline-offset:4px; }
+.article-v2 .v2-mark-editor { position:fixed; bottom:max(12px,env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%); width:min(36rem,calc(100% - 24px)); max-height:50dvh; overflow:auto; z-index:30; padding:12px 16px; border:1px solid #aebfb3; border-radius:14px; background:#fff; box-shadow:0 5px 24px #1c353930; }
+.article-v2 .v2-mark-editor p { margin:4px 0 10px; }
+.article-v2 .v2-selection-preview { max-height:6rem; overflow:auto; overflow-wrap:anywhere; }
+.article-v2 .v2-has-mark-editor { padding-bottom:240px; }
+.article-v2 .v2-saved-mark { display:flex; flex-wrap:wrap; justify-content:space-between; gap:8px; padding:12px 0; border-top:1px solid #dce4da; }
+.article-v2 .v2-saved-mark > span { flex:1 1 180px; overflow-wrap:anywhere; }
+.article-v2 .v2-saved-mark > button { flex:none; align-self:start; }
 .article-v2 .v2-question, .article-v2 .v2-reading-card, .article-v2 .v2-mistake-card, .article-v2 .v2-vocabulary-item { margin:16px 0; padding:20px; border:1px solid #d7dfd7; border-radius:14px; background:#fff; max-width:100%; scroll-margin-top:18px; }
 .article-v2 fieldset legend { max-width:100%; padding:0 5px; font-weight:600; }
 .article-v2 .v2-option { display:grid; grid-template-columns:auto minmax(0,1fr); gap:10px; align-items:start; padding:12px 0; border-bottom:1px solid #e8ece7; }

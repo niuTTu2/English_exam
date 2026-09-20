@@ -15,6 +15,7 @@ const [{ syntheticArticle: article, syntheticCorpus: corpus, emptyV2State: empty
   vite.ssrLoadModule("/tests/fixtures/article-v2-synthetic.ts"), load("article-v2/model.ts"), load("article-v2/content.ts"), load("article-v2/state.ts"), load("study-sync.ts"), load("vocabulary-learning/study-bridge.ts"), load("vocabulary-learning/model.ts"), load("article-v2/persistence.ts"), load("vocabulary-learning/codec.ts"),
 ]);
 const [{ ExamPage }, { QuickReadingCard }, { QuestionAnalysisPage }, { default: ArticleV2 }, { ArticleVocabularyPage }] = await Promise.all([load("article-v2/exam-page.tsx"), load("article-v2/quick-reading-card.tsx"), load("article-v2/question-mistake-card.tsx"), load("article-v2/article-v2.tsx"), load("article-v2/article-vocabulary-page.tsx")]);
+const [selection, { SourceText }, { ReadingWords }] = await Promise.all([load("article-v2/source-selection.ts"), load("article-v2/source-marking.tsx"), load("article-v2/quick-reading-card.tsx")]);
 const noop = () => {};
 const props = { article, data: empty, corpus, ready: true, onUpdate: noop, onTerm: noop, onSource: noop, onExternalSource: noop, renderDetails: () => React.createElement("p", null, "完整讲义"), renderQuestionDetails: () => null };
 const render = (component, changes = {}) => renderToStaticMarkup(React.createElement(component, { ...props, ...changes }));
@@ -132,6 +133,71 @@ test("timer resumes by timestamp and pauses on page change; precise marks toggle
   data = state.toggleSourceMark(data, mark, 2700);
   assert.equal(data.articleV2Marks[id].active, false);
   assert.equal(data.articleV2Marks[id].createdAt, 2600);
+});
+test("word selection is one tap, repeated taps never remove marks, and phrase endpoints can be corrected", () => {
+  const first = { start: 0, end: 5 }, last = { start: 12, end: 17 };
+  const word = selection.selectMark(null, "word", "s1", first);
+  assert.equal(word.ready, true);
+  assert.equal(word.kind, "word");
+  assert.deepEqual(selection.selectMark(word, "word", "s1", first), word);
+  const begin = selection.selectMark(null, "phrase", "s1", first);
+  assert.equal(begin.ready, false);
+  const phrase = selection.selectMark(begin, "phrase", "s1", last);
+  assert.equal(phrase.ready, true);
+  assert.equal(phrase.kind, "phrase");
+  assert.deepEqual([phrase.start, phrase.end], [0, 17]);
+  const corrected = selection.selectMark(phrase, "phrase", "s1", { start: 6, end: 11 });
+  assert.deepEqual([corrected.start, corrected.end], [0, 11]);
+  const reversed = selection.selectMark(selection.selectMark(null, "phrase", "s1", last), "phrase", "s1", first);
+  assert.deepEqual([reversed.start, reversed.end], [0, 17]);
+  const otherSource = selection.selectMark(phrase, "phrase", "question-1-option-A", first);
+  assert.equal(otherSource.ready, false);
+  assert.equal(otherSource.sourceId, "question-1-option-A");
+  assert.equal(selection.selectMark(null, "phrase", "s1", last).ready, false, "cancelled selection restarts at a new anchor");
+});
+test("explicit mark removal and undo retain stable IDs and reject undo over newer changes", () => {
+  const input = { articleId: article.id, sourceId: "synthetic.v2-s1", kind: "word", start: 14, end: 19 };
+  const original = snapshot({ answers: { 21: "B" }, termNotes: { old: "旧笔记" } });
+  const added = state.setSourceMark(original, input, true, 100);
+  const id = state.markId(input);
+  assert.equal(state.setSourceMark(added, input, true, 101), added, "double confirmation cannot toggle off");
+  const removed = state.setSourceMark(added, input, false, 102);
+  assert.equal(removed.articleV2Marks[id].active, false);
+  assert.equal(removed.articleV2Marks[id].createdAt, 100);
+  const restored = state.undoSourceMark(removed, input, { updatedAt: 102, active: false }, true, 102);
+  assert.equal(restored.articleV2Marks[id].active, true);
+  assert.equal(restored.articleV2Marks[id].updatedAt, 103);
+  assert.throws(() => state.undoSourceMark(restored, input, { updatedAt: 102, active: false }, true, 104), /其他修改/);
+  assert.deepEqual(restored.answers, original.answers);
+  assert.deepEqual(restored.termNotes, original.termNotes);
+  assert.equal(sync.isStudySnapshot(restored), true);
+  const undoneAdd = state.undoSourceMark(added, input, { updatedAt: 100, active: true }, false, 105);
+  assert.equal(undoneAdd.articleV2Marks[id].active, false, "undo keeps a tombstone for sync, never deletes the key");
+});
+test("raw-word click only selects a source range; persisted marks require a separate explicit action", () => {
+  const picked = [];
+  const element = SourceText({ text: "A note.", sourceId: "s1", mode: "word", marks: [], selection: null, onPick: (...args) => picked.push(args) });
+  const button = React.Children.toArray(element.props.children).find(node => node.type === "button" && node.props.children === "note");
+  button.props.onClick(); button.props.onClick();
+  assert.deepEqual(picked, [["s1", { start: 2, end: 6 }], ["s1", { start: 2, end: 6 }]]);
+  const sentence = SourceText({ text: "A note.", sourceId: "s1", mode: "sentence", marks: [{ sourceId: "s1", kind: "word", start: 2, end: 6, active: true }], selection: null, onPick: noop });
+  assert.ok(!sentence.props.className.includes("v2-marked"), "a saved word must not make the whole sentence appear marked");
+  assert.ok(renderToStaticMarkup(sentence).includes('class="v2-marked ">note</span>'));
+  const html = render(ExamPage);
+  for (const label of ["标单词", "标词组", "标句子", "查看与取消"]) assert.ok(html.includes(label));
+  assert.ok(!html.includes("点首尾标词或词组"));
+});
+test("quick reading exposes every word with exact source and preserves raw punctuation", () => {
+  const raw = "Note, cheap software — 21st century.";
+  const opened = [];
+  const element = ReadingWords({ text: raw, sourceId: "question-990001-option-B", onTerm: (...args) => opened.push(args) });
+  const html = renderToStaticMarkup(element);
+  assert.equal(html.replace(/<[^>]+>/g, ""), raw);
+  const fragments = React.Children.toArray(element.props.children).filter(node => node.type === React.Fragment);
+  const cheap = fragments.flatMap(node => React.Children.toArray(node.props.children)).find(node => node.type === "button" && node.props.children === "cheap");
+  cheap.props.onClick();
+  assert.deepEqual(opened, [["cheap", "question-990001-option-B", false]]);
+  assert.deepEqual(selection.readingWords("U.S. jobs don't cover post-high school.").map(w => w.text), ["U.S.", "jobs", "don't", "cover", "post-high", "school"]);
 });
 const note = { id: "note.1", articleId: article.id, sourceId: "synthetic.v2-s2", intent: "trunk", question: "主干在哪里？", note: "个人笔记", createdAt: 10, updatedAt: 10 };
 test("optional records survive old clients, codec round trips, local save and isolated account keys", () => {
