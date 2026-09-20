@@ -45,7 +45,12 @@ test("reviewed note senses merge tone sources and separate annotation/notice wit
   assert.equal(same.primaryContextId, tone.primaryContextId);
   assert.equal(Object.keys(memories).length, 3);
   assert.notEqual(annotation.id, notice.id);
-  assert.equal(candidate("note", "2010-p1-s1").entry.counts.lemma, 4);
+  const noteEntry = candidate("note", "2010-p1-s1").entry;
+  assert.equal(noteEntry.counts.lemma, 5);
+  assert.deepEqual(noteEntry.occurrences.map(item => item.sourceId).sort(),
+    ["2010-cloze-s5", "2010-p1-s1", "2013-p1-s11", "p3-s10", "p5-s5"].sort());
+  assert.equal(candidate("notes", "2013-p1-s11").entry.headword, "note");
+  assert.match(noteEntry.occurrences.find(item => item.sourceId === "2013-p1-s11").excerpt, /As Davidson notes/);
   assert.equal(queue.nextContextId(same, { last: { memoryId: same.id, kind: "reading", contextId: tone.primaryContextId, createdAt: now } }), same.contexts[1].id);
 });
 

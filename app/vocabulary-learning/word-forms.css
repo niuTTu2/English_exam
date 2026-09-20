@@ -1,0 +1,7 @@
+.word-forms { max-width:100%; min-width:0; margin:16px 0; overflow-wrap:anywhere; }
+.word-forms h4 { font-size:14px; margin:0 0 8px; }
+.word-form-list { display:flex; flex-wrap:wrap; gap:8px; }
+.word-form { max-width:100%; padding:5px 9px; border:1px solid #d8e2d9; border-radius:8px; background:#f4f7f3; }
+.word-form small { margin-left:6px; font-size:11px; color:#5b6b60; }
+.word-form-caption { font-size:12px; color:#5b6b60; }
+.word-forms summary { cursor:pointer; min-height:44px; padding:10px 0; }

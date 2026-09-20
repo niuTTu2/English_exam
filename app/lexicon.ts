@@ -900,3 +900,31 @@ export function getLexicalGuide(token: string, context?: LexicalContext): Lexica
     contextualSubstitutions: sentenceContext?.contextualSubstitutions ?? passageEntry?.contextualSubstitutions ?? [],
   };
 }
+
+// Presentation-only reverse index of already reviewed inflections. No stemming,
+// family aliases, new dictionary keys or changes to canonicalLemma resolution.
+let recordedFormIndex: Map<string, { forms: string[]; notes: string[] }> | undefined;
+export function recordedWordForms(headword: string) {
+  if (!recordedFormIndex) {
+    recordedFormIndex = new Map();
+    const row = (lemma: string) => {
+      let value = recordedFormIndex!.get(lemma);
+      if (!value) { value = { forms: [], notes: [] }; recordedFormIndex!.set(lemma, value); }
+      return value;
+    };
+    for (const aliases of [lemmaAliases, passage2013P1LemmaAliases, writing2012BLemmaAliases, writing2012ALemmaAliases, translation2012LemmaAliases, passage2012P5LemmaAliases, passage2012P4LemmaAliases, passage2012P3LemmaAliases, passage2012P2LemmaAliases, passage2012P1LemmaAliases, cloze2012LemmaAliases, writing2011BLemmaAliases, writing2011ALemmaAliases, translation2011LemmaAliases, passage2011P5LemmaAliases, passage2011P4LemmaAliases, passage2011P3LemmaAliases, passage2011P2LemmaAliases, passage2011P1LemmaAliases, cloze2011LemmaAliases, translation2010LemmaAliases, passage2010P5LemmaAliases, passage2010P4LemmaAliases, passage2010P3LemmaAliases, passage1LemmaAliases, passage2LemmaAliases, passage3LemmaAliases, passage4LemmaAliases, passage5LemmaAliases, translationLemmaAliases, cloze2001LemmaAliases, passage2001P1LemmaAliases, passage2001P2LemmaAliases, cloze2010LemmaAliases, passage2010P1LemmaAliases, passage2010P2LemmaAliases, ...Object.values(sourceLemmaAliases)]) {
+      for (const [form, lemma] of Object.entries(aliases)) {
+        if (form !== lemma && !row(lemma).forms.includes(form)) row(lemma).forms.push(form);
+      }
+    }
+    const addNotes = (lemma: string, notes: string[]) => {
+      for (const note of notes) if (!row(lemma).notes.includes(note)) row(lemma).notes.push(note);
+    };
+    for (const [lemma, notes] of Object.entries(specialForms)) addNotes(lemma, notes);
+    for (const lexicon of [passage2013P1Lexicon, writing2012BLexicon, writing2012ALexicon, translation2012Lexicon, passage2012P5Lexicon, passage2012P4Lexicon, passage2012P3Lexicon, passage2012P2Lexicon, passage2012P1Lexicon, cloze2012Lexicon, writing2011BLexicon, writing2011ALexicon, translation2011Lexicon, passage2011P5Lexicon, passage2011P4Lexicon, passage2011P3Lexicon, passage2011P2Lexicon, passage2011P1Lexicon, cloze2011Lexicon, translation2010Lexicon, passage2010P5Lexicon, passage2010P4Lexicon, passage2010P3Lexicon, passage1Lexicon, passage2Lexicon, passage3Lexicon, passage4Lexicon, passage5Lexicon, translationLexicon, cloze2001Lexicon, passage2001P1Lexicon, passage2001P2Lexicon, cloze2010Lexicon, passage2010P1Lexicon, passage2010P2Lexicon]) {
+      for (const [lemma, entry] of Object.entries(lexicon)) addNotes(lemma, entry.specialForms ?? []);
+    }
+  }
+  const result = recordedFormIndex.get(headword.toLowerCase());
+  return { forms: [...(result?.forms ?? [])], notes: [...(result?.notes ?? [])] };
+}

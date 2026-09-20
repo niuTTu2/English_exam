@@ -3,11 +3,12 @@ import { questionOptionSourceId, type ArticleContent } from "../data";
 import { changePage, elapsed, pauseTimer, progressFor, type V2StudySnapshot, type V2Update } from "./state";
 import { SourceText, useSourceMarking } from "./source-marking";
 import type { MarkMode } from "./source-selection";
+import type { VocabularyCorpus } from "../vocabulary-learning/corpus";
 
 /** This component receives source/answers/marks only; never renders teaching content. */
-export function ExamPage({ article, data, onUpdate }: { article: ArticleContent; data: V2StudySnapshot; onUpdate: (update: V2Update) => void }) {
+export function ExamPage({ article, data, onUpdate, corpus }: { article: ArticleContent; data: V2StudySnapshot; onUpdate: (update: V2Update) => void; corpus?: VocabularyCorpus }) {
   const [now, setNow] = useState(Date.now);
-  const marking = useSourceMarking(article, data, onUpdate);
+  const marking = useSourceMarking(article, data, onUpdate, corpus);
   const { mode, marks, selection, pick } = marking;
   const progress = progressFor(data, article.id);
   useEffect(() => { if (progress.timerStartedAt === undefined) return; const interval = window.setInterval(() => setNow(Date.now()), 1000); return () => window.clearInterval(interval); }, [progress.timerStartedAt]);

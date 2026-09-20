@@ -12,6 +12,7 @@ import { PhraseLearningCard, WordLearningCard } from "./learning-card";
 import { SpellingPractice } from "./spelling-practice";
 import { DifficultMemories, LearningSummary } from "./learning-summary";
 import "./vocabulary-learning.css";
+import { isMarkedVocabulary } from "./reading-marks";
 
 export type VocabularyLearningProps = {
   data: VocabularyLearningData;
@@ -65,7 +66,7 @@ export function VocabularyLearning({ data, onUpdate, corpus, articleId, articleL
   const scopedIds = useMemo(() => {
     const keys = scope.kind === "marked" ? Object.keys(marks).filter(key => marks[key]?.length) : scope.kind === "list" ? listItems[scope.list ?? lists[0]] ?? [] : undefined;
     const selected = keys ? new Set(keys) : undefined;
-    return Object.values(memories).filter(memory => selected ? selected.has(memory.termKey) : scope.kind === "all" || memory.contexts.some(context => scope.kind === "year" ? context.year === year : context.articleId === articleId)).map(memory => memory.id);
+    return Object.values(memories).filter(memory => scope.kind === "marked" ? isMarkedVocabulary(memory, marks) : selected ? selected.has(memory.termKey) : scope.kind === "all" || memory.contexts.some(context => scope.kind === "year" ? context.year === year : context.articleId === articleId)).map(memory => memory.id);
   }, [memories, scope, marks, listItems, lists, year, articleId]);
   const scopedStats = useMemo(() => vocabularyTodayStats(memoriesInSemanticScope(memories, scopedIds), attempts, now), [scopedIds, memories, attempts, now]);
   const spellingAvailable = useMemo(() => Boolean(session?.status === "completed" && appendSpelling(session, memories, now).queue.length > session.queue.length), [session, memories, now]);

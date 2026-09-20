@@ -19,6 +19,8 @@ import { importedEntryContext } from "./vocabulary-learning/imported-entry-fallb
 import { selectLegacyVocabularyCandidates } from "./vocabulary-learning/legacy-selection";
 import { type VocabularyLearningData, type VocabularyMark } from "./vocabulary-learning/model";
 import { migrateLegacyVocabulary } from "./vocabulary-learning/migration";
+import { enrollSavedReadingMarks } from "./vocabulary-learning/reading-marks";
+import { vocabularyTitle, WordForms } from "./vocabulary-learning/word-forms";
 import { vocabularyDataFrom, enrollVocabulary } from "./vocabulary-learning/study-bridge";
 import { unknownStudyFields } from "./vocabulary-learning/persistence";
 import type { ArticleV2Data } from "./article-v2/model";
@@ -1268,8 +1270,9 @@ export default function StudyApp() {
     if (!hydrated || vocabularyWriteBlocked.current || !snapshotRef.current) return false;
     try {
       const previous = snapshotRef.current;
-      const result = migrateLegacyVocabulary(previous, vocabularyCorpus.resolveLegacyCandidates);
-      if (result.changed) {
+      const withReadingMarks = enrollSavedReadingMarks(previous, vocabularyCorpus, Date.now());
+      const result = migrateLegacyVocabulary(withReadingMarks, vocabularyCorpus.resolveLegacyCandidates);
+      if (result.changed || withReadingMarks !== previous) {
         preserveLocalStudyState(window.localStorage, snapshotOwner.current, { state: previous, base: remoteBase.current });
         updateVocabulary(() => vocabularyDataFrom(result.state));
       }
@@ -2574,7 +2577,7 @@ export default function StudyApp() {
                     </button>
                   )}
                 </div>
-                <SheetTitle className="term-title">{selectedTerm.entry.display}</SheetTitle>
+                <SheetTitle className="term-title">{selectedTerm.entry.kind === "word" ? vocabularyTitle(selectedTerm.entry) : selectedTerm.entry.display}</SheetTitle>
                 <SheetDescription>
                   {termIsLocked
                     ? "先标记问题；讲解会按你的自测设置解锁。"
@@ -2628,6 +2631,7 @@ export default function StudyApp() {
                       <p>{selectedTerm.entry.use}</p>
                     </section>
                     {selectedTermPriority && <section className="term-priority"><Badge variant="outline">{selectedTermPriority.label}</Badge><p>{selectedTermPriority.reason}</p><small>本篇学习建议，不是官方词频排名。</small></section>}
+                    <WordForms entry={selectedTerm.entry} />
                     {selectedTerm.entry.collocationDetails?.[0] && <p className="term-key-collocation"><b>先记一个搭配：</b>{selectedTerm.entry.collocationDetails[0].label} · {selectedTerm.entry.collocationDetails[0].meaning}</p>}
 
                     <TermSenses entry={selectedTerm.entry} currentSourceId={selectedTerm.sentenceId} onSource={goToSource} />
@@ -3636,9 +3640,9 @@ export function TermDetails({
   const collocations = (entry.collocationDetails ?? []).filter((item) => !item.meaning.includes("将在所属真题"));
   const synonyms = entry.synonymDetails ?? [];
   const family = entry.familyDetails ?? [];
-  const specialForms = (entry.specialForms ?? []).filter(
+  const specialForms = entry.kind === "phrase" ? (entry.specialForms ?? []).filter(
     (item) => !item.startsWith("无需要") && !item.startsWith("结构词：") && !/特殊变形另行列出|按本句词性识别规则词形/.test(item),
-  );
+  ) : [];
 
   return (
     <div className="term-details">
@@ -3688,15 +3692,12 @@ export function TermDetails({
           </div>
         </details>
       )}
-
       {specialForms.length > 0 && (
         <details>
           <summary>特殊变形 <span>{specialForms.length}</span></summary>
           <div className="detail-body"><InfoChips items={specialForms} /></div>
         </details>
       )}
-      {entry.kind === "word" && specialForms.length === 0 && <p className="regular-forms">本用法无特殊变形需要单独记忆；按词性使用规则变化。</p>}
-
       {synonyms.length > 0 && (
         <details>
           <summary>考研近义词与区别 <span>{synonyms.length}</span></summary>

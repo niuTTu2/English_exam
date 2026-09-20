@@ -4,9 +4,11 @@ import type { ArticleV2Mark, TextRange } from "./model";
 import { articleSources } from "./content";
 import { selectMark, type MarkMode, type MarkSelection } from "./source-selection";
 import { markId, setSourceMark, undoSourceMark, type SourceMarkInput, type V2StudySnapshot, type V2Update } from "./state";
+import type { VocabularyCorpus } from "../vocabulary-learning/corpus";
+import { enrollReadingMark, readingMarkCandidate, undoReadingEnrollment } from "../vocabulary-learning/reading-marks";
 
 const kindNames = { word: "单词", phrase: "词组", sentence: "句子", option: "选项" };
-type Undo = { input: SourceMarkInput; before: boolean; after: boolean; at: number };
+type Undo = { input: SourceMarkInput; before: boolean; after: boolean; at: number; beforeMemories: V2StudySnapshot["vocabularyMemories"]; afterMemories: V2StudySnapshot["vocabularyMemories"] };
 
 export function SourceText({ text, sourceId, mode, marks, selection, onPick }: {
   text: string; sourceId: string; mode: MarkMode; marks: ArticleV2Mark[]; selection: MarkSelection | null;
@@ -24,7 +26,7 @@ export function SourceText({ text, sourceId, mode, marks, selection, onPick }: {
   })}</span>;
 }
 
-export function useSourceMarking(article: ArticleContent, data: V2StudySnapshot, onUpdate: (update: V2Update) => void) {
+export function useSourceMarking(article: ArticleContent, data: V2StudySnapshot, onUpdate: (update: V2Update) => void, corpus?: VocabularyCorpus) {
   const [mode, setMode] = useState<MarkMode>("read");
   const [selection, setSelection] = useState<MarkSelection | null>(null);
   const [undo, setUndo] = useState<Undo | null>(null);
@@ -47,18 +49,25 @@ export function useSourceMarking(article: ArticleContent, data: V2StudySnapshot,
         const previous = current.articleV2Marks?.[markId(input)];
         if (Boolean(previous?.active) === active) return current;
         const at = Math.max(Date.now(), (previous?.updatedAt ?? 0) + 1);
-        change = { input, before: Boolean(previous?.active), after: active, at };
-        return setSourceMark(current, input, active, at);
+        let next = setSourceMark(current, input, active, at);
+        if (active && corpus) next = enrollReadingMark(next, input, corpus, at, true);
+        change = { input, before: Boolean(previous?.active), after: active, at, beforeMemories: current.vocabularyMemories, afterMemories: next.vocabularyMemories };
+        return next;
       });
       if (change) setUndo(change);
       setSelection(null); setError("");
-      setNotice(`${active ? "已标记" : "已取消标记"}：${sources.get(input.sourceId)?.slice(input.start, input.end) ?? ""}`);
+      const enrolled = corpus && readingMarkCandidate(input, corpus);
+      setNotice(`${active ? enrolled ? "已标记并加入词汇学习" : "已标记" : "已取消原文标记"}：${sources.get(input.sourceId)?.slice(input.start, input.end) ?? ""}${!active && enrolled ? "。已有词汇学习记录保留，可在词汇学习中暂停。" : ""}`);
     } catch { setError("标记未能保存，请重试；当前选择仍保留。"); }
   };
   const undoLast = () => {
     if (!undo) return;
     try {
-      onUpdate(current => undoSourceMark(current, undo.input, { updatedAt: undo.at, active: undo.after }, undo.before, Date.now()));
+      onUpdate(current => {
+        const at = Math.max(Date.now(), undo.at + 1);
+        const next = undoSourceMark(current, undo.input, { updatedAt: undo.at, active: undo.after }, undo.before, at);
+        return corpus ? undoReadingEnrollment(next, undo.beforeMemories, undo.afterMemories, corpus, at) : next;
+      });
       setUndo(null); setNotice("已撤销上次标记操作。"); setError("");
     } catch (reason) { setError(reason instanceof Error ? reason.message : "撤销未保存，请重试。"); }
   };
@@ -78,6 +87,8 @@ export function useSourceMarking(article: ArticleContent, data: V2StudySnapshot,
       {selection ? <>
         <p role="status"><strong>{selection.ready ? existing ? "已标记的范围" : `待确认${kindNames[selection.kind]}` : "已选起点，请点词组最后一个词"}</strong></p>
         <p className="v2-selection-preview" lang="en">{sources.get(selection.sourceId)?.slice(selection.start, selection.end)}</p>
+        {selection.ready && input && !existing && corpus && readingMarkCandidate(input, corpus) && <p>确认后加入词汇学习，保留本句出处。</p>}
+        {selection.ready && input?.kind === "phrase" && corpus && !readingMarkCandidate(input, corpus) && <p>此范围保留为阅读标记；只有已收录的固定搭配才作为独立词组加入学习。</p>}
         <div className="v2-actions">
           {selection.ready && input && <button type="button" className="v2-primary" onClick={() => apply(input, !existing)}>{existing ? "取消此标记" : "确认标记"}</button>}
           {mode === "phrase" && <button type="button" onClick={() => setSelection(null)}>重新选择起点</button>}

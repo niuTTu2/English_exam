@@ -4,6 +4,7 @@ import { useState, type ReactNode } from "react";
 import type { VocabEntry } from "../data";
 import type { VocabularyCandidate, VocabularyRating } from "./model";
 import { SenseOverviewPanel } from "./sense-overview-panel";
+import { vocabularyTitle, WordForms } from "./word-forms";
 
 export const feedbackOptions: Array<{ value: VocabularyRating; label: string; hint: string }> = [
   { value: "forgot", label: "忘了", hint: "本轮再见" },
@@ -60,7 +61,7 @@ function ExtraKnowledge({ entry, note, onNote, onSource }: Pick<LearningCardProp
     {!!entry.contextualSubstitutions?.length && <details><summary>本句同义替换</summary>{entry.contextualSubstitutions.map(item => <div key={item.rewrittenSentence} className="vl-reference-item"><b lang="en">{item.label}</b><p>{item.chinese}</p><blockquote lang="en">{item.rewrittenSentence}</blockquote><p>{item.nuance}</p>{item.adjustment && <p>{item.adjustment}</p>}</div>)}</details>}
     {!!entry.synonymDetails?.length && <details><summary>近义词与辨析</summary><ReferenceList entries={entry.synonymDetails} /></details>}
     {!!entry.confusions.length && <details><summary>易混词与区别</summary>{entry.confusions.map((item, index) => <p key={index}>{item}</p>)}</details>}
-    {!!entry.specialForms?.length && <details><summary>特殊词形</summary>{entry.specialForms.map((item, index) => <p key={index}>{item}</p>)}</details>}
+    {entry.kind === "phrase" && !!entry.specialForms?.length && <details><summary>特殊词形</summary>{entry.specialForms.map((item, index) => <p key={index}>{item}</p>)}</details>}
     {!!entry.familyDetails?.length && <details><summary>派生词与词族</summary><ReferenceList entries={entry.familyDetails} /></details>}
     {!!entry.structures?.length && <details><summary>全部规范结构</summary>{entry.structures.map((item, index) => <div className="vl-reference-item" key={index}><b lang="en">{item.pattern}</b><p>{item.meaning}</p><p>{item.rule}</p></div>)}</details>}
     {!!entry.collocationDetails?.length && <details><summary>全部搭配</summary><ReferenceList entries={entry.collocationDetails} /></details>}
@@ -86,7 +87,8 @@ function LearningCard({ candidate, revealed, sourceLabel, note, onSource, onReve
   return <article className={`vl-learning-card ${phrase ? "vl-phrase-card" : "vl-word-card"}`} data-card-kind={phrase ? "phrase" : "word"} data-card-face={revealed ? "answer" : "front"}>
     <div className="vl-card-core">
       <div className="vl-card-kicker"><span>{phrase ? "词组 · 整体记忆" : "单词 · 语境识别"}</span>{candidate.priority && <span>{candidate.priority.label}</span>}</div>
-      <div className="vl-term-heading"><h3 lang={cloze && !revealed ? undefined : "en"}>{cloze && !revealed ? "回忆整组表达" : expression}</h3>{onSpeak && !(cloze && !revealed) && <button type="button" className="vl-speak" onClick={() => onSpeak(expression)} aria-label="使用浏览器朗读">朗读</button>}</div>
+      <div className="vl-term-heading"><h3 lang={cloze && !revealed ? undefined : "en"}>{cloze && !revealed ? "回忆整组表达" : phrase ? expression : vocabularyTitle(entry)}</h3>{onSpeak && !(cloze && !revealed) && <button type="button" className="vl-speak" onClick={() => onSpeak(phrase ? expression : vocabularyTitle(entry))} aria-label="使用浏览器朗读">朗读</button>}</div>
+      {!phrase && <p className="vl-source-caption">本句词形：<span lang="en">{expression}</span></p>}
       <p className="vl-source-caption">{sourceLabel}</p>
       {text && <HighlightedContext text={text} expression={expression} blank={canCloze && cloze && !revealed} />}
       {!revealed && <p className="vl-recall-prompt">{candidate.context.mark === "容易混淆" ? "想一想：在这里是哪一种意思？" : phrase ? "把整组表达连起来，回忆它在句中的意思。" : "先在心中回忆：这个词在本句中是什么意思？"}</p>}
@@ -105,7 +107,7 @@ function LearningCard({ candidate, revealed, sourceLabel, note, onSource, onReve
       <div className="vl-context-controls">{canCloze && !revealed && <button type="button" className="vl-text-button" aria-pressed={cloze} onClick={() => setCloze(!cloze)}>{cloze ? "显示原文表达" : "试试原句挖空"}</button>}{contextControls}</div>
     </div>
     <footer className="vl-card-actions">{revealed ? <RatingButtons onRate={onRate} /> : <button type="button" className="vl-primary vl-reveal" onClick={onReveal}>显示释义 <kbd>空格</kbd></button>}</footer>
-    {revealed && !phrase && <SenseOverviewPanel entry={entry} currentSourceId={candidate.context.sourceId} onSource={onSource} />}
+    {revealed && !phrase && <><WordForms entry={entry} /><SenseOverviewPanel entry={entry} currentSourceId={candidate.context.sourceId} onSource={onSource} /></>}
     {revealed && <ExtraKnowledge entry={entry} note={note} onNote={onNote} onSource={onSource} />}
     {revealed && memoryControls && <details className="vl-memory-controls"><summary>这个词的复习设置</summary>{memoryControls}</details>}
   </article>;

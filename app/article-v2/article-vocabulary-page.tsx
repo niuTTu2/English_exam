@@ -6,6 +6,7 @@ import { memorySemanticKey } from "../vocabulary-learning/memory-groups";
 import { enrollVocabulary } from "../vocabulary-learning/study-bridge";
 import { VocabularyLearning } from "../vocabulary-learning/vocabulary-learning";
 import { vocabularyCategories } from "./model";
+import { vocabularyTitle } from "../vocabulary-learning/word-forms";
 import type { OnTerm } from "./quick-reading-card";
 import type { V2StudySnapshot, V2Update } from "./state";
 
@@ -25,7 +26,8 @@ export function ArticleVocabularyPage({ article, data, corpus, onUpdate, onTerm,
         const enrolled = memories.some(m => memorySemanticKey(m) === identity);
         const contexts = corpus.candidatesForMemory(createMemory(candidate, 0, memories));
         return <article className="v2-vocabulary-item" key={`${focus.sourceId}-${focus.expression}-${i}`}>
-          <h4><button type="button" onClick={() => onTerm(focus.expression, focus.sourceId, focus.kind === "phrase")}>{candidate.context.expression}</button> <small>{focus.kind === "phrase" ? "独立词组" : candidate.entry.partOfSpeech}</small></h4>
+          <h4><button type="button" onClick={() => onTerm(focus.expression, focus.sourceId, focus.kind === "phrase")}>{vocabularyTitle(candidate.entry)}</button> <small>{focus.kind === "phrase" ? "独立词组" : candidate.entry.partOfSpeech}</small></h4>
+          <p className="v2-hint">原文词形：<span lang="en">{candidate.context.expression}</span></p>
           <p><strong>本句义：</strong>{candidate.entry.contextualMeaning}</p><p lang="en">{candidate.text}</p><p className="v2-hint">{candidate.sourceLabel} · {enrolled ? "已进入记忆系统" : "尚未加入"}</p>
           <div className="v2-actions"><button type="button" onClick={() => { onUpdate(current => ({ ...current, ...enrollVocabulary(current, candidate, Date.now()) })); setNotice(`已加入待学：${focus.expression}（当前语境义）。`); }}>加入待学</button>
             <button type="button" onClick={() => { onUpdate(current => ({ ...current, ...enrollVocabulary(current, candidate, Date.now(), "有些陌生") })); setNotice(`已加入复习：${focus.expression}（当前语境义）。`); }}>加入复习</button>
