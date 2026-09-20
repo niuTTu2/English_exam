@@ -62,6 +62,7 @@ import { passage2010P1Questions, passage2010P1Sentences } from "./2010-passage-1
 import { passage2010P1Guide } from "./2010-passage-1-guide";
 import type { ArticleGuide, QuestionReasoning } from "./article-teaching";
 import type { PracticeTask } from "./learning-model";
+import type { QuickReading, GrammarPatch, SentenceRelationKind, ArticleVocabularyFocus } from "./article-v2/model";
 import { passage2010P2Questions, passage2010P2Sentences } from "./2010-passage-2-data";
 import { passage2010P2Guide } from "./2010-passage-2-guide";
 import type { ContextualSubstitution } from "./contextual-vocabulary";
@@ -100,6 +101,7 @@ export type ReviewedSentenceChunk = {
 export type SentenceChunk = LegacySentenceChunk | ReviewedSentenceChunk;
 
 export type BeginnerSyntaxComponent = {
+  relationKind?: SentenceRelationKind;
   text: string;
   form: string;
   function: string;
@@ -133,6 +135,8 @@ export type BeginnerSyntax = {
 };
 
 export type SentenceAnalysis = {
+  quickReading?: QuickReading;
+  grammarPatches?: GrammarPatch[];
   id: string;
   number: number;
   text: string;
@@ -284,6 +288,9 @@ export type WritingTask = {
 };
 
 export type ArticleContent = {
+  /** Absent means V1. Never infer a version from year, filename or other fields. */
+  experienceVersion?: 1 | 2;
+  vocabularyFocus?: ArticleVocabularyFocus[];
   id: string;
   year: number;
   sectionId: "cloze" | "p1" | "p2" | "p3" | "p4" | "p5" | "translation" | "writing-a" | "writing-b";

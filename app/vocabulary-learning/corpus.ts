@@ -88,6 +88,14 @@ function lexicalContext(source: CorpusSourceReference): LexicalContext {
 
 /** An editorial recommendation is reused; unspecified entries remain opt-in. */
 function priorityFor(entry: Pick<VocabEntry, "headword" | "display" | "kind" | "canonicalForm" | "partOfSpeech">, source: CorpusSourceReference): VocabularyPriority {
+  if (source.article.experienceVersion === 2) {
+    const focus = source.article.vocabularyFocus?.find(f => f.sourceId === source.id && f.kind === entry.kind && normalize(f.expression) === normalize(entry.display));
+    if (focus) {
+      const categories = focus.categories;
+      const id = categories.includes("recognition") ? "recognition" : categories.includes("sense") ? "sense" : entry.kind === "phrase" ? "structure" : "core";
+      return { id, label: { recognition: "识别即可", sense: "熟词生义", structure: "必会固定搭配", core: "本篇核心词" }[id], reason: "来自本篇精审词汇分类；保留当前出处与语境义。", recommendedReview: id !== "recognition" };
+    }
+  }
   const recommendation = vocabularyPriority(entry, source.id, source.article.id);
   // Some older articles have no priority table, but their reviewed POS still identifies names.
   if (/proper\s*n\.|专有名词|专名|人名|地名/.test(entry.partOfSpeech)) {

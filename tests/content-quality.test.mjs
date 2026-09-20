@@ -26,6 +26,7 @@ const syntaxGuide = await vite.ssrLoadModule("/app/syntax-guide.ts");
 const verifiedSyntax = await vite.ssrLoadModule("/app/verified-syntax-2000.ts");
 const reviewedSyntax = await vite.ssrLoadModule("/app/reviewed-syntax.ts");
 const allSentences = data.allSentences ?? data.sentences;
+const v2SentenceIds = new Set(Object.values(data.articleContents).filter(a => a.experienceVersion === 2).flatMap(a => a.sentences.map(s => s.id)));
 const allQuestions = data.allQuestions ?? data.questions;
 
 test("单词本句义与词组、句意分开，保留词形与语境差异", async () => {
@@ -241,6 +242,8 @@ test("句子分析完整并可还原原文", () => {
     ids.add(sentence.id);
     assert.ok(Number.isInteger(sentence.number) && sentence.number > 0, `${sentence.id} 序号无效`);
     requireText(sentence.text, `${sentence.id}.text`);
+    // V2 has a separate understanding/evidence gate; V1 keeps every original syntax check.
+    if (v2SentenceIds.has(sentence.id)) continue;
     requireText(sentence.trunk, `${sentence.id}.trunk`);
     requireText(sentence.literal, `${sentence.id}.literal`);
     requireText(sentence.natural, `${sentence.id}.natural`);

@@ -112,6 +112,26 @@ test("old clients retain vocabulary progress and unknown future fields on the re
   assert.equal(saved.state.termNotes.note, "旧页面更新笔记");
 });
 
+test("V2 optional records survive old uploads; invalid ranges and stale writes cannot overwrite the real route", async () => {
+  const user = await seedUser("v2-compatibility");
+  const note = { id: "follow.1", articleId: "synthetic.v2", sourceId: "synthetic.v2-s1", intent: "trunk", question: "主干在哪里？", note: "个人笔记", createdAt: 10, updatedAt: 10 };
+  const mark = { id: "mark1", articleId: "synthetic.v2", sourceId: "question-990001-option-B", kind: "option", start: 0, end: 12, active: true, createdAt: 10, updatedAt: 10 };
+  const fields = { articleV2FollowUps: { [note.id]: note }, articleV2Marks: { mark1: mark }, articleV2Progress: { "synthetic.v2": { articleId: "synthetic.v2", page: "read", elapsedMs: 100, updatedAt: 10 } } };
+  const original = studySnapshot({ ...vocabularyFixture(), ...fields, answers: { 21: "B" }, termNotes: { old: "旧笔记" } });
+  const first = await writeStudy(user, original); assert.equal(first.status, 200);
+  const firstRevision = (await first.json()).updatedAt;
+  const oldPage = await writeStudy(user, studySnapshot({ answers: { 21: "B" }, termNotes: { old: "旧笔记" }, articleV2Marks: {}, articleV2FollowUps: {} }), firstRevision);
+  assert.equal(oldPage.status, 200);
+  const revision = (await oldPage.json()).updatedAt;
+  const saved = await (await request("/api/study-state", "GET", undefined, user.cookie)).json();
+  for (const [key, value] of Object.entries(fields)) assert.deepEqual(saved.state[key], value);
+  assert.deepEqual(saved.state.vocabularyMemories, original.vocabularyMemories);
+  assert.deepEqual(saved.state.answers, original.answers);
+  assert.equal((await writeStudy(user, { ...original, articleV2Marks: { mark1: { ...mark, end: 0 } } }, revision)).status, 400);
+  assert.equal((await writeStudy(user, original, firstRevision)).status, 409);
+  assert.deepEqual((await (await request("/api/study-state", "GET", undefined, user.cookie)).json()).state, saved.state);
+});
+
 test("vocabulary payload corruption and attempt rewrites never modify cloud data", async () => {
   const user = await seedUser("vocabulary-validation");
   const original = studySnapshot(vocabularyFixture());

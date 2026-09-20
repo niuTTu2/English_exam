@@ -2,6 +2,7 @@ import { isLocationAttempt } from "./location-model";
 import { isPracticeAttempt, isPracticeSession, errorCategories } from "./learning-model";
 import { isAtomicVocabularyPath, isVocabularySnapshotFields, preserveVocabularyRecords } from "./vocabulary-learning/persistence";
 import { packVocabularySnapshot, unpackVocabularySnapshot } from "./vocabulary-learning/codec";
+import { isArticleV2Snapshot, preserveArticleV2Records, isAtomicArticleV2Path, hasArticleV2Records } from "./article-v2/persistence";
 type TimedSnapshot = { updatedAt: number };
 export type RemoteStudyState<Snapshot> = { state: Snapshot | null; updatedAt: number | null };
 export type LocalStudyState<Snapshot> = { state: Snapshot; base: RemoteStudyState<Snapshot> | null };
@@ -23,7 +24,7 @@ function stringArray(value: unknown): value is string[] {
 
 export function isStudySnapshot(value: unknown): value is TimedSnapshot & Record<string, unknown> {
   if (!isRecord(value) || value.version !== 1 || !Number.isSafeInteger(value.updatedAt) || Number(value.updatedAt) < 0) return false;
-  if (!isVocabularySnapshotFields(value)) return false;
+  if (!isVocabularySnapshotFields(value) || !isArticleV2Snapshot(value)) return false;
   const maps: Record<string, (entry: unknown) => boolean> = {
     locationAttempts: isLocationAttempt,
     practiceAttempts: isPracticeAttempt,
@@ -59,6 +60,7 @@ export function isStudySnapshot(value: unknown): value is TimedSnapshot & Record
 
 export function hasStudyRecords(snapshot: unknown): boolean {
   if (!isRecord(snapshot)) return false;
+  if (hasArticleV2Records(snapshot)) return true;
   const nonempty = (value: unknown): boolean => {
     if (Array.isArray(value)) return value.some(nonempty);
     if (isRecord(value)) return Object.values(value).some(nonempty);
@@ -85,7 +87,7 @@ export function sameStudySnapshot(first: TimedSnapshot | null, second: TimedSnap
 export function prepareLocalSnapshot<Snapshot extends TimedSnapshot>(
   current: Snapshot, previous: Snapshot | null, initialUpdatedAt = 0, now = Date.now(),
 ): Snapshot {
-  const safe = previous ? preserveVocabularyRecords(previous as Record<string, unknown>, current as Record<string, unknown>) as Snapshot : current;
+  const safe = previous ? preserveArticleV2Records(previous as Record<string, unknown>, preserveVocabularyRecords(previous as Record<string, unknown>, current as Record<string, unknown>)) as Snapshot : current;
   if (previous && sameStudySnapshot(safe, previous)) return previous;
   return { ...safe, updatedAt: previous ? now : initialUpdatedAt };
 }
@@ -99,7 +101,7 @@ export function reconcileStudyState<Snapshot extends TimedSnapshot>(
   function merge(base: unknown, current: unknown, cloud: unknown, path: string): unknown {
     if (sameValue(current, base)) return cloud;
     if (sameValue(cloud, base) || sameValue(current, cloud)) return current;
-    if (isAtomicVocabularyPath(path)) {
+    if (isAtomicVocabularyPath(path) || isAtomicArticleV2Path(path)) {
       conflicts.push(path);
       return current;
     }
@@ -118,8 +120,8 @@ export function reconcileStudyState<Snapshot extends TimedSnapshot>(
     return current;
   }
   const baseline = isRecord(local.base.state) ? local.base.state : {};
-  const safeLocal = preserveVocabularyRecords(baseline, local.state as Record<string, unknown>);
-  const safeRemote = preserveVocabularyRecords(baseline, remote.state as Record<string, unknown>);
+  const safeLocal = preserveArticleV2Records(baseline, preserveVocabularyRecords(baseline, local.state as Record<string, unknown>));
+  const safeRemote = preserveArticleV2Records(baseline, preserveVocabularyRecords(baseline, remote.state as Record<string, unknown>));
   return { state: merge(local.base.state, safeLocal, safeRemote, "") as Snapshot, conflicts };
 }
 
@@ -164,7 +166,7 @@ export function saveLocalStudyState<Snapshot>(storage: Storage, email: string | 
     const original = readLocalStudyState(storage, email);
     if (original) {
       if (options.replaceVocabularyAfterBackup) preserveLocalStudyState(storage, email, original);
-      else state = preserveVocabularyRecords(original.state as Record<string, unknown>, record.state) as typeof state;
+      else state = preserveArticleV2Records(original.state as Record<string, unknown>, preserveVocabularyRecords(original.state as Record<string, unknown>, record.state)) as typeof state;
     }
   }
   storage.setItem(studyStorageKey(email), JSON.stringify({ ...record, state: packVocabularySnapshot(state),

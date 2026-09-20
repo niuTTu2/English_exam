@@ -94,6 +94,7 @@ test("声明完成的训练层必须具备可核对的结构，不能只更改�
   const { getPhraseKnowledge } = await vite.ssrLoadModule("/app/knowledge-base.ts");
   assert.deepEqual(article.teachingStatus, { syntax: true, vocabulary: true, evidence: true, practice: true });
   for (const item of Object.values(articleContents)) {
+    if (item.experienceVersion === 2) continue; // Dedicated V2 gate: no mandatory per-sentence grammar/tasks.
     const status = item.teachingStatus;
     if (!status) continue; // 既有内容仍明确标作待升级，不用兼容界面冒充完成。
     const written = item.kind === "translation" || item.kind === "writing";

@@ -1,10 +1,12 @@
 import type { PracticeTask } from "./learning-model";
 import type { LocationPolicy } from "./location-model";
+import type { QuestionCorrection } from "./article-v2/model";
 export type PassageEvidence = { sentenceId: string; quote: string; role: string };
 export type QuestionScope = "sentence" | "adjacent-sentences" | "paragraph" | "whole-passage";
 export const scopeLabels: Record<QuestionScope, string> = { sentence: "单句定位", "adjacent-sentences": "前后句联合定位", paragraph: "段落范围", "whole-passage": "全文范围" };
 export type DistractorType = "无中生有" | "偷换对象" | "范围扩大" | "范围过窄" | "因果倒置" | "时间错位" | "过度绝对" | "把局部当全文" | "观点归属错误" | "与原文相反" | "事实成立，非本题所求" | "语法不符" | "搭配不符" | "语境不符";
 export type QuestionReasoning = {
+  correction?: QuestionCorrection;
   questionType: string;
   scope: QuestionScope;
   restatement: string;
