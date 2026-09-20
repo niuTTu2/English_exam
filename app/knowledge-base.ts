@@ -1,3 +1,4 @@
+import { passage2013P3PhraseGuides, passage2013P3PhraseAliases, passage2013P3PhraseGlosses } from "./2013-passage-3-vocabulary";
 import { passage2013P2PhraseGuides, passage2013P2PhraseAliases, passage2013P2PhraseGlosses } from "./2013-passage-2-vocabulary";
 import { passage2013P1PhraseGuides, passage2013P1PhraseAliases, passage2013P1PhraseGlosses } from "./2013-passage-1-vocabulary";
 import { getTranslation2010ReviewedKnowledge } from "./2010-translation-contexts";
@@ -1121,6 +1122,22 @@ export function getPhraseKnowledge(source: string, context?: { articleId?: strin
       structures: [s(source.trim(), scopedGloss.meaning, scopedGloss.note ?? "按本篇语境整体记忆。")],
     };
   }
+  if (context?.articleId === "2013-p3") {
+    const scopedAlias = passage2013P3PhraseAliases[clean];
+    const scopedGuide = passage2013P3PhraseGuides[scopedAlias ?? clean];
+    if (scopedGuide) return { ...scopedGuide, sourceExpression: source.trim() };
+    const scopedGloss = passage2013P3PhraseGlosses[clean];
+    if (scopedGloss) return {
+      key: `2013-p3-collocation:${clean}`,
+      sourceExpression: source.trim(),
+      canonical: source.trim(),
+      type: "常用搭配",
+      meaning: scopedGloss.meaning,
+      summary: scopedGloss.note ?? "结合本篇原句整体识别这个搭配。",
+      grammarRole: "固定或高频词语搭配",
+      structures: [s(source.trim(), scopedGloss.meaning, scopedGloss.note ?? "按本篇语境整体记忆。")],
+    };
+  }
   const alias = phraseAliases[clean];
   if (alias) {
     const guide = phraseGuides[alias];
@@ -1281,14 +1298,14 @@ export function getWordKnowledge(headword: string, context?: { articleId?: strin
   return wordKnowledge[normalized(headword)];
 }
 
-export function getCollocationDetails(items: string[]): ReferenceDetail[] {
+export function getCollocationDetails(items: string[], context?: { articleId?: string }): ReferenceDetail[] {
   return items.map((item) => {
     const info = collocationGlosses[normalized(item)];
-    const phrase = getPhraseKnowledge(item);
+    const phrase = getPhraseKnowledge(item, context);
     return {
       label: item,
-      meaning: info?.meaning ?? phrase?.meaning ?? item,
-      note: info?.note ?? phrase?.summary,
+      meaning: context ? phrase?.meaning ?? info?.meaning ?? item : info?.meaning ?? phrase?.meaning ?? item,
+      note: context ? phrase?.summary ?? info?.note : info?.note ?? phrase?.summary,
       target: info || phrase ? `phrase:${item}` : undefined,
     };
   });

@@ -11,7 +11,7 @@ export function createAnalysisPhraseResolver(articles: Record<string, ArticleCon
       .filter(text => text.includes(" ") && isKnown(text))),
   ];
   const legacy = Object.values(articles).filter(article => legacyArticleIds.has(article.id)).flatMap(collect);
-  const sourceArticles = new Map(Object.values(articles).flatMap(article => article.questions.flatMap(question => [
+  const sourceArticles = new Map<string, ArticleContent>(Object.values(articles).flatMap(article => article.questions.flatMap(question => [
     [`question-${question.id}-prompt`, article] as const,
     ...question.options.map(option => [`question-${question.id}-option-${option.key}`, article] as const),
   ])));

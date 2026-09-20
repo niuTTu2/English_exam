@@ -1,3 +1,4 @@
+import { passage2013P3Lexicon, passage2013P3LemmaAliases } from "./2013-passage-3-vocabulary";
 import { passage2013P2Lexicon, passage2013P2LemmaAliases } from "./2013-passage-2-vocabulary";
 import { passage2013P1Lexicon, passage2013P1LemmaAliases } from "./2013-passage-1-vocabulary";
 import { passage4FormContexts } from "./passage-4-contexts";
@@ -731,6 +732,7 @@ const sourceLemmaAliases: Record<string, Record<string, string>> = {
 
 export function canonicalLemma(token: string, context?: LexicalContext) {
   const normalized = token.trim().toLowerCase().replace(/[’‘]/g, "'");
+  if (context?.articleId === "2013-p3" && passage2013P3LemmaAliases[normalized]) return passage2013P3LemmaAliases[normalized];
   if (context?.articleId === "2013-p2" && (context.sourceId ?? context.sentenceId) === "2013-p2-s22" && normalized === "means") return "mean";
   if (context?.articleId === "2013-p2" && passage2013P2LemmaAliases[normalized]) return passage2013P2LemmaAliases[normalized];
   if (context?.articleId === "2013-p1" && passage2013P1LemmaAliases[normalized]) return passage2013P1LemmaAliases[normalized];
@@ -852,6 +854,7 @@ export function getLexicalGuide(token: string, context?: LexicalContext): Lexica
     "2012-writing-b": writing2012BEntry,
     "2013-p1": passage2013P1Entry,
     "2013-p2": passage2013P2Lexicon[headword],
+    "2013-p3": passage2013P3Lexicon[headword],
     "2011-cloze": cloze2011Entry,
     "2011-p1": passage2011P1Entry,
     "2011-writing-b": writing2011BEntry,
@@ -916,7 +919,7 @@ export function recordedWordForms(headword: string) {
       if (!value) { value = { forms: [], notes: [] }; recordedFormIndex!.set(lemma, value); }
       return value;
     };
-    for (const aliases of [lemmaAliases, passage2013P2LemmaAliases, passage2013P1LemmaAliases, writing2012BLemmaAliases, writing2012ALemmaAliases, translation2012LemmaAliases, passage2012P5LemmaAliases, passage2012P4LemmaAliases, passage2012P3LemmaAliases, passage2012P2LemmaAliases, passage2012P1LemmaAliases, cloze2012LemmaAliases, writing2011BLemmaAliases, writing2011ALemmaAliases, translation2011LemmaAliases, passage2011P5LemmaAliases, passage2011P4LemmaAliases, passage2011P3LemmaAliases, passage2011P2LemmaAliases, passage2011P1LemmaAliases, cloze2011LemmaAliases, translation2010LemmaAliases, passage2010P5LemmaAliases, passage2010P4LemmaAliases, passage2010P3LemmaAliases, passage1LemmaAliases, passage2LemmaAliases, passage3LemmaAliases, passage4LemmaAliases, passage5LemmaAliases, translationLemmaAliases, cloze2001LemmaAliases, passage2001P1LemmaAliases, passage2001P2LemmaAliases, cloze2010LemmaAliases, passage2010P1LemmaAliases, passage2010P2LemmaAliases, ...Object.values(sourceLemmaAliases)]) {
+    for (const aliases of [lemmaAliases, passage2013P3LemmaAliases, passage2013P2LemmaAliases, passage2013P1LemmaAliases, writing2012BLemmaAliases, writing2012ALemmaAliases, translation2012LemmaAliases, passage2012P5LemmaAliases, passage2012P4LemmaAliases, passage2012P3LemmaAliases, passage2012P2LemmaAliases, passage2012P1LemmaAliases, cloze2012LemmaAliases, writing2011BLemmaAliases, writing2011ALemmaAliases, translation2011LemmaAliases, passage2011P5LemmaAliases, passage2011P4LemmaAliases, passage2011P3LemmaAliases, passage2011P2LemmaAliases, passage2011P1LemmaAliases, cloze2011LemmaAliases, translation2010LemmaAliases, passage2010P5LemmaAliases, passage2010P4LemmaAliases, passage2010P3LemmaAliases, passage1LemmaAliases, passage2LemmaAliases, passage3LemmaAliases, passage4LemmaAliases, passage5LemmaAliases, translationLemmaAliases, cloze2001LemmaAliases, passage2001P1LemmaAliases, passage2001P2LemmaAliases, cloze2010LemmaAliases, passage2010P1LemmaAliases, passage2010P2LemmaAliases, ...Object.values(sourceLemmaAliases)]) {
       for (const [form, lemma] of Object.entries(aliases)) {
         if (form !== lemma && !row(lemma).forms.includes(form)) row(lemma).forms.push(form);
       }
@@ -925,7 +928,7 @@ export function recordedWordForms(headword: string) {
       for (const note of notes) if (!row(lemma).notes.includes(note)) row(lemma).notes.push(note);
     };
     for (const [lemma, notes] of Object.entries(specialForms)) addNotes(lemma, notes);
-    for (const lexicon of [passage2013P2Lexicon, passage2013P1Lexicon, writing2012BLexicon, writing2012ALexicon, translation2012Lexicon, passage2012P5Lexicon, passage2012P4Lexicon, passage2012P3Lexicon, passage2012P2Lexicon, passage2012P1Lexicon, cloze2012Lexicon, writing2011BLexicon, writing2011ALexicon, translation2011Lexicon, passage2011P5Lexicon, passage2011P4Lexicon, passage2011P3Lexicon, passage2011P2Lexicon, passage2011P1Lexicon, cloze2011Lexicon, translation2010Lexicon, passage2010P5Lexicon, passage2010P4Lexicon, passage2010P3Lexicon, passage1Lexicon, passage2Lexicon, passage3Lexicon, passage4Lexicon, passage5Lexicon, translationLexicon, cloze2001Lexicon, passage2001P1Lexicon, passage2001P2Lexicon, cloze2010Lexicon, passage2010P1Lexicon, passage2010P2Lexicon]) {
+    for (const lexicon of [passage2013P3Lexicon, passage2013P2Lexicon, passage2013P1Lexicon, writing2012BLexicon, writing2012ALexicon, translation2012Lexicon, passage2012P5Lexicon, passage2012P4Lexicon, passage2012P3Lexicon, passage2012P2Lexicon, passage2012P1Lexicon, cloze2012Lexicon, writing2011BLexicon, writing2011ALexicon, translation2011Lexicon, passage2011P5Lexicon, passage2011P4Lexicon, passage2011P3Lexicon, passage2011P2Lexicon, passage2011P1Lexicon, cloze2011Lexicon, translation2010Lexicon, passage2010P5Lexicon, passage2010P4Lexicon, passage2010P3Lexicon, passage1Lexicon, passage2Lexicon, passage3Lexicon, passage4Lexicon, passage5Lexicon, translationLexicon, cloze2001Lexicon, passage2001P1Lexicon, passage2001P2Lexicon, cloze2010Lexicon, passage2010P1Lexicon, passage2010P2Lexicon]) {
       for (const [lemma, entry] of Object.entries(lexicon)) addNotes(lemma, entry.specialForms ?? []);
     }
   }

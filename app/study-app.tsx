@@ -267,6 +267,10 @@ const sourceById = new Map(corpusSources.map((source) => [source.id, source]));
 const phraseKnowledgeFor = (label: string, sourceId?: string) => getPhraseKnowledge(label, {
   articleId: sourceId ? sourceById.get(sourceId)?.article.id : undefined,
 });
+const collocationDetailsFor = (items: string[], sourceId?: string) => {
+  const article = sourceId ? sourceById.get(sourceId)?.article : undefined;
+  return getCollocationDetails(items, article?.experienceVersion === 2 ? { articleId: article.id } : undefined);
+};
 const phraseAnnotations = Object.values(articleContents).flatMap((article) => [
   ...article.sentences.flatMap((sentence) => sentence.phrases.map((label) => ({ label, sourceId: sentence.id }))),
   ...article.questions.flatMap((question) => [
@@ -504,7 +508,7 @@ function makeFallbackEntry(label: string, isPhrase = false, sentenceId?: string)
     specialForms: isPhrase ? ["固定搭配本身不作词形变化；内部单词可分别点击查看"] : guide?.specialForms ?? [],
     examSynonyms: isPhrase ? ["固定搭配优先整体记忆，不按单个中文意思随意替换"] : guide?.examSynonyms ?? [],
     collocations: guide?.collocations ?? [],
-    collocationDetails: getCollocationDetails(guide?.collocations ?? []),
+    collocationDetails: collocationDetailsFor(guide?.collocations ?? [], sentenceId),
     synonymDetails: getSynonymDetails(guide?.examSynonyms ?? []),
     familyDetails: getFamilyDetails(guide?.wordFamily ?? []),
     otherMeanings: guide?.otherMeanings ?? [],
@@ -584,7 +588,7 @@ export function resolveEntry(label: string, isPhrase = false, sentenceId?: strin
     structures: wordKnowledge?.structures ?? entry.structures,
     pitfalls: Array.from(new Set([...(entry.pitfalls ?? []), ...(wordKnowledge?.pitfalls ?? [])])),
     collocations: mergedCollocations,
-    collocationDetails: getCollocationDetails(mergedCollocations),
+    collocationDetails: collocationDetailsFor(mergedCollocations, sentenceId),
     synonymDetails: getSynonymDetails(mergedSynonyms),
     familyDetails: getFamilyDetails(mergedFamily),
     otherMeanings: Array.from(new Set([...(entry.otherMeanings ?? []), ...(guide?.otherMeanings ?? [])])),

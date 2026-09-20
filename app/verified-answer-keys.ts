@@ -275,3 +275,6 @@ export const verifiedAnswerSources2010Passage2 = [
     url: "https://yz.chsi.com.cn/kyzx/en/201001/20100113/61655286-2.html",
   },
 ] as const;
+
+export const verifiedAnswerKey2013Passage3:Record<number,"A"|"B"|"C"|"D">={31:"D",32:"A",33:"B",34:"C",35:"B"};
+export const verifiedAnswerSource2013Passage3="https://zemengzhou.com/kaoyan/english/past-papers/ying-yu-er/2013/10-da-an-su-cha";
