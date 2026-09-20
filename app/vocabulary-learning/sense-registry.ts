@@ -3,6 +3,7 @@ import { normalizeMeaning, normalizePartOfSpeech } from "./semantic-normalizatio
 import { getReviewedSemanticAlias } from "./semantic-aliases";
 import { getFunctionSemanticAlias } from "./function-semantic-aliases";
 import { getContentSemanticAlias } from "./content-semantic-aliases";
+import { getReviewedSenseMapping, getReviewedSenseAnnotation } from "./reviewed-senses";
 
 export { normalizeMeaning, normalizePartOfSpeech } from "./semantic-normalization";
 
@@ -43,9 +44,12 @@ const meaningAliases: Record<string, Array<{ id: string; pos: string; meanings: 
 };
 
 /** Shared semantic identity for display, new cards and non-destructive legacy grouping. */
-export function resolveReviewedSense(termKey: string, kind: "word" | "phrase", partOfSpeech: string, meaning: string, sourceId?: string): { senseId: string; partOfSpeech: string; meaning?: string } | undefined {
+export function resolveReviewedSense(termKey: string, kind: "word" | "phrase", partOfSpeech: string, meaning: string, sourceId?: string, expression?: string): { senseId: string; partOfSpeech: string; meaning?: string } | undefined {
   if (kind !== "word") return undefined;
   const pos = normalizePartOfSpeech(partOfSpeech);
+  const canonical = getReviewedSenseMapping(termKey, partOfSpeech, meaning, sourceId, expression);
+  if (canonical) return { senseId: `reviewed:${canonical.id}`, partOfSpeech: normalizePartOfSpeech(canonical.pos), meaning: canonical.meaning };
+  if (getReviewedSenseAnnotation(termKey, partOfSpeech, meaning, sourceId, expression)) return undefined;
   const mapped = sourceId ? sourceSenses[termKey]?.[sourceId] : undefined;
   const originalAlias = meaningAliases[termKey]?.find(item => item.meanings.some(alias => normalizeMeaning(alias) === normalizeMeaning(meaning)) && (pos.split("/").includes(item.pos) || mapped));
   if (mapped || originalAlias) return { senseId: `reviewed:${mapped?.[0] ?? originalAlias!.id}`, partOfSpeech: mapped?.[1] ?? originalAlias!.pos };
@@ -58,10 +62,14 @@ export function resolveReviewedSense(termKey: string, kind: "word" | "phrase", p
 export function resolveMemorySense(candidate: VocabularyCandidate, existing: VocabularyMemory[] = []) {
   const entry = candidate.entry;
   let pos = normalizePartOfSpeech(entry.partOfSpeech);
-  const reviewed = resolveReviewedSense(entry.key, entry.kind, entry.partOfSpeech, entry.contextualMeaning, candidate.context.sourceId);
+  const reviewed = resolveReviewedSense(entry.key, entry.kind, entry.partOfSpeech, entry.contextualMeaning, candidate.context.sourceId, candidate.context.expression);
   if (reviewed) pos = reviewed.partOfSpeech;
   // Once a source belongs to a saved sense, minor editorial wording changes cannot rename its key.
-  const saved = existing.find(memory => memory.termKey === entry.key && memory.kind === entry.kind && memory.contexts.some(context => context.id === candidate.context.id));
+  // Old word context IDs omit the inflected expression. Two forms in the same
+  // sentence (patents/patented, health/healthy) may therefore have the same ID.
+  // Keep historical IDs intact, but never reuse one merely because that ID matches.
+  const saved = existing.find(memory => memory.termKey === entry.key && memory.kind === entry.kind && memory.contexts.some(context =>
+    context.id === candidate.context.id && context.expression.normalize("NFKC").toLowerCase() === candidate.context.expression.normalize("NFKC").toLowerCase()));
   if (saved) return { senseId: saved.senseId, partOfSpeech: saved.partOfSpeech };
   if (candidate.senseId) return { senseId: candidate.senseId, partOfSpeech: pos };
   if (reviewed) {
@@ -70,7 +78,7 @@ export function resolveMemorySense(candidate: VocabularyCandidate, existing: Voc
       memory.senseId === reviewed.senseId && memory.partOfSpeech === pos ||
       (() => {
         const context = memory.contexts.find(item => item.id === memory.primaryContextId) ?? memory.contexts[0];
-        const resolved = resolveReviewedSense(memory.termKey, memory.kind, memory.partOfSpeech, memory.meaning, context?.sourceId);
+        const resolved = resolveReviewedSense(memory.termKey, memory.kind, memory.partOfSpeech, memory.meaning, context?.sourceId, context?.expression);
         return resolved?.senseId === reviewed.senseId && resolved?.partOfSpeech === pos;
       })()
     )).sort((left, right) => left.createdAt - right.createdAt || left.id.localeCompare(right.id))[0];

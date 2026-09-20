@@ -1,11 +1,14 @@
 import type { VocabularyMemory } from "./model";
 import { normalizeMeaning, normalizePartOfSpeech, resolveReviewedSense } from "./sense-registry";
+import { getReviewedSenseAnnotation } from "./reviewed-senses";
 
 /** A derived identity, never a replacement for a saved memory/attempt ID. */
 export function memorySemanticKey(memory: VocabularyMemory) {
   const source = memory.contexts.find(context => context.id === memory.primaryContextId) ?? memory.contexts[0];
-  const reviewed = resolveReviewedSense(memory.termKey, memory.kind, memory.partOfSpeech, memory.meaning, source?.sourceId);
-  const sense = reviewed?.senseId ?? (memory.senseId.startsWith("reviewed:") ? memory.senseId : `meaning:${normalizeMeaning(memory.meaning)}`);
+  const annotation = memory.kind === "word" && getReviewedSenseAnnotation(memory.termKey, memory.partOfSpeech, memory.meaning, source?.sourceId, source?.expression);
+  const reviewed = resolveReviewedSense(memory.termKey, memory.kind, memory.partOfSpeech, memory.meaning, source?.sourceId, source?.expression);
+  const sense = annotation ? `annotation:${source?.sourceId ?? memory.id}|${source?.expression ?? ""}`
+    : reviewed?.senseId ?? (memory.senseId.startsWith("reviewed:") ? memory.senseId : `meaning:${normalizeMeaning(memory.meaning)}`);
   return [memory.kind, memory.termKey, reviewed?.partOfSpeech ?? normalizePartOfSpeech(memory.partOfSpeech), sense].map(encodeURIComponent).join(":");
 }
 

@@ -15,6 +15,7 @@ import { AuthSessionError, readAuthSession } from "./auth-session";
 import { createVocabularyCorpus, type ResolvedVocabularyCandidate } from "./vocabulary-learning/corpus";
 import { VocabularyLearning } from "./vocabulary-learning/vocabulary-learning";
 import { SenseOverviewPanel } from "./vocabulary-learning/sense-overview-panel";
+import { importedEntryContext } from "./vocabulary-learning/imported-entry-fallback";
 import { selectLegacyVocabularyCandidates } from "./vocabulary-learning/legacy-selection";
 import { type VocabularyLearningData, type VocabularyMark } from "./vocabulary-learning/model";
 import { migrateLegacyVocabulary } from "./vocabulary-learning/migration";
@@ -439,6 +440,8 @@ function makeFallbackEntry(label: string, isPhrase = false, sentenceId?: string)
   const guide = isPhrase ? null : getLexicalGuide(normalized, lexicalContextFor(sentenceId));
   const wordKnowledge = guide ? getWordKnowledge(guide.headword, lexicalContextFor(sentenceId)) : undefined;
   const counts = currentCounts(label, isPhrase, sentenceId);
+  const importedContext = !isPhrase && !guide?.contextualMeaning && !basicMeanings[normalized]
+    ? importedEntryContext(currentOccurrences(label, false, sentenceId), sentenceId) : undefined;
   if (phraseKnowledge) {
     return {
       key: `pattern:${phraseKnowledge.key}`,
@@ -473,15 +476,15 @@ function makeFallbackEntry(label: string, isPhrase = false, sentenceId?: string)
     headword: isPhrase ? normalized : guide?.headword ?? lemmaOf(normalized),
     display: label,
     kind: isPhrase ? "phrase" : "word",
-    partOfSpeech: isPhrase ? "固定搭配" : guide?.partOfSpeech ?? "词性待精审",
+    partOfSpeech: isPhrase ? "固定搭配" : importedContext?.partOfSpeech ?? guide?.partOfSpeech ?? "词性待精审",
     contextualMeaning:
-      (isPhrase ? phraseGlosses[normalized] : guide?.contextualMeaning ?? basicMeanings[normalized]) ??
+      (isPhrase ? phraseGlosses[normalized] : guide?.contextualMeaning ?? basicMeanings[normalized] ?? importedContext?.meaning) ??
       "该词未出现在当前精审语料中；释义会在它所属的真题文章精审时补全。",
     use: option
       ? `本题辨析：${option.explanation}`
       : isPhrase
         ? "这是 GPT 在本句中预先确认的整体表达，应优先整体理解。"
-        : guide?.use ?? "结合本句成分理解；该词的详细用法会随对应真题精审持续补充。",
+        : importedContext?.use ?? guide?.use ?? "结合本句成分理解；该词的详细用法会随对应真题精审持续补充。",
     grammarRole: wordKnowledge?.grammarRole,
     grammarSummary: wordKnowledge?.grammarSummary,
     structures: wordKnowledge?.structures,
@@ -509,6 +512,12 @@ function makeFallbackEntry(label: string, isPhrase = false, sentenceId?: string)
 
 export function resolveEntry(label: string, isPhrase = false, sentenceId?: string): VocabEntry {
   const normalized = label.toLowerCase();
+  // A separately imported lemma (e.g. noun "ruling") must not inherit the
+  // generic morphology fallback's unrelated verb entry when opened without a source.
+  if (!isPhrase && !sentenceId && lemmaOf(normalized) !== normalized) {
+    const exact = findTermContexts(normalized).find(context => context.headword === normalized);
+    if (exact) return { ...resolveEntry(exact.label, false, exact.sourceId), display: label };
+  }
   const phraseKnowledge = isPhrase ? getPhraseKnowledge(normalized) : undefined;
   const guide = isPhrase ? null : getLexicalGuide(normalized, lexicalContextFor(sentenceId));
   const wordKnowledge = guide ? getWordKnowledge(guide.headword, lexicalContextFor(sentenceId)) : undefined;
@@ -550,9 +559,11 @@ export function resolveEntry(label: string, isPhrase = false, sentenceId?: strin
     kind: isPhrase ? "phrase" : "word",
     display: label,
     headword: guide?.headword ?? entry.headword,
-    partOfSpeech: guide?.partOfSpeech ?? entry.partOfSpeech,
+    partOfSpeech: sentenceId || guide?.contextualMeaning ? guide?.partOfSpeech ?? entry.partOfSpeech : entry.partOfSpeech,
     contextualMeaning: guide?.contextualMeaning ?? entry.contextualMeaning,
-    use: guide?.use ?? entry.use,
+    // A source guide can have reviewed usage even when its meaning comes from
+    // basicMeanings. Only a bare imported-lemma fallback keeps the borrowed use.
+    use: sentenceId || guide?.contextualMeaning ? guide?.use ?? entry.use : entry.use,
     contextualSubstitutions: guide?.contextualSubstitutions ?? entry.contextualSubstitutions ?? [],
     specialForms: guide?.specialForms ?? entry.specialForms ?? [],
     examSynonyms: guide?.examSynonyms ?? entry.examSynonyms ?? [],

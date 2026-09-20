@@ -36,7 +36,7 @@ test("real note shows all twelve reviewed senses; only real sense sources contri
   assert.equal(JSON.stringify(note), snapshot, "display aggregation cannot mutate corpus or memory data");
 });
 
-test("real work counts artwork, employment and operating separately and never splits broad old glosses", () => {
+test("real work counts reviewed source meanings separately and retains the exact old broad wording", () => {
   const rows = buildSenseOverview(resolveEntry("works", false, "2010-p1-s1"), "2010-p1-s1");
   const artwork = rows.find(row => row.id.endsWith("reviewed%3Aartwork"));
   const employment = rows.find(row => row.id.endsWith("reviewed%3Aemployment"));
@@ -44,15 +44,19 @@ test("real work counts artwork, employment and operating separately and never sp
   assert.equal(artwork.count, 5);
   assert.equal(artwork.current, true);
   assert.equal(artwork.partOfSpeech, "n.");
-  assert.equal(employment.count, 3);
-  assert.equal(operating.count, 2);
+  assert.equal(employment.count, 6);
+  assert.equal(operating.count, 3);
   assert.ok(artwork.sources.some(source => source.sourceId === "question-201022-option-D"));
-  const broad = rows.find(row => row.meaning === "工作；劳动；起作用");
-  assert.equal(broad.count, 1);
+  const broad = employment.sources.find(source => source.sourceId === "p4-s16");
+  assert.equal(broad.meaning, "工作；劳动；起作用");
   assert.equal(broad.partOfSpeech, "n./v.");
+  assert.deepEqual(new Set(employment.sources.map(source => source.sourceId)), new Set(["2010-p2-s15", "2010-p2-s8", "2012-p5-s14", "2012-p5-s7", "p4-s16", "question-201124-option-C"]));
   assert.equal(operating.sources.some(source => source.sourceId === "p4-s16"), false);
-  assert.equal(employment.sources.some(source => source.sourceId === "p4-s16"), false);
-  assert.ok(rows.some(row => row.meaning === "工作" && row.partOfSpeech.startsWith("v.") && row.count === 1), "the noun employment count does not absorb the verb working sense");
+  assert.equal(employment.sources.some(source => source.sourceId === "p4-s16"), true);
+  const labour = rows.find(row => row.id.endsWith("reviewed%3Alabour"));
+  assert.equal(labour.count, 3);
+  assert.equal(labour.partOfSpeech, "v.");
+  assert.deepEqual(new Set(labour.sources.map(source => source.sourceId)), new Set(["2011-p5-s18", "2012-p5-s1", "2012-translation-s6"]), "the noun employment count does not absorb the verb working sense");
 });
 
 test("frequency ordering includes body, prompt and option, deduplicates sources, and does not promote the current sense", () => {

@@ -90,7 +90,8 @@ test("function words group changing referents and clause descriptions without me
   const it = entry("it", "它（美国）", "pron.", [occurrence("country", "它（美国）", "pron."), occurrence("homework", "它（指家庭作业）", "pron."),
     occurrence("formal-subject", "形式主语", "pron."), occurrence("formal-object", "形式宾语（不单独翻译）", "pron.")]);
   const itRows = buildSenseOverview(it, "country");
-  assert.equal(itRows.length, 3);
+  assert.equal(itRows.length, 4);
+  assert.equal(itRows.find(row => row.id.endsWith("reviewed%3Asituational")).count, null, "the full reviewed inventory also shows the absent situational use without inventing a source");
   assert.equal(itRows.find(row => row.current).count, 2, "a new pronoun referent is a new context, not a new word meaning");
 });
 
@@ -156,18 +157,20 @@ test("note keeps every reviewed sense and teaching example while combining only 
   assert.equal(record.count, null, "a teaching example is never counted as an exam source");
 });
 
-test("work preserves artwork, employment, operation and the unresolved mixed-POS legacy gloss", () => {
+test("work preserves distinct senses and assigns reviewed old mixed glosses only to their exact real source", () => {
   const rows = buildSenseOverview(resolveEntry("works", false, "2010-p1-s1"), "2010-p1-s1");
   const artwork = rows.find(row => row.id.includes("reviewed%3Aartwork"));
   const employment = rows.find(row => row.id.includes("reviewed%3Aemployment"));
   const operating = rows.find(row => row.id.includes("reviewed%3Aoperate"));
   assert.equal(artwork.count, 5);
-  assert.equal(employment.count, 3);
-  assert.equal(operating.count, 2);
+  assert.equal(employment.count, 6);
+  assert.equal(operating.count, 3);
   assert.equal(new Set([artwork.id, employment.id, operating.id]).size, 3);
-  const broad = rows.find(row => row.meaning === "工作；劳动；起作用");
-  assert.equal(broad.count, 1);
-  assert.equal(broad.partOfSpeech, "n./v.");
+  assert.equal(rows.some(row => row.meaning === "工作；劳动；起作用"), false);
+  const retained = employment.sources.find(source => source.sourceId === "p4-s16");
+  assert.equal(retained.meaning, "工作；劳动；起作用");
+  assert.equal(retained.partOfSpeech, "n./v.");
+  assert.equal(operating.sources.some(source => source.sourceId === "p4-s16"), false, "the reviewed noun source must not lend a count to the operating verb");
 });
 
 test("semantic grouping and canonical labels are independent of source ordering and active context", () => {

@@ -1,5 +1,6 @@
 import type { OccurrenceContext, VocabEntry } from "../data";
-import { normalizeMeaning, normalizePartOfSpeech, resolveMemorySense } from "./sense-registry";
+import { normalizeMeaning, normalizePartOfSpeech, resolveMemorySense, resolveReviewedSense } from "./sense-registry";
+import { getReviewedSenseAnnotation, getReviewedSenseGroups } from "./reviewed-senses";
 
 export type VocabularySenseOverviewSource = OccurrenceContext & {
   sourceId: string;
@@ -18,13 +19,15 @@ export type VocabularySenseOverviewRow = {
   sources: VocabularySenseOverviewSource[];
   use?: string;
   example?: { english: string; chinese: string };
+  annotationReason?: string;
+  dictionaryDetails?: Array<{ meaning: string; partOfSpeech: string; use?: string; example?: { english: string; chinese: string } }>;
 };
 
 const cache = new WeakMap<VocabEntry, Map<string, VocabularySenseOverviewRow[]>>();
 const compare = (left: string, right: string) => left < right ? -1 : left > right ? 1 : 0;
 
 function resolve(entry: VocabEntry, context: OccurrenceContext, sourceId: string, senseId?: string) {
-  return resolveMemorySense({
+  return resolveReviewedSense(entry.key, entry.kind, context.partOfSpeech, context.meaning, sourceId, context.expression) ?? resolveMemorySense({
     entry: { ...entry, partOfSpeech: context.partOfSpeech, contextualMeaning: context.meaning },
     context: { id: `overview:${sourceId}`, sourceId, articleId: "overview", year: 0, sourceType: "sentence", expression: context.expression },
     ...(senseId ? { senseId } : {}),
@@ -51,8 +54,8 @@ function extraMeaning(text: string) {
 /**
  * Build only the opened term's display index. This never creates or rewrites a
  * memory: current-sense progress continues to use the existing sense registry.
- * A source with a broad old gloss remains one broad row; its count is not
- * distributed to each component meaning or each part of speech.
+ * Reviewed composite notes stay available as annotations. An exact source may
+ * select one core sense; unclassified notes never lend their count to several senses.
  */
 export function buildSenseOverview(entry: VocabEntry, currentSourceId?: string): VocabularySenseOverviewRow[] {
   const cacheKey = currentSourceId ?? "";
@@ -61,6 +64,16 @@ export function buildSenseOverview(entry: VocabEntry, currentSourceId?: string):
   const rows = new Map<string, VocabularySenseOverviewRow>();
 
   function ensure(context: OccurrenceContext, sourceId: string, senseId?: string) {
+    const annotation = entry.kind === "word" ? getReviewedSenseAnnotation(entry.key, context.partOfSpeech, context.meaning, sourceId, context.expression) : undefined;
+    if (annotation) {
+      const id = [entry.kind, entry.key, "annotation", normalizePartOfSpeech(context.partOfSpeech), normalizeMeaning(context.meaning)].map(encodeURIComponent).join(":");
+      let row = rows.get(id);
+      if (!row) {
+        row = { id, meaning: context.meaning, partOfSpeech: context.partOfSpeech, count: null, current: false, sources: [], annotationReason: annotation.reason, ...(context.use ? { use: context.use } : {}) };
+        rows.set(id, row);
+      }
+      return row;
+    }
     const sense = resolve(entry, context, sourceId, senseId);
     const id = rowId(entry, sense, context.meaning);
     let row = rows.get(id) ?? (sense.senseId.startsWith("source:") ? [...rows.values()].find(item =>
@@ -72,12 +85,21 @@ export function buildSenseOverview(entry: VocabEntry, currentSourceId?: string):
       row = { id, meaning: sense.meaning ?? context.meaning, partOfSpeech, count: null, current: false, sources: [], ...(context.use ? { use: context.use } : {}) };
       rows.set(id, row);
     }
+    if (!row.use && context.use) row.use = context.use;
     return row;
   }
 
+  // These are editorial identities linked to existing corpus/guide wording, not a second dictionary.
+  // Include reviewed meanings from other sources even when this card's old extras omit them.
+  for (const group of entry.kind === "word" ? getReviewedSenseGroups(entry.key) : []) {
+    const sense = { senseId: `reviewed:${group.id}`, partOfSpeech: normalizePartOfSpeech(group.pos) };
+    const id = rowId(entry, sense, group.meaning);
+    if (!rows.has(id)) rows.set(id, { id, meaning: group.meaning, partOfSpeech: sense.partOfSpeech.split("/").map(pos => /^[a-z]+$/.test(pos) ? `${pos}.` : pos).join(" / "), count: null, current: false, sources: [] });
+  }
   for (const sense of entry.senseGuide?.senses ?? []) {
     const row = ensure({ expression: entry.headword, partOfSpeech: sense.partOfSpeech, meaning: sense.meaning, use: sense.use }, `guide:${sense.id}`, `reviewed:${sense.id}`);
-    row.example = sense.example;
+    row.example ??= sense.example;
+    (row.dictionaryDetails ??= []).push({ meaning: sense.meaning, partOfSpeech: sense.partOfSpeech, use: sense.use, example: sense.example });
   }
 
   // Sorting makes labels, source order and unregistered source anchors independent
@@ -119,7 +141,8 @@ export function buildSenseOverview(entry: VocabEntry, currentSourceId?: string):
       });
       if (matches.length === 1) continue;
     }
-    ensure({ expression: entry.headword, ...extra, use: "" }, `other:${index}`);
+    const row = ensure({ expression: entry.headword, ...extra, use: "" }, `other:${index}`);
+    if (row.meaning !== extra.meaning) (row.dictionaryDetails ??= []).push({ meaning: extra.meaning, partOfSpeech: extra.partOfSpeech });
   }
 
   const result = [...rows.values()].sort((left, right) => (right.count ?? -1) - (left.count ?? -1) || compare(left.id, right.id));
