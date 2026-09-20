@@ -57,6 +57,7 @@ export const passage2013P1FormPartOfSpeech: Record<string, string> = Object.from
 
 export const passage2013P1SentenceContexts: Record<string, Record<string, SentenceWordContext>> = {
   "2013-p1-s1": {
+    textile: { partOfSpeech: "adj.", contextualMeaning: "纺织业的", use: "textile 修饰 mill，说明这是一家纺织厂。", preferredCollocations: ["textile mill（纺织厂）"] },
     entitle: { partOfSpeech: "v.-ed", contextualMeaning: "题为；名为", use: "entitled \"Making It in America\" 后置修饰 essay，说明文章标题。" },
     make: { partOfSpeech: "v.（标题中的动名词形式）", contextualMeaning: "取得成功；立足", use: "篇名 Making It in America 中 make it 整体指在美国取得成功。" },
     country: { partOfSpeech: "n.", contextualMeaning: "地区；乡间", use: "cotton country 指产棉区，不是一个国家。" },
@@ -85,6 +86,7 @@ export const passage2013P1SentenceContexts: Record<string, Record<string, Senten
   "2013-p1-s14": { average: { partOfSpeech: "n./adj. used substantively", contextualMeaning: "普通水平", use: "回扣全文中心：一般水准已经不够。" }, support: { partOfSpeech: "v.", contextualMeaning: "促进；支持", use: "support employment 指采取措施促进就业。" }, pass: { partOfSpeech: "gerund", contextualMeaning: "通过（法案）", use: "passing some kind of Bill 作 than 后的比较对象，说明最重要的措施。" }, access: { partOfSpeech: "n.", contextualMeaning: "接受教育的机会", use: "has access to education 不是物理入口，而是有机会接受教育。" }, education: { partOfSpeech: "n.", contextualMeaning: "高中后教育", use: "post-high school education 包括高中毕业后的继续教育。" },
   },
   "question-201321-prompt": { illustrate: { partOfSpeech: "v.", contextualMeaning: "说明；阐明", use: "问笑话在论证中用来说明什么。" } },
+  "question-201321-option-C": { textile: { partOfSpeech: "adj.", contextualMeaning: "纺织业的", use: "textile 修饰 mills，说明选项讨论的是纺织厂。", preferredCollocations: ["textile mills（纺织厂）"] } },
   "question-201321-option-A": { impact: { partOfSpeech: "n.", contextualMeaning: "影响", use: "the impact of technological advances 指技术进步对用工的影响。" }, advance: { partOfSpeech: "n.", contextualMeaning: "进步；发展", use: "technological advances 与正文自动化和信息技术进步对应。" } },
   "question-201322-option-D": { contribute: { partOfSpeech: "v.", contextualMeaning: "贡献；提供价值", use: "contribute something unique 是 unique value contribution 的词性转换。" } },
   "question-201322-option-C": { average: { partOfSpeech: "adj.", contextualMeaning: "普通的；一般水平的", use: "average lifestyle 回指过去一般技能可获得的普通生活。" } },

@@ -78,6 +78,14 @@ test("submitted analysis leads with the learner's wrong choice and its exact dis
 
 test("words keep source-specific senses and phrases enter the shared memory system as independent objects", () => {
   const corpus = study.vocabularyCorpus;
+  for (const sourceId of ["2013-p1-s1", "question-201321-option-C"]) {
+    const textile = study.resolveEntry("textile", false, sourceId);
+    assert.equal(textile.partOfSpeech, "adj.");
+    assert.equal(textile.contextualMeaning, "纺织业的");
+    assert.match(textile.use, /textile 修饰 mills?/);
+    assert.doesNotMatch(textile.use, /cars|并列作主语/);
+    assert.match(textile.collocations[0], /textile mills?（纺织厂）/);
+  }
   const averageMill = corpus.resolveCandidate("average", false, "2013-p1-s1", true);
   const averageOver = corpus.resolveCandidate("average", false, "2013-p1-s5", true);
   assert.ok(averageMill && averageOver);
