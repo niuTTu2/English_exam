@@ -128,6 +128,10 @@ V2 JS/CSS 按需加载。既有 Service Worker 缓存访问过的模块；从未
 node --test --test-concurrency=1 tests/article-v2.test.mjs tests/study-sync.test.mjs tests/auth.test.mjs
 node tests/browser-v2/serve.mjs
 # 本机打开 http://127.0.0.1:5174/tests/browser-v2/widths.html
+node tests/browser-v2/serve-pilot.mjs
+# 实际应用试点： http://127.0.0.1:5183/__v2-inspection
 ```
+
+真实试点的完整操作路径见 `V2_BROWSER_ACCEPTANCE.md`。入口启动和HTTP响应通过，不代表手机触控、保存或离线已验收。
 
 测试目录不被生产入口引用，不是正式新文章。首个正式试点是用户提供的2013英语二Text 1；实现方式见 `app/2013-passage-1-*.ts`、原卷快照 `tests/fixtures/2013-passage-1-source.json` 和专项测试 `tests/2013-passage-1-v2.test.mjs`。它是示例，不是句数、深度句数或任务数模板；以后仍按真实难点决定。不能把旧 Text 1/2 或合成夹具标为试点。360/390、离线、真实原卷内容及正式站 V2 验证全部完成前不推 main。

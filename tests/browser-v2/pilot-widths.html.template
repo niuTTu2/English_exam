@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>2013 Text 1 · V2 本地验收</title>
+  <style>
+    body { margin: 16px; font: 16px/1.6 system-ui, sans-serif; background: #f4f5f1; color: #183536; }
+    button { padding: 8px 14px; margin: 4px; font: inherit; }
+    iframe { display: block; border: 0; background: white; height: 850px; }
+    pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+  </style>
+</head>
+<body>
+  <h1>2013 Text 1 · V2 本地验收</h1>
+  <p>下方为实际应用。先选择2013年 → 阅读 Text 1。只使用本机测试记录，不登录正式账号。</p>
+  <p>切换宽度不刷新页面；每次切页、展开结构或打开词卡后，重新检查宽度。框架宽度检查不等于手机触控或离线验证。</p>
+  <button type="button" data-width="360">360px</button>
+  <button type="button" data-width="390">390px</button>
+  <button type="button" id="measure">检查当前页面宽度</button>
+  <p><a href="/" target="_blank" rel="noopener">独立打开完整应用（保存、刷新和离线检查）</a></p>
+  <pre id="result" role="status">尚未测量。初始宽度360px。</pre>
+  <iframe id="app" title="实际应用 · 360px" src="/" width="360"></iframe>
+  <script>
+    const frame = document.getElementById("app");
+    const result = document.getElementById("result");
+    document.querySelectorAll("[data-width]").forEach(button => {
+      button.addEventListener("click", () => {
+        frame.width = button.dataset.width;
+        frame.title = `实际应用 · ${frame.width}px`;
+        result.textContent = `已切换到${frame.width}px；请检查当前状态后测量。`;
+      });
+    });
+    document.getElementById("measure").addEventListener("click", () => {
+      const doc = frame.contentDocument;
+      if (!doc?.body) { result.textContent = "应用尚未载入。"; return; }
+      const viewport = doc.documentElement.clientWidth;
+      const width = Math.max(doc.documentElement.scrollWidth, doc.body.scrollWidth);
+      const heading = doc.querySelector("h1")?.textContent?.trim() ?? "未发现文章标题";
+      result.textContent = JSON.stringify({
+        time: new Date().toISOString(), heading,
+        requestedWidth: Number(frame.width), viewport, documentWidth: width,
+        horizontalOverflow: width > viewport,
+        note: "仅测量当前已打开状态；需另外检查弹窗内部、触控、刷新与离线。",
+      }, null, 2);
+    });
+  </script>
+</body>
+</html>
