@@ -219,3 +219,9 @@ sense ID 不能以中文文本作为唯一长期主键：优先已有人工义�
 新增专项文件与结果：`node --test --test-concurrency=1 tests/vocabulary-semantic-dedup.test.mjs`为11/11，`tests/vocabulary-content-aliases.test.mjs`为4/4，`tests/vocabulary-function-aliases.test.mjs`为1/1；`node --test --test-concurrency=1 tests/vocabulary-memory-groups.test.mjs tests/vocabulary-learning.test.mjs`为25/25。它们也全部包含在最后394项全套结果中。手机关键HTML结构沿用专项覆盖；本次可用云浏览器没有360px/390px或真机控制，不把桌面验证称作Android/iOS实测。
 
 发布前已在旧版公开站的独立访客环境，经正常界面分别标记2011完形第1句and（“和；并且”）和2010 Text3第11句and（“和”），实际观察到全库范围“今日复习2”，并暂停两张卡的旧会话，供新版本验证真实旧记录去重、恢复和原句轮换。未读取或修改正式用户账号数据。Cloudflare结果、发布SHA与该旧会话升级后的实测留在交付消息，不为回填本提交SHA再次提交。
+
+## 17. 全库义项与默认查词入口整合
+
+用户继续指出仍有大量重复。进一步审计覆盖全部3,015个词条的原句及默认查词入口，发现上一轮遗漏了无来源词卡的旧总括释义。完整旧版基线有1,286个多行词，已按核心义、具体用法、旧混合注释分层审阅。精确映射同时用于词卡和既有无损记忆分组；所有原始语境、旧学习ID和进度继续保留。
+
+本轮新增可重复执行的全库清单和严格变化门禁，已接入日常`quality:content`，不再仅靠几个示例词回归。详细方法、文件职责、旧记录兼容及最终验收见[全库词义归并与防重复维护](VOCABULARY_SENSE_AUDIT.md)。旧节中的“混合释义仍为独立显示行”由本轮“明确词义分列，原注单独保留且不虚分次数”取代，历史测试结果不作为本轮结果。
