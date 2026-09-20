@@ -88,6 +88,14 @@ function lexicalContext(source: CorpusSourceReference): LexicalContext {
 
 /** An editorial recommendation is reused; unspecified entries remain opt-in. */
 function priorityFor(entry: Pick<VocabEntry, "headword" | "display" | "kind" | "canonicalForm" | "partOfSpeech">, source: CorpusSourceReference): VocabularyPriority {
+  if (source.article.experienceVersion === 2) {
+    const focus = source.article.vocabularyFocus?.find(f => f.sourceId === source.id && f.kind === entry.kind && normalize(f.expression) === normalize(entry.display));
+    if (focus) {
+      const categories = focus.categories;
+      const id = categories.includes("recognition") ? "recognition" : categories.includes("sense") ? "sense" : entry.kind === "phrase" ? "structure" : "core";
+      return { id, label: { recognition: "识别即可", sense: "熟词生义", structure: "必会固定搭配", core: "本篇核心词" }[id], reason: "来自本篇精审词汇分类；保留当前出处与语境义。", recommendedReview: id !== "recognition" };
+    }
+  }
   const recommendation = vocabularyPriority(entry, source.id, source.article.id);
   // Some older articles have no priority table, but their reviewed POS still identifies names.
   if (/proper\s*n\.|专有名词|专名|人名|地名/.test(entry.partOfSpeech)) {
@@ -189,7 +197,7 @@ export function createVocabularyCorpus(bridge: VocabularyCorpusBridge) {
     if (!source || !reference || !expression) return undefined;
     // Only existing annotated expressions or reviewed canonical structures are eligible.
     // A manual mark never manufactures phrases out of adjacent words.
-    if (isPhrase && !phrases().get(sourceId)?.some(item => normalize(item) === normalize(expression)) && !getPhraseKnowledge(expression)) {
+    if (isPhrase && !phrases().get(sourceId)?.some(item => normalize(item) === normalize(expression)) && !getPhraseKnowledge(expression, { articleId: source.articleId })) {
       candidateCache.set(cacheKey, null);
       return undefined;
     }
@@ -291,7 +299,7 @@ export function createVocabularyCorpus(bridge: VocabularyCorpusBridge) {
         if (++count >= limit) return;
       }
       for (const label of phrases().get(source.id) ?? []) {
-        const knowledge = getPhraseKnowledge(label);
+        const knowledge = getPhraseKnowledge(label, { articleId: source.article.id });
         const preliminary = priorityFor({ headword: knowledge?.canonical ?? label, display: label, canonicalForm: knowledge?.canonical, kind: "phrase", partOfSpeech: knowledge?.type ?? "固定搭配" }, source);
         if (!vocabularyCandidateAllowed(preliminary, options)) continue;
         const candidate = resolveCandidate(label, true, source.id);

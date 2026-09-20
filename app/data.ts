@@ -1,3 +1,4 @@
+import { passage2013P1Article, passage2013P1Sentences, passage2013P1Questions } from "./2013-passage-1-data";
 import { passage2012P3Guide, passage2012P3Paragraphs } from "./2012-passage-3-guide";
 import { passage2012P2Guide, passage2012P2Paragraphs } from "./2012-passage-2-guide";
 import { passage2012P1Guide, passage2012P1Paragraphs } from "./2012-passage-1-guide";
@@ -62,6 +63,7 @@ import { passage2010P1Questions, passage2010P1Sentences } from "./2010-passage-1
 import { passage2010P1Guide } from "./2010-passage-1-guide";
 import type { ArticleGuide, QuestionReasoning } from "./article-teaching";
 import type { PracticeTask } from "./learning-model";
+import type { QuickReading, GrammarPatch, SentenceRelationKind, ArticleVocabularyFocus } from "./article-v2/model";
 import { passage2010P2Questions, passage2010P2Sentences } from "./2010-passage-2-data";
 import { passage2010P2Guide } from "./2010-passage-2-guide";
 import type { ContextualSubstitution } from "./contextual-vocabulary";
@@ -100,6 +102,7 @@ export type ReviewedSentenceChunk = {
 export type SentenceChunk = LegacySentenceChunk | ReviewedSentenceChunk;
 
 export type BeginnerSyntaxComponent = {
+  relationKind?: SentenceRelationKind;
   text: string;
   form: string;
   function: string;
@@ -133,6 +136,8 @@ export type BeginnerSyntax = {
 };
 
 export type SentenceAnalysis = {
+  quickReading?: QuickReading;
+  grammarPatches?: GrammarPatch[];
   id: string;
   number: number;
   text: string;
@@ -284,6 +289,9 @@ export type WritingTask = {
 };
 
 export type ArticleContent = {
+  /** Absent means V1. Never infer a version from year, filename or other fields. */
+  experienceVersion?: 1 | 2;
+  vocabularyFocus?: ArticleVocabularyFocus[];
   id: string;
   year: number;
   sectionId: "cloze" | "p1" | "p2" | "p3" | "p4" | "p5" | "translation" | "writing-a" | "writing-b";
@@ -313,6 +321,7 @@ export const sections = [
 ] as const;
 
 export const sectionsByYear = {
+  2013: [{ id: "2013-p1", label: "阅读 Text 1", meta: "14句 · 5题", status: "ready" }],
   2000: sections,
   2001: [
     { id: "2001-cloze", label: "完形填空", meta: "9句 · 20题", status: "ready" },
@@ -356,7 +365,7 @@ export const sectionsByYear = {
   ],
 } as const;
 
-export const availableYears = [2000, 2001, 2010, 2011, 2012] as const;
+export const availableYears = [2000, 2001, 2010, 2011, 2012, 2013] as const;
 
 export const sentences: SentenceAnalysis[] = [
   {
@@ -1724,7 +1733,8 @@ export const articleContents: Record<string, ArticleContent> = {
     title: "员工工作满意度：年龄组比较与谨慎评论", description: "第48题，至少150词，15分。保留原卷满意度表及精确百分数；指令练习只计审题与语言理解，作文独立写作与自查，不自动评分。",
     kind: "writing", sentences: writing2012BSentences, questions: [], writingTasks: writing2012BTasks,
   },
+  "2013-p1": passage2013P1Article,
 };
 
-export const allSentences = [...verifiedClozeSentences, ...verifiedPassage1Sentences, ...verifiedPassage2Sentences, ...verifiedPassage3Sentences, ...verifiedPassage4Sentences, ...verifiedPassage5Sentences, ...verifiedTranslationSentences, ...cloze2001Sentences, ...passage2001P1Sentences, ...passage2001P2Sentences, ...cloze2010Sentences, ...passage2010P1Sentences, ...passage2010P2Sentences, ...passage2010P3Sentences, ...passage2010P4Sentences, ...passage2010P5Sentences, ...translation2010Sentences, ...cloze2011Sentences, ...passage2011P1Sentences, ...passage2011P2Sentences, ...passage2011P3Sentences, ...passage2011P4Sentences, ...passage2011P5Sentences, ...translation2011Sentences, ...writing2011ASentences, ...writing2011BSentences, ...cloze2012Sentences, ...passage2012P1Sentences, ...passage2012P2Sentences, ...passage2012P3Sentences, ...passage2012P4Sentences, ...passage2012P5Sentences, ...translation2012Sentences, ...writing2012ASentences, ...writing2012BSentences];
-export const allQuestions = [...verifiedClozeQuestions, ...verifiedPassage1Questions, ...verifiedPassage2Questions, ...verifiedPassage3Questions, ...verifiedPassage4Questions, ...verifiedPassage5Questions, ...cloze2001Questions, ...passage2001P1Questions, ...passage2001P2Questions, ...cloze2010Questions, ...passage2010P1Questions, ...passage2010P2Questions, ...passage2010P3Questions, ...passage2010P4Questions, ...passage2010P5Questions, ...cloze2011Questions, ...passage2011P1Questions, ...passage2011P2Questions, ...passage2011P3Questions, ...passage2011P4Questions, ...passage2011P5Questions, ...cloze2012Questions, ...passage2012P1Questions, ...passage2012P2Questions, ...passage2012P3Questions, ...passage2012P4Questions, ...passage2012P5Questions];
+export const allSentences = [...verifiedClozeSentences, ...verifiedPassage1Sentences, ...verifiedPassage2Sentences, ...verifiedPassage3Sentences, ...verifiedPassage4Sentences, ...verifiedPassage5Sentences, ...verifiedTranslationSentences, ...cloze2001Sentences, ...passage2001P1Sentences, ...passage2001P2Sentences, ...cloze2010Sentences, ...passage2010P1Sentences, ...passage2010P2Sentences, ...passage2010P3Sentences, ...passage2010P4Sentences, ...passage2010P5Sentences, ...translation2010Sentences, ...cloze2011Sentences, ...passage2011P1Sentences, ...passage2011P2Sentences, ...passage2011P3Sentences, ...passage2011P4Sentences, ...passage2011P5Sentences, ...translation2011Sentences, ...writing2011ASentences, ...writing2011BSentences, ...cloze2012Sentences, ...passage2012P1Sentences, ...passage2012P2Sentences, ...passage2012P3Sentences, ...passage2012P4Sentences, ...passage2012P5Sentences, ...translation2012Sentences, ...writing2012ASentences, ...writing2012BSentences, ...passage2013P1Sentences];
+export const allQuestions = [...verifiedClozeQuestions, ...verifiedPassage1Questions, ...verifiedPassage2Questions, ...verifiedPassage3Questions, ...verifiedPassage4Questions, ...verifiedPassage5Questions, ...cloze2001Questions, ...passage2001P1Questions, ...passage2001P2Questions, ...cloze2010Questions, ...passage2010P1Questions, ...passage2010P2Questions, ...passage2010P3Questions, ...passage2010P4Questions, ...passage2010P5Questions, ...cloze2011Questions, ...passage2011P1Questions, ...passage2011P2Questions, ...passage2011P3Questions, ...passage2011P4Questions, ...passage2011P5Questions, ...cloze2012Questions, ...passage2012P1Questions, ...passage2012P2Questions, ...passage2012P3Questions, ...passage2012P4Questions, ...passage2012P5Questions, ...passage2013P1Questions];

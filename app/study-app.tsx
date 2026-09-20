@@ -21,6 +21,10 @@ import { type VocabularyLearningData, type VocabularyMark } from "./vocabulary-l
 import { migrateLegacyVocabulary } from "./vocabulary-learning/migration";
 import { vocabularyDataFrom, enrollVocabulary } from "./vocabulary-learning/study-bridge";
 import { unknownStudyFields } from "./vocabulary-learning/persistence";
+import type { ArticleV2Data } from "./article-v2/model";
+import type { V2Update } from "./article-v2/state";
+import type { V2SourceRequest } from "./article-v2/article-v2";
+import { ArticleV2Boundary } from "./article-v2-boundary";
 import "./vocabulary-learning/integration.css";
 
 import {
@@ -52,7 +56,7 @@ import {
   Trash2,
   WifiOff,
 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -161,7 +165,9 @@ type YearPhraseItem = {
   sentenceId: string;
 };
 
-type PersistedStudyState = VocabularyLearningData & {
+const ArticleV2 = lazy(() => import("./article-v2/article-v2"));
+
+type PersistedStudyState = VocabularyLearningData & ArticleV2Data & {
   version: 1;
   updatedAt: number;
   expanded: string[];
@@ -255,6 +261,9 @@ const corpusSources = Object.values(articleContents).flatMap((article) => [
   ]),
 ]);
 const sourceById = new Map(corpusSources.map((source) => [source.id, source]));
+const phraseKnowledgeFor = (label: string, sourceId?: string) => getPhraseKnowledge(label, {
+  articleId: sourceId ? sourceById.get(sourceId)?.article.id : undefined,
+});
 const phraseAnnotations = Object.values(articleContents).flatMap((article) => [
   ...article.sentences.flatMap((sentence) => sentence.phrases.map((label) => ({ label, sourceId: sentence.id }))),
   ...article.questions.flatMap((question) => [
@@ -264,10 +273,10 @@ const phraseAnnotations = Object.values(articleContents).flatMap((article) => [
         .map(label => ({ label, sourceId: questionOptionSourceId(question, option.key) })))),
   ]),
   ...article.questions.filter(question => question.format !== "matching" || question.id === question.sharedOptionsId).flatMap((question) => question.options
-    .filter((option) => option.text.includes(" ") && getPhraseKnowledge(option.text))
+    .filter((option) => option.text.includes(" ") && getPhraseKnowledge(option.text, { articleId: article.id }))
     .map((option) => ({ label: option.text, sourceId: questionOptionSourceId(question, option.key) }))),
 ]).filter((annotation, index, all) => all.findIndex(item => item.sourceId === annotation.sourceId && item.label.toLowerCase() === annotation.label.toLowerCase()) === index)
-  .map((annotation) => ({ ...annotation, patternKey: getPhraseKnowledge(annotation.label)?.key }));
+  .map((annotation) => ({ ...annotation, patternKey: phraseKnowledgeFor(annotation.label, annotation.sourceId)?.key }));
 const phraseOccurrenceCache = new Map<string, Array<{ source: (typeof corpusSources)[number]; start: number; end: number; label: string }>>();
 const termContextCache = new Map<string, SavedTermContext[]>();
 const corpusTokens = corpusSources.flatMap((source) => tokenizeWords(source.text.toLowerCase()).map((form) => {
@@ -367,7 +376,7 @@ const contextualOccurrenceCache = new Map<string, ContextualOccurrence[]>();
 function phraseOccurrenceContext(expression: string, sourceId?: string): OccurrenceContext {
   const contextual = getSentencePhraseContext(sourceId, expression);
   const knowledgeExpression = contextual?.knowledgeExpression ?? expression;
-  const knowledge = getPhraseKnowledge(knowledgeExpression);
+  const knowledge = phraseKnowledgeFor(knowledgeExpression, sourceId);
   const detail = getCollocationDetails([knowledgeExpression])[0];
   return {
     expression,
@@ -379,7 +388,7 @@ function phraseOccurrenceContext(expression: string, sourceId?: string): Occurre
 
 export function currentOccurrences(label: string, isPhrase: boolean, sourceId?: string): ContextualOccurrence[] {
   const lemma = isPhrase ? undefined : lemmaOf(label.toLowerCase(), sourceId);
-  const cacheKey = isPhrase ? JSON.stringify(["phrase", normalizePhrase(label), getPhraseKnowledge(label)?.key]) : `word:${lemma}`;
+  const cacheKey = isPhrase ? JSON.stringify(["phrase", normalizePhrase(label), phraseKnowledgeFor(label, sourceId)?.key, sourceId]) : `word:${lemma}`;
   const cached = contextualOccurrenceCache.get(cacheKey);
   if (cached) return cached;
   const grouped = new Map<string, ContextualOccurrence>();
@@ -436,7 +445,7 @@ export function groupOccurrenceSenses(occurrences: VocabEntry["occurrences"]) {
 function makeFallbackEntry(label: string, isPhrase = false, sentenceId?: string): VocabEntry {
   const normalized = label.toLowerCase();
   const option = sentenceId ? optionLookup.get(`${sentenceId}:${normalized}`) : undefined;
-  const phraseKnowledge = isPhrase ? getPhraseKnowledge(normalized) : undefined;
+  const phraseKnowledge = isPhrase ? phraseKnowledgeFor(normalized, sentenceId) : undefined;
   const guide = isPhrase ? null : getLexicalGuide(normalized, lexicalContextFor(sentenceId));
   const wordKnowledge = guide ? getWordKnowledge(guide.headword, lexicalContextFor(sentenceId)) : undefined;
   const counts = currentCounts(label, isPhrase, sentenceId);
@@ -518,7 +527,7 @@ export function resolveEntry(label: string, isPhrase = false, sentenceId?: strin
     const exact = findTermContexts(normalized).find(context => context.headword === normalized);
     if (exact) return { ...resolveEntry(exact.label, false, exact.sourceId), display: label };
   }
-  const phraseKnowledge = isPhrase ? getPhraseKnowledge(normalized) : undefined;
+  const phraseKnowledge = isPhrase ? phraseKnowledgeFor(normalized, sentenceId) : undefined;
   const guide = isPhrase ? null : getLexicalGuide(normalized, lexicalContextFor(sentenceId));
   const wordKnowledge = guide ? getWordKnowledge(guide.headword, lexicalContextFor(sentenceId)) : undefined;
   const key = phraseKnowledge
@@ -533,7 +542,7 @@ export function resolveEntry(label: string, isPhrase = false, sentenceId?: strin
   if (phraseKnowledge) {
     const context = phraseOccurrenceContext(label, sentenceId);
     const knowledgeExpression = getSentencePhraseContext(sentenceId, label)?.knowledgeExpression;
-    const contextualKnowledge = knowledgeExpression ? getPhraseKnowledge(knowledgeExpression) : undefined;
+    const contextualKnowledge = knowledgeExpression ? phraseKnowledgeFor(knowledgeExpression, sentenceId) : undefined;
     return {
       ...entry,
       display: label,
@@ -692,7 +701,7 @@ export function findTermContexts(key: string): SavedTermContext[] {
     const annotation = phraseAnnotations.find((item) => key === `pattern:${item.patternKey}` || normalizePhrase(item.label) === normalizePhrase(key));
     for (const occurrence of findPhraseOccurrences(annotation?.label ?? key, Boolean(annotation?.patternKey))) {
       contexts.set(occurrence.source.id, { articleId: occurrence.source.article.id, sourceId: occurrence.source.id,
-        headword: getPhraseKnowledge(occurrence.label)?.canonical ?? occurrence.label, label: occurrence.label, kind: "phrase" });
+        headword: phraseKnowledgeFor(occurrence.label, occurrence.source.id)?.canonical ?? occurrence.label, label: occurrence.label, kind: "phrase" });
     }
   } else {
     for (const token of corpusTokens.filter((item) => item.lemma === key || aliasToVocab[item.form] === key)) {
@@ -833,6 +842,7 @@ export default function StudyApp() {
   const [snapshotRevision, setSnapshotRevision] = useState(0);
   const [snapshotIdentity, setSnapshotIdentity] = useState<{ epoch: number; owner: string | null }>({ epoch: 0, owner: null });
   const [snapshotExtensions, setSnapshotExtensions] = useState<Record<string, unknown>>({});
+  const [v2SourceRequest, setV2SourceRequest] = useState<V2SourceRequest>();
   const vocabularyWriteBlocked = useRef(false);
   const [vocabularyError, setVocabularyError] = useState("");
   const [vocabularyNotice, setVocabularyNotice] = useState("");
@@ -1212,6 +1222,24 @@ export default function StudyApp() {
     reviewFilter,
   }), [activeSection, answers, expanded, listItems, lists, marks, revealTiming, reviewFilter, reviewSchedule, selectedYear, sentenceMarks, sentenceNotes, submittedSections, submittedTranslationTasks, termContexts, termNotes, termRatings, timerMode, translationAnswers, practiceAttempts, practiceReveals, practiceSessions, learningReflections, questionWork, locationAttempts, vocabularyData, snapshotExtensions]);
 
+  const updateArticleV2 = useCallback((update: V2Update) => {
+    if (!hydrated || vocabularyWriteBlocked.current || !snapshotRef.current || snapshotIdentity.epoch !== snapshotEpoch.current || snapshotIdentity.owner !== snapshotOwner.current) throw new Error("记录正在切换或尚未安全载入，请稍后重试。");
+    const current = { ...snapshotRef.current, ...persistedState, ...vocabularyRef.current };
+    const snapshot = { ...current, ...update(current), updatedAt: Date.now() } as PersistedStudyState;
+    try {
+      if (!isStudySnapshot(snapshot)) throw new Error("本次记录校验失败，上一份学习记录已保留。");
+      saveLocalStudyState(window.localStorage, snapshotOwner.current, { state: snapshot, base: remoteBase.current });
+      applySnapshot(snapshot);
+    } catch (error) {
+      vocabularyWriteBlocked.current = true;
+      readyToUpload.current = false;
+      setRemoteReady(false);
+      const message = error instanceof Error ? error.message : "学习记录保存失败，请先导出本机备份。";
+      setVocabularyError(message); setSyncError(message);
+      throw error;
+    }
+  }, [hydrated, persistedState, snapshotIdentity, applySnapshot]);
+
   const updateVocabulary = useCallback((update: (current: VocabularyLearningData) => VocabularyLearningData) => {
     if (!hydrated || vocabularyWriteBlocked.current || !snapshotRef.current) throw new Error("记录尚未安全载入，暂不能保存学习结果。");
     const next = update(vocabularyRef.current);
@@ -1255,9 +1283,10 @@ export default function StudyApp() {
     }
   }, [hydrated, updateVocabulary]);
 
+  const inV2Vocabulary = activeArticle.experienceVersion === 2 && persistedState.articleV2Progress?.[activeArticle.id]?.page === "vocabulary";
   useEffect(() => {
-    if (view === "vocabulary-learning" && hydrated) queueMicrotask(() => { ensureVocabularyMigration(); });
-  }, [view, hydrated, ensureVocabularyMigration, snapshotRevision]);
+    if ((view === "vocabulary-learning" || inV2Vocabulary) && hydrated) queueMicrotask(() => { ensureVocabularyMigration(); });
+  }, [view, inV2Vocabulary, hydrated, ensureVocabularyMigration, snapshotRevision]);
 
   useEffect(() => {
     if (contextPicker) firstContextOption.current?.focus();
@@ -1384,6 +1413,11 @@ export default function StudyApp() {
   function openPracticeSentence(id: string, at: number, taskId?: string) {
     const article = sentenceArticle.get(id) ?? Object.values(articleContents).find(article => `${article.id}-map` === id);
     if (!article) return;
+    if (article.experienceVersion === 2) {
+      setV2SourceRequest(current => ({ sourceId: id, nonce: (current?.nonce ?? 0) + 1 }));
+      setActiveSection(article.id); setSelectedYear(article.year); setView("study");
+      return;
+    }
     beginPractice(article.id, at);
     setPracticeTarget({ sentenceId: id, taskId });
     setActiveSection(article.id); setSelectedYear(article.year); setView("study"); setStudyPart("passage"); setExpanded(current => new Set(current).add(id));
@@ -1514,6 +1548,7 @@ export default function StudyApp() {
   function goToSource(sourceId: string) {
     const target = sourceDestination(sourceId);
     if (!target) return;
+    if (articleContents[target.articleId].experienceVersion === 2) setV2SourceRequest(current => ({ sourceId, nonce: (current?.nonce ?? 0) + 1 }));
     sourceNavigation.current = target.elementId;
     setActiveSection(target.articleId);
     setSelectedYear(target.year);
@@ -1934,6 +1969,7 @@ export default function StudyApp() {
   }
 
   const termIsLocked = (() => {
+    if (activeArticle.experienceVersion === 2) return false;
     if (!selectedTerm || view !== "test") return false;
     if (revealTiming === "instant") return false;
     const submittedTranslationSentence = activeArticle.kind === "translation" && (activeArticle.translationTasks ?? []).some((task) => (
@@ -2043,6 +2079,7 @@ export default function StudyApp() {
             </button>)}<Button variant="outline" onClick={() => setVocabularyChoices(null)}>取消选择</Button>
           </section>}
           {evidenceOrigin && view === "study" && evidenceOrigin.articleId === activeArticle.id && <aside className="evidence-return-bar" aria-label="返回原题"><span>正在核对：第{evidenceOrigin.number}题{evidenceOrigin.option ? ` ${evidenceOrigin.option}项` : ""}</span><button type="button" onClick={returnToQuestion}>返回第{evidenceOrigin.number}题</button><button type="button" aria-label="关闭返回条" onClick={() => setEvidenceOrigin(null)}>×</button></aside>}
+          {activeArticle.experienceVersion === 2 && ["test", "study", "review"].includes(view) ? <ArticleV2Boundary key={`${snapshotIdentity.owner ?? "guest"}:${activeArticle.id}`}><Suspense fallback={<p role="status">正在载入文章学习页面…</p>}><ArticleV2 article={activeArticle} data={persistedState} ready={hydrated && !vocabularyError} corpus={vocabularyCorpus} onUpdate={updateArticleV2} onTerm={openTerm} onExternalSource={goToSource} sourceRequest={v2SourceRequest} renderQuestionDetails={(question, onSentence) => <QuestionStudyCard question={question} onTerm={openTerm} onSentence={onSentence} />} /></Suspense></ArticleV2Boundary> : <>
           {view !== "vocabulary-learning" && <section className="paper-heading">
             {view === "vocabulary" ? (
               <>
@@ -2482,6 +2519,7 @@ export default function StudyApp() {
               />
             </TabsContent>
           </Tabs>
+          </>}
         </main>
       </div>
 
@@ -3804,7 +3842,7 @@ function renderInteractiveText(
     if (match.start > cursor) {
       nodes.push(...renderWords(text.slice(cursor, match.start), sentenceId, onTerm, `before-${index}`));
     }
-    const phraseKnowledge = getPhraseKnowledge(match.label);
+    const phraseKnowledge = phraseKnowledgeFor(match.label, sentenceId);
     nodes.push(
       <span
         key={`phrase-${sentenceId}-${match.start}`}

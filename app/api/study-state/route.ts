@@ -6,6 +6,7 @@ import { getSessionUser, isSameOrigin } from "../_lib/auth";
 import { hasStudyRecords, isStudySnapshot } from "../../study-sync";
 import { preserveTrainingRecords } from "../../learning-model";
 import { preserveVocabularyRecords } from "../../vocabulary-learning/persistence";
+import { preserveArticleV2Records } from "../../article-v2/persistence";
 import { MAX_STUDY_STORAGE_BYTES, packVocabularySnapshot, studyStorageBytes, unpackVocabularySnapshot } from "../../vocabulary-learning/codec";
 
 function reply(body: unknown, status = 200) {
@@ -53,7 +54,7 @@ export async function PUT(request: Request) {
   const previous = existing ? unpackVocabularySnapshot(JSON.parse(existing.payload)) : {};
   let safeState: Record<string, unknown>;
   try {
-    safeState = preserveVocabularyRecords(previous, preserveTrainingRecords(previous, incoming));
+    safeState = preserveArticleV2Records(previous, preserveVocabularyRecords(previous, preserveTrainingRecords(previous, incoming)));
   } catch {
     return reply({ error: "词汇尝试记录发生冲突，已保留云端原记录。请重新同步，本机记录不会被清空。" }, 409);
   }

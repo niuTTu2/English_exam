@@ -1,0 +1,215 @@
+{
+  "base": "a8b258fb8c191d3016120b63b5afd823b0851345",
+  "articles": {
+    "cloze": {
+      "content": "6d2e8af2971533596184a32732c5317d2f032fbc0427e5579ec8ccae1e8752f5",
+      "render": "d599e4cfe869805edba1127e94868e6bdca3416140018e11a5a264117063f373",
+      "sentences": 8,
+      "questions": 10
+    },
+    "p1": {
+      "content": "fc08aefb15133f05edd73fd25fa79ef9265bbb447dae5c737b9db77798fb58d5",
+      "render": "f3bb1ec520cad83dd3f075ab6e1cab05beb37e8b9acb3d0ea1cbdff2d144cb44",
+      "sentences": 25,
+      "questions": 4
+    },
+    "p2": {
+      "content": "f3e50541b47e824728246e362f583d64c667a6452986f1962b720741fe6925e9",
+      "render": "d2f5ae5c94c5c005b05912344bfbbb0719f290fc7e466232fcd16d4a4f4ad031",
+      "sentences": 27,
+      "questions": 4
+    },
+    "p3": {
+      "content": "c99c10c97975375af3e623392986856ff72f15fb6357661f68180074a1d10e72",
+      "render": "fb3077510a8af580cfb386fc28d4fdf0828af85666b5547c4f3a301f7046b15e",
+      "sentences": 13,
+      "questions": 4
+    },
+    "p4": {
+      "content": "1228718bd343fc9039a609bf5ac0eff240b9dfe65bd11c4509e5cab1bac8ee69",
+      "render": "57335d7e3bd69c8f613d39a7be95f8394ce4e41b1adf9da736f6c275b311d3a7",
+      "sentences": 17,
+      "questions": 4
+    },
+    "p5": {
+      "content": "0b95e5f579d7eecc96f27f10fd10ef763212db1a77190012fb2b70fdf9eb3afa",
+      "render": "2899f873375c9ddd455fb22d94c1c0694c37c3348f0f36b1dcfc12eb919fb0e1",
+      "sentences": 15,
+      "questions": 4
+    },
+    "translation": {
+      "content": "2c3c75c17d9079e808bd5dcab96899f347b8094592474bb407bd1b539137de77",
+      "render": "b4156f93852c231c543504b6df8bb818b247ae438a763ae1bdd2b9851841845a",
+      "sentences": 5,
+      "questions": 0
+    },
+    "2001-cloze": {
+      "content": "dc5fd6074fcbf12bfa5c41ead24780c7199c2a7795f9667836cf0c38d5c081ab",
+      "render": "cebd02d61d5e64b5639a1694aed1aee1693f0b8774826eded083fbb0f9aa67b8",
+      "sentences": 9,
+      "questions": 20
+    },
+    "2001-p1": {
+      "content": "446b9e55fe24b99d80a854e06fcb55ebca13c50b192939ebe9554f0a429c35b3",
+      "render": "8229804504489bd9886e238596ad7f59a973990ca44e4a4a804546cfc70150aa",
+      "sentences": 16,
+      "questions": 4
+    },
+    "2001-p2": {
+      "content": "7a0a9fd8add4d67885963941c96cd4268eae4b8d4639a89068b031e223736a95",
+      "render": "233288e0398f3f8cf4e745fe88051dfffcc4b08d85284be6be8ef718d6568c64",
+      "sentences": 27,
+      "questions": 4
+    },
+    "2010-cloze": {
+      "content": "978aa1591799f9d4f61d825161c20ee4aefba6f453e18c982651545cf2e6b544",
+      "render": "7f6135dc7d5f6b2a165dd86514d7d6af447caefc383495413eedfbb10092fecc",
+      "sentences": 13,
+      "questions": 20
+    },
+    "2010-p1": {
+      "content": "5e76f53769abd6c9247e5b27290269d39cc21733f43bcaeb53ba5f85427fc265",
+      "render": "04c5c8d63a3396d9990c9ce03273661202a509be8079983cf6eb887cf419fa12",
+      "sentences": 19,
+      "questions": 5
+    },
+    "2010-p2": {
+      "content": "d565ed90723747913b95d103e38c1e502fad9707b1e4fe3e59850394b750de96",
+      "render": "18d102d767c33654e6393e1c79137c373a4079909ef89d2001240ea66bc91f37",
+      "sentences": 19,
+      "questions": 5
+    },
+    "2010-p3": {
+      "content": "cb0f5af2f42c6b7a3d54cfb8db08e3a99beebe714dee6fbb3350e3700e912936",
+      "render": "c534482a6a4ea2a5233869c5d2ab58d784f3851ed3fc9616dee09025d8513bc9",
+      "sentences": 16,
+      "questions": 5
+    },
+    "2010-p4": {
+      "content": "9a9aecfb08bedbb779b55ff843344cbc38e998b7c72f179fe7012ae15e851e16",
+      "render": "38c93787abf7067440f5081abb3b735fc2c49d4c99b68321ca1420b9e2cc8612",
+      "sentences": 14,
+      "questions": 5
+    },
+    "2010-p5": {
+      "content": "d4c90cc4b983310a502445e08c6ced4daa837f04497b64ad70dbe0dd23b41f17",
+      "render": "0b09caa1813b4b83ddff6e9a83023af92b637bd6b491814ddbc9fbef735b81df",
+      "sentences": 28,
+      "questions": 5
+    },
+    "2010-translation": {
+      "content": "757e8a1f5fad433a6591f5939fd7b6417ef4b10c2ce3549af75dacfdd6e552b6",
+      "render": "e44329eaabd730819daff429b31ff3ebfc9bc10b06294a3f288ccdd540eafc10",
+      "sentences": 10,
+      "questions": 0
+    },
+    "2011-cloze": {
+      "content": "57273a603dfb402a5728da9f63631d5839aad089869d6da4d4065991b932fc21",
+      "render": "63d19b02398ed73d699dde41d810d478d8d1ffe87d3b0a06647010787f5586db",
+      "sentences": 16,
+      "questions": 20
+    },
+    "2011-p1": {
+      "content": "169227a31fdb70e319d54a129a931219b4718329c73be74483897e22f2f4db63",
+      "render": "23eb31a140b4d4f4a00787d5a2d847a9b2b0690ba287cd8072e89d4965503760",
+      "sentences": 19,
+      "questions": 5
+    },
+    "2011-p2": {
+      "content": "f243e3073c7239edac192e3ab5832c3bd0049b9e9c7b49da1a9147a5475d4db6",
+      "render": "f5fbbd758e3172ca11888b856ef019a2460f37b49cd103a3c12748484872844b",
+      "sentences": 30,
+      "questions": 5
+    },
+    "2011-p3": {
+      "content": "4ceeb70a09abd33e96339eaa5770ae899d576998602e8b7c60f468352cd1c955",
+      "render": "6151065d6e345b72b94469ff7f1e441917e80734c0465dd9c62821d1d367cc56",
+      "sentences": 17,
+      "questions": 5
+    },
+    "2011-p4": {
+      "content": "cf533c1f1fbfed8fd28cbb58a6960eae2a9851fd9f392f1132c121c9dd23daae",
+      "render": "892b325b43d4bdc8b6857cbf23f03d597d902450fa4a4b5f1a784994de5f6cbf",
+      "sentences": 17,
+      "questions": 5
+    },
+    "2011-p5": {
+      "content": "89542f80fe6f5d9ea1b6ba58c6dc98a4edea47aba6638f37dcd8fc44510de96d",
+      "render": "deb0168a1bfbb01e2defae1fd1b70916df8a0564deb295bfcf38819c37fec2dc",
+      "sentences": 21,
+      "questions": 5
+    },
+    "2011-translation": {
+      "content": "b88346cd57df290270fd07507e701cd5d7ba99bb9a1a44905126b8e4cf31c112",
+      "render": "b9810684629c995a5e3aaf8eabc84a5bbf811e37b69c0471c1462d2645bbe895",
+      "sentences": 7,
+      "questions": 0
+    },
+    "2011-writing-a": {
+      "content": "f142cd302cb1c7736f11e95ca8f8692bd383317892b24ed65633b6e231b4c30e",
+      "render": "6d3dca388aabbfb78866b8ac0a2be5f3a03fa12c405bd13dc7e746586092da94",
+      "sentences": 6,
+      "questions": 0
+    },
+    "2011-writing-b": {
+      "content": "8e246a3bca62654982238e3dfc682697e53b6678277cc13a67b2a977fd17e853",
+      "render": "e8da09db58b5702af6448cbb41929f43fcbcc1032d5e9495a20c6b24386792ed",
+      "sentences": 4,
+      "questions": 0
+    },
+    "2012-cloze": {
+      "content": "94776446fddfab4ea47e320aea8822012ce81229958e028153b3f90a712a8d69",
+      "render": "b94bb162f5ddf1b4ac27ff39128b99a7b7be6396997ec9546d70fa317ad2b9d6",
+      "sentences": 16,
+      "questions": 20
+    },
+    "2012-p1": {
+      "content": "450504d970cb2c3ae1f9f14fcdb465df9f485f6fd232b34d129c0cba1ceb6465",
+      "render": "d7b1dbb755bcef810ab74ec5ce6964f6072495860721bdb6bc035775b045b1a8",
+      "sentences": 18,
+      "questions": 5
+    },
+    "2012-p2": {
+      "content": "6e883b490e48309f16fbc0d4529f860f94fd0367f37b7c48aedcd155ce1ac139",
+      "render": "f9087fc397a122d0fa90403efa8741b37908eebb8021e59307dfe2d06c967b45",
+      "sentences": 18,
+      "questions": 5
+    },
+    "2012-p3": {
+      "content": "04e5ffa3e8b8d87c096640b22cb3f80a0e481463f62df834bfd3b344943882dd",
+      "render": "d6d000e56685018a5635d07747ab80753911211b601a738e245314f9ddcc6fca",
+      "sentences": 24,
+      "questions": 5
+    },
+    "2012-p4": {
+      "content": "e821fab6bec6944e63ff57b97c11ec44ab6b2625fc7560a1163eb87ca114a7af",
+      "render": "7e2b2dd40d775768d9756d06dc768e4a827e686bd5792009ca814aba2a4d937d",
+      "sentences": 18,
+      "questions": 5
+    },
+    "2012-p5": {
+      "content": "55c188102a8f378a86efbf68e20952576a21a329abd4b93fd09d456702eec5de",
+      "render": "bcbf09671fd6e0f2c8237ea7c88e53cf9ceccc377ca6aa2102a103da253b28f9",
+      "sentences": 28,
+      "questions": 5
+    },
+    "2012-translation": {
+      "content": "355a83ae959b57408299a2e70cc92775e1c75157a21a256e31c7a2c609dbd886",
+      "render": "e5f9e289ab44bbfe8fe70e1cc77faf10b1fd76383ae4c7517a2d660a1b08c5e7",
+      "sentences": 6,
+      "questions": 0
+    },
+    "2012-writing-a": {
+      "content": "cef36b493e99b33a66019b3758c12c375c236aaad5a7058577a48e5644c942c6",
+      "render": "29b6ac23e589c8079a584931be0900864a1126d1ff1ed0e8f82ebb6b85c006a3",
+      "sentences": 6,
+      "questions": 0
+    },
+    "2012-writing-b": {
+      "content": "61eae996ac709258b6395e81fb2c835796eafd2a45a4f3d820bec775abbcbc10",
+      "render": "f6eb5eca2ed23c574d501f0777958df8da1a8ce9356751689df28823a7c155d1",
+      "sentences": 4,
+      "questions": 0
+    }
+  }
+}

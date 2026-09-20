@@ -1,6 +1,18 @@
 # 从这里开始
 
-这是“真题句读”的持续维护入口。GitHub 仓库是唯一代码源，`main` 分支已连接 Cloudflare；用户已明确授权按“一篇文章一个提交”的方式持续精审、检查、推送和自动部署。
+## 本轮唯一任务：以后新文章的 V2 架构（2026-09-20）
+
+当前用户要求覆盖下方历史批量升级安排：冻结全部既有文章、ID、教学内容、页面体验和学习记录。本轮只导入用户随后提供的唯一试点 **2013英语二Text 1**，不导入整卷其他内容、不迁移任何 V1。新阅读仅由明确的 `experienceVersion: 2` 进入“做题 / 快速读懂 / 题目解析 / 词汇搭配”；缺失标识继续 V1。
+
+先读 [V1/V2 架构审计](docs/NEW_ARTICLE_V2_ARCHITECTURE.md)、[V2 导入模板](docs/ARTICLE_IMPORT_TEMPLATE_V2.md) 和 [发布清单](docs/RELEASE_CHECKLIST.md)。旧 `TRAINING_TEMPLATE.md` 的每句完整语法和任务要求只适用于 V1，不得带入 V2。
+
+正式试点生产 ID 为 `2013-p1`：用户DOCX中的6个原卷段落、14个句源和21—25题，答案A/D/B/B/C；实现与来源报告见 `docs/change-reports/2013-passage-1-v2-pilot.md`。`tests/fixtures/article-v2-synthetic.ts` 仍只是合成工程夹具。代码保留在 `codex/new-article-v2`，完成360/390、离线及正式站验收前不推送生产 main；不改变登录、邮箱、部署或同步协议。实际测试与未验收项见架构文档末尾。
+
+真实试点浏览器验收入口：`node tests/browser-v2/serve-pilot.mjs`；访问 `http://127.0.0.1:5183/__v2-inspection`。操作与证据记录见 [V2_BROWSER_ACCEPTANCE.md](docs/V2_BROWSER_ACCEPTANCE.md)。该入口只在本机运行完整应用，不代替浏览器实测结果。
+
+以下为历史维护背景；与本节冲突时，以本节和最新用户指令为准。
+
+ 这是“真题句读”的持续维护入口。GitHub 仓库是唯一代码源，`main` 分支已连接 Cloudflare；用户已明确授权按“一篇文章一个提交”的方式持续精审、检查、推送和自动部署。
 
 ## 当前优先级（2026-09-18）
 

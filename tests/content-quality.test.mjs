@@ -26,6 +26,7 @@ const syntaxGuide = await vite.ssrLoadModule("/app/syntax-guide.ts");
 const verifiedSyntax = await vite.ssrLoadModule("/app/verified-syntax-2000.ts");
 const reviewedSyntax = await vite.ssrLoadModule("/app/reviewed-syntax.ts");
 const allSentences = data.allSentences ?? data.sentences;
+const v2SentenceIds = new Set(Object.values(data.articleContents).filter(a => a.experienceVersion === 2).flatMap(a => a.sentences.map(s => s.id)));
 const allQuestions = data.allQuestions ?? data.questions;
 
 test("单词本句义与词组、句意分开，保留词形与语境差异", async () => {
@@ -241,6 +242,8 @@ test("句子分析完整并可还原原文", () => {
     ids.add(sentence.id);
     assert.ok(Number.isInteger(sentence.number) && sentence.number > 0, `${sentence.id} 序号无效`);
     requireText(sentence.text, `${sentence.id}.text`);
+    // V2 has a separate understanding/evidence gate; V1 keeps every original syntax check.
+    if (v2SentenceIds.has(sentence.id)) continue;
     requireText(sentence.trunk, `${sentence.id}.trunk`);
     requireText(sentence.literal, `${sentence.id}.literal`);
     requireText(sentence.natural, `${sentence.id}.natural`);
@@ -718,11 +721,13 @@ test("同一词条按文章和句子语境显示本句义与可替换表达", ()
 });
 
 test("所有预标词组都有规范原型、中文义和语法", () => {
+  const articleBySentence = new Map(Object.values(data.articleContents).flatMap(article => article.sentences.map(sentence => [sentence.id, article])));
   for (const sentence of allSentences) {
     const lower = sentence.text.toLowerCase();
     for (const source of sentence.phrases) {
       assert.ok(lower.includes(source.toLowerCase()), `${sentence.id} 的词组不在原句中：${source}`);
-      const phrase = knowledge.getPhraseKnowledge(source);
+      const article = articleBySentence.get(sentence.id);
+      const phrase = knowledge.getPhraseKnowledge(source, article?.experienceVersion === 2 ? { articleId: article.id } : undefined);
       assert.ok(phrase, `词组缺少知识条目：${source}`);
       requireText(phrase.canonical, `${source}.canonical`);
       requireText(phrase.type, `${source}.type`);
@@ -822,9 +827,10 @@ test("提交答案后的题目分析完整且英文词可追溯", () => {
 });
 
 test("正文、题干选项中的全部词形都有有效知识", () => {
+  const v1Articles = Object.values(data.articleContents).filter(article => article.experienceVersion !== 2);
   const corpus = [
-    ...allSentences.map((sentence) => sentence.text),
-    ...allQuestions.flatMap((question) => [question.prompt, ...question.options.map((option) => option.text)]),
+    ...v1Articles.flatMap(article => article.sentences.map(sentence => sentence.text)),
+    ...v1Articles.flatMap(article => article.questions.flatMap(question => [question.prompt, ...question.options.map(option => option.text)])),
   ].join(" ");
   const tokens = [...new Set(corpus.toLowerCase().match(/[a-z]+(?:\d+[a-z]*)+\b|\d+(?:st|nd|rd|th)\b|\d{4}s\b|(?:[a-z]\.){2,}|(?<![a-z0-9])[a-z]+(?:-[a-z]+)?(?:['’][a-z]+)?/g) ?? [])];
 

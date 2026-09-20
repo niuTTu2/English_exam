@@ -1,3 +1,4 @@
+import type { PracticePurpose } from "./article-v2/model";
 export const grammarConcepts = {
   "nonfinite-gerund": "动名词结构",
   "nonfinite-infinitive": "不定式结构", "clause-condition": "条件从句", "clause-purpose": "目的从句", "parallel-structure": "并列结构", "passive-voice": "被动语态", "lexical-context": "语境词义",
@@ -19,6 +20,7 @@ export type ErrorCategory = keyof typeof errorCategories;
 export const hintTypes = ["word", "syntax", "translation", "article-map", "previous-answer"] as const;
 export type HintType = typeof hintTypes[number];
 export type PracticeTask = {
+  purpose?: PracticePurpose;
   id: string; revision: number; kind: "token" | "choice" | "range" | "link" | "order"; prompt: string; options: string[]; answer: string;
   evidence: string; feedback: string; conceptId: GrammarConceptId; errorType: ErrorCategory;
   links?: Array<{ source: string; target: string }>;

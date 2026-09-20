@@ -1,3 +1,4 @@
+import { passage2013P1Lexicon, passage2013P1LemmaAliases } from "./2013-passage-1-vocabulary";
 import { passage4FormContexts } from "./passage-4-contexts";
 import { passage3FormContexts } from "./passage-3-contexts";
 import { getPassage2011P2FormContext } from "./2011-passage-2-contexts";
@@ -729,6 +730,7 @@ const sourceLemmaAliases: Record<string, Record<string, string>> = {
 
 export function canonicalLemma(token: string, context?: LexicalContext) {
   const normalized = token.trim().toLowerCase().replace(/[’‘]/g, "'");
+  if (context?.articleId === "2013-p1" && passage2013P1LemmaAliases[normalized]) return passage2013P1LemmaAliases[normalized];
   if (context?.articleId === "2011-writing-b" && writing2011BLemmaAliases[normalized]) return writing2011BLemmaAliases[normalized];
   if (context?.articleId === "2011-writing-a" && writing2011ALemmaAliases[normalized]) return writing2011ALemmaAliases[normalized];
   if (context?.articleId === "2011-translation" && translation2011LemmaAliases[normalized]) return translation2011LemmaAliases[normalized];
@@ -760,6 +762,7 @@ export function canonicalLemma(token: string, context?: LexicalContext) {
 export function getLexicalGuide(token: string, context?: LexicalContext): LexicalGuide {
   const normalized = token.trim().toLowerCase().replace(/[’‘]/g, "'");
   const headword = canonicalLemma(normalized, context);
+  const passage2013P1Entry = passage2013P1Lexicon[headword];
   const passage3Entry = passage3Lexicon[headword];
   const passage1Entry = passage1Lexicon[headword];
   const passage2Entry = passage2Lexicon[headword];
@@ -844,6 +847,7 @@ export function getLexicalGuide(token: string, context?: LexicalContext): Lexica
     "2012-translation": translation2012Entry,
     "2012-writing-a": writing2012AEntry,
     "2012-writing-b": writing2012BEntry,
+    "2013-p1": passage2013P1Entry,
     "2011-cloze": cloze2011Entry,
     "2011-p1": passage2011P1Entry,
     "2011-writing-b": writing2011BEntry,
