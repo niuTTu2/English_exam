@@ -38,3 +38,14 @@
 .vl-marked-library ul, .v2-marked-vocabulary ul { list-style: none; padding: 0; display: grid; gap: .65rem; }
 .vl-marked-library li, .v2-marked-vocabulary li { border-bottom: 1px solid var(--border, #dce3df); padding: .6rem 0; overflow-wrap: anywhere; }
 .vl-marked-library small, .v2-marked-vocabulary small { display: block; color: #62776e; }
+.vl-word-state-tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 14px 0 10px; }
+.vl-word-state-tabs button { min-height: 46px; padding: 10px 12px; border: 1px solid #c7d6cd; border-radius: 10px; background: #f7faf6; color: #315e58; }
+.vl-word-state-tabs button[aria-pressed="true"] { border-color: #7ca897; background: #e7f0e8; font-weight: 700; }
+.vl-word-state-tabs b { margin-left: 4px; }
+.vl-marked-library > input[type="search"] { width: 100%; min-height: 44px; padding: 9px 11px; border: 1px solid #bdcec3; border-radius: 9px; background: white; }
+.vl-date-groups { display: grid; gap: 12px; margin-top: 12px; }
+.vl-date-group { min-width: 0; padding: 12px 14px; border: 1px solid #d8e1d8; border-radius: 12px; background: #fbfcf8; }
+.vl-date-group h4 { display: flex; justify-content: space-between; gap: 10px; margin: 0; color: #526d63; font-size: 14px; }
+.vl-date-group h4 small { font-size: 11px; font-weight: 400; }
+.vl-marked-phrases { margin-top: 12px; border-top: 1px solid #d8e1d8; }
+.vl-marked-phrases summary { min-height: 44px; padding: 12px 0; cursor: pointer; color: #526d63; font-weight: 600; }

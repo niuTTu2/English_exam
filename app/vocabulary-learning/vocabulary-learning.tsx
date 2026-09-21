@@ -13,6 +13,7 @@ import { SpellingPractice } from "./spelling-practice";
 import { DifficultMemories, LearningSummary } from "./learning-summary";
 import "./vocabulary-learning.css";
 import { isMarkedVocabulary } from "./reading-marks";
+import { datedWords, groupDatedWords, type DatedWordState } from "./dated-words";
 
 export type VocabularyLearningProps = {
   data: VocabularyLearningData;
@@ -61,12 +62,21 @@ export function VocabularyLearning({ data, onUpdate, corpus, articleId, articleL
   const candidate = currentMemory && currentContext ? corpus.getCandidate(currentContext, currentMemory.kind) : undefined;
   const stats = useMemo(() => vocabularyTodayStats(memories, attempts, now), [memories, attempts, now]);
   const [librarySearch, setLibrarySearch] = useState("");
-  const markedLibrary = useMemo(() => memoryGroups(memories).groups.flatMap(group => {
-    const memory = representativeMemory(group);
-    if (!memory || !group.some(member => isMarkedVocabulary(member, marks))) return [];
+  const [wordLibraryState, setWordLibraryState] = useState<DatedWordState>("pending");
+  const wordLibrary = useMemo(() => datedWords(memories, attempts), [memories, attempts]);
+  const pendingWords = wordLibrary.filter(item => item.state === "pending");
+  const learnedWords = wordLibrary.filter(item => item.state === "learned");
+  const markedPhrases = useMemo(() => memoryGroups(memories).groups.flatMap(group => {
+    const memory = representativeMemory(group) ?? group[0];
+    if (!memory || memory.kind !== "phrase" || !group.some(member => isMarkedVocabulary(member, marks))) return [];
     return [vocabularyMemoryView(memories, memory.id) ?? memory];
-  }).sort((a, b) => b.createdAt - a.createdAt || a.id.localeCompare(b.id)), [memories, marks]);
-  const visibleMarked = markedLibrary.filter(memory => `${memory.headword} ${memory.meaning}`.toLowerCase().includes(librarySearch.trim().toLowerCase()));
+  }).sort((left, right) => right.createdAt - left.createdAt || left.id.localeCompare(right.id)), [memories, marks]);
+  const visibleWordGroups = useMemo(() => {
+    const query = librarySearch.trim().toLowerCase();
+    const selected = (wordLibraryState === "pending" ? pendingWords : learnedWords)
+      .filter(item => `${item.memory.headword} ${item.memory.meaning}`.toLowerCase().includes(query));
+    return groupDatedWords(selected, now);
+  }, [librarySearch, learnedWords, now, pendingWords, wordLibraryState]);
   const pausedMemories = useMemo(() => memoryGroups(memories).groups.flatMap(group => {
     const paused = group.every(memory => memory.paused || memory.status === "paused") ? group[0] : undefined;
     return paused ? [paused] : [];
@@ -199,7 +209,7 @@ export function VocabularyLearning({ data, onUpdate, corpus, articleId, articleL
           if (!queued) return current;
           return withSession({ ...current, vocabularyMemories: result.memories }, createSession(result.queue, at, { id: sessionId, ...(limit === "ten-minutes" ? { timeLimitMinutes: 10 } : {}) }));
         });
-        if (saved && !queued) setMessage(mode === "review" ? "全局生词库当前没有到期项目；标记的生词会直接加入这里。" : remainingWords + remainingPhrases === 0 ? "今天的新词目标已经完成，可以复习到期项或调整每日计划。" : scope.kind === "list" ? "这份清单中能匹配真题的词汇已自动关联；当前没有符合计划的新词，可以调整每日目标或学习其他清单。" : "本范围暂时没有符合当前计划的新词。可以从原句标记词汇，或在学习偏好中包含“本句识别即可”的词。");
+        if (saved && !queued) setMessage(mode === "review" ? "全局生词库当前没有到期项目；标记的生词会直接加入这里。" : remainingWords + remainingPhrases === 0 ? "今天的待学目标已经完成，可以复习到期项或调整每日计划。" : scope.kind === "list" ? "这份清单中能匹配真题的词汇已自动关联；当前没有符合计划的待学内容，可以调整每日目标或学习其他清单。" : "本范围暂时没有符合当前计划的待学内容。可以从原句标记词汇，或在学习偏好中包含“本句识别即可”的词。");
         setNow(at);
       } catch (error) { setMessage(error instanceof Error ? error.message : "学习队列暂时无法准备，原记录保持不变。"); }
       finally { setBusy(false); }
@@ -267,6 +277,7 @@ export function VocabularyLearning({ data, onUpdate, corpus, articleId, articleL
   }
 
   const metrics = { ...stats, dueWords: stats.dueWords, duePhrases: stats.duePhrases, overdue: stats.overdue,
+    pendingWords: pendingWords.length, learnedWords: learnedWords.length,
     remainingNew: Math.max(0, settings.dailyWords - stats.newWords) + Math.max(0, settings.dailyPhrases - stats.newPhrases),
     estimatedMinutes: Math.max(1, Math.ceil(Math.min(settings.sessionSize, stats.dueWords + stats.duePhrases || settings.dailyWords + settings.dailyPhrases) / 2)) };
   const unresolved = data.vocabularyMigration?.unresolvedKeys ?? [];
@@ -274,14 +285,25 @@ export function VocabularyLearning({ data, onUpdate, corpus, articleId, articleL
     {spellingFeedback && <section className="vl-spelling" aria-label="已保存的拼写结果"><h3>{spellingFeedback.correct ? "拼写一致" : "再看一次原文词形"}</h3><p lang="en">{spellingFeedback.expected}</p><p>{spellingFeedback.meaning}</p><p>拼写结果已保存。阅读识别记录保持不变。</p><button type="button" className="vl-primary" onClick={() => setSpellingFeedback(null)}>下一项</button></section>}
     {!spellingFeedback && !inSession && session?.status !== "completed" && <>
       <VocabularyHome metrics={metrics} settings={settings} scope={scope} articleLabel={articleLabel} year={year} lists={lists} busy={busy} message={busy ? "正在准备这一组真题词汇…" : message} resumable={resumable ? { completed: resumable.cursor, total: resumable.queue.length } : undefined} onScope={setScope} onSettings={value => { mutate(current => ({ ...current, vocabularySettings: value })); }} onStart={start} onResume={() => { if (resumable) mutate(current => withSession(current, resumeBatch(current.vocabularySessions?.[resumable.id] ?? resumable, current.vocabularyMemories ?? {}, Date.now()))); }} />
-      <section className="vl-marked-library" aria-label="所有年份的已标记生词">
-        <h3>我标记的生词 · {markedLibrary.length}</h3><p>汇总所有年份和文章。同义项合并，来源保留；今日复习不受上面的新词筛选限制。</p>
-        <input type="search" aria-label="搜索全局生词" placeholder="搜索单词或中文义" value={librarySearch} onChange={event => setLibrarySearch(event.target.value)} />
-        {!visibleMarked.length && <p>{librarySearch ? "没有匹配的生词。" : "在真题中标记不会的词后，会直接出现在这里。"}</p>}
-        <ul>{visibleMarked.map(memory => { const context = memory.contexts.find(item => item.id === memory.primaryContextId) ?? memory.contexts[0]; return <li key={memory.id}>
-          <button type="button" className="vl-text-button" onClick={() => context && (onTerm ? onTerm(context.expression, context.sourceId, memory.kind === "phrase") : onSource(context.sourceId))}><strong lang="en">{memory.headword}</strong></button> · {memory.meaning}
-          <small>{memory.paused || memory.status === "paused" ? "已暂停" : memory.dueAt <= now ? "待复习" : "已安排后续复习"} · 来源：{[...new Set(memory.contexts.map(item => item.year))].join("、")} · {new Set(memory.contexts.map(item => item.sourceId)).size} 处</small>
-        </li>; })}</ul>
+      <section className="vl-marked-library" aria-label="按日期整理的单词">
+        <h3>我的单词</h3><p>待学按加入日期归档，已学按首次学习日期归档；同一义项只显示一次，全部年份的来源继续保留。</p>
+        <div className="vl-word-state-tabs" aria-label="选择单词状态">
+          <button type="button" aria-pressed={wordLibraryState === "pending"} onClick={() => setWordLibraryState("pending")}>待学单词 <b>{pendingWords.length}</b></button>
+          <button type="button" aria-pressed={wordLibraryState === "learned"} onClick={() => setWordLibraryState("learned")}>已学单词 <b>{learnedWords.length}</b></button>
+        </div>
+        <input type="search" aria-label="搜索我的单词" placeholder="搜索单词或中文义" value={librarySearch} onChange={event => setLibrarySearch(event.target.value)} />
+        {!visibleWordGroups.length && <p>{librarySearch ? "当前分类没有匹配的单词。" : wordLibraryState === "pending" ? "暂无待学单词。在真题中标记不会的词后，会按加入日期出现在这里。" : "暂无已学单词。完成第一次学习后，会按学习日期移到这里。"}</p>}
+        <div className="vl-date-groups">{visibleWordGroups.map(group => <section key={group.day} className="vl-date-group">
+          <h4>{group.label}<small>{group.items.length} 个</small></h4>
+          <ul>{group.items.map(({ memory }) => { const context = memory.contexts.find(item => item.id === memory.primaryContextId) ?? memory.contexts[0]; return <li key={memory.id}>
+            <button type="button" className="vl-text-button" onClick={() => context && (onTerm ? onTerm(context.expression, context.sourceId, false) : onSource(context.sourceId))}><strong lang="en">{memory.headword}</strong></button> · {memory.meaning}
+            <small>{memory.paused || memory.status === "paused" ? "已暂停" : wordLibraryState === "pending" ? "待学" : memory.dueAt <= now ? "已学 · 待复习" : "已学 · 已安排复习"} · 来源：{[...new Set(memory.contexts.map(item => item.year))].join("、")} · {new Set(memory.contexts.map(item => item.sourceId)).size} 处</small>
+          </li>; })}</ul>
+        </section>)}</div>
+        {markedPhrases.length > 0 && <details className="vl-marked-phrases"><summary>已标记词组 · {markedPhrases.length}</summary><ul>{markedPhrases.map(memory => { const context = memory.contexts.find(item => item.id === memory.primaryContextId) ?? memory.contexts[0]; return <li key={memory.id}>
+          <button type="button" className="vl-text-button" onClick={() => context && (onTerm ? onTerm(context.expression, context.sourceId, true) : onSource(context.sourceId))}><strong lang="en">{memory.headword}</strong></button> · {memory.meaning}
+          <small>{memory.lastReviewedAt || memory.lastRating ? "已学" : "待学"} · 来源：{[...new Set(memory.contexts.map(item => item.year))].join("、")} · {new Set(memory.contexts.map(item => item.sourceId)).size} 处</small>
+        </li>; })}</ul></details>}
       </section>
       {unresolved.length > 0 && <details className="vl-legacy"><summary>已保留的历史词条 · {unresolved.length} 项</summary><p>这些词条目前未匹配到本库真题例句。原标签、复习计划、笔记和清单仍然保留，无需补充语境，可以继续学习其他词汇。</p><ul>{unresolved.map(key => <li key={key}>{key}</li>)}</ul></details>}
     </>}

@@ -128,14 +128,34 @@ test("phrase cloze respects word boundaries and preserves punctuation", () => {
 });
 
 test("home has three principal actions, all scopes and opt-in spelling, names and function words", () => {
-  const html = renderToStaticMarkup(React.createElement(VocabularyHome, { metrics: { dueWords: 8, duePhrases: 3, overdue: 2, completed: 6, newWords: 2, newPhrases: 1, remainingNew: 12, estimatedMinutes: 6 }, settings: model.DEFAULT_SETTINGS, scope: { kind: "article" }, articleLabel: "Text 1", year: 2010, lists: ["本周重点"], onScope: noop, onSettings: noop, onStart: noop, onResume: noop }));
-  for (const action of ["继续上次学习", "今日复习", "学习新词"]) assert.ok(html.includes(action));
+  const html = renderToStaticMarkup(React.createElement(VocabularyHome, { metrics: { dueWords: 8, duePhrases: 3, overdue: 2, completed: 6, newWords: 2, newPhrases: 1, pendingWords: 12, learnedWords: 34, remainingNew: 12, estimatedMinutes: 6 }, settings: model.DEFAULT_SETTINGS, scope: { kind: "article" }, articleLabel: "Text 1", year: 2010, lists: ["本周重点"], onScope: noop, onSettings: noop, onStart: noop, onResume: noop }));
+  for (const action of ["继续上次学习", "全局待复习", "学习待学单词"]) assert.ok(html.includes(action));
+  assert.match(html, /待学单词[\s\S]*12/);
+  assert.match(html, /已学单词[\s\S]*34/);
+  assert.doesNotMatch(html, /今日新词目标/);
   for (const scope of ["article", "year", "all", "marked", "list"]) assert.ok(html.includes(`value="${scope}"`));
   assert.match(html, /只学 10 个|只学 10 分钟/);
   assert.equal(model.DEFAULT_SETTINGS.spellingEnabled, false);
   assert.equal(model.DEFAULT_SETTINGS.includeNames, false);
   assert.equal(model.DEFAULT_SETTINGS.includeFunctionWords, false);
   assert.doesNotMatch(html, /<details[^>]*\sopen(?:=|\s|>)/);
+});
+
+test("word library separates pending and learned totals while the pending view is grouped by date", () => {
+  const at = Date.now() - 86_400_000;
+  const pendingCandidate = corpus.resolveCandidate("momentum", false, "2010-p1-s5");
+  const learnedCandidate = corpus.resolveCandidate("market", false, "2010-p1-s1");
+  assert.ok(pendingCandidate && learnedCandidate);
+  const pending = model.createMemory({ ...pendingCandidate, context: { ...pendingCandidate.context, mark: "完全不会" } }, at);
+  const learned = model.createMemory(learnedCandidate, at - 86_400_000);
+  const attempt = { id: "learned-once", sessionId: "learned", queueItemId: "learned", memoryId: learned.id,
+    contextId: learned.primaryContextId, kind: "reading", rating: "known", createdAt: at, wasNew: true };
+  const html = renderToStaticMarkup(React.createElement(VocabularyLearning, { data: { vocabularyMemories: { [pending.id]: pending, [learned.id]: learned }, vocabularyAttempts: { [attempt.id]: attempt } }, onUpdate: noop, corpus, articleId: "2010-p1", articleLabel: "Text 1", year: 2010, lists: [], listItems: {}, marks: {}, notes: {}, onSource: noop }));
+  assert.match(html, /待学单词 <b>1<\/b>/);
+  assert.match(html, /已学单词 <b>1<\/b>/);
+  assert.match(html, /class="vl-date-group"/);
+  assert.match(html, /<strong lang="en">momentum<\/strong>/);
+  assert.doesNotMatch(html, /今日新词目标/);
 });
 
 test("spelling offers exact-source cloze and reliable phrase key parts without leaking the expression into the input", () => {
