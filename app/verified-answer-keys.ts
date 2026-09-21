@@ -1,4 +1,8 @@
 export const verifiedAnswerKey2013Passage2: Record<number, "A" | "B" | "C" | "D"> = { 26: "A", 27: "C", 28: "C", 29: "B", 30: "D" };
+export const verifiedAnswerKey2013Cloze: Record<number, "A" | "B" | "C" | "D"> = { 1: "B", 2: "D", 3: "B", 4: "A", 5: "C", 6: "B", 7: "A", 8: "D", 9: "C", 10: "A", 11: "A", 12: "C", 13: "B", 14: "D", 15: "C", 16: "D", 17: "A", 18: "B", 19: "D", 20: "C" };
+export const verifiedAnswerSources2013Cloze = [
+  { range: "1—20：B D B A C B A D C A A C B D C D A B D C；答案字母与用户原卷选项顺序逐题核对", label: "2013英语二答案速查（教学参考，非官方阅卷标准）", url: "https://zemengzhou.com/kaoyan/english/past-papers/ying-yu-er/2013/10-da-an-su-cha" },
+] as const;
 export const verifiedAnswerSources2013Passage2 = [{ range: "26—30；A/C/C/B/D，证据按用户原卷逐题复核", label: "2013英语二答案速查（教学参考，非官方）", url: "https://zemengzhou.com/kaoyan/english/past-papers/ying-yu-er/2013/10-da-an-su-cha" }];
 export const verifiedAnswerKey2013Passage1: Record<number, "A" | "B" | "C" | "D"> = { 21: "A", 22: "D", 23: "B", 24: "B", 25: "C" };
 export const verifiedAnswerSources2013Passage1 = [

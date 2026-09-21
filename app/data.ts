@@ -2,6 +2,7 @@ import { passage2013P4Article, passage2013P4Sentences, passage2013P4Questions } 
 import { passage2013P3Article, passage2013P3Sentences, passage2013P3Questions } from "./2013-passage-3-data";
 import { passage2013P2Article, passage2013P2Sentences, passage2013P2Questions } from "./2013-passage-2-data";
 import { passage2013P1Article, passage2013P1Sentences, passage2013P1Questions } from "./2013-passage-1-data";
+import { cloze2013Sentences, cloze2013Questions } from "./2013-cloze-data";
 import { passage2012P3Guide, passage2012P3Paragraphs } from "./2012-passage-3-guide";
 import { passage2012P2Guide, passage2012P2Paragraphs } from "./2012-passage-2-guide";
 import { passage2012P1Guide, passage2012P1Paragraphs } from "./2012-passage-1-guide";
@@ -324,7 +325,7 @@ export const sections = [
 ] as const;
 
 export const sectionsByYear = {
-  2013: [{ id: "2013-p1", label: "阅读 Text 1", meta: "14句 · 5题", status: "ready" }, { id: "2013-p2", label: "阅读 Text 2", meta: "22句 · 5题", status: "ready" }, { id: "2013-p3", label: "阅读 Text 3", meta: "17句 · 5题", status: "ready" }, { id: "2013-p4", label: "阅读 Text 4", meta: "18句 · 5题", status: "ready" }],
+  2013: [{ id: "2013-cloze", label: "完形填空", meta: "16句 · 20题", status: "ready" }, { id: "2013-p1", label: "阅读 Text 1", meta: "14句 · 5题", status: "ready" }, { id: "2013-p2", label: "阅读 Text 2", meta: "22句 · 5题", status: "ready" }, { id: "2013-p3", label: "阅读 Text 3", meta: "17句 · 5题", status: "ready" }, { id: "2013-p4", label: "阅读 Text 4", meta: "18句 · 5题", status: "ready" }],
   2000: sections,
   2001: [
     { id: "2001-cloze", label: "完形填空", meta: "9句 · 20题", status: "ready" },
@@ -1736,11 +1737,17 @@ export const articleContents: Record<string, ArticleContent> = {
     title: "员工工作满意度：年龄组比较与谨慎评论", description: "第48题，至少150词，15分。保留原卷满意度表及精确百分数；指令练习只计审题与语言理解，作文独立写作与自查，不自动评分。",
     kind: "writing", sentences: writing2012BSentences, questions: [], writingTasks: writing2012BTasks,
   },
+  "2013-cloze": {
+    id: "2013-cloze", year: 2013, sectionId: "cloze", label: "完形填空", badge: "2013 · 英语二 · 完形填空",
+    title: "电子支付：无现金社会为何迟迟未到", description: "16句、20题。围绕基础设施成本、纸质收据、支票浮存期以及安全与隐私风险，逐空核对篇章转折、固定搭配和上下文证据。",
+    kind: "cloze", sentences: cloze2013Sentences, questions: cloze2013Questions,
+    paragraphs: [[1, 2, 3, 4, 5], [6, 7, 8, 9, 10], [11, 12, 13, 14, 15, 16]].map((numbers, index) => ({ id: `2013-cloze-p${index + 1}`, sentenceIds: numbers.map(number => `2013-cloze-s${number}`) })),
+  },
   "2013-p1": passage2013P1Article,
   "2013-p2": passage2013P2Article,
   "2013-p3": passage2013P3Article,
   "2013-p4": passage2013P4Article,
 };
 
-export const allSentences = [...verifiedClozeSentences, ...verifiedPassage1Sentences, ...verifiedPassage2Sentences, ...verifiedPassage3Sentences, ...verifiedPassage4Sentences, ...verifiedPassage5Sentences, ...verifiedTranslationSentences, ...cloze2001Sentences, ...passage2001P1Sentences, ...passage2001P2Sentences, ...cloze2010Sentences, ...passage2010P1Sentences, ...passage2010P2Sentences, ...passage2010P3Sentences, ...passage2010P4Sentences, ...passage2010P5Sentences, ...translation2010Sentences, ...cloze2011Sentences, ...passage2011P1Sentences, ...passage2011P2Sentences, ...passage2011P3Sentences, ...passage2011P4Sentences, ...passage2011P5Sentences, ...translation2011Sentences, ...writing2011ASentences, ...writing2011BSentences, ...cloze2012Sentences, ...passage2012P1Sentences, ...passage2012P2Sentences, ...passage2012P3Sentences, ...passage2012P4Sentences, ...passage2012P5Sentences, ...translation2012Sentences, ...writing2012ASentences, ...writing2012BSentences, ...passage2013P1Sentences, ...passage2013P2Sentences, ...passage2013P3Sentences, ...passage2013P4Sentences];
-export const allQuestions = [...verifiedClozeQuestions, ...verifiedPassage1Questions, ...verifiedPassage2Questions, ...verifiedPassage3Questions, ...verifiedPassage4Questions, ...verifiedPassage5Questions, ...cloze2001Questions, ...passage2001P1Questions, ...passage2001P2Questions, ...cloze2010Questions, ...passage2010P1Questions, ...passage2010P2Questions, ...passage2010P3Questions, ...passage2010P4Questions, ...passage2010P5Questions, ...cloze2011Questions, ...passage2011P1Questions, ...passage2011P2Questions, ...passage2011P3Questions, ...passage2011P4Questions, ...passage2011P5Questions, ...cloze2012Questions, ...passage2012P1Questions, ...passage2012P2Questions, ...passage2012P3Questions, ...passage2012P4Questions, ...passage2012P5Questions, ...passage2013P1Questions, ...passage2013P2Questions, ...passage2013P3Questions, ...passage2013P4Questions];
+export const allSentences = [...verifiedClozeSentences, ...verifiedPassage1Sentences, ...verifiedPassage2Sentences, ...verifiedPassage3Sentences, ...verifiedPassage4Sentences, ...verifiedPassage5Sentences, ...verifiedTranslationSentences, ...cloze2001Sentences, ...passage2001P1Sentences, ...passage2001P2Sentences, ...cloze2010Sentences, ...passage2010P1Sentences, ...passage2010P2Sentences, ...passage2010P3Sentences, ...passage2010P4Sentences, ...passage2010P5Sentences, ...translation2010Sentences, ...cloze2011Sentences, ...passage2011P1Sentences, ...passage2011P2Sentences, ...passage2011P3Sentences, ...passage2011P4Sentences, ...passage2011P5Sentences, ...translation2011Sentences, ...writing2011ASentences, ...writing2011BSentences, ...cloze2012Sentences, ...passage2012P1Sentences, ...passage2012P2Sentences, ...passage2012P3Sentences, ...passage2012P4Sentences, ...passage2012P5Sentences, ...translation2012Sentences, ...writing2012ASentences, ...writing2012BSentences, ...cloze2013Sentences, ...passage2013P1Sentences, ...passage2013P2Sentences, ...passage2013P3Sentences, ...passage2013P4Sentences];
+export const allQuestions = [...verifiedClozeQuestions, ...verifiedPassage1Questions, ...verifiedPassage2Questions, ...verifiedPassage3Questions, ...verifiedPassage4Questions, ...verifiedPassage5Questions, ...cloze2001Questions, ...passage2001P1Questions, ...passage2001P2Questions, ...cloze2010Questions, ...passage2010P1Questions, ...passage2010P2Questions, ...passage2010P3Questions, ...passage2010P4Questions, ...passage2010P5Questions, ...cloze2011Questions, ...passage2011P1Questions, ...passage2011P2Questions, ...passage2011P3Questions, ...passage2011P4Questions, ...passage2011P5Questions, ...cloze2012Questions, ...passage2012P1Questions, ...passage2012P2Questions, ...passage2012P3Questions, ...passage2012P4Questions, ...passage2012P5Questions, ...cloze2013Questions, ...passage2013P1Questions, ...passage2013P2Questions, ...passage2013P3Questions, ...passage2013P4Questions];
