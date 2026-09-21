@@ -1,3 +1,4 @@
+import { passage2013P4PhraseGuides, passage2013P4PhraseAliases, passage2013P4PhraseGlosses } from "./2013-passage-4-vocabulary";
 import { passage2013P3PhraseGuides, passage2013P3PhraseAliases, passage2013P3PhraseGlosses } from "./2013-passage-3-vocabulary";
 import { passage2013P2PhraseGuides, passage2013P2PhraseAliases, passage2013P2PhraseGlosses } from "./2013-passage-2-vocabulary";
 import { passage2013P1PhraseGuides, passage2013P1PhraseAliases, passage2013P1PhraseGlosses } from "./2013-passage-1-vocabulary";
@@ -1129,6 +1130,22 @@ export function getPhraseKnowledge(source: string, context?: { articleId?: strin
     const scopedGloss = passage2013P3PhraseGlosses[clean];
     if (scopedGloss) return {
       key: `2013-p3-collocation:${clean}`,
+      sourceExpression: source.trim(),
+      canonical: source.trim(),
+      type: "常用搭配",
+      meaning: scopedGloss.meaning,
+      summary: scopedGloss.note ?? "结合本篇原句整体识别这个搭配。",
+      grammarRole: "固定或高频词语搭配",
+      structures: [s(source.trim(), scopedGloss.meaning, scopedGloss.note ?? "按本篇语境整体记忆。")],
+    };
+  }
+  if (context?.articleId === "2013-p4") {
+    const scopedAlias = passage2013P4PhraseAliases[clean];
+    const scopedGuide = passage2013P4PhraseGuides[scopedAlias ?? clean];
+    if (scopedGuide) return { ...scopedGuide, sourceExpression: source.trim() };
+    const scopedGloss = passage2013P4PhraseGlosses[clean];
+    if (scopedGloss) return {
+      key: `2013-p4-collocation:${clean}`,
       sourceExpression: source.trim(),
       canonical: source.trim(),
       type: "常用搭配",

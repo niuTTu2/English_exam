@@ -44,13 +44,13 @@ test("real work counts reviewed source meanings separately and retains the exact
   assert.equal(artwork.count, 5);
   assert.equal(artwork.current, true);
   assert.equal(artwork.partOfSpeech, "n.");
-  assert.equal(employment.count, 7);
+  assert.equal(employment.count, 9);
   assert.equal(operating.count, 4);
   assert.ok(artwork.sources.some(source => source.sourceId === "question-201022-option-D"));
   const broad = employment.sources.find(source => source.sourceId === "p4-s16");
   assert.equal(broad.meaning, "工作；劳动；起作用");
   assert.equal(broad.partOfSpeech, "n./v.");
-  assert.deepEqual(new Set(employment.sources.map(source => source.sourceId)), new Set(["2010-p2-s15", "2010-p2-s8", "2012-p5-s14", "2012-p5-s7", "2013-p2-s15", "p4-s16", "question-201124-option-C"]));
+  assert.deepEqual(new Set(employment.sources.map(source => source.sourceId)), new Set(["2010-p2-s15", "2010-p2-s8", "2012-p5-s14", "2012-p5-s7", "2013-p2-s15", "2013-p4-s9", "question-201338-option-C", "p4-s16", "question-201124-option-C"]));
   assert.equal(operating.sources.some(source => source.sourceId === "p4-s16"), false);
   assert.equal(employment.sources.some(source => source.sourceId === "p4-s16"), true);
   const labour = rows.find(row => row.id.endsWith("reviewed%3Alabour"));

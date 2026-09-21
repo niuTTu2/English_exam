@@ -3692,7 +3692,7 @@ export const reviewedSensesFunction: ReviewedSenseTable = {
   "until": [
     {
       "id": "time-limit",
-      "pos": "prep",
+      "pos": "prep/conj",
       "meaning": "直到……为止",
       "forms": [
         [
