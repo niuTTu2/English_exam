@@ -3,6 +3,7 @@ import { passage2013P3Article, passage2013P3Sentences, passage2013P3Questions } 
 import { passage2013P2Article, passage2013P2Sentences, passage2013P2Questions } from "./2013-passage-2-data";
 import { passage2013P1Article, passage2013P1Sentences, passage2013P1Questions } from "./2013-passage-1-data";
 import { cloze2013Sentences, cloze2013Questions } from "./2013-cloze-data";
+import { translation2013Sentences, translation2013Tasks, translation2013ArticleParagraphs } from "./2013-translation-data";
 import { passage2012P3Guide, passage2012P3Paragraphs } from "./2012-passage-3-guide";
 import { passage2012P2Guide, passage2012P2Paragraphs } from "./2012-passage-2-guide";
 import { passage2012P1Guide, passage2012P1Paragraphs } from "./2012-passage-1-guide";
@@ -325,7 +326,7 @@ export const sections = [
 ] as const;
 
 export const sectionsByYear = {
-  2013: [{ id: "2013-cloze", label: "完形填空", meta: "16句 · 20题", status: "ready" }, { id: "2013-p1", label: "阅读 Text 1", meta: "14句 · 5题", status: "ready" }, { id: "2013-p2", label: "阅读 Text 2", meta: "22句 · 5题", status: "ready" }, { id: "2013-p3", label: "阅读 Text 3", meta: "17句 · 5题", status: "ready" }, { id: "2013-p4", label: "阅读 Text 4", meta: "18句 · 5题", status: "ready" }],
+  2013: [{ id: "2013-cloze", label: "完形填空", meta: "16句 · 20题", status: "ready" }, { id: "2013-p1", label: "阅读 Text 1", meta: "14句 · 5题", status: "ready" }, { id: "2013-p2", label: "阅读 Text 2", meta: "22句 · 5题", status: "ready" }, { id: "2013-p3", label: "阅读 Text 3", meta: "17句 · 5题", status: "ready" }, { id: "2013-p4", label: "阅读 Text 4", meta: "18句 · 5题", status: "ready" }, { id: "2013-translation", label: "英译汉", meta: "9句 · 15分", status: "ready" }],
   2000: sections,
   2001: [
     { id: "2001-cloze", label: "完形填空", meta: "9句 · 20题", status: "ready" },
@@ -1747,7 +1748,12 @@ export const articleContents: Record<string, ArticleContent> = {
   "2013-p2": passage2013P2Article,
   "2013-p3": passage2013P3Article,
   "2013-p4": passage2013P4Article,
+  "2013-translation": {
+    id: "2013-translation", year: 2013, sectionId: "translation", label: "英译汉", badge: "2013 · 英语二 · 第46题",
+    title: "超常记忆：清晰回忆与情绪体验", description: "两段九句，第46题整篇一次作答，15分。理解信息存储、情绪调节与两类同日记忆的并置；参考译文用于学习对照，不作自动评分。",
+    kind: "translation", sentences: translation2013Sentences, questions: [], paragraphs: translation2013ArticleParagraphs, translationTasks: translation2013Tasks,
+  },
 };
 
-export const allSentences = [...verifiedClozeSentences, ...verifiedPassage1Sentences, ...verifiedPassage2Sentences, ...verifiedPassage3Sentences, ...verifiedPassage4Sentences, ...verifiedPassage5Sentences, ...verifiedTranslationSentences, ...cloze2001Sentences, ...passage2001P1Sentences, ...passage2001P2Sentences, ...cloze2010Sentences, ...passage2010P1Sentences, ...passage2010P2Sentences, ...passage2010P3Sentences, ...passage2010P4Sentences, ...passage2010P5Sentences, ...translation2010Sentences, ...cloze2011Sentences, ...passage2011P1Sentences, ...passage2011P2Sentences, ...passage2011P3Sentences, ...passage2011P4Sentences, ...passage2011P5Sentences, ...translation2011Sentences, ...writing2011ASentences, ...writing2011BSentences, ...cloze2012Sentences, ...passage2012P1Sentences, ...passage2012P2Sentences, ...passage2012P3Sentences, ...passage2012P4Sentences, ...passage2012P5Sentences, ...translation2012Sentences, ...writing2012ASentences, ...writing2012BSentences, ...cloze2013Sentences, ...passage2013P1Sentences, ...passage2013P2Sentences, ...passage2013P3Sentences, ...passage2013P4Sentences];
+export const allSentences = [...verifiedClozeSentences, ...verifiedPassage1Sentences, ...verifiedPassage2Sentences, ...verifiedPassage3Sentences, ...verifiedPassage4Sentences, ...verifiedPassage5Sentences, ...verifiedTranslationSentences, ...cloze2001Sentences, ...passage2001P1Sentences, ...passage2001P2Sentences, ...cloze2010Sentences, ...passage2010P1Sentences, ...passage2010P2Sentences, ...passage2010P3Sentences, ...passage2010P4Sentences, ...passage2010P5Sentences, ...translation2010Sentences, ...cloze2011Sentences, ...passage2011P1Sentences, ...passage2011P2Sentences, ...passage2011P3Sentences, ...passage2011P4Sentences, ...passage2011P5Sentences, ...translation2011Sentences, ...writing2011ASentences, ...writing2011BSentences, ...cloze2012Sentences, ...passage2012P1Sentences, ...passage2012P2Sentences, ...passage2012P3Sentences, ...passage2012P4Sentences, ...passage2012P5Sentences, ...translation2012Sentences, ...writing2012ASentences, ...writing2012BSentences, ...cloze2013Sentences, ...passage2013P1Sentences, ...passage2013P2Sentences, ...passage2013P3Sentences, ...passage2013P4Sentences, ...translation2013Sentences];
 export const allQuestions = [...verifiedClozeQuestions, ...verifiedPassage1Questions, ...verifiedPassage2Questions, ...verifiedPassage3Questions, ...verifiedPassage4Questions, ...verifiedPassage5Questions, ...cloze2001Questions, ...passage2001P1Questions, ...passage2001P2Questions, ...cloze2010Questions, ...passage2010P1Questions, ...passage2010P2Questions, ...passage2010P3Questions, ...passage2010P4Questions, ...passage2010P5Questions, ...cloze2011Questions, ...passage2011P1Questions, ...passage2011P2Questions, ...passage2011P3Questions, ...passage2011P4Questions, ...passage2011P5Questions, ...cloze2012Questions, ...passage2012P1Questions, ...passage2012P2Questions, ...passage2012P3Questions, ...passage2012P4Questions, ...passage2012P5Questions, ...cloze2013Questions, ...passage2013P1Questions, ...passage2013P2Questions, ...passage2013P3Questions, ...passage2013P4Questions];

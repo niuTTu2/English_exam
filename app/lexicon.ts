@@ -3,6 +3,7 @@ import { passage2013P3Lexicon, passage2013P3LemmaAliases } from "./2013-passage-
 import { passage2013P2Lexicon, passage2013P2LemmaAliases } from "./2013-passage-2-vocabulary";
 import { passage2013P1Lexicon, passage2013P1LemmaAliases } from "./2013-passage-1-vocabulary";
 import { cloze2013Lexicon, cloze2013LemmaAliases, cloze2013FormPartOfSpeech } from "./2013-cloze-lexicon";
+import { translation2013Lexicon, translation2013LemmaAliases, translation2013FormPartOfSpeech } from "./2013-translation-lexicon";
 import { passage4FormContexts } from "./passage-4-contexts";
 import { passage3FormContexts } from "./passage-3-contexts";
 import { getPassage2011P2FormContext } from "./2011-passage-2-contexts";
@@ -363,6 +364,7 @@ Object.assign(lemmaAliases, passage1LemmaAliases);
 Object.assign(familyAliases, passage1FamilyAliases);
 Object.assign(formPartOfSpeech, passage1FormPartOfSpeech);
 Object.assign(formPartOfSpeech, cloze2013FormPartOfSpeech);
+Object.assign(formPartOfSpeech, translation2013FormPartOfSpeech);
 for (const [key, value] of Object.entries(passage2LemmaAliases)) {
   if (!lemmaAliases[key]) lemmaAliases[key] = value;
 }
@@ -735,6 +737,7 @@ const sourceLemmaAliases: Record<string, Record<string, string>> = {
 
 export function canonicalLemma(token: string, context?: LexicalContext) {
   const normalized = token.trim().toLowerCase().replace(/[’‘]/g, "'");
+  if (context?.articleId === "2013-translation" && translation2013LemmaAliases[normalized]) return translation2013LemmaAliases[normalized];
   if (context?.articleId === "2013-cloze" && cloze2013LemmaAliases[normalized]) return cloze2013LemmaAliases[normalized];
   if (context?.articleId === "2013-p4" && passage2013P4LemmaAliases[normalized]) return passage2013P4LemmaAliases[normalized];
   if (context?.articleId === "2013-p3" && passage2013P3LemmaAliases[normalized]) return passage2013P3LemmaAliases[normalized];
@@ -766,7 +769,7 @@ export function canonicalLemma(token: string, context?: LexicalContext) {
   if (context?.articleId === "2011-cloze" && cloze2011LemmaAliases[normalized]) return cloze2011LemmaAliases[normalized];
   if (context?.articleId === "2010-translation" && translation2010LemmaAliases[normalized]) return translation2010LemmaAliases[normalized];
   const sourceId = context?.sourceId ?? context?.sentenceId;
-  return (context?.articleId === "2010-p5" ? passage2010P5LemmaAliases[normalized] : undefined) ?? (context?.articleId === "2010-p4" ? passage2010P4LemmaAliases[normalized] : undefined) ?? (context?.articleId === "2010-p3" ? passage2010P3LemmaAliases[normalized] : undefined) ?? (sourceId ? sourceLemmaAliases[sourceId]?.[normalized] : undefined) ?? (context?.articleId === "p5" ? passage5LemmaAliases[normalized] : undefined) ?? (context?.articleId === "p4" ? passage4LemmaAliases[normalized] : undefined) ?? lemmaAliases[normalized] ?? (!context?.articleId ? cloze2013LemmaAliases[normalized] ?? cloze2011LemmaAliases[normalized] ?? writing2012BLemmaAliases[normalized] ?? writing2012ALemmaAliases[normalized] ?? (normalized === "best" || normalized === "better" ? undefined : translation2012LemmaAliases[normalized]) ?? passage2012P5LemmaAliases[normalized] ?? passage2012P4LemmaAliases[normalized] ?? passage2012P3LemmaAliases[normalized] ?? passage2012P2LemmaAliases[normalized] ?? passage2012P1LemmaAliases[normalized] ?? cloze2012LemmaAliases[normalized] ?? passage2011P1LemmaAliases[normalized] ?? passage2011P2LemmaAliases[normalized] ?? passage2011P3LemmaAliases[normalized] ?? passage2011P4LemmaAliases[normalized] ?? passage2011P5LemmaAliases[normalized] ?? translation2011LemmaAliases[normalized] ?? writing2011ALemmaAliases[normalized] ?? writing2011BLemmaAliases[normalized] : undefined) ?? normalized;
+  return (context?.articleId === "2010-p5" ? passage2010P5LemmaAliases[normalized] : undefined) ?? (context?.articleId === "2010-p4" ? passage2010P4LemmaAliases[normalized] : undefined) ?? (context?.articleId === "2010-p3" ? passage2010P3LemmaAliases[normalized] : undefined) ?? (sourceId ? sourceLemmaAliases[sourceId]?.[normalized] : undefined) ?? (context?.articleId === "p5" ? passage5LemmaAliases[normalized] : undefined) ?? (context?.articleId === "p4" ? passage4LemmaAliases[normalized] : undefined) ?? lemmaAliases[normalized] ?? (!context?.articleId ? translation2013LemmaAliases[normalized] ?? cloze2013LemmaAliases[normalized] ?? cloze2011LemmaAliases[normalized] ?? writing2012BLemmaAliases[normalized] ?? writing2012ALemmaAliases[normalized] ?? (normalized === "best" || normalized === "better" ? undefined : translation2012LemmaAliases[normalized]) ?? passage2012P5LemmaAliases[normalized] ?? passage2012P4LemmaAliases[normalized] ?? passage2012P3LemmaAliases[normalized] ?? passage2012P2LemmaAliases[normalized] ?? passage2012P1LemmaAliases[normalized] ?? cloze2012LemmaAliases[normalized] ?? passage2011P1LemmaAliases[normalized] ?? passage2011P2LemmaAliases[normalized] ?? passage2011P3LemmaAliases[normalized] ?? passage2011P4LemmaAliases[normalized] ?? passage2011P5LemmaAliases[normalized] ?? translation2011LemmaAliases[normalized] ?? writing2011ALemmaAliases[normalized] ?? writing2011BLemmaAliases[normalized] : undefined) ?? normalized;
 }
 
 export function getLexicalGuide(token: string, context?: LexicalContext): LexicalGuide {
@@ -774,6 +777,7 @@ export function getLexicalGuide(token: string, context?: LexicalContext): Lexica
   const headword = canonicalLemma(normalized, context);
   const passage2013P1Entry = passage2013P1Lexicon[headword];
   const cloze2013Entry = cloze2013Lexicon[headword];
+  const translation2013Entry = translation2013Lexicon[headword];
   const passage3Entry = passage3Lexicon[headword];
   const passage1Entry = passage1Lexicon[headword];
   const passage2Entry = passage2Lexicon[headword];
@@ -863,6 +867,7 @@ export function getLexicalGuide(token: string, context?: LexicalContext): Lexica
     "2013-p3": passage2013P3Lexicon[headword],
     "2013-p4": passage2013P4Lexicon[headword],
     "2013-cloze": cloze2013Entry,
+    "2013-translation": translation2013Entry,
     "2011-cloze": cloze2011Entry,
     "2011-p1": passage2011P1Entry,
     "2011-writing-b": writing2011BEntry,
@@ -874,7 +879,7 @@ export function getLexicalGuide(token: string, context?: LexicalContext): Lexica
     "2011-p2": passage2011P2Entry,
   } satisfies Record<ArticleLexiconId, typeof passage1Entry | undefined>;
   const articleEntry = context?.articleId ? articleEntries[context.articleId] : undefined;
-  const globalPassageEntry = cloze2013Entry ?? passage2001P2Entry ?? passage2001P1Entry ?? cloze2001Entry ?? passage3Entry ?? passage1Entry ?? passage2Entry ?? passage4Entry ?? passage5Entry ?? translationEntry ?? cloze2010Entry ?? passage2010P1Entry ?? passage2010P2Entry ?? passage2010P3Entry ?? passage2010P4Entry ?? passage2010P5Entry ?? translation2010Entry ?? cloze2011Entry ?? passage2011P1Entry ?? passage2011P2Entry ?? passage2011P3Entry ?? passage2011P4Entry ?? passage2011P5Entry ?? translation2011Entry ?? writing2011AEntry ?? writing2011BEntry ?? cloze2012Entry ?? passage2012P1Entry ?? passage2012P2Entry ?? passage2012P3Entry ?? passage2012P4Entry ?? passage2012P5Entry ?? translation2012Entry ?? writing2012AEntry ?? writing2012BEntry;
+  const globalPassageEntry = translation2013Entry ?? cloze2013Entry ?? passage2001P2Entry ?? passage2001P1Entry ?? cloze2001Entry ?? passage3Entry ?? passage1Entry ?? passage2Entry ?? passage4Entry ?? passage5Entry ?? translationEntry ?? cloze2010Entry ?? passage2010P1Entry ?? passage2010P2Entry ?? passage2010P3Entry ?? passage2010P4Entry ?? passage2010P5Entry ?? translation2010Entry ?? cloze2011Entry ?? passage2011P1Entry ?? passage2011P2Entry ?? passage2011P3Entry ?? passage2011P4Entry ?? passage2011P5Entry ?? translation2011Entry ?? writing2011AEntry ?? writing2011BEntry ?? cloze2012Entry ?? passage2012P1Entry ?? passage2012P2Entry ?? passage2012P3Entry ?? passage2012P4Entry ?? passage2012P5Entry ?? translation2012Entry ?? writing2012AEntry ?? writing2012BEntry;
   const ordinal = normalized.match(/^([0-9]+)(?:st|nd|rd|th)$/);
   const decade = normalized.match(/^([0-9]{4})s$/);
   const chronologicalEntry: typeof passage1Entry | undefined = ordinal || decade ? {
@@ -927,7 +932,7 @@ export function recordedWordForms(headword: string) {
       if (!value) { value = { forms: [], notes: [] }; recordedFormIndex!.set(lemma, value); }
       return value;
     };
-    for (const aliases of [lemmaAliases, cloze2013LemmaAliases, passage2013P4LemmaAliases, passage2013P3LemmaAliases, passage2013P2LemmaAliases, passage2013P1LemmaAliases, writing2012BLemmaAliases, writing2012ALemmaAliases, translation2012LemmaAliases, passage2012P5LemmaAliases, passage2012P4LemmaAliases, passage2012P3LemmaAliases, passage2012P2LemmaAliases, passage2012P1LemmaAliases, cloze2012LemmaAliases, writing2011BLemmaAliases, writing2011ALemmaAliases, translation2011LemmaAliases, passage2011P5LemmaAliases, passage2011P4LemmaAliases, passage2011P3LemmaAliases, passage2011P2LemmaAliases, passage2011P1LemmaAliases, cloze2011LemmaAliases, translation2010LemmaAliases, passage2010P5LemmaAliases, passage2010P4LemmaAliases, passage2010P3LemmaAliases, passage1LemmaAliases, passage2LemmaAliases, passage3LemmaAliases, passage4LemmaAliases, passage5LemmaAliases, translationLemmaAliases, cloze2001LemmaAliases, passage2001P1LemmaAliases, passage2001P2LemmaAliases, cloze2010LemmaAliases, passage2010P1LemmaAliases, passage2010P2LemmaAliases, ...Object.values(sourceLemmaAliases)]) {
+    for (const aliases of [lemmaAliases, translation2013LemmaAliases, cloze2013LemmaAliases, passage2013P4LemmaAliases, passage2013P3LemmaAliases, passage2013P2LemmaAliases, passage2013P1LemmaAliases, writing2012BLemmaAliases, writing2012ALemmaAliases, translation2012LemmaAliases, passage2012P5LemmaAliases, passage2012P4LemmaAliases, passage2012P3LemmaAliases, passage2012P2LemmaAliases, passage2012P1LemmaAliases, cloze2012LemmaAliases, writing2011BLemmaAliases, writing2011ALemmaAliases, translation2011LemmaAliases, passage2011P5LemmaAliases, passage2011P4LemmaAliases, passage2011P3LemmaAliases, passage2011P2LemmaAliases, passage2011P1LemmaAliases, cloze2011LemmaAliases, translation2010LemmaAliases, passage2010P5LemmaAliases, passage2010P4LemmaAliases, passage2010P3LemmaAliases, passage1LemmaAliases, passage2LemmaAliases, passage3LemmaAliases, passage4LemmaAliases, passage5LemmaAliases, translationLemmaAliases, cloze2001LemmaAliases, passage2001P1LemmaAliases, passage2001P2LemmaAliases, cloze2010LemmaAliases, passage2010P1LemmaAliases, passage2010P2LemmaAliases, ...Object.values(sourceLemmaAliases)]) {
       for (const [form, lemma] of Object.entries(aliases)) {
         if (form !== lemma && !row(lemma).forms.includes(form)) row(lemma).forms.push(form);
       }
@@ -936,7 +941,7 @@ export function recordedWordForms(headword: string) {
       for (const note of notes) if (!row(lemma).notes.includes(note)) row(lemma).notes.push(note);
     };
     for (const [lemma, notes] of Object.entries(specialForms)) addNotes(lemma, notes);
-    for (const lexicon of [cloze2013Lexicon, passage2013P4Lexicon, passage2013P3Lexicon, passage2013P2Lexicon, passage2013P1Lexicon, writing2012BLexicon, writing2012ALexicon, translation2012Lexicon, passage2012P5Lexicon, passage2012P4Lexicon, passage2012P3Lexicon, passage2012P2Lexicon, passage2012P1Lexicon, cloze2012Lexicon, writing2011BLexicon, writing2011ALexicon, translation2011Lexicon, passage2011P5Lexicon, passage2011P4Lexicon, passage2011P3Lexicon, passage2011P2Lexicon, passage2011P1Lexicon, cloze2011Lexicon, translation2010Lexicon, passage2010P5Lexicon, passage2010P4Lexicon, passage2010P3Lexicon, passage1Lexicon, passage2Lexicon, passage3Lexicon, passage4Lexicon, passage5Lexicon, translationLexicon, cloze2001Lexicon, passage2001P1Lexicon, passage2001P2Lexicon, cloze2010Lexicon, passage2010P1Lexicon, passage2010P2Lexicon]) {
+    for (const lexicon of [translation2013Lexicon, cloze2013Lexicon, passage2013P4Lexicon, passage2013P3Lexicon, passage2013P2Lexicon, passage2013P1Lexicon, writing2012BLexicon, writing2012ALexicon, translation2012Lexicon, passage2012P5Lexicon, passage2012P4Lexicon, passage2012P3Lexicon, passage2012P2Lexicon, passage2012P1Lexicon, cloze2012Lexicon, writing2011BLexicon, writing2011ALexicon, translation2011Lexicon, passage2011P5Lexicon, passage2011P4Lexicon, passage2011P3Lexicon, passage2011P2Lexicon, passage2011P1Lexicon, cloze2011Lexicon, translation2010Lexicon, passage2010P5Lexicon, passage2010P4Lexicon, passage2010P3Lexicon, passage1Lexicon, passage2Lexicon, passage3Lexicon, passage4Lexicon, passage5Lexicon, translationLexicon, cloze2001Lexicon, passage2001P1Lexicon, passage2001P2Lexicon, cloze2010Lexicon, passage2010P1Lexicon, passage2010P2Lexicon]) {
       for (const [lemma, entry] of Object.entries(lexicon)) addNotes(lemma, entry.specialForms ?? []);
     }
   }
