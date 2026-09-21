@@ -293,13 +293,13 @@ export function VocabularyLearning({ data, onUpdate, corpus, articleId, articleL
         </div>
         <input type="search" aria-label="搜索我的单词" placeholder="搜索单词或中文义" value={librarySearch} onChange={event => setLibrarySearch(event.target.value)} />
         {!visibleWordGroups.length && <p>{librarySearch ? "当前分类没有匹配的单词。" : wordLibraryState === "pending" ? "暂无待学单词。在真题中标记不会的词后，会按加入日期出现在这里。" : "暂无已学单词。完成第一次学习后，会按学习日期移到这里。"}</p>}
-        <div className="vl-date-groups">{visibleWordGroups.map(group => <section key={group.day} className="vl-date-group">
-          <h4>{group.label}<small>{group.items.length} 个</small></h4>
+        <div className="vl-date-groups">{visibleWordGroups.map((group, index) => <details key={group.day} className="vl-date-group" open={index === 0}>
+          <summary><span>{group.label}</span><small>{group.items.length} 个</small></summary>
           <ul>{group.items.map(({ memory }) => { const context = memory.contexts.find(item => item.id === memory.primaryContextId) ?? memory.contexts[0]; return <li key={memory.id}>
             <button type="button" className="vl-text-button" onClick={() => context && (onTerm ? onTerm(context.expression, context.sourceId, false) : onSource(context.sourceId))}><strong lang="en">{memory.headword}</strong></button> · {memory.meaning}
             <small>{memory.paused || memory.status === "paused" ? "已暂停" : wordLibraryState === "pending" ? "待学" : memory.dueAt <= now ? "已学 · 待复习" : "已学 · 已安排复习"} · 来源：{[...new Set(memory.contexts.map(item => item.year))].join("、")} · {new Set(memory.contexts.map(item => item.sourceId)).size} 处</small>
           </li>; })}</ul>
-        </section>)}</div>
+        </details>)}</div>
         {markedPhrases.length > 0 && <details className="vl-marked-phrases"><summary>已标记词组 · {markedPhrases.length}</summary><ul>{markedPhrases.map(memory => { const context = memory.contexts.find(item => item.id === memory.primaryContextId) ?? memory.contexts[0]; return <li key={memory.id}>
           <button type="button" className="vl-text-button" onClick={() => context && (onTerm ? onTerm(context.expression, context.sourceId, true) : onSource(context.sourceId))}><strong lang="en">{memory.headword}</strong></button> · {memory.meaning}
           <small>{memory.lastReviewedAt || memory.lastRating ? "已学" : "待学"} · 来源：{[...new Set(memory.contexts.map(item => item.year))].join("、")} · {new Set(memory.contexts.map(item => item.sourceId)).size} 处</small>

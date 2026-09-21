@@ -153,7 +153,8 @@ test("word library separates pending and learned totals while the pending view i
   const html = renderToStaticMarkup(React.createElement(VocabularyLearning, { data: { vocabularyMemories: { [pending.id]: pending, [learned.id]: learned }, vocabularyAttempts: { [attempt.id]: attempt } }, onUpdate: noop, corpus, articleId: "2010-p1", articleLabel: "Text 1", year: 2010, lists: [], listItems: {}, marks: {}, notes: {}, onSource: noop }));
   assert.match(html, /待学单词 <b>1<\/b>/);
   assert.match(html, /已学单词 <b>1<\/b>/);
-  assert.match(html, /class="vl-date-group"/);
+  assert.match(html, /<details class="vl-date-group" open="">/);
+  assert.match(html, /<summary><span>[^<]+<\/span><small>1 个<\/small><\/summary>/);
   assert.match(html, /<strong lang="en">momentum<\/strong>/);
   assert.doesNotMatch(html, /今日新词目标/);
 });
