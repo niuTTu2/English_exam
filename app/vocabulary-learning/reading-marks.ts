@@ -30,7 +30,7 @@ export function enrollReadingMark<T extends VocabularyLearningData>(data: T, mar
 export function enrollSavedReadingMarks<T extends VocabularyLearningData & ReadingMarks>(data: T, corpus: VocabularyCorpus, now: number): T {
   let next = data;
   for (const mark of Object.values(data.articleV2Marks ?? {})) if (mark.active) next = enrollReadingMark(next, mark, corpus, now);
-  return next;
+  return promoteMarkedMemories(next, now);
 }
 
 export function isMarkedVocabulary(memory: VocabularyMemory, legacyMarks: Record<string, string[]>) {
@@ -53,4 +53,14 @@ export function undoReadingEnrollment<T extends VocabularyLearningData & Reading
     changed = true;
   }
   return changed ? { ...data, vocabularyMemories: memories } : data;
+}
+
+/** Upgrade old marked-new records once, without resetting learned or paused schedules. */
+export function promoteMarkedMemories<T extends VocabularyLearningData>(data: T, now: number): T {
+  let memories = data.vocabularyMemories;
+  for (const memory of Object.values(data.vocabularyMemories ?? {})) {
+    if (memory.status !== "unseen" || memory.paused || !memory.contexts.some(context => context.mark)) continue;
+    memories = { ...memories, [memory.id]: { ...memory, status: "review", dueAt: Math.min(memory.dueAt, now), updatedAt: now } };
+  }
+  return memories === data.vocabularyMemories ? data : { ...data, vocabularyMemories: memories };
 }

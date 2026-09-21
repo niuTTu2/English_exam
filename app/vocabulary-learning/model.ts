@@ -71,7 +71,7 @@ export function createMemory(candidate: VocabularyCandidate, now: number, existi
     termKey: candidate.entry.key, kind: candidate.entry.kind, senseId: sense.senseId,
     headword: candidate.entry.headword, partOfSpeech: sense.partOfSpeech, meaning: candidate.entry.contextualMeaning,
     primaryContextId: candidate.context.id, contexts: [{ ...candidate.context }],
-    status: candidate.context.mark === "有些陌生" ? "review" : "unseen", dueAt: now,
+    status: candidate.context.mark ? "review" : "unseen", dueAt: now,
     intervalDays: 0, consecutiveKnown: 0, lapses: 0,
     spelling: { enabled: false, attempts: 0, correct: 0 }, paused: false, createdAt: now, updatedAt: now,
   };
@@ -99,5 +99,5 @@ export function isCandidateEligible(candidate: VocabularyCandidate, settings: Vo
 }
 
 export function setMemoryPaused(memory: VocabularyMemory, paused: boolean, now: number): VocabularyMemory {
-  return { ...memory, paused, status: paused ? "paused" : memory.lastReviewedAt ? "review" : "unseen", updatedAt: now };
+  return { ...memory, paused, status: paused ? "paused" : memory.lastReviewedAt || memory.contexts.some(context => context.mark) ? "review" : "unseen", updatedAt: now };
 }

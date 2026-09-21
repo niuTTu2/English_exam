@@ -102,7 +102,7 @@ function applyLegacyProgress(memory: VocabularyMemory, snapshot: LegacyVocabular
   const lastRating = legacyRating === "正确" ? "known" : legacyRating === "模糊" ? "fuzzy" : legacyRating === "错误" ? "forgot" : undefined;
   return {
     ...memory,
-    status: schedule ? "review" : legacyRating || marks.includes("有些陌生") || marks.includes("容易混淆") ? "learning" : "unseen",
+    status: schedule ? "review" : legacyRating || marks.length > 0 ? "learning" : "unseen",
     // The original due time is retained, including overdue and future dates.
     dueAt: schedule?.dueAt ?? now,
     intervalDays: schedule?.intervalDays ?? 0,

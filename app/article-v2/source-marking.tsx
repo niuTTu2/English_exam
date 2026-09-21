@@ -1,3 +1,4 @@
+import { useGlobalWordMark } from "../vocabulary-learning/global-marks";
 import { useEffect, useState } from "react";
 import { questionOptionSourceId, type ArticleContent } from "../data";
 import type { ArticleV2Mark, TextRange } from "./model";
@@ -14,12 +15,13 @@ export function SourceText({ text, sourceId, mode, marks, selection, onPick }: {
   text: string; sourceId: string; mode: MarkMode; marks: ArticleV2Mark[]; selection: MarkSelection | null;
   onPick: (sourceId: string, range: TextRange) => void;
 }) {
+  const globalMarked = useGlobalWordMark();
   const marked = (start: number, end: number) => marks.some(m => m.sourceId === sourceId && m.active && m.start < end && m.end > start);
   const pending = (start: number, end: number) => selection?.sourceId === sourceId && selection.start < end && selection.end > start;
   if (mode === "sentence") return <button type="button" className={`v2-inline-sentence ${marks.some(m => m.sourceId === sourceId && m.kind === "sentence" && m.active) ? "v2-marked" : ""} ${pending(0, text.length) ? "v2-pending-mark" : ""}`} aria-label={`选择句子：${text}`} onClick={() => onPick(sourceId, { start: 0, end: text.length })}><SourceText text={text} sourceId={sourceId} mode="read" marks={marks} selection={null} onPick={onPick} /></button>;
   return <span>{Array.from(text.matchAll(/[\p{L}\p{N}]+(?:['’\-][\p{L}\p{N}]+)*|[^\p{L}\p{N}]+/gu), (part, i) => {
     const start = part.index!, end = start + part[0].length;
-    const className = `${marked(start, end) ? "v2-marked" : ""} ${pending(start, end) ? "v2-pending-mark" : ""}`;
+    const className = `${globalMarked(part[0], sourceId) ? "global-vocabulary-mark" : ""} ${marked(start, end) ? "v2-marked" : ""} ${pending(start, end) ? "v2-pending-mark" : ""}`;
     return mode !== "read" && /^[\p{L}\p{N}]/u.test(part[0])
       ? <button type="button" key={i} className={`v2-inline-word ${className}`} aria-label={`${mode === "word" ? "选择单词" : selection?.sourceId === sourceId && (selection.kind === "word" || selection.kind === "phrase") ? "选择词组终点" : "选择词组起点"} ${part[0]}`} onClick={() => onPick(sourceId, { start, end })}>{part[0]}</button>
       : <span className={className} key={i}>{part[0]}</span>;
@@ -57,7 +59,7 @@ export function useSourceMarking(article: ArticleContent, data: V2StudySnapshot,
       if (change) setUndo(change);
       setSelection(null); setError("");
       const enrolled = corpus && readingMarkCandidate(input, corpus);
-      setNotice(`${active ? enrolled ? "已标记并加入词汇学习" : "已标记" : "已取消原文标记"}：${sources.get(input.sourceId)?.slice(input.start, input.end) ?? ""}${!active && enrolled ? "。已有词汇学习记录保留，可在词汇学习中暂停。" : ""}`);
+      setNotice(`${active ? enrolled ? "已标记并加入全局待复习" : "已标记" : "已取消原文标记"}：${sources.get(input.sourceId)?.slice(input.start, input.end) ?? ""}${!active && enrolled ? "。已有词汇学习记录保留，可在词汇学习中暂停。" : ""}`);
     } catch { setError("标记未能保存，请重试；当前选择仍保留。"); }
   };
   const undoLast = () => {
@@ -87,7 +89,7 @@ export function useSourceMarking(article: ArticleContent, data: V2StudySnapshot,
       {selection ? <>
         <p role="status"><strong>{selection.ready ? existing ? "已标记的范围" : `待确认${kindNames[selection.kind]}` : "已选起点，请点词组最后一个词"}</strong></p>
         <p className="v2-selection-preview" lang="en">{sources.get(selection.sourceId)?.slice(selection.start, selection.end)}</p>
-        {selection.ready && input && !existing && corpus && readingMarkCandidate(input, corpus) && <p>确认后加入词汇学习，保留本句出处。</p>}
+        {selection.ready && input && !existing && corpus && readingMarkCandidate(input, corpus) && <p>确认后直接加入全局待复习；所有年份共用，保留本句出处。</p>}
         {selection.ready && input?.kind === "phrase" && corpus && !readingMarkCandidate(input, corpus) && <p>此范围保留为阅读标记；只有已收录的固定搭配才作为独立词组加入学习。</p>}
         <div className="v2-actions">
           {selection.ready && input && <button type="button" className="v2-primary" onClick={() => apply(input, !existing)}>{existing ? "取消此标记" : "确认标记"}</button>}

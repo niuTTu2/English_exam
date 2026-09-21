@@ -1,6 +1,7 @@
 "use client";
 
 import { chunkVisualRole, chunkDescription, visualRoleLabels } from "./reviewed-syntax";
+import { GlobalVocabularyProvider, GlobalWord, GlobalMarkedText } from "./vocabulary-learning/global-marks";
 import { OriginalPassage } from "./original-passage";
 import { ArticleGuidePanel } from "./article-guide-panel";
 import { QuestionEvidencePanel } from "./question-evidence-panel";
@@ -19,7 +20,7 @@ import { importedEntryContext } from "./vocabulary-learning/imported-entry-fallb
 import { selectLegacyVocabularyCandidates } from "./vocabulary-learning/legacy-selection";
 import { type VocabularyLearningData, type VocabularyMark } from "./vocabulary-learning/model";
 import { migrateLegacyVocabulary } from "./vocabulary-learning/migration";
-import { enrollSavedReadingMarks } from "./vocabulary-learning/reading-marks";
+import { enrollSavedReadingMarks, promoteMarkedMemories } from "./vocabulary-learning/reading-marks";
 import { createAnalysisPhraseResolver } from "./legacy-analysis-phrases";
 import { vocabularyTitle, WordForms } from "./vocabulary-learning/word-forms";
 import { vocabularyDataFrom, enrollVocabulary } from "./vocabulary-learning/study-bridge";
@@ -1279,7 +1280,7 @@ export default function StudyApp() {
       const result = migrateLegacyVocabulary(withReadingMarks, vocabularyCorpus.resolveLegacyCandidates);
       if (result.changed || withReadingMarks !== previous) {
         preserveLocalStudyState(window.localStorage, snapshotOwner.current, { state: previous, base: remoteBase.current });
-        updateVocabulary(() => vocabularyDataFrom(result.state));
+        updateVocabulary(() => vocabularyDataFrom(promoteMarkedMemories(result.state, Date.now())));
       }
       return true;
     } catch (error) {
@@ -1293,7 +1294,7 @@ export default function StudyApp() {
 
   const inV2Vocabulary = activeArticle.experienceVersion === 2 && persistedState.articleV2Progress?.[activeArticle.id]?.page === "vocabulary";
   useEffect(() => {
-    if ((view === "vocabulary-learning" || inV2Vocabulary) && hydrated) queueMicrotask(() => { ensureVocabularyMigration(); });
+    if (hydrated) queueMicrotask(() => { ensureVocabularyMigration(); });
   }, [view, inV2Vocabulary, hydrated, ensureVocabularyMigration, snapshotRevision]);
 
   useEffect(() => {
@@ -1643,7 +1644,7 @@ export default function StudyApp() {
       if (candidates.length === 1) {
         try {
           updateVocabulary(current => enrollVocabulary(current, candidates[0], Date.now(), mark, selectedTerm.key));
-          setVocabularyNotice(`已将整个搭配“${candidates[0].context.expression}”加入待学词汇。`);
+          setVocabularyNotice(`已将整个搭配“${candidates[0].context.expression}”加入全局待复习。`);
         } catch { /* Keep the original snapshot and surface the persistent save error. */ }
         return;
       }
@@ -1654,7 +1655,7 @@ export default function StudyApp() {
     if (!candidate) { setVocabularyNotice("请从该词实际出现的真题原句或选项中加入学习。"); return; }
     try {
       updateVocabulary(current => enrollVocabulary(current, candidate, Date.now(), mark));
-      setVocabularyNotice(`已加入待学词汇：${candidate.context.expression}（当前语境义）。`);
+      setVocabularyNotice(`${mark ? "已加入全局待复习" : "已加入待学词汇"}：${candidate.entry.headword}（保留当前出处）。`);
     } catch { /* The persistent error and original snapshot remain visible. */ }
   }
 
@@ -1989,7 +1990,7 @@ export default function StudyApp() {
   })();
 
   return (
-    <div className={`study-shell ${view === "vocabulary-learning" ? "is-vocabulary-learning" : ""}`}>
+    <GlobalVocabularyProvider data={vocabularyData} corpus={vocabularyCorpus} legacy={marks}><div className={`study-shell ${view === "vocabulary-learning" ? "is-vocabulary-learning" : ""}`}>
       <header className="topbar">
         <div className="brand-block">
           <div className="brand-mark" aria-hidden="true">句</div>
@@ -2140,7 +2141,7 @@ export default function StudyApp() {
             <TabsContent value="vocabulary-learning" className="mode-content">
               {hydrated && !vocabularyError ? <VocabularyLearning data={vocabularyData} onUpdate={updateVocabulary} corpus={vocabularyCorpus}
                 articleId={activeSection} articleLabel={activeArticle.label} year={selectedYear} lists={lists} listItems={listItems} marks={marks} notes={termNotes}
-                onNote={(key, value) => setTermNotes(current => ({ ...current, [key]: value }))} onSource={goToSource} />
+                onTerm={openTerm} onNote={(key, value) => setTermNotes(current => ({ ...current, [key]: value }))} onSource={goToSource} />
                 : <p role="status">{vocabularyError || "正在载入学习记录…"}</p>}
             </TabsContent>
 
@@ -2327,7 +2328,7 @@ export default function StudyApp() {
                         <article key={question.id} className="question-card">
                           <div className="question-prompt" id={`source-question-${question.id}-prompt`} tabIndex={-1} data-source-location>
                             <span>{question.number ?? question.id}</span>
-                            <p>{activeArticle.paragraphs && !submitted ? question.prompt : renderWords(question.prompt, `question-${question.id}-prompt`, openTerm, `question-${question.id}`)}</p>
+                            <p>{activeArticle.paragraphs && !submitted ? <GlobalMarkedText text={question.prompt} sourceId={`question-${question.id}-prompt`} /> : renderWords(question.prompt, `question-${question.id}-prompt`, openTerm, `question-${question.id}`)}</p>
                           </div>
                           <div className={`option-list ${question.format === "matching" ? "matching-choices" : ""}`}>
                             {question.options.map((option) => {
@@ -2346,7 +2347,7 @@ export default function StudyApp() {
                                     <span>{option.key}</span>{correct && <Check />}
                                   </button>
                                   {question.format !== "matching" && <div className="option-terms">
-                                    {activeArticle.paragraphs && !submitted ? <button className="plain-option-text" type="button" onClick={() => setAnswers(current => ({ ...current, [question.id]: option.key }))}>{option.text}</button> : renderWords(option.text, `question-${question.id}-option-${option.key}`, openTerm, `option-${question.id}-${option.key}`)}
+                                    {activeArticle.paragraphs && !submitted ? <button className="plain-option-text" type="button" onClick={() => setAnswers(current => ({ ...current, [question.id]: option.key }))}><GlobalMarkedText text={option.text} sourceId={questionOptionSourceId(question, option.key)} /></button> : renderWords(option.text, `question-${question.id}-option-${option.key}`, openTerm, `option-${question.id}-${option.key}`)}
                                     {(!activeArticle.paragraphs || submitted) && option.text.includes(" ") && getPhraseKnowledge(option.text) && (
                                       <button
                                         type="button"
@@ -2669,7 +2670,7 @@ export default function StudyApp() {
                 )}
 
                 <section className="mark-section">
-                  <span>这次遇到了什么问题？标记即可加入待学词汇。</span>
+                  <span>这次遇到了什么问题？标记即可加入全局待复习。</span>
                   <div className="mark-buttons">
                     {markTags.map((tag) => (
                       <Button
@@ -2879,7 +2880,7 @@ export default function StudyApp() {
           )}
         </SheetContent>
       </Sheet>
-    </div>
+    </div></GlobalVocabularyProvider>
   );
 }
 
@@ -3418,7 +3419,7 @@ export function StudySentence({
     <article className={`sentence-card ${isExpanded ? "is-open" : ""}`} id={`source-${sentence.id}`} tabIndex={-1} data-source-location>
       <div className="sentence-toggle">
         <span className="sentence-number">{sentence.number}</span>
-        <p>{mode === "words" ? renderWords(sentence.text, sentence.id, onTerm, `${sentence.id}-words`) : sentence.text}</p>
+        <p>{mode === "words" ? renderWords(sentence.text, sentence.id, onTerm, `${sentence.id}-words`) : <GlobalMarkedText text={sentence.text} sourceId={sentence.id} />}</p>
         <button
           type="button"
           className="expand-icon"
@@ -3882,12 +3883,12 @@ function renderWords(
     return parts.map((part, index) => {
       if (!/^[A-Za-z]+(?:\d+[A-Za-z]*)+$|^\d+(?:st|nd|rd|th)$|^\d{4}s$|^(?:[A-Za-z]\.){2,}$|^[A-Za-z]+(?:-[A-Za-z]+)?(?:['’][A-Za-z]+)?$/.test(part)) return part;
       return (
-        <button
+        <GlobalWord word={part} sourceId={sentenceId}
           type="button"
           key={`${keyPrefix}-${segmentIndex}-${index}-${part}`}
           className="term-token"
           onClick={(event) => { event.stopPropagation(); onTerm(part, sentenceId, false); }}
-        >{part}</button>
+        >{part}</GlobalWord>
       );
     });
   });

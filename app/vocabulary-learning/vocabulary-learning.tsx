@@ -21,6 +21,7 @@ export type VocabularyLearningProps = {
   articleId: string; articleLabel: string; year: number;
   lists: string[]; listItems: Record<string, string[]>; marks: Record<string, string[]>; notes: Record<string, string>;
   onNote?: (termKey: string, note: string) => void;
+  onTerm?: (expression: string, sourceId: string, isPhrase?: boolean) => void;
   onSource: (sourceId: string) => void;
 };
 
@@ -41,8 +42,8 @@ function resumeBatch(session: VocabularySession, memories: Record<string, Vocabu
   return resumeSession(extended, now);
 }
 
-export function VocabularyLearning({ data, onUpdate, corpus, articleId, articleLabel, year, lists, listItems, marks, notes, onNote, onSource }: VocabularyLearningProps) {
-  const [scope, setScope] = useState<LearningScope>({ kind: "article" });
+export function VocabularyLearning({ data, onUpdate, corpus, articleId, articleLabel, year, lists, listItems, marks, notes, onNote, onSource, onTerm }: VocabularyLearningProps) {
+  const [scope, setScope] = useState<LearningScope>({ kind: "all" });
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const [now, setNow] = useState(Date.now);
@@ -59,6 +60,13 @@ export function VocabularyLearning({ data, onUpdate, corpus, articleId, articleL
   const currentContext = currentMemory?.contexts.find(context => context.id === currentItem?.contextId) ?? currentMemory?.contexts[0];
   const candidate = currentMemory && currentContext ? corpus.getCandidate(currentContext, currentMemory.kind) : undefined;
   const stats = useMemo(() => vocabularyTodayStats(memories, attempts, now), [memories, attempts, now]);
+  const [librarySearch, setLibrarySearch] = useState("");
+  const markedLibrary = useMemo(() => memoryGroups(memories).groups.flatMap(group => {
+    const memory = representativeMemory(group);
+    if (!memory || !group.some(member => isMarkedVocabulary(member, marks))) return [];
+    return [vocabularyMemoryView(memories, memory.id) ?? memory];
+  }).sort((a, b) => b.createdAt - a.createdAt || a.id.localeCompare(b.id)), [memories, marks]);
+  const visibleMarked = markedLibrary.filter(memory => `${memory.headword} ${memory.meaning}`.toLowerCase().includes(librarySearch.trim().toLowerCase()));
   const pausedMemories = useMemo(() => memoryGroups(memories).groups.flatMap(group => {
     const paused = group.every(memory => memory.paused || memory.status === "paused") ? group[0] : undefined;
     return paused ? [paused] : [];
@@ -186,12 +194,12 @@ export function VocabularyLearning({ data, onUpdate, corpus, articleId, articleL
         const sessionId = `session-${crypto.randomUUID()}`;
         let queued = 0;
         const saved = mutate(current => {
-          const result = createLearningQueue(current.vocabularyMemories ?? {}, candidates, { ...DEFAULT_SETTINGS, ...current.vocabularySettings }, at, mode, { size: limit === "ten-cards" ? 10 : settings.sessionSize, attempts: current.vocabularyAttempts, memoryIds: scopedIds });
+          const result = createLearningQueue(current.vocabularyMemories ?? {}, candidates, { ...DEFAULT_SETTINGS, ...current.vocabularySettings }, at, mode, { size: limit === "ten-cards" ? 10 : settings.sessionSize, attempts: current.vocabularyAttempts, memoryIds: mode === "review" ? undefined : scopedIds });
           queued = result.queue.length;
           if (!queued) return current;
           return withSession({ ...current, vocabularyMemories: result.memories }, createSession(result.queue, at, { id: sessionId, ...(limit === "ten-minutes" ? { timeLimitMinutes: 10 } : {}) }));
         });
-        if (saved && !queued) setMessage(mode === "review" ? "这个范围没有已到期项目；未来的复习会按原计划保留。" : remainingWords + remainingPhrases === 0 ? "今天的新词目标已经完成，可以复习到期项或调整每日计划。" : scope.kind === "list" ? "这份清单中能匹配真题的词汇已自动关联；当前没有符合计划的新词，可以调整每日目标或学习其他清单。" : "本范围暂时没有符合当前计划的新词。可以从原句标记词汇，或在学习偏好中包含“本句识别即可”的词。");
+        if (saved && !queued) setMessage(mode === "review" ? "全局生词库当前没有到期项目；标记的生词会直接加入这里。" : remainingWords + remainingPhrases === 0 ? "今天的新词目标已经完成，可以复习到期项或调整每日计划。" : scope.kind === "list" ? "这份清单中能匹配真题的词汇已自动关联；当前没有符合计划的新词，可以调整每日目标或学习其他清单。" : "本范围暂时没有符合当前计划的新词。可以从原句标记词汇，或在学习偏好中包含“本句识别即可”的词。");
         setNow(at);
       } catch (error) { setMessage(error instanceof Error ? error.message : "学习队列暂时无法准备，原记录保持不变。"); }
       finally { setBusy(false); }
@@ -258,14 +266,23 @@ export function VocabularyLearning({ data, onUpdate, corpus, articleId, articleL
     if (saved && recorded) setSpellingFeedback({ itemId: submittedItemId, correct, expected, meaning: candidate.entry.contextualMeaning });
   }
 
-  const metrics = { ...stats, dueWords: scopedStats.dueWords, duePhrases: scopedStats.duePhrases, overdue: scopedStats.overdue,
+  const metrics = { ...stats, dueWords: stats.dueWords, duePhrases: stats.duePhrases, overdue: stats.overdue,
     remainingNew: Math.max(0, settings.dailyWords - stats.newWords) + Math.max(0, settings.dailyPhrases - stats.newPhrases),
-    estimatedMinutes: Math.max(1, Math.ceil(Math.min(settings.sessionSize, scopedStats.dueWords + scopedStats.duePhrases || settings.dailyWords + settings.dailyPhrases) / 2)) };
+    estimatedMinutes: Math.max(1, Math.ceil(Math.min(settings.sessionSize, stats.dueWords + stats.duePhrases || settings.dailyWords + settings.dailyPhrases) / 2)) };
   const unresolved = data.vocabularyMigration?.unresolvedKeys ?? [];
   return <div className="vl-root" aria-busy={busy}>
     {spellingFeedback && <section className="vl-spelling" aria-label="已保存的拼写结果"><h3>{spellingFeedback.correct ? "拼写一致" : "再看一次原文词形"}</h3><p lang="en">{spellingFeedback.expected}</p><p>{spellingFeedback.meaning}</p><p>拼写结果已保存。阅读识别记录保持不变。</p><button type="button" className="vl-primary" onClick={() => setSpellingFeedback(null)}>下一项</button></section>}
     {!spellingFeedback && !inSession && session?.status !== "completed" && <>
       <VocabularyHome metrics={metrics} settings={settings} scope={scope} articleLabel={articleLabel} year={year} lists={lists} busy={busy} message={busy ? "正在准备这一组真题词汇…" : message} resumable={resumable ? { completed: resumable.cursor, total: resumable.queue.length } : undefined} onScope={setScope} onSettings={value => { mutate(current => ({ ...current, vocabularySettings: value })); }} onStart={start} onResume={() => { if (resumable) mutate(current => withSession(current, resumeBatch(current.vocabularySessions?.[resumable.id] ?? resumable, current.vocabularyMemories ?? {}, Date.now()))); }} />
+      <section className="vl-marked-library" aria-label="所有年份的已标记生词">
+        <h3>我标记的生词 · {markedLibrary.length}</h3><p>汇总所有年份和文章。同义项合并，来源保留；今日复习不受上面的新词筛选限制。</p>
+        <input type="search" aria-label="搜索全局生词" placeholder="搜索单词或中文义" value={librarySearch} onChange={event => setLibrarySearch(event.target.value)} />
+        {!visibleMarked.length && <p>{librarySearch ? "没有匹配的生词。" : "在真题中标记不会的词后，会直接出现在这里。"}</p>}
+        <ul>{visibleMarked.map(memory => { const context = memory.contexts.find(item => item.id === memory.primaryContextId) ?? memory.contexts[0]; return <li key={memory.id}>
+          <button type="button" className="vl-text-button" onClick={() => context && (onTerm ? onTerm(context.expression, context.sourceId, memory.kind === "phrase") : onSource(context.sourceId))}><strong lang="en">{memory.headword}</strong></button> · {memory.meaning}
+          <small>{memory.paused || memory.status === "paused" ? "已暂停" : memory.dueAt <= now ? "待复习" : "已安排后续复习"} · 来源：{[...new Set(memory.contexts.map(item => item.year))].join("、")} · {new Set(memory.contexts.map(item => item.sourceId)).size} 处</small>
+        </li>; })}</ul>
+      </section>
       {unresolved.length > 0 && <details className="vl-legacy"><summary>已保留的历史词条 · {unresolved.length} 项</summary><p>这些词条目前未匹配到本库真题例句。原标签、复习计划、笔记和清单仍然保留，无需补充语境，可以继续学习其他词汇。</p><ul>{unresolved.map(key => <li key={key}>{key}</li>)}</ul></details>}
     </>}
     {!spellingFeedback && session?.status === "completed" && <><LearningSummary summary={sessionSummary(session, attempts, memories)} memories={memories} onHome={goHome} onSpelling={spelling} spellingAvailable={spellingAvailable} />{message && <p className="vl-message" role="status">{message}</p>}</>}

@@ -1,3 +1,4 @@
+import { MarkedVocabulary } from "./marked-vocabulary";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { questionOptionSourceId, type ArticleContent, type AnyQuestion } from "../data";
 import type { VocabularyCorpus } from "../vocabulary-learning/corpus";
@@ -59,9 +60,10 @@ export default function ArticleV2({ article, data, ready, corpus, onUpdate, onTe
     <nav className="v2-tabs" aria-label="文章学习页面">{Object.entries(v2Pages).map(([key, label]) => <button type="button" key={key} aria-current={page === key ? "page" : undefined} onClick={() => { setReturnSource(undefined); navigate(key as V2Page); }}>{label}</button>)}</nav>
     {error && <p className="v2-error" role="alert">{error}</p>}
     {returnSource && <aside className="v2-return"><span>正在核对原文</span><button type="button" onClick={() => visitSource(returnSource, undefined, "analysis")}>返回刚才的题目</button></aside>}
+    {(page === "read" || page === "analysis") && <MarkedVocabulary {...props} corpus={corpus} onTerm={onTerm} />}
     {page === "exam" && <ExamPage {...props} corpus={corpus} />}
     {page === "read" && <QuickReadingPage {...props} onTerm={onTerm} />}
-    {page === "analysis" && <QuestionAnalysisPage {...props} onSource={visitSource} renderDetails={renderQuestionDetails} />}
+    {page === "analysis" && <QuestionAnalysisPage {...props} onTerm={onTerm} onSource={visitSource} renderDetails={renderQuestionDetails} />}
     {page === "vocabulary" && <ArticleVocabularyPage {...props} corpus={corpus} onTerm={onTerm} onSource={visitSource} />}
   </div>;
 }

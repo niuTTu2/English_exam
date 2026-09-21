@@ -31,7 +31,7 @@ test("real note shows all twelve reviewed senses; only real sense sources contri
   assert.equal(rows.find(row => row.meaning === "注释；附注").count, 1);
   assert.equal(rows.find(row => row.meaning === "注意；留意到").count, 1);
   assert.equal(rows.find(row => row.meaning === "笔记；记录").count, null);
-  assert.equal(rows.reduce((sum, row) => sum + (row.count ?? 0), 0), 4);
+  assert.equal(rows.reduce((sum, row) => sum + (row.count ?? 0), 0), 5);
   for (const original of note.senseGuide.senses) assert.ok(rows.some(row => row.meaning === original.meaning && row.example.english === original.example.english));
   assert.equal(JSON.stringify(note), snapshot, "display aggregation cannot mutate corpus or memory data");
 });
@@ -44,13 +44,13 @@ test("real work counts reviewed source meanings separately and retains the exact
   assert.equal(artwork.count, 5);
   assert.equal(artwork.current, true);
   assert.equal(artwork.partOfSpeech, "n.");
-  assert.equal(employment.count, 6);
-  assert.equal(operating.count, 3);
+  assert.equal(employment.count, 7);
+  assert.equal(operating.count, 4);
   assert.ok(artwork.sources.some(source => source.sourceId === "question-201022-option-D"));
   const broad = employment.sources.find(source => source.sourceId === "p4-s16");
   assert.equal(broad.meaning, "工作；劳动；起作用");
   assert.equal(broad.partOfSpeech, "n./v.");
-  assert.deepEqual(new Set(employment.sources.map(source => source.sourceId)), new Set(["2010-p2-s15", "2010-p2-s8", "2012-p5-s14", "2012-p5-s7", "p4-s16", "question-201124-option-C"]));
+  assert.deepEqual(new Set(employment.sources.map(source => source.sourceId)), new Set(["2010-p2-s15", "2010-p2-s8", "2012-p5-s14", "2012-p5-s7", "2013-p2-s15", "p4-s16", "question-201124-option-C"]));
   assert.equal(operating.sources.some(source => source.sourceId === "p4-s16"), false);
   assert.equal(employment.sources.some(source => source.sourceId === "p4-s16"), true);
   const labour = rows.find(row => row.id.endsWith("reviewed%3Alabour"));

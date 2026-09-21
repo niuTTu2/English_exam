@@ -987,57 +987,39 @@ export const reviewedSensesNS: ReviewedSenseTable = {
     }
   ],
   "past": [
-    {
-      "id": "past-time",
-      "pos": "n",
-      "meaning": "过去",
-      "forms": [
+  {
+    "id": "past-time",
+    "pos": "adj/n",
+    "meaning": "过去；过去的",
+    "forms": [
+      [
+        "n",
         [
-          "n",
-          [
-            "过去"
-          ]
+          "过去"
         ]
       ],
-      "sources": [
+      [
+        "adj",
         [
-          "2012-p5-s4",
-          "adj/n/prep",
-          "过去的；过去"
-        ],
+          "过去的"
+        ]
+      ],
+      [
+        "adj/n/prep",
         [
-          "2012-p5-s23",
-          "adj/n/prep",
-          "过去的；过去"
-        ],
-        [
-          "2012-p5-s24",
-          "adj/n/prep",
           "过去的；过去"
         ]
       ]
-    },
-    {
-      "id": "past",
-      "pos": "adj",
-      "meaning": "过去的",
-      "forms": [
-        [
-          "adj",
-          [
-            "过去的"
-          ]
-        ]
-      ],
-      "sources": [
-        [
-          "p4-s17",
-          "adj/n/prep",
-          "过去的；经过；超过"
-        ]
+    ],
+    "sources": [
+      [
+        "p4-s17",
+        "adj/n/prep",
+        "过去的；经过；超过"
       ]
-    }
-  ],
+    ]
+  }
+],
   "patient": [
     {
       "id": "patient",

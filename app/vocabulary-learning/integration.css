@@ -33,3 +33,8 @@
   .is-vocabulary-learning .paper-nav .section-list { display: none; }
   .is-vocabulary-learning .paper-nav { padding-bottom: 10px; }
 }
+
+.global-vocabulary-mark { background: #fff0af; color: inherit; border-radius: 3px; box-shadow: inset 0 -2px 0 #b78a20; }
+.vl-marked-library ul, .v2-marked-vocabulary ul { list-style: none; padding: 0; display: grid; gap: .65rem; }
+.vl-marked-library li, .v2-marked-vocabulary li { border-bottom: 1px solid var(--border, #dce3df); padding: .6rem 0; overflow-wrap: anywhere; }
+.vl-marked-library small, .v2-marked-vocabulary small { display: block; color: #62776e; }

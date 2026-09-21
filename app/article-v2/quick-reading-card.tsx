@@ -1,3 +1,4 @@
+import { GlobalWord } from "../vocabulary-learning/global-marks";
 import type { ArticleContent, SentenceAnalysis } from "../data";
 import { DeepReading } from "./deep-reading";
 import { hasDeepReading } from "./content";
@@ -11,7 +12,7 @@ import type { ArticleV2Mark } from "./model";
 export type OnTerm = (expression: string, sourceId: string, isPhrase?: boolean) => void;
 export function ReadingWords({ text, sourceId, onTerm, marks = [] }: { text: string; sourceId: string; onTerm: OnTerm; marks?: ArticleV2Mark[] }) {
   const words = readingWords(text);
-  return <>{words.map((word, i) => <Fragment key={word.start}>{text.slice(i ? words[i - 1].end : 0, word.start)}<button type="button" className={`v2-inline-word v2-lookup-word ${marks.some(m => m.active && m.sourceId === sourceId && (m.kind === "word" || m.kind === "phrase") && m.start < word.end && m.end > word.start) ? "v2-marked" : ""}`} aria-label={`查看单词 ${word.text}`} onClick={() => onTerm(word.text, sourceId, false)}>{word.text}</button></Fragment>)}{text.slice(words.at(-1)?.end ?? 0)}</>;
+  return <>{words.map((word, i) => <Fragment key={word.start}>{text.slice(i ? words[i - 1].end : 0, word.start)}<GlobalWord word={word.text} sourceId={sourceId} type="button" className={`v2-inline-word v2-lookup-word ${marks.some(m => m.active && m.sourceId === sourceId && (m.kind === "word" || m.kind === "phrase") && m.start < word.end && m.end > word.start) ? "v2-marked" : ""}`} aria-label={`查看单词 ${word.text}`} onClick={() => onTerm(word.text, sourceId, false)}>{word.text}</GlobalWord></Fragment>)}{text.slice(words.at(-1)?.end ?? 0)}</>;
 }
 export function QuickReadingCard({ article, sentence, data, onUpdate, onTerm }: { article: ArticleContent; sentence: SentenceAnalysis; data: V2StudySnapshot; onUpdate: (update: V2Update) => void; onTerm: OnTerm }) {
   const quick = sentence.quickReading!;

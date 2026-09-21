@@ -16,6 +16,14 @@ const [{ syntheticArticle: article, syntheticCorpus: corpus, emptyV2State: empty
 ]);
 const [{ ExamPage }, { QuickReadingCard }, { QuestionAnalysisPage }, { default: ArticleV2 }, { ArticleVocabularyPage }] = await Promise.all([load("article-v2/exam-page.tsx"), load("article-v2/quick-reading-card.tsx"), load("article-v2/question-mistake-card.tsx"), load("article-v2/article-v2.tsx"), load("article-v2/article-vocabulary-page.tsx")]);
 const [selection, { SourceText }, { ReadingWords }] = await Promise.all([load("article-v2/source-selection.ts"), load("article-v2/source-marking.tsx"), load("article-v2/quick-reading-card.tsx")]);
+const { GlobalWord } = await load("vocabulary-learning/global-marks.tsx");
+// Exercise hook-using source text inside React, retaining callbacks for selection assertions.
+function sourceElement(props) {
+  let element;
+  function Capture() { element = SourceText(props); return element; }
+  renderToStaticMarkup(React.createElement(Capture));
+  return element;
+}
 const noop = () => {};
 const props = { article, data: empty, corpus, ready: true, onUpdate: noop, onTerm: noop, onSource: noop, onExternalSource: noop, renderDetails: () => React.createElement("p", null, "完整讲义"), renderQuestionDetails: () => null };
 const render = (component, changes = {}) => renderToStaticMarkup(React.createElement(component, { ...props, ...changes }));
@@ -176,13 +184,13 @@ test("explicit mark removal and undo retain stable IDs and reject undo over newe
 });
 test("raw-word click only selects a source range; persisted marks require a separate explicit action", () => {
   const picked = [];
-  const element = SourceText({ text: "A note.", sourceId: "s1", mode: "word", marks: [], selection: null, onPick: (...args) => picked.push(args) });
+  const element = sourceElement({ text: "A note.", sourceId: "s1", mode: "word", marks: [], selection: null, onPick: (...args) => picked.push(args) });
   const button = React.Children.toArray(element.props.children).find(node => node.type === "button" && node.props.children === "note");
   button.props.onClick(); button.props.onClick();
   assert.deepEqual(picked, [["s1", { start: 2, end: 6 }], ["s1", { start: 2, end: 6 }]]);
-  const sentence = SourceText({ text: "A note.", sourceId: "s1", mode: "sentence", marks: [{ sourceId: "s1", kind: "word", start: 2, end: 6, active: true }], selection: null, onPick: noop });
+  const sentence = sourceElement({ text: "A note.", sourceId: "s1", mode: "sentence", marks: [{ sourceId: "s1", kind: "word", start: 2, end: 6, active: true }], selection: null, onPick: noop });
   assert.ok(!sentence.props.className.includes("v2-marked"), "a saved word must not make the whole sentence appear marked");
-  assert.ok(renderToStaticMarkup(sentence).includes('class="v2-marked ">note</span>'));
+  assert.match(renderToStaticMarkup(sentence), /class="\s*v2-marked\s*">note<\/span>/);
   const html = render(ExamPage);
   for (const label of ["标单词", "标词组", "标句子", "查看与取消"]) assert.ok(html.includes(label));
   assert.ok(!html.includes("点首尾标词或词组"));
@@ -194,7 +202,7 @@ test("quick reading exposes every word with exact source and preserves raw punct
   const html = renderToStaticMarkup(element);
   assert.equal(html.replace(/<[^>]+>/g, ""), raw);
   const fragments = React.Children.toArray(element.props.children).filter(node => node.type === React.Fragment);
-  const cheap = fragments.flatMap(node => React.Children.toArray(node.props.children)).find(node => node.type === "button" && node.props.children === "cheap");
+  const cheap = fragments.flatMap(node => React.Children.toArray(node.props.children)).find(node => node.type === GlobalWord && node.props.children === "cheap");
   cheap.props.onClick();
   assert.deepEqual(opened, [["cheap", "question-990001-option-B", false]]);
   assert.deepEqual(selection.readingWords("U.S. jobs don't cover post-high school.").map(w => w.text), ["U.S.", "jobs", "don't", "cover", "post-high", "school"]);

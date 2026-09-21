@@ -23,7 +23,7 @@ function mark(expression, sourceId = "2013-p1-s1", kind = "word") {
 }
 function add(snapshot, input, at = 10) { return bridge.enrollReadingMark(state.setSourceMark(snapshot, input, true, at), input, corpus, at, true); }
 
-test("confirmed reading words enroll the exact source/sense, survive snapshot validation and enter marked/new queues", () => {
+test("confirmed reading words enroll the exact source/sense, survive snapshot validation and enter global review queues", () => {
   const input = mark("automated");
   const saved = add(empty, input);
   const [memory] = Object.values(saved.vocabularyMemories);
@@ -32,11 +32,11 @@ test("confirmed reading words enroll the exact source/sense, survive snapshot va
   assert.equal(memory.contexts[0].sourceId, "2013-p1-s1");
   assert.equal(memory.contexts[0].mark, "完全不会");
   assert.equal(bridge.isMarkedVocabulary(memory, {}), true);
-  assert.equal(memory.status, "unseen");
+  assert.equal(memory.status, "review");
   assert.deepEqual(saved.answers, empty.answers);
   assert.equal(sync.isStudySnapshot(saved), true);
   const restored = JSON.parse(JSON.stringify(saved));
-  const result = queue.createLearningQueue(restored.vocabularyMemories, [], model.DEFAULT_SETTINGS, 20, "new", { memoryIds: [memory.id] });
+  const result = queue.createLearningQueue(restored.vocabularyMemories, [], { ...model.DEFAULT_SETTINGS, dailyWords: 0, dailyPhrases: 0 }, 20, "review", { memoryIds: [memory.id] });
   assert.equal(result.queue.length, 1);
   assert.equal(result.queue[0].memoryId, memory.id);
   assert.equal(bridge.enrollSavedReadingMarks(saved, corpus, 30), saved);
@@ -48,8 +48,8 @@ test("past active marks backfill without resetting learning or paused schedules;
   old = state.setSourceMark(old, mark("average", "2013-p1-s5"), true, 11);
   const saved = bridge.enrollSavedReadingMarks(old, corpus, 30);
   const memories = Object.values(saved.vocabularyMemories);
-  assert.equal(memories.length, 2);
-  assert.notEqual(memories[0].senseId, memories[1].senseId);
+  assert.equal(memories.length, 1, "ordinary/ordinary level share one core meaning");
+  assert.equal(memories[0].contexts.length, 2);
   const existing = { ...memories[0], status: "paused", paused: true, dueAt: 90000, intervalDays: 7, consecutiveKnown: 3, lastReviewedAt: 25 };
   const learned = { ...saved, vocabularyMemories: { ...saved.vocabularyMemories, [existing.id]: existing } };
   assert.equal(bridge.enrollSavedReadingMarks(learned, corpus, 80), learned);

@@ -13,7 +13,7 @@ export function enrollVocabulary(data: VocabularyLearningData, source: Vocabular
   const memories = data.vocabularyMemories ?? {};
   let memory = mergeCandidate(memories, candidate, now);
   if (mark && memories[memory.id]) {
-    memory = { ...memory, paused: false, status: memory.lastReviewedAt || mark !== "完全不会" ? "review" : "unseen",
+    memory = { ...memory, paused: false, status: "review",
       dueAt: Math.min(memory.dueAt, now), updatedAt: now };
   }
   const migration = data.vocabularyMigration;

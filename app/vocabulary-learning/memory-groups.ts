@@ -78,6 +78,6 @@ export function memoriesInSemanticScope(memories: Record<string, VocabularyMemor
 export function setMemoryGroupPaused(memories: Record<string, VocabularyMemory>, id: string, paused: boolean, now: number) {
   const next = { ...memories };
   for (const memory of memoryGroup(memories, id)) next[memory.id] = { ...memory, paused,
-    status: paused ? "paused" : memory.lastReviewedAt ? "review" : "unseen", updatedAt: now };
+    status: paused ? "paused" : memory.lastReviewedAt || memory.contexts.some(context => context.mark) ? "review" : "unseen", updatedAt: now };
   return next;
 }

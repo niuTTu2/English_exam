@@ -1,3 +1,4 @@
+import { reviewedSensesGlobal } from "./reviewed-senses-global";
 import { reviewedSenses2013P3 } from "./reviewed-senses-2013-p3";
 import { reviewedSenses2013, reviewedAnnotations2013 } from "./reviewed-senses-2013";
 import type { ReviewedSenseAnnotation, ReviewedSenseAnnotations, ReviewedSenseGroup, ReviewedSenseTable } from "./reviewed-sense-types";
@@ -8,7 +9,7 @@ import { reviewedSensesNS, reviewedAnnotationsNS } from "./reviewed-senses-n-s";
 import { reviewedSensesTZ, reviewedAnnotationsTZ } from "./reviewed-senses-t-z";
 import { reviewedSensesFunction, reviewedAnnotationsFunction } from "./reviewed-senses-function";
 
-export const reviewedSenseTables: readonly ReviewedSenseTable[] = [reviewedSenses2013P3, reviewedSenses2013, reviewedSensesAF, reviewedSensesGM, reviewedSensesNS, reviewedSensesTZ, reviewedSensesFunction];
+export const reviewedSenseTables: readonly ReviewedSenseTable[] = [reviewedSensesGlobal, reviewedSenses2013P3, reviewedSenses2013, reviewedSensesAF, reviewedSensesGM, reviewedSensesNS, reviewedSensesTZ, reviewedSensesFunction];
 export const reviewedAnnotationTables: readonly ReviewedSenseAnnotations[] = [reviewedAnnotations2013, reviewedAnnotationsAF, reviewedAnnotationsGM, reviewedAnnotationsNS, reviewedAnnotationsTZ, reviewedAnnotationsFunction];
 
 const formKey = (pos: string, meaning: string) => JSON.stringify([normalizePartOfSpeech(pos), normalizeMeaning(meaning)]);

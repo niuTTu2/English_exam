@@ -1,11 +1,13 @@
+import { ReadingWords, type OnTerm } from "./quick-reading-card";
 import type { ReactNode } from "react";
 import { questionOptionSourceId, type ArticleContent, type AnyQuestion } from "../data";
 import { OptionalPractice } from "./optional-practice";
 import { FollowUpPanel } from "./follow-up-panel";
 import { recordV2Check, type V2StudySnapshot, type V2Update } from "./state";
 
-export function QuestionMistakeCard({ article, question: q, data, onUpdate, onSource, renderDetails }: {
+export function QuestionMistakeCard({ article, question: q, data, onUpdate, onSource, renderDetails, onTerm }: {
   article: ArticleContent; question: AnyQuestion; data: V2StudySnapshot; onUpdate: (update: V2Update) => void;
+  onTerm: OnTerm;
   onSource: (sourceId: string, returnSource?: string) => void;
   renderDetails: (question: AnyQuestion, onSentence: (id: string) => void) => ReactNode;
 }) {
@@ -17,6 +19,9 @@ export function QuestionMistakeCard({ article, question: q, data, onUpdate, onSo
   const recheck = mistake?.recheck ?? correction.correctCheck;
   return <article className="v2-mistake-card" id={`v2-analysis-${sourceId}`}>
     <h3>第 {q.number} 题 · {wrong ? "先看这次错在哪里" : "答对了，再确认依据"}</h3>
+    <section aria-label="题干与选项查词"><p lang="en"><ReadingWords text={q.prompt} sourceId={sourceId} onTerm={onTerm} marks={Object.values(data.articleV2Marks ?? {})} /></p>
+      {q.options.map(option => <p key={option.key} lang="en"><strong>{option.key}. </strong><ReadingWords text={option.text} sourceId={questionOptionSourceId(q, option.key)} onTerm={onTerm} marks={Object.values(data.articleV2Marks ?? {})} /></p>)}
+    </section>
     <p>你选择：<strong>{choice || "未作答"}</strong>{selected ? ` · ${selected.text}` : ""}</p>
     <p>正确答案：<strong>{q.answer}</strong> · {correct.text}</p>
     <section className="v2-difference"><h4>{wrong ? "最关键的差别" : "判断关键"}</h4><p>{mistake?.difference ?? reasoning.options[q.answer].reasoning}</p></section>
