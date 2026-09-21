@@ -69,7 +69,7 @@ test('reviewed synonyms merge across all source wording while real semantic diff
   for (const row of rows) assert.equal(row.count, row.sources.length ? new Set(row.sources.map(source => source.sourceId)).size : null);
  }
  const past = study.resolveEntry('past', false, '2013-p1-s4');
- const rows = overview.buildSenseOverview(past, '2013-p1-s4'); assert.equal(rows[0].count, 9); assert.equal(rows[0].current, true);
+ const rows = overview.buildSenseOverview(past, '2013-p1-s4'); assert.equal(rows[0].count, 10); assert.equal(rows[0].current, true);
  for (const source of past.occurrences) for (const context of source.contexts ?? []) assert.ok(rows[0].sources.some(item => item.sourceId === source.sourceId && item.partOfSpeech === context.partOfSpeech && item.meaning === context.meaning && item.use === context.use));
  const patient = overview.buildSenseOverview(study.resolveEntry('patient', false)).filter(row => !row.annotationReason);
  assert.ok(patient.some(row => row.meaning === '患者')); assert.ok(patient.some(row => row.meaning.includes('耐心')));
