@@ -1,3 +1,4 @@
+import {lexicon as p2014P2Lexicon,aliases as p2014P2Aliases} from "./2014-passage-2-vocabulary";
 import {lexicon as p2014P1Lexicon,aliases as p2014P1Aliases} from "./2014-passage-1-vocabulary";
 import { passage2013P4Lexicon, passage2013P4LemmaAliases, passage2013P4FormContexts } from "./2013-passage-4-vocabulary";
 import { passage2013P3Lexicon, passage2013P3LemmaAliases } from "./2013-passage-3-vocabulary";
@@ -738,6 +739,7 @@ const sourceLemmaAliases: Record<string, Record<string, string>> = {
 
 export function canonicalLemma(token: string, context?: LexicalContext) {
   const normalized = token.trim().toLowerCase().replace(/[’‘]/g, "'");
+  if (context?.articleId === "2014-p2" && p2014P2Aliases[normalized]) return p2014P2Aliases[normalized];
   if (context?.articleId === "2014-p1" && p2014P1Aliases[normalized]) return p2014P1Aliases[normalized];
   if (context?.articleId === "2013-translation" && translation2013LemmaAliases[normalized]) return translation2013LemmaAliases[normalized];
   if (context?.articleId === "2013-cloze" && cloze2013LemmaAliases[normalized]) return cloze2013LemmaAliases[normalized];
@@ -865,6 +867,7 @@ export function getLexicalGuide(token: string, context?: LexicalContext): Lexica
     "2012-writing-a": writing2012AEntry,
     "2012-writing-b": writing2012BEntry,
     "2014-p1": p2014P1Lexicon[headword],
+    "2014-p2": p2014P2Lexicon[headword],
     "2013-p1": passage2013P1Entry,
     "2013-p2": passage2013P2Lexicon[headword],
     "2013-p3": passage2013P3Lexicon[headword],
@@ -882,7 +885,7 @@ export function getLexicalGuide(token: string, context?: LexicalContext): Lexica
     "2011-p2": passage2011P2Entry,
   } satisfies Record<ArticleLexiconId, typeof passage1Entry | undefined>;
   const articleEntry = context?.articleId ? articleEntries[context.articleId] : undefined;
-  const globalPassageEntry = translation2013Entry ?? cloze2013Entry ?? passage2001P2Entry ?? passage2001P1Entry ?? cloze2001Entry ?? passage3Entry ?? passage1Entry ?? passage2Entry ?? passage4Entry ?? passage5Entry ?? translationEntry ?? cloze2010Entry ?? passage2010P1Entry ?? passage2010P2Entry ?? passage2010P3Entry ?? passage2010P4Entry ?? passage2010P5Entry ?? translation2010Entry ?? cloze2011Entry ?? passage2011P1Entry ?? passage2011P2Entry ?? passage2011P3Entry ?? passage2011P4Entry ?? passage2011P5Entry ?? translation2011Entry ?? writing2011AEntry ?? writing2011BEntry ?? cloze2012Entry ?? passage2012P1Entry ?? passage2012P2Entry ?? passage2012P3Entry ?? passage2012P4Entry ?? passage2012P5Entry ?? translation2012Entry ?? writing2012AEntry ?? writing2012BEntry ?? p2014P1Lexicon[headword];
+  const globalPassageEntry = translation2013Entry ?? cloze2013Entry ?? passage2001P2Entry ?? passage2001P1Entry ?? cloze2001Entry ?? passage3Entry ?? passage1Entry ?? passage2Entry ?? passage4Entry ?? passage5Entry ?? translationEntry ?? cloze2010Entry ?? passage2010P1Entry ?? passage2010P2Entry ?? passage2010P3Entry ?? passage2010P4Entry ?? passage2010P5Entry ?? translation2010Entry ?? cloze2011Entry ?? passage2011P1Entry ?? passage2011P2Entry ?? passage2011P3Entry ?? passage2011P4Entry ?? passage2011P5Entry ?? translation2011Entry ?? writing2011AEntry ?? writing2011BEntry ?? cloze2012Entry ?? passage2012P1Entry ?? passage2012P2Entry ?? passage2012P3Entry ?? passage2012P4Entry ?? passage2012P5Entry ?? translation2012Entry ?? writing2012AEntry ?? writing2012BEntry ?? p2014P1Lexicon[headword] ?? p2014P2Lexicon[headword];
   const ordinal = normalized.match(/^([0-9]+)(?:st|nd|rd|th)$/);
   const decade = normalized.match(/^([0-9]{4})s$/);
   const chronologicalEntry: typeof passage1Entry | undefined = ordinal || decade ? {
