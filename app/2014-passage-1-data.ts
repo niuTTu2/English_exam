@@ -1,0 +1,5 @@
+import type {ArticleContent} from './data';
+import {sentences,paragraphs,guide} from './2014-passage-1-reading';
+import {questions} from './2014-passage-1-questions';
+export {sentences as passage2014P1Sentences,questions as passage2014P1Questions};
+export const passage2014P1Article:ArticleContent={id:'2014-p1',year:2014,sectionId:'p1',label:'阅读 Text 1',badge:'2014 · 英语二 · Text 1',title:'2014 英语二 · Text 1',description:'原卷4段18句，第21—25题。',kind:'reading',experienceVersion:2,sentences,questions,paragraphs,guide,vocabularyFocus:[{sourceId:'2014-p1-s4',expression:'counterintuitive',kind:'word',categories:['core']},{sourceId:'2014-p1-s10',expression:'volume',kind:'word',categories:['sense']},{sourceId:'2014-p1-s16',expression:'scarcity',kind:'word',categories:['core']},{sourceId:'2014-p1-s3',expression:'could do worse than',kind:'phrase',categories:['collocation']},{sourceId:'question-201424-option-B',expression:'worthwhile',kind:'word',categories:['paraphrase'],questionLink:{questionId:201424,paraphraseIndex:0}},{sourceId:'2014-p1-s2',expression:'MacKenzie',kind:'word',categories:['recognition']}]};

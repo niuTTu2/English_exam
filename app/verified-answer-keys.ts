@@ -284,3 +284,6 @@ export const verifiedAnswerKey2013Passage3:Record<number,"A"|"B"|"C"|"D">={31:"D
 export const verifiedAnswerSource2013Passage3="https://zemengzhou.com/kaoyan/english/past-papers/ying-yu-er/2013/10-da-an-su-cha";
 
 export const verifiedAnswerKey2013Passage4:Record<number,string>={36:"B",37:"C",38:"A",39:"D",40:"C"};
+
+export const verifiedAnswerKey2014Passage1:Record<number,string>={21:"B",22:"A",23:"D",24:"B",25:"C"};
+export const verifiedAnswerSource2014="https://zemengzhou.com/kaoyan/english/past-papers/ying-yu-er/2014/10-da-an-su-cha";

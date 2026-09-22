@@ -31,7 +31,7 @@ test("pilot source is an exact, single-article transcription of the supplied DOC
   assert.equal(article.sentences.length, 14);
   assert.equal(article.paragraphs.length, 6);
   assert.equal(article.questions.length, 5);
-  assert.equal(Object.keys(data.articleContents).length, 41);
+  assert.equal(Object.keys(data.articleContents).length, 42);
   assert.deepEqual(article.questions.map(q => q.answer), ["A", "D", "B", "B", "C"]);
   assert.deepEqual(keys.verifiedAnswerKey2013Passage1, { 21: "A", 22: "D", 23: "B", 24: "B", 25: "C" });
 });
