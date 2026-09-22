@@ -1,0 +1,139 @@
+export const texts=[
+  "An article in Scientific American has pointed out that empirical research says that, actually, you think you're more beautiful than you are.",
+  "We have a deep-seated need to feel good about ourselves and we naturally employ a number of self-enhancing strategies to achieve this.",
+  "Social psychologists have amassed oceans of research into what they call the \"above average effect\", or \"illusory superiority\", and shown that, for example, 70% of us rate ourselves as above average in leadership, 93% in driving and 85% at getting on well with others – all obviously statistical impossibilities.",
+  "We rose-tint our memories and put ourselves into self-affirming situations.",
+  "We become defensive when criticised, and apply negative stereotypes to others to boost our own esteem.",
+  "We stalk around thinking we're hot stuff.",
+  "Psychologist and behavioural scientist Nicholas Epley oversaw a key study into self-enhancement and attractiveness.",
+  "Rather than have people simply rate their beauty compared with others, he asked them to identify an original photograph of themselves from a lineup including versions that had been altered to appear more and less attractive.",
+  "Visual recognition, reads the study, is \"an automatic psychological process, occurring rapidly and intuitively with little or no apparent conscious deliberation\".",
+  "If the subjects quickly chose a falsely flattering image – which most did – they genuinely believed it was really how they looked.",
+  "Epley found no significant gender difference in responses.",
+  "Nor was there any evidence that those who self-enhanced the most (that is, the participants who thought the most positively doctored pictures were real) were doing so to make up for profound insecurities.",
+  "In fact, those who thought that the images higher up the attractiveness scale were real directly corresponded with those who showed other markers for having higher self-esteem.",
+  "\"I don't think the findings that we have are any evidence of personal delusion,\" says Epley.",
+  "\"It's a reflection simply of people generally thinking well of themselves.\"",
+  "If you are depressed, you won't be self-enhancing.",
+  "Knowing the results of Epley's study, it makes sense that many people hate photographs of themselves viscerally – on one level, they don't even recognise the person in the picture as themselves.",
+  "Facebook, therefore, is a self-enhancer's paradise, where people can share only the most flattering photos, the cream of their wit, style, beauty, intellect and lifestyles.",
+  "It's not that people's profiles are dishonest, says Catalina Toma of Wisconsin-Madison University, \"but they portray an idealised version of themselves.\""
+];
+export const paragraphNumbers=[[1,2,3],[4,5,6],[7,8,9,10],[11,12,13,14,15,16],[17,18,19]];
+export const rawQuestions=[
+  {
+    "id": 201426,
+    "number": 26,
+    "prompt": "According to the first paragraph, social psychologists have found that____.",
+    "options": [
+      {
+        "key": "A",
+        "text": "our self-ratings are unrealistically high"
+      },
+      {
+        "key": "B",
+        "text": "illusory superiority is a baseless effect"
+      },
+      {
+        "key": "C",
+        "text": "our need for leadership is unnatural"
+      },
+      {
+        "key": "D",
+        "text": "self-enhancing strategies are ineffective"
+      }
+    ]
+  },
+  {
+    "id": 201427,
+    "number": 27,
+    "prompt": "Visual recognition is believed to be people's____.",
+    "options": [
+      {
+        "key": "A",
+        "text": "rapid matching"
+      },
+      {
+        "key": "B",
+        "text": "conscious choice"
+      },
+      {
+        "key": "C",
+        "text": "intuitive response"
+      },
+      {
+        "key": "D",
+        "text": "automatic self-defence"
+      }
+    ]
+  },
+  {
+    "id": 201428,
+    "number": 28,
+    "prompt": "Epley found that people with higher self-esteem tended to____.",
+    "options": [
+      {
+        "key": "A",
+        "text": "underestimate their insecurities"
+      },
+      {
+        "key": "B",
+        "text": "believe in their attractiveness"
+      },
+      {
+        "key": "C",
+        "text": "cover up their depressions"
+      },
+      {
+        "key": "D",
+        "text": "oversimplify their illusions"
+      }
+    ]
+  },
+  {
+    "id": 201429,
+    "number": 29,
+    "prompt": "The word \"viscerally\" (Line 2, Para. 5) is closest in meaning to____.",
+    "options": [
+      {
+        "key": "A",
+        "text": "instinctively"
+      },
+      {
+        "key": "B",
+        "text": "occasionally"
+      },
+      {
+        "key": "C",
+        "text": "particularly"
+      },
+      {
+        "key": "D",
+        "text": "aggressively"
+      }
+    ]
+  },
+  {
+    "id": 201430,
+    "number": 30,
+    "prompt": "It can be inferred that Facebook is a self-enhancer's paradise because people can____.",
+    "options": [
+      {
+        "key": "A",
+        "text": "present their dishonest profiles"
+      },
+      {
+        "key": "B",
+        "text": "define their traditional lifestyles"
+      },
+      {
+        "key": "C",
+        "text": "share their intellectual pursuits"
+      },
+      {
+        "key": "D",
+        "text": "withhold their unflattering sides"
+      }
+    ]
+  }
+] as const;
