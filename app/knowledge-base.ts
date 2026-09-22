@@ -1157,12 +1157,18 @@ export function getPhraseKnowledge(source: string, context?: { articleId?: strin
       structures: [s(source.trim(), scopedGloss.meaning, scopedGloss.note ?? "按本篇语境整体记忆。")],
     };
   }
-  if(context?.articleId === "2014-p2") { const guide=p2014P2Guides[p2014P2Aliases[clean]??clean]; const existing=phraseGuides[phraseAliases[clean]??clean]; if(guide) return {...guide,key:existing?.key??guide.key,sourceExpression:source.trim()}; const gloss=p2014P2Glosses[clean]; if(gloss) return {key:existing?.key??`collocation:${clean}`,canonical:source.trim(),sourceExpression:source.trim(),type:"常用搭配",meaning:gloss.meaning,summary:gloss.note,grammarRole:"词语搭配",structures:[s(source.trim(),gloss.meaning,gloss.note)]}; }
   if(context?.articleId === "2014-p1") {
     const guide=p2014P1Guides[p2014P1Aliases[clean]??clean];
     const existing=phraseGuides[phraseAliases[clean]??clean];
     if(guide) return {...guide,key:existing?.key??guide.key,sourceExpression:source.trim()};
     const gloss=p2014P1Glosses[clean];
+    if(gloss) return {key:existing?.key??`collocation:${clean}`,canonical:source.trim(),sourceExpression:source.trim(),type:"常用搭配",meaning:gloss.meaning,summary:gloss.note,grammarRole:"词语搭配",structures:[s(source.trim(),gloss.meaning,gloss.note)]};
+  }
+  if(context?.articleId === "2014-p2") {
+    const guide=p2014P2Guides[p2014P2Aliases[clean]??clean];
+    const existing=phraseGuides[phraseAliases[clean]??clean];
+    if(guide) return {...guide,key:existing?.key??guide.key,sourceExpression:source.trim()};
+    const gloss=p2014P2Glosses[clean];
     if(gloss) return {key:existing?.key??`collocation:${clean}`,canonical:source.trim(),sourceExpression:source.trim(),type:"常用搭配",meaning:gloss.meaning,summary:gloss.note,grammarRole:"词语搭配",structures:[s(source.trim(),gloss.meaning,gloss.note)]};
   }
   const alias = phraseAliases[clean];

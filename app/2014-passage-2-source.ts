@@ -1,4 +1,4 @@
-export const texts=[
+export const texts = [
   "An article in Scientific American has pointed out that empirical research says that, actually, you think you're more beautiful than you are.",
   "We have a deep-seated need to feel good about ourselves and we naturally employ a number of self-enhancing strategies to achieve this.",
   "Social psychologists have amassed oceans of research into what they call the \"above average effect\", or \"illusory superiority\", and shown that, for example, 70% of us rate ourselves as above average in leadership, 93% in driving and 85% at getting on well with others – all obviously statistical impossibilities.",
@@ -19,8 +19,8 @@ export const texts=[
   "Facebook, therefore, is a self-enhancer's paradise, where people can share only the most flattering photos, the cream of their wit, style, beauty, intellect and lifestyles.",
   "It's not that people's profiles are dishonest, says Catalina Toma of Wisconsin-Madison University, \"but they portray an idealised version of themselves.\""
 ];
-export const paragraphNumbers=[[1,2,3],[4,5,6],[7,8,9,10],[11,12,13,14,15,16],[17,18,19]];
-export const rawQuestions=[
+export const paragraphNumbers = [[1, 2, 3], [4, 5, 6], [7, 8, 9, 10], [11, 12, 13, 14, 15, 16], [17, 18, 19]];
+export const rawQuestions = [
   {
     "id": 201426,
     "number": 26,

@@ -1,6 +1,6 @@
 # 当前接续：2014英语二
 
-用户原卷 `/workspace/scratch/f6652dfd6645/upload/01-2014-.docx` 已读取，SHA256 `7429f0421dfb4a49b36e955bc7096d1cb2540f8af317199bcbcf41bdf54fbbf9`。本轮目录 `/workspace/scratch/f6652dfd6645/English_exam`，分支 `content/2014`，从远端main `6a81961` 开始。Text 1内容已完成；其余模块继续按篇录入、验证、独立提交和发布。实际状态见 `docs/IMPORT_PROGRESS.md` 及2014独立报告。旧发布授权继续有效。
+用户原卷 `/workspace/scratch/f6652dfd6645/upload/01-2014-.docx` 已读取，SHA256 `7429f0421dfb4a49b36e955bc7096d1cb2540f8af317199bcbcf41bdf54fbbf9`。本轮目录 `/workspace/scratch/f6652dfd6645/English_exam`，分支 `content/2014`，从远端main `6a81961` 开始。Text 1已由d997bab发布，Cloudflare构建成功；Text 2内容、专项、完整门禁修复复测及构建已完成；其余模块继续按篇录入、验证、独立提交和发布。实际状态见 `docs/IMPORT_PROGRESS.md` 及2014独立报告。旧发布授权继续有效。
 
 # 从这里开始
 

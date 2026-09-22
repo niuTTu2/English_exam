@@ -286,5 +286,6 @@ export const verifiedAnswerSource2013Passage3="https://zemengzhou.com/kaoyan/eng
 export const verifiedAnswerKey2013Passage4:Record<number,string>={36:"B",37:"C",38:"A",39:"D",40:"C"};
 
 export const verifiedAnswerKey2014Passage1:Record<number,string>={21:"B",22:"A",23:"D",24:"B",25:"C"};
-export const verifiedAnswerKey2014Passage2:Record<number,string>={26:"A",27:"C",28:"B",29:"A",30:"D"};
 export const verifiedAnswerSource2014="https://zemengzhou.com/kaoyan/english/past-papers/ying-yu-er/2014/10-da-an-su-cha";
+
+export const verifiedAnswerKey2014Passage2:Record<number,string>={26:"A",27:"C",28:"B",29:"A",30:"D"};

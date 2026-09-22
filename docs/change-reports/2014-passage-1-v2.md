@@ -3,7 +3,7 @@
 ## 范围与来源
 
 - 用户文件：考研英语二2014年真题（整卷）.docx；DOCX段落115—118为正文，119—143为题干选项（从0计数）。
-- 原文件7429f0421dfb4a49b36e955bc7096d1cb2540f8af317199bcbcf41bdf54fbbf9256：`7429f0421dfb4a49b36e955bc7096d1cb2540f8af317199bcbcf41bdf54fbbf9`。快照见`tests/fixtures/2014-passage-1-source.json`；正文与题干逐字重组检查。
+- 原文件SHA256：`7429f0421dfb4a49b36e955bc7096d1cb2540f8af317199bcbcf41bdf54fbbf9`。快照见`tests/fixtures/2014-passage-1-source.json`；正文与题干逐字重组检查。
 - 4段18句，稳定ID `2014-p1-s1`—`s18`；21—25题，ID `201421`—`201425`。
 - 参考答案B/A/D/B/C，与用户选项顺序及正文证据交叉核对；参考来源：https://zemengzhou.com/kaoyan/english/past-papers/ying-yu-er/2014/10-da-an-su-cha（教学参考，不宣称官方阅卷标准）。
 - 修改仅本篇内容、词汇来源与规范义项、必要目录/年度索引、答案清单、专项门禁和交接文件。未改页面、账号、同步、学习记录或部署配置。
@@ -30,5 +30,7 @@
 ## 接续
 
 - 下一篇2014 Text 2；其余八模块未标记完成。
-- 提交及推送：待本篇最后门禁完成后独立提交；最终7429f0421dfb4a49b36e955bc7096d1cb2540f8af317199bcbcf41bdf54fbbf9见Git记录及交付消息。
+- 提交及推送：待本篇最后门禁完成后独立提交；最终SHA见Git记录及交付消息。
 - Cloudflare状态须在推送后观察，不预先声明成功。
+
+2026-09-22发布核验：远端提交`d997babd50e4a6f6204e6f93c608a26d6e81140a`，文件树`3ebee9199becbdbfd6ec0b52c01d9cc74a0be2b2`与本地已测快照完全一致。Workers Builds: english-exam已完成且success（Build ID 7410b1f2-f207-439a-aa8c-64c9fd21e2f2）。当前环境访问两个既有站点均HTTP 403，公开页面未复验，不宣称手机/离线/账号实测通过。
