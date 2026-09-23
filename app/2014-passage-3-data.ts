@@ -1,0 +1,5 @@
+import type {ArticleContent} from './data';
+import {sentences,paragraphs,guide} from './2014-passage-3-reading';
+import {questions} from './2014-passage-3-questions';
+export {sentences as passage2014P3Sentences,questions as passage2014P3Questions};
+export const passage2014P3Article:ArticleContent={id:'2014-p3',year:2014,sectionId:'p3',label:'阅读 Text 3',badge:'2014 · 英语二 · Text 3',title:'2014 英语二 · Text 3',description:'原卷6段19句，第31—35题。',kind:'reading',experienceVersion:2,sentences,questions,paragraphs,guide,vocabularyFocus:[{sourceId:'2014-p3-s4',expression:'insatiable',kind:'word',categories:['core']},{sourceId:'2014-p3-s3',expression:'for good',kind:'phrase',categories:['collocation']},{sourceId:'2014-p3-s13',expression:'take initiative',kind:'phrase',categories:['collocation']},{sourceId:'question-201434-option-D',expression:'involvement',kind:'word',categories:['paraphrase'],questionLink:{questionId:201434,paraphraseIndex:0}},{sourceId:'2014-p3-s6',expression:'Brynjolfsson',kind:'word',categories:['recognition']}]};

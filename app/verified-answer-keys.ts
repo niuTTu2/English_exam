@@ -289,3 +289,5 @@ export const verifiedAnswerKey2014Passage1:Record<number,string>={21:"B",22:"A",
 export const verifiedAnswerSource2014="https://zemengzhou.com/kaoyan/english/past-papers/ying-yu-er/2014/10-da-an-su-cha";
 
 export const verifiedAnswerKey2014Passage2:Record<number,string>={26:"A",27:"C",28:"B",29:"A",30:"D"};
+
+export const verifiedAnswerKey2014Passage3:Record<number,string>={31:"B",32:"A",33:"D",34:"D",35:"C"};

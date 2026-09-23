@@ -1,3 +1,4 @@
+import {reviewedSenses2014P3,reviewedAnnotations2014P3} from "./reviewed-senses-2014-p3";
 import {reviewedSenses2014P2,reviewedAnnotations2014P2} from "./reviewed-senses-2014-p2";
 import {reviewedSenses2014P1,reviewedAnnotations2014P1} from "./reviewed-senses-2014-p1";
 import { reviewedSensesGlobal } from "./reviewed-senses-global";
@@ -12,8 +13,8 @@ import { reviewedSensesNS, reviewedAnnotationsNS } from "./reviewed-senses-n-s";
 import { reviewedSensesTZ, reviewedAnnotationsTZ } from "./reviewed-senses-t-z";
 import { reviewedSensesFunction, reviewedAnnotationsFunction } from "./reviewed-senses-function";
 
-export const reviewedSenseTables: readonly ReviewedSenseTable[] = [reviewedSenses2014P2, reviewedSenses2014P1, reviewedSensesGlobal, reviewedSenses2013P4, reviewedSenses2013P3, reviewedSenses2013, reviewedSensesAF, reviewedSensesGM, reviewedSensesNS, reviewedSensesTZ, reviewedSensesFunction];
-export const reviewedAnnotationTables: readonly ReviewedSenseAnnotations[] = [reviewedAnnotations2014P2, reviewedAnnotations2014P1, reviewedAnnotations2013P4, reviewedAnnotations2013, reviewedAnnotationsAF, reviewedAnnotationsGM, reviewedAnnotationsNS, reviewedAnnotationsTZ, reviewedAnnotationsFunction];
+export const reviewedSenseTables: readonly ReviewedSenseTable[] = [reviewedSenses2014P3, reviewedSenses2014P2, reviewedSenses2014P1, reviewedSensesGlobal, reviewedSenses2013P4, reviewedSenses2013P3, reviewedSenses2013, reviewedSensesAF, reviewedSensesGM, reviewedSensesNS, reviewedSensesTZ, reviewedSensesFunction];
+export const reviewedAnnotationTables: readonly ReviewedSenseAnnotations[] = [reviewedAnnotations2014P3, reviewedAnnotations2014P2, reviewedAnnotations2014P1, reviewedAnnotations2013P4, reviewedAnnotations2013, reviewedAnnotationsAF, reviewedAnnotationsGM, reviewedAnnotationsNS, reviewedAnnotationsTZ, reviewedAnnotationsFunction];
 
 const formKey = (pos: string, meaning: string) => JSON.stringify([normalizePartOfSpeech(pos), normalizeMeaning(meaning)]);
 const sourceKey = (sourceId: string, pos: string, meaning: string, expression?: string) => JSON.stringify([sourceId, formKey(pos, meaning), expression?.normalize("NFKC").toLowerCase().replace(/\s+/g, " ").trim() ?? null]);

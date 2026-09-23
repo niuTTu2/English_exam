@@ -1,3 +1,4 @@
+import {phraseGuides as p2014P3Guides,phraseAliases as p2014P3Aliases,phraseGlosses as p2014P3Glosses} from "./2014-passage-3-vocabulary";
 import {phraseGuides as p2014P2Guides,phraseAliases as p2014P2Aliases,phraseGlosses as p2014P2Glosses} from "./2014-passage-2-vocabulary";
 import {phraseGuides as p2014P1Guides,phraseAliases as p2014P1Aliases,phraseGlosses as p2014P1Glosses} from "./2014-passage-1-vocabulary";
 import { passage2013P4PhraseGuides, passage2013P4PhraseAliases, passage2013P4PhraseGlosses } from "./2013-passage-4-vocabulary";
@@ -1169,6 +1170,13 @@ export function getPhraseKnowledge(source: string, context?: { articleId?: strin
     const existing=phraseGuides[phraseAliases[clean]??clean];
     if(guide) return {...guide,key:existing?.key??guide.key,sourceExpression:source.trim()};
     const gloss=p2014P2Glosses[clean];
+    if(gloss) return {key:existing?.key??`collocation:${clean}`,canonical:source.trim(),sourceExpression:source.trim(),type:"常用搭配",meaning:gloss.meaning,summary:gloss.note,grammarRole:"词语搭配",structures:[s(source.trim(),gloss.meaning,gloss.note)]};
+  }
+  if(context?.articleId === "2014-p3") {
+    const guide=p2014P3Guides[p2014P3Aliases[clean]??clean];
+    const existing=phraseGuides[phraseAliases[clean]??clean];
+    if(guide) return {...guide,key:existing?.key??guide.key,sourceExpression:source.trim()};
+    const gloss=p2014P3Glosses[clean];
     if(gloss) return {key:existing?.key??`collocation:${clean}`,canonical:source.trim(),sourceExpression:source.trim(),type:"常用搭配",meaning:gloss.meaning,summary:gloss.note,grammarRole:"词语搭配",structures:[s(source.trim(),gloss.meaning,gloss.note)]};
   }
   const alias = phraseAliases[clean];
